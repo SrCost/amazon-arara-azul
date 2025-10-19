@@ -1,0 +1,197 @@
+import { useParams, Link } from "react-router-dom";
+import {
+  MapPin,
+  Users,
+  Wifi,
+  Coffee,
+  Tv,
+  Wind,
+  ArrowLeft,
+  Star,
+  Check,
+} from "lucide-react";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import lodge1 from "@/assets/lodge-1.jpg";
+import lodge2 from "@/assets/lodge-2.jpg";
+import lodge3 from "@/assets/lodge-3.jpg";
+import lodge4 from "@/assets/lodge-4.jpg";
+
+const LodgeDetail = () => {
+  const { id } = useParams();
+
+  const lodgeData: { [key: string]: any } = {
+    "canopy-retreat": {
+      name: "Canopy Retreat",
+      location: "Reserva do Jaú, Amazonas",
+      images: [lodge1, lodge2, lodge3],
+      price: "R$ 850",
+      guests: 4,
+      description:
+        "O Canopy Retreat é um refúgio exclusivo projetado para oferecer uma experiência única de imersão na floresta amazônica. Construído com materiais sustentáveis e integrado harmoniosamente ao dossel da floresta, este lodge oferece vistas panorâmicas espetaculares, conforto moderno e uma conexão profunda com a natureza.",
+      amenities: [
+        "Wi-Fi de alta velocidade",
+        "Café da manhã incluído",
+        "Ar condicionado",
+        "Varanda privativa",
+        "Energia solar",
+        "Água quente",
+      ],
+      experiences: [
+        "Trilhas guiadas na floresta",
+        "Observação de aves",
+        "Passeios de canoa",
+        "Visita a comunidades locais",
+      ],
+      rating: 4.9,
+      reviews: 127,
+    },
+  };
+
+  const lodge = lodgeData[id || ""] || lodgeData["canopy-retreat"];
+
+  const amenityIcons: { [key: string]: any } = {
+    "Wi-Fi de alta velocidade": Wifi,
+    "Café da manhã incluído": Coffee,
+    "Ar condicionado": Wind,
+    "Varanda privativa": Tv,
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+
+      <div className="pt-24 pb-16">
+        <div className="container mx-auto px-4">
+          {/* Back Button */}
+          <Button variant="ghost" asChild className="mb-6">
+            <Link to="/pousadas">
+              <ArrowLeft className="mr-2" />
+              Voltar para Pousadas
+            </Link>
+          </Button>
+
+          {/* Image Gallery */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="h-96 md:h-[500px] overflow-hidden rounded-lg">
+              <img
+                src={lodge.images[0]}
+                alt={lodge.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {lodge.images.slice(1).map((img: string, idx: number) => (
+                <div key={idx} className="h-44 md:h-60 overflow-hidden rounded-lg">
+                  <img
+                    src={img}
+                    alt={`${lodge.name} ${idx + 2}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground">
+                    {lodge.name}
+                  </h1>
+                  <div className="flex items-center space-x-2">
+                    <Star className="h-5 w-5 fill-golden text-golden" />
+                    <span className="font-semibold">{lodge.rating}</span>
+                    <span className="text-muted-foreground">({lodge.reviews} avaliações)</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center text-muted-foreground mb-6">
+                  <MapPin className="h-5 w-5 mr-2 text-accent" />
+                  {lodge.location}
+                </div>
+
+                <p className="text-lg text-foreground leading-relaxed">{lodge.description}</p>
+              </div>
+
+              {/* Amenities */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-2xl font-display font-semibold mb-4">Comodidades</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {lodge.amenities.map((amenity: string, idx: number) => (
+                      <div key={idx} className="flex items-center space-x-3">
+                        <Check className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span className="text-foreground">{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Experiences */}
+              <Card>
+                <CardContent className="p-6">
+                  <h2 className="text-2xl font-display font-semibold mb-4">
+                    Experiências Incluídas
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {lodge.experiences.map((exp: string, idx: number) => (
+                      <div key={idx} className="flex items-center space-x-3">
+                        <div className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />
+                        <span className="text-foreground">{exp}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Booking Sidebar */}
+            <div className="lg:col-span-1">
+              <Card className="sticky top-28 shadow-medium">
+                <CardContent className="p-6">
+                  <div className="mb-6">
+                    <div className="text-3xl font-bold text-primary mb-1">{lodge.price}</div>
+                    <div className="text-sm text-muted-foreground">por noite</div>
+                  </div>
+
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-center text-foreground">
+                      <Users className="h-5 w-5 mr-3 text-accent" />
+                      Até {lodge.guests} hóspedes
+                    </div>
+                  </div>
+
+                  <Button className="w-full bg-gradient-forest hover:opacity-90 h-12 text-lg mb-4">
+                    Reservar Agora
+                  </Button>
+
+                  <p className="text-xs text-center text-muted-foreground">
+                    Você não será cobrado ainda
+                  </p>
+
+                  <div className="border-t border-border mt-6 pt-6">
+                    <h3 className="font-semibold mb-3">Política de Cancelamento</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Cancelamento gratuito até 7 dias antes do check-in. Reembolso de 50% até 3
+                      dias antes.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default LodgeDetail;
