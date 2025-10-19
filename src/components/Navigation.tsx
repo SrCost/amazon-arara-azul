@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import logoAraraAzul from "@/assets/logo-arara-azul.jpg";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,9 +46,14 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-soft">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center space-x-2">
-            <h1 className="text-2xl md:text-3xl font-display font-bold text-primary">
-              Pousadas Amazônia
+          <Link to="/" className="flex items-center space-x-3">
+            <img 
+              src={logoAraraAzul} 
+              alt="Pousada Arara Azul" 
+              className="h-12 md:h-16 w-auto"
+            />
+            <h1 className="text-xl md:text-2xl font-display font-bold text-primary">
+              Pousada Arara Azul
             </h1>
           </Link>
 

@@ -8,87 +8,87 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Amazon-inspired natural palette */
-    --background: 40 30% 96%;
-    --foreground: 150 20% 15%;
+    /* Arara Azul color palette - inspired by the logo */
+    --background: 200 25% 97%;
+    --foreground: 210 100% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 150 20% 15%;
+    --card-foreground: 210 100% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 150 20% 15%;
+    --popover-foreground: 210 100% 15%;
 
-    /* Deep forest green - primary brand color */
-    --primary: 150 70% 25%;
-    --primary-foreground: 40 30% 98%;
-    --primary-light: 145 60% 40%;
+    /* Deep navy blue - primary brand color from logo */
+    --primary: 210 100% 20%;
+    --primary-foreground: 0 0% 100%;
+    --primary-light: 210 80% 35%;
 
-    /* Amazon river blue - accent color */
-    --secondary: 180 50% 45%;
-    --secondary-foreground: 0 0% 100%;
+    /* Bright cyan/turquoise - accent color from logo */
+    --secondary: 190 100% 45%;
+    --secondary-foreground: 210 100% 15%;
 
-    /* Earth tones */
-    --muted: 40 25% 92%;
-    --muted-foreground: 30 15% 45%;
+    /* Neutral tones */
+    --muted: 200 20% 92%;
+    --muted-foreground: 210 15% 45%;
 
-    --accent: 180 45% 55%;
-    --accent-foreground: 150 70% 15%;
+    --accent: 190 90% 50%;
+    --accent-foreground: 210 100% 15%;
 
-    /* Natural highlights */
-    --golden: 45 80% 60%;
-    --earth: 30 35% 35%;
+    /* Bright yellow from logo */
+    --golden: 48 100% 50%;
+    --earth: 210 50% 25%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 20% 85%;
-    --input: 40 20% 90%;
-    --ring: 150 70% 25%;
+    --border: 200 20% 85%;
+    --input: 200 20% 90%;
+    --ring: 210 100% 20%;
 
     --radius: 0.75rem;
 
-    /* Gradients */
-    --gradient-forest: linear-gradient(135deg, hsl(150 70% 25%) 0%, hsl(145 60% 40%) 100%);
-    --gradient-water: linear-gradient(135deg, hsl(180 50% 45%) 0%, hsl(190 55% 55%) 100%);
-    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(150 70% 15% / 0.6) 100%);
+    /* Gradients using Arara Azul colors */
+    --gradient-forest: linear-gradient(135deg, hsl(210 100% 20%) 0%, hsl(190 100% 45%) 100%);
+    --gradient-water: linear-gradient(135deg, hsl(190 100% 45%) 0%, hsl(190 90% 60%) 100%);
+    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(210 100% 15% / 0.6) 100%);
     
-    /* Shadows */
-    --shadow-soft: 0 4px 20px -2px hsl(150 70% 25% / 0.1);
-    --shadow-medium: 0 8px 30px -4px hsl(150 70% 25% / 0.15);
-    --shadow-strong: 0 12px 40px -6px hsl(150 70% 25% / 0.25);
+    /* Shadows with navy blue tint */
+    --shadow-soft: 0 4px 20px -2px hsl(210 100% 20% / 0.1);
+    --shadow-medium: 0 8px 30px -4px hsl(210 100% 20% / 0.15);
+    --shadow-strong: 0 12px 40px -6px hsl(210 100% 20% / 0.25);
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 150 25% 8%;
-    --foreground: 40 30% 95%;
+    --background: 210 35% 8%;
+    --foreground: 200 25% 95%;
 
-    --card: 150 20% 12%;
-    --card-foreground: 40 30% 95%;
+    --card: 210 30% 12%;
+    --card-foreground: 200 25% 95%;
 
-    --popover: 150 20% 12%;
-    --popover-foreground: 40 30% 95%;
+    --popover: 210 30% 12%;
+    --popover-foreground: 200 25% 95%;
 
-    --primary: 145 60% 45%;
-    --primary-foreground: 150 70% 10%;
+    --primary: 190 100% 45%;
+    --primary-foreground: 210 100% 10%;
 
-    --secondary: 180 45% 40%;
+    --secondary: 190 80% 40%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 150 15% 18%;
-    --muted-foreground: 40 20% 65%;
+    --muted: 210 20% 18%;
+    --muted-foreground: 200 15% 65%;
 
-    --accent: 180 50% 35%;
-    --accent-foreground: 40 30% 95%;
+    --accent: 190 90% 35%;
+    --accent-foreground: 200 25% 95%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 15% 22%;
-    --input: 150 15% 22%;
-    --ring: 145 60% 45%;
+    --border: 210 20% 22%;
+    --input: 210 20% 22%;
+    --ring: 190 100% 45%;
   }
 }
 
