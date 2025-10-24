@@ -1,45 +1,40 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Menu, X, Globe, User } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useAuth } from "@/contexts/AuthContext";
 import logoAraraAzul from "@/assets/logo-arara-azul.jpg";
+import { Button } from "./ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [lang, setLang] = useState<"pt" | "en">("pt");
+  const { t, i18n } = useTranslation();
+  const { user, signOut, isAdmin } = useAuth();
   const location = useLocation();
 
-  const translations = {
-    pt: {
-      home: "Início",
-      lodges: "Pousadas",
-      sustainability: "Sustentabilidade",
-      howToGet: "Como Chegar",
-      contact: "Contato",
-      reserve: "Reservar Agora",
-    },
-    en: {
-      home: "Home",
-      lodges: "Lodges",
-      sustainability: "Sustainability",
-      howToGet: "How to Get There",
-      contact: "Contact",
-      reserve: "Book Now",
-    },
-  };
-
-  const t = translations[lang];
-
-  const navLinks = [
-    { path: "/", label: t.home },
-    { path: "/pousadas", label: t.lodges },
-    { path: "/sustentabilidade", label: t.sustainability },
-    { path: "/como-chegar", label: t.howToGet },
-    { path: "/contato", label: t.contact },
+  const menuItems = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.lodges"), href: "/pousadas" },
+    { label: t("nav.sustainability"), href: "/sustentabilidade" },
+    { label: t("nav.howToGetThere"), href: "/como-chegar" },
+    { label: t("nav.contact"), href: "/contato" },
   ];
 
-  const toggleLanguage = () => {
-    setLang(lang === "pt" ? "en" : "pt");
+  const languages = [
+    { code: "pt", label: "Português" },
+    { code: "en", label: "English" },
+    { code: "es", label: "Español" },
+    { code: "fr", label: "Français" },
+  ];
+
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
   };
 
   return (
@@ -47,9 +42,9 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center space-x-3">
-            <img 
-              src={logoAraraAzul} 
-              alt="Pousada Arara Azul" 
+            <img
+              src={logoAraraAzul}
+              alt="Pousada Arara Azul"
               className="h-12 md:h-16 w-auto"
             />
             <h1 className="text-xl md:text-2xl font-display font-bold text-primary">
@@ -58,32 +53,75 @@ const Navigation = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navLinks.map((link) => (
+          <div className="hidden md:flex items-center space-x-6">
+            {menuItems.map((item) => (
               <Link
-                key={link.path}
-                to={link.path}
+                key={item.href}
+                to={item.href}
                 className={`text-sm font-medium transition-colors hover:text-primary ${
-                  location.pathname === link.path
+                  location.pathname === item.href
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
               >
-                {link.label}
+                {item.label}
               </Link>
             ))}
-            
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleLanguage}
-              className="text-muted-foreground hover:text-primary"
-            >
-              <Globe className="h-5 w-5" />
-            </Button>
+
+            {/* Language Selector */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="flex items-center space-x-1"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>{i18n.language.toUpperCase()}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                {languages.map((lang) => (
+                  <DropdownMenuItem
+                    key={lang.code}
+                    onClick={() => changeLanguage(lang.code)}
+                  >
+                    {lang.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* User Menu */}
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem asChild>
+                    <Link to="/minhas-reservas">{t("nav.myReservations")}</Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin">{t("nav.admin")}</Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={signOut}>
+                    {t("nav.logout")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/auth">{t("nav.login")}</Link>
+              </Button>
+            )}
 
             <Button variant="default" size="lg" asChild>
-              <Link to="/pousadas">{t.reserve}</Link>
+              <Link to="/pousadas">{t("hero.bookNow")}</Link>
             </Button>
           </div>
 
@@ -99,36 +137,94 @@ const Navigation = () => {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden py-4 border-t border-border">
-            <div className="flex flex-col space-y-4">
-              {navLinks.map((link) => (
+            <div className="flex flex-col space-y-3">
+              {menuItems.map((item) => (
                 <Link
-                  key={link.path}
-                  to={link.path}
+                  key={item.href}
+                  to={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`text-sm font-medium transition-colors hover:text-primary px-2 py-2 ${
-                    location.pathname === link.path
-                      ? "text-primary"
-                      : "text-muted-foreground"
-                  }`}
+                  className={`px-3 py-2 rounded-md text-base font-medium ${
+                    location.pathname === item.href
+                      ? "text-primary bg-muted"
+                      : "text-foreground hover:bg-muted"
+                  } transition-colors`}
                 >
-                  {link.label}
+                  {item.label}
                 </Link>
               ))}
-              
-              <div className="flex items-center justify-between px-2">
-                <Button
-                  variant="ghost"
-                  onClick={toggleLanguage}
-                  className="text-muted-foreground"
-                >
-                  <Globe className="h-5 w-5 mr-2" />
-                  {lang === "pt" ? "English" : "Português"}
-                </Button>
+
+              {/* Language Selector Mobile */}
+              <div className="border-t border-border pt-3 space-y-2">
+                <p className="px-3 text-sm font-semibold text-muted-foreground">
+                  {t("nav.language") || "Idioma"}
+                </p>
+                {languages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      changeLanguage(lang.code);
+                      setIsOpen(false);
+                    }}
+                    className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
+                      i18n.language === lang.code
+                        ? "bg-muted text-primary"
+                        : "text-foreground hover:bg-muted"
+                    } transition-colors`}
+                  >
+                    {lang.label}
+                  </button>
+                ))}
               </div>
 
-              <Button variant="default" size="lg" asChild className="w-full">
+              {/* User Menu Mobile */}
+              <div className="border-t border-border pt-3">
+                {user ? (
+                  <>
+                    <Link
+                      to="/minhas-reservas"
+                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      {t("nav.myReservations")}
+                    </Link>
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        {t("nav.admin")}
+                      </Link>
+                    )}
+                    <button
+                      onClick={() => {
+                        signOut();
+                        setIsOpen(false);
+                      }}
+                      className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      {t("nav.logout")}
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    to="/auth"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    {t("nav.login")}
+                  </Link>
+                )}
+              </div>
+
+              <Button
+                variant="default"
+                size="lg"
+                asChild
+                className="w-full mt-4"
+              >
                 <Link to="/pousadas" onClick={() => setIsOpen(false)}>
-                  {t.reserve}
+                  {t("hero.bookNow")}
                 </Link>
               </Button>
             </div>

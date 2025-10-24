@@ -3,13 +3,17 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import "@/i18n/config";
 import Index from "./pages/Index";
 import Lodges from "./pages/Lodges";
 import LodgeDetail from "./pages/LodgeDetail";
 import Sustainability from "./pages/Sustainability";
 import HowToGetThere from "./pages/HowToGetThere";
 import Contact from "./pages/Contact";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import FloatingSupportButton from "./components/FloatingSupportButton";
 
 const queryClient = new QueryClient();
 
@@ -19,16 +23,20 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/pousadas" element={<Lodges />} />
-          <Route path="/pousadas/:id" element={<LodgeDetail />} />
-          <Route path="/sustentabilidade" element={<Sustainability />} />
-          <Route path="/como-chegar" element={<HowToGetThere />} />
-          <Route path="/contato" element={<Contact />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/pousadas" element={<Lodges />} />
+            <Route path="/pousadas/:id" element={<LodgeDetail />} />
+            <Route path="/sustentabilidade" element={<Sustainability />} />
+            <Route path="/como-chegar" element={<HowToGetThere />} />
+            <Route path="/contato" element={<Contact />} />
+            <Route path="/auth" element={<Auth />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+          <FloatingSupportButton />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
