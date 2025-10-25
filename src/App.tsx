@@ -14,6 +14,10 @@ import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import FloatingSupportButton from "./components/FloatingSupportButton";
+import AdminLayout from "./pages/admin/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import Reservations from "./pages/admin/Reservations";
+import Messages from "./pages/admin/Messages";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +36,30 @@ const App = () => (
             <Route path="/como-chegar" element={<HowToGetThere />} />
             <Route path="/contato" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/admin"
+              element={
+                <AdminLayout>
+                  <Dashboard />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/reservations"
+              element={
+                <AdminLayout>
+                  <Reservations />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/messages"
+              element={
+                <AdminLayout>
+                  <Messages />
+                </AdminLayout>
+              }
+            />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
