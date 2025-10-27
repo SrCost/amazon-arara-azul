@@ -9,6 +9,8 @@ import {
   MessageSquare,
   LogOut,
   Home,
+  Users as UsersIcon,
+  DollarSign,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -26,7 +28,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return null;
   }
 
-  const menuItems = [
+  const baseMenuItems = [
     {
       icon: LayoutDashboard,
       label: t("admin.dashboard"),
@@ -43,6 +45,23 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       path: "/admin/messages",
     },
   ];
+
+  const superAdminItems = isSuperAdmin
+    ? [
+        {
+          icon: UsersIcon,
+          label: t("admin.users"),
+          path: "/admin/users",
+        },
+        {
+          icon: DollarSign,
+          label: "Pagamentos",
+          path: "/admin/payments",
+        },
+      ]
+    : [];
+
+  const menuItems = [...baseMenuItems, ...superAdminItems];
 
   const handleSignOut = async () => {
     await signOut();

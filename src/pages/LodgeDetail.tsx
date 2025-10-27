@@ -1,4 +1,6 @@
 import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MapPin,
   Users,
@@ -14,6 +16,8 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ReservationFlow from "@/components/ReservationFlow";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
@@ -21,6 +25,8 @@ import lodge4 from "@/assets/lodge-4.jpg";
 
 const LodgeDetail = () => {
   const { id } = useParams();
+  const { t } = useTranslation();
+  const [showReservation, setShowReservation] = useState(false);
 
   const lodgeData: { [key: string]: any } = {
     "canopy-retreat": {
@@ -69,7 +75,7 @@ const LodgeDetail = () => {
           <Button variant="ghost" asChild className="mb-6">
             <Link to="/pousadas">
               <ArrowLeft className="mr-2" />
-              Voltar para Pousadas
+              {t("lodge.backToLodges")}
             </Link>
           </Button>
 
@@ -106,7 +112,7 @@ const LodgeDetail = () => {
                   <div className="flex items-center space-x-2">
                     <Star className="h-5 w-5 fill-golden text-golden" />
                     <span className="font-semibold">{lodge.rating}</span>
-                    <span className="text-muted-foreground">({lodge.reviews} avaliações)</span>
+                    <span className="text-muted-foreground">({lodge.reviews} {t("lodge.reviews")})</span>
                   </div>
                 </div>
 
@@ -121,7 +127,7 @@ const LodgeDetail = () => {
               {/* Amenities */}
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-display font-semibold mb-4">Comodidades</h2>
+                  <h2 className="text-2xl font-display font-semibold mb-4">{t("lodge.amenities")}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {lodge.amenities.map((amenity: string, idx: number) => (
                       <div key={idx} className="flex items-center space-x-3">
@@ -137,7 +143,7 @@ const LodgeDetail = () => {
               <Card>
                 <CardContent className="p-6">
                   <h2 className="text-2xl font-display font-semibold mb-4">
-                    Experiências Incluídas
+                    {t("lodge.experiences")}
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {lodge.experiences.map((exp: string, idx: number) => (
@@ -157,29 +163,31 @@ const LodgeDetail = () => {
                 <CardContent className="p-6">
                   <div className="mb-6">
                     <div className="text-3xl font-bold text-primary mb-1">{lodge.price}</div>
-                    <div className="text-sm text-muted-foreground">por noite</div>
+                    <div className="text-sm text-muted-foreground">{t("common.perNight")}</div>
                   </div>
 
                   <div className="space-y-4 mb-6">
                     <div className="flex items-center text-foreground">
                       <Users className="h-5 w-5 mr-3 text-accent" />
-                      Até {lodge.guests} hóspedes
+                      {t("lodge.upTo")} {lodge.guests} {t("common.guests")}
                     </div>
                   </div>
 
-                  <Button className="w-full bg-gradient-forest hover:opacity-90 h-12 text-lg mb-4">
-                    Reservar Agora
+                  <Button 
+                    className="w-full bg-gradient-forest hover:opacity-90 h-12 text-lg mb-4"
+                    onClick={() => setShowReservation(true)}
+                  >
+                    {t("common.bookNow")}
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    Você não será cobrado ainda
+                    {t("lodge.notChargedYet")}
                   </p>
 
                   <div className="border-t border-border mt-6 pt-6">
-                    <h3 className="font-semibold mb-3">Política de Cancelamento</h3>
+                    <h3 className="font-semibold mb-3">{t("lodge.cancellationPolicy")}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Cancelamento gratuito até 7 dias antes do check-in. Reembolso de 50% até 3
-                      dias antes.
+                      {t("lodge.cancellationText")}
                     </p>
                   </div>
                 </CardContent>
@@ -190,6 +198,17 @@ const LodgeDetail = () => {
       </div>
 
       <Footer />
+
+      {/* Reservation Dialog */}
+      <Dialog open={showReservation} onOpenChange={setShowReservation}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <ReservationFlow 
+            lodgeName={lodge.name} 
+            pricePerNight={parseInt(lodge.price.replace(/[^\d]/g, ""))} 
+            onClose={() => setShowReservation(false)} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

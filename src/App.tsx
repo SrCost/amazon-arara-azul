@@ -18,6 +18,8 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Reservations from "./pages/admin/Reservations";
 import Messages from "./pages/admin/Messages";
+import Users from "./pages/admin/Users";
+import Payments from "./pages/admin/Payments";
 
 const queryClient = new QueryClient();
 
@@ -57,6 +59,22 @@ const App = () => (
               element={
                 <AdminLayout>
                   <Messages />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <AdminLayout>
+                  <Users />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/payments"
+              element={
+                <AdminLayout>
+                  <Payments />
                 </AdminLayout>
               }
             />
