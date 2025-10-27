@@ -39,7 +39,8 @@
     "next": "Próximo",
     "previous": "Anterior",
     "submit": "Enviar",
-    "close": "Fechar"
+    "close": "Fechar",
+    "welcome": "Bem-vindo ao Painel Administrativo"
   },
   "lodge": {
     "amenities": "Comodidades",

@@ -39,7 +39,8 @@
     "next": "Next",
     "previous": "Previous",
     "submit": "Submit",
-    "close": "Close"
+    "close": "Close",
+    "welcome": "Welcome to Admin Panel"
   },
   "lodge": {
     "amenities": "Amenities",

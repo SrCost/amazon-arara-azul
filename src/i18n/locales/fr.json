@@ -39,7 +39,8 @@
     "next": "Suivant",
     "previous": "Précédent",
     "submit": "Soumettre",
-    "close": "Fermer"
+    "close": "Fermer",
+    "welcome": "Bienvenue au Panneau d'Administration"
   },
   "lodge": {
     "amenities": "Équipements",

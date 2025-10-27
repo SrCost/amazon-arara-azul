@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowRight, Leaf, Shield, Heart } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -12,6 +13,7 @@ import lodge3 from "@/assets/lodge-3.jpg";
 import lodge4 from "@/assets/lodge-4.jpg";
 
 const Index = () => {
+  const { t } = useTranslation();
   const lodges = [
     {
       id: "canopy-retreat",
@@ -62,21 +64,18 @@ const Index = () => {
   const features = [
     {
       icon: Leaf,
-      title: "100% Sustentável",
-      description:
-        "Energia solar, tratamento de resíduos e arquitetura de baixo impacto ambiental",
+      title: t("home.sustainable"),
+      description: t("home.sustainableDesc"),
     },
     {
       icon: Shield,
-      title: "Conservação Ativa",
-      description:
-        "Parte da receita destinada à proteção da floresta e biodiversidade local",
+      title: t("home.conservation"),
+      description: t("home.conservationDesc"),
     },
     {
       icon: Heart,
-      title: "Comunidade Local",
-      description:
-        "Apoio direto às famílias ribeirinhas e valorização da cultura amazônica",
+      title: t("home.localCommunity"),
+      description: t("home.localCommunityDesc"),
     },
   ];
 
@@ -95,17 +94,16 @@ const Index = () => {
 
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in">
-            Viva a Amazônia com Responsabilidade
+            {t("home.heroTitle")}
           </h1>
           <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto text-balance">
-            Hospedagem ecológica em meio à maior floresta tropical do planeta. Uma imersão única
-            que une conforto, natureza e sustentabilidade.
+            {t("home.heroSubtitle")}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
               <Link to="/pousadas">
-                Explorar Pousadas
+                {t("home.exploreLodges")}
                 <ArrowRight className="ml-2" />
               </Link>
             </Button>
@@ -115,7 +113,7 @@ const Index = () => {
               className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
               asChild
             >
-              <Link to="/sustentabilidade">Nossa Missão</Link>
+              <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
             </Button>
           </div>
 
@@ -152,11 +150,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
-              Nossas Pousadas
+              {t("home.ourLodges")}
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Cada pousada oferece uma experiência autêntica, integrada à natureza e à cultura
-              local
+              {t("home.lodgesDescription")}
             </p>
           </div>
 
@@ -169,7 +166,7 @@ const Index = () => {
           <div className="text-center">
             <Button size="lg" variant="outline" asChild>
               <Link to="/pousadas">
-                Ver Todas as Pousadas
+                {t("home.viewAllLodges")}
                 <ArrowRight className="ml-2" />
               </Link>
             </Button>
@@ -181,18 +178,17 @@ const Index = () => {
       <section className="py-24 bg-gradient-forest text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-5xl font-display font-bold mb-6">
-            Pronto para Sua Aventura Amazônica?
+            {t("home.readyForAdventure")}
           </h2>
           <p className="text-lg mb-8 max-w-2xl mx-auto opacity-90">
-            Reserve agora e garanta sua experiência inesquecível em uma das regiões mais
-            biodiversas do mundo
+            {t("home.bookNowDescription")}
           </p>
           <Button
             size="lg"
             className="bg-white text-primary hover:bg-white/90 text-lg h-14 px-8"
             asChild
           >
-            <Link to="/contato">Entre em Contato</Link>
+            <Link to="/contato">{t("home.getInTouch")}</Link>
           </Button>
         </div>
       </section>
