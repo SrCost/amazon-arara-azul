@@ -30,10 +30,12 @@ const LodgeDetail = () => {
 
   const lodgeData: { [key: string]: any } = {
     "canopy-retreat": {
+      id: "00000000-0000-0000-0000-000000000001",
       name: "Canopy Retreat",
       location: "Reserva do Jaú, Amazonas",
       images: [lodge1, lodge2, lodge3],
       price: "R$ 850",
+      pricePerNight: 850,
       guests: 4,
       description:
         "O Canopy Retreat é um refúgio exclusivo projetado para oferecer uma experiência única de imersão na floresta amazônica. Construído com materiais sustentáveis e integrado harmoniosamente ao dossel da floresta, este lodge oferece vistas panorâmicas espetaculares, conforto moderno e uma conexão profunda com a natureza.",
@@ -204,7 +206,8 @@ const LodgeDetail = () => {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <ReservationFlow 
             lodgeName={lodge.name} 
-            pricePerNight={parseInt(lodge.price.replace(/[^\d]/g, ""))} 
+            pricePerNight={lodge.pricePerNight || parseInt(lodge.price.replace(/[^\d]/g, ""))}
+            roomId={lodge.id || id || ""}
             onClose={() => setShowReservation(false)} 
           />
         </DialogContent>

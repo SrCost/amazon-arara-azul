@@ -97,6 +97,7 @@
     "social": "Redes Sociais"
   },
   "reservation": {
+    "loginRequired": "Você precisa estar logado para fazer uma reserva",
     "title": "Reservar",
     "step1": "Escolha o Quarto",
     "step2": "Selecione as Datas",

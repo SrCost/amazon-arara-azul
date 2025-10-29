@@ -9,15 +9,82 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const SearchBar = () => {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
   const [lodgeType, setLodgeType] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
-  const handleSearch = () => {
-    console.log({ checkIn, checkOut, guests, lodgeType });
+  const handleSearch = async () => {
+    if (!checkIn || !checkOut || !guests || !lodgeType) {
+      toast({
+        title: t("common.error"),
+        description: "Preencha todos os campos para buscar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (new Date(checkIn) >= new Date(checkOut)) {
+      toast({
+        title: t("common.error"),
+        description: "A data de check-out deve ser após o check-in",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      // Check for conflicting reservations
+      const { data: reservations, error: reservationsError } = await supabase
+        .from("reservations")
+        .select("room_id, check_in, check_out")
+        .in("status", ["confirmed", "pending"])
+        .or(`check_in.lte.${checkOut},check_out.gte.${checkIn}`);
+
+      if (reservationsError) throw reservationsError;
+
+      const bookedRoomIds = reservations?.map((r) => r.room_id) || [];
+
+      // Get available rooms
+      const { data: rooms, error: roomsError } = await supabase
+        .from("rooms")
+        .select("*")
+        .eq("is_active", true)
+        .gte("max_guests", parseInt(guests))
+        .not("id", "in", `(${bookedRoomIds.length > 0 ? bookedRoomIds.join(",") : "00000000-0000-0000-0000-000000000000"})`);
+
+      if (roomsError) throw roomsError;
+
+      if (rooms && rooms.length > 0) {
+        navigate(`/lodges?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
+      } else {
+        toast({
+          title: "Indisponível",
+          description: "Esta pousada está indisponível para as datas selecionadas. Escolha outras datas ou outra acomodação.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Search error:", error);
+      toast({
+        title: t("common.error"),
+        description: "Erro ao buscar acomodações. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   return (
@@ -32,6 +99,7 @@ const SearchBar = () => {
             type="date"
             value={checkIn}
             onChange={(e) => setCheckIn(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
             className="w-full"
           />
         </div>
@@ -45,6 +113,7 @@ const SearchBar = () => {
             type="date"
             value={checkOut}
             onChange={(e) => setCheckOut(e.target.value)}
+            min={checkIn || new Date().toISOString().split('T')[0]}
             className="w-full"
           />
         </div>
@@ -90,9 +159,10 @@ const SearchBar = () => {
         <div className="flex items-end">
           <Button
             onClick={handleSearch}
+            disabled={isSearching}
             className="w-full h-10 bg-gradient-forest hover:opacity-90 transition-opacity"
           >
-            Buscar
+            {isSearching ? "Buscando..." : "Buscar"}
           </Button>
         </div>
       </div>

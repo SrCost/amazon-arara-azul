@@ -8,10 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Auth = () => {
   const { t } = useTranslation();
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, signOut } = useAuth();
+  const { toast } = useToast();
   
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -25,6 +28,33 @@ const Auth = () => {
     setLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
+      // Check if user is admin
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id);
+        
+        const isAdmin = roles?.some(r => r.role === "admin" || r.role === "super_admin");
+        
+        if (isAdmin) {
+          window.location.href = "/admin";
+        } else {
+          toast({
+            title: t("auth.accessDenied"),
+            description: "Acesso restrito a administradores",
+            variant: "destructive",
+          });
+          await signOut();
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: t("common.error"),
+        description: error.message || "Erro ao fazer login",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }

@@ -15,16 +15,21 @@ import {
 } from "@/components/ui/select";
 import { Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ReservationFlowProps {
   lodgeName: string;
   pricePerNight: number;
+  roomId: string;
   onClose: () => void;
 }
 
-const ReservationFlow = ({ lodgeName, pricePerNight, onClose }: ReservationFlowProps) => {
+const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: ReservationFlowProps) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
   const [guests, setGuests] = useState("2");
@@ -67,9 +72,59 @@ const ReservationFlow = ({ lodgeName, pricePerNight, onClose }: ReservationFlowP
     }
   };
 
-  const handleConfirm = () => {
-    toast.success(t("reservation.reservationSuccess"));
-    onClose();
+  const handleConfirm = async () => {
+    if (!user) {
+      toast.error("Você precisa estar logado para fazer uma reserva");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const totalPrice = calculateTotal();
+      
+      // Create reservation
+      const { data: reservation, error: reservationError } = await supabase
+        .from("reservations")
+        .insert({
+          user_id: user.id,
+          room_id: roomId,
+          check_in: checkIn?.toISOString().split('T')[0],
+          check_out: checkOut?.toISOString().split('T')[0],
+          guests: parseInt(guests),
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_phone: guestPhone,
+          special_requests: specialRequests,
+          payment_method: paymentMethod,
+          total_price: totalPrice,
+          status: "confirmed",
+          payment_status: "pending",
+        })
+        .select()
+        .single();
+
+      if (reservationError) throw reservationError;
+
+      // Create payment record
+      const { error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          reservation_id: reservation.id,
+          amount: totalPrice,
+          payment_method: paymentMethod,
+          status: "pending",
+        });
+
+      if (paymentError) throw paymentError;
+
+      toast.success(t("reservation.reservationSuccess"));
+      onClose();
+    } catch (error) {
+      console.error("Reservation error:", error);
+      toast.error("Erro ao criar reserva. Tente novamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -342,8 +397,12 @@ const ReservationFlow = ({ lodgeName, pricePerNight, onClose }: ReservationFlowP
                 <ChevronRight className="ml-2 h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={handleConfirm} className="bg-gradient-forest">
-                {t("reservation.confirmReservation")}
+              <Button 
+                onClick={handleConfirm} 
+                disabled={isSubmitting}
+                className="bg-gradient-forest"
+              >
+                {isSubmitting ? t("common.loading") : t("reservation.confirmReservation")}
               </Button>
             )}
           </div>
