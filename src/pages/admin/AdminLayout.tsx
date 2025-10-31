@@ -12,6 +12,7 @@ import {
   Users as UsersIcon,
   DollarSign,
 } from "lucide-react";
+import logoArara from "@/assets/logo-arara-azul.jpg";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -73,10 +74,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Sidebar */}
       <aside className="w-64 bg-card border-r border-border">
         <div className="p-6">
-          <h1 className="text-2xl font-display font-bold text-foreground mb-2">
-            Admin Panel
-          </h1>
-          <p className="text-sm text-muted-foreground">Pousadas Amazônia</p>
+          <div className="flex items-center gap-3 mb-2">
+            <img 
+              src={logoArara} 
+              alt="Pousada Arara Azul" 
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div>
+              <h1 className="text-xl font-display font-bold text-foreground">
+                Admin Panel
+              </h1>
+              <p className="text-xs text-muted-foreground">Pousada Arara Azul</p>
+            </div>
+          </div>
         </div>
 
         <nav className="px-4 space-y-2">
