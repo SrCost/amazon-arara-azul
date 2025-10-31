@@ -73,20 +73,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   };
 
   const handleConfirm = async () => {
-    if (!user) {
-      toast.error("Você precisa estar logado para fazer uma reserva");
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const totalPrice = calculateTotal();
       
-      // Create reservation
+      // Create reservation - allow guests without login
       const { data: reservation, error: reservationError } = await supabase
         .from("reservations")
         .insert({
-          user_id: user.id,
+          user_id: user?.id || null, // Optional user_id for guests
           room_id: roomId,
           check_in: checkIn?.toISOString().split('T')[0],
           check_out: checkOut?.toISOString().split('T')[0],
@@ -106,13 +101,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       if (reservationError) throw reservationError;
 
       // Create payment record
+      // TODO: Future integration with external payment API (Stripe, MercadoPago, etc.)
+      // This will be replaced with actual payment processing
       const { error: paymentError } = await supabase
         .from("payments")
         .insert({
           reservation_id: reservation.id,
           amount: totalPrice,
           payment_method: paymentMethod,
-          status: "pending",
+          status: "pending", // Will be updated by payment gateway webhook
         });
 
       if (paymentError) throw paymentError;

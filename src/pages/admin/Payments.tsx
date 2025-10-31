@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,50 +12,118 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, Eye, Download, CreditCard } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface Payment {
+  id: string;
+  reservation_id: string;
+  amount: number;
+  payment_method: string;
+  status: string;
+  payment_date: string;
+  created_at: string;
+  reservations?: {
+    guest_name: string;
+    guest_email: string;
+  };
+}
 
 const Payments = () => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
-  const payments = [
-    {
-      id: "PAY-001",
-      reservation: "RSV-001",
-      guest: "João Silva",
-      amount: "R$ 3.400",
-      method: "Cartão de Crédito",
-      status: "completed",
-      date: "2025-10-20",
-    },
-    {
-      id: "PAY-002",
-      reservation: "RSV-002",
-      guest: "Maria Santos",
-      amount: "R$ 3.600",
-      method: "PIX",
-      status: "pending",
-      date: "2025-10-22",
-    },
-    {
-      id: "PAY-003",
-      reservation: "RSV-003",
-      guest: "Pedro Costa",
-      amount: "R$ 4.750",
-      method: "PayPal",
-      status: "completed",
-      date: "2025-10-18",
-    },
-    {
-      id: "PAY-004",
-      reservation: "RSV-004",
-      guest: "Ana Lima",
-      amount: "R$ 6.000",
-      method: "Cartão de Crédito",
-      status: "refunded",
-      date: "2025-10-15",
-    },
-  ];
+  useEffect(() => {
+    fetchPayments();
+
+    // Setup realtime updates
+    const channel = supabase
+      .channel('payments-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'payments'
+        },
+        () => fetchPayments()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchPayments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("payments")
+        .select(`
+          *,
+          reservations (
+            guest_name,
+            guest_email
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPayments(data || []);
+    } catch (error) {
+      console.error("Error fetching payments:", error);
+      toast.error("Erro ao carregar pagamentos");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleView = (payment: Payment) => {
+    setSelectedPayment(payment);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleUpdateStatus = async (paymentId: string, newStatus: string) => {
+    try {
+      // TODO: When integrating with payment gateway (Stripe, MercadoPago, etc.)
+      // this will need to sync with the external payment provider
+      const { error } = await supabase
+        .from("payments")
+        .update({ status: newStatus })
+        .eq("id", paymentId);
+
+      if (error) throw error;
+
+      toast.success("Status do pagamento atualizado!");
+      fetchPayments();
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      toast.error("Erro ao atualizar status");
+    }
+  };
+
+  const handleDownloadReceipt = (payment: Payment) => {
+    // TODO: Implement PDF generation for receipt
+    toast.info("Funcionalidade de download de comprovante em desenvolvimento");
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: any } = {
@@ -70,18 +138,28 @@ const Payments = () => {
   };
 
   const filteredPayments = payments.filter(
-    (payment) =>
-      payment.guest.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.id.toLowerCase().includes(searchTerm.toLowerCase())
+    (payment) => {
+      const guestName = payment.reservations?.guest_name || "";
+      const guestEmail = payment.reservations?.guest_email || "";
+      return (
+        guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        guestEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.id.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
   );
 
   const totalCompleted = payments
     .filter((p) => p.status === "completed")
-    .reduce((sum, p) => sum + parseFloat(p.amount.replace(/[^\d,]/g, "").replace(",", ".")), 0);
+    .reduce((sum, p) => sum + Number(p.amount), 0);
 
   const totalPending = payments
     .filter((p) => p.status === "pending")
-    .reduce((sum, p) => sum + parseFloat(p.amount.replace(/[^\d,]/g, "").replace(",", ".")), 0);
+    .reduce((sum, p) => sum + Number(p.amount), 0);
+
+  if (loading) {
+    return <div className="p-8">Carregando...</div>;
+  }
 
   return (
     <div className="p-8 space-y-6">
@@ -100,7 +178,7 @@ const Payments = () => {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Total Recebido</p>
                 <p className="text-2xl font-bold text-foreground">
-                  R$ {totalCompleted.toFixed(2).replace(".", ",")}
+                  R$ {totalCompleted.toLocaleString()}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
@@ -116,7 +194,7 @@ const Payments = () => {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">{t("admin.pendingPayments")}</p>
                 <p className="text-2xl font-bold text-foreground">
-                  R$ {totalPending.toFixed(2).replace(".", ",")}
+                  R$ {totalPending.toLocaleString()}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
@@ -163,9 +241,8 @@ const Payments = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Reserva</TableHead>
                   <TableHead>Hóspede</TableHead>
+                  <TableHead>Reserva ID</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>{t("reservation.paymentMethod")}</TableHead>
                   <TableHead>{t("admin.status")}</TableHead>
@@ -176,19 +253,45 @@ const Payments = () => {
               <TableBody>
                 {filteredPayments.map((payment) => (
                   <TableRow key={payment.id}>
-                    <TableCell className="font-medium">{payment.id}</TableCell>
-                    <TableCell>{payment.reservation}</TableCell>
-                    <TableCell>{payment.guest}</TableCell>
-                    <TableCell className="font-medium">{payment.amount}</TableCell>
-                    <TableCell>{payment.method}</TableCell>
-                    <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                    <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
+                    <TableCell className="font-medium">
+                      {payment.reservations?.guest_name || "N/A"}
+                    </TableCell>
+                    <TableCell className="font-mono text-sm">{payment.reservation_id.slice(0, 8)}...</TableCell>
+                    <TableCell className="font-medium">R$ {Number(payment.amount).toLocaleString()}</TableCell>
+                    <TableCell>{payment.payment_method}</TableCell>
+                    <TableCell>
+                      <Select 
+                        value={payment.status}
+                        onValueChange={(value) => handleUpdateStatus(payment.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue>{getStatusBadge(payment.status)}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pendente</SelectItem>
+                          <SelectItem value="completed">Concluído</SelectItem>
+                          <SelectItem value="failed">Falhou</SelectItem>
+                          <SelectItem value="refunded">Reembolsado</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>{new Date(payment.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleView(payment)}
+                          title="Visualizar"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleDownloadReceipt(payment)}
+                          title="Baixar comprovante"
+                        >
                           <Download className="h-4 w-4" />
                         </Button>
                       </div>
@@ -200,6 +303,53 @@ const Payments = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes do Pagamento</DialogTitle>
+          </DialogHeader>
+          {selectedPayment && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Hóspede</p>
+                <p className="font-medium">{selectedPayment.reservations?.guest_name || "N/A"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">E-mail</p>
+                <p className="font-medium">{selectedPayment.reservations?.guest_email || "N/A"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">ID da Reserva</p>
+                <p className="font-mono text-sm">{selectedPayment.reservation_id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Valor</p>
+                <p className="font-medium text-lg">R$ {Number(selectedPayment.amount).toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Método de Pagamento</p>
+                <p className="font-medium">{selectedPayment.payment_method}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Status</p>
+                <div className="mt-1">{getStatusBadge(selectedPayment.status)}</div>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Data de Criação</p>
+                <p className="font-medium">{new Date(selectedPayment.created_at).toLocaleString()}</p>
+              </div>
+              <div className="pt-4 border-t text-sm text-muted-foreground">
+                {/* Future payment gateway integration point */}
+                <p className="italic">
+                  Nota: Integração com gateway de pagamento (Stripe, MercadoPago) será implementada para processamento automático.
+                </p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

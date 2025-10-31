@@ -48,30 +48,41 @@ const SearchBar = () => {
       // Check for conflicting reservations
       const { data: reservations, error: reservationsError } = await supabase
         .from("reservations")
-        .select("room_id, check_in, check_out")
+        .select("room_id")
         .in("status", ["confirmed", "pending"])
-        .or(`check_in.lte.${checkOut},check_out.gte.${checkIn}`);
+        .or(`and(check_in.lte.${checkOut},check_out.gte.${checkIn})`);
 
       if (reservationsError) throw reservationsError;
 
       const bookedRoomIds = reservations?.map((r) => r.room_id) || [];
 
-      // Get available rooms
-      const { data: rooms, error: roomsError } = await supabase
+      // Build query for available rooms
+      let query = supabase
         .from("rooms")
         .select("*")
         .eq("is_active", true)
-        .gte("max_guests", parseInt(guests))
-        .not("id", "in", `(${bookedRoomIds.length > 0 ? bookedRoomIds.join(",") : "00000000-0000-0000-0000-000000000000"})`);
+        .gte("max_guests", parseInt(guests));
+
+      // Exclude booked rooms
+      if (bookedRoomIds.length > 0) {
+        query = query.not("id", "in", `(${bookedRoomIds.join(",")})`);
+      }
+
+      const { data: rooms, error: roomsError } = await query;
 
       if (roomsError) throw roomsError;
 
       if (rooms && rooms.length > 0) {
-        navigate(`/lodges?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
+        // Navigate to lodges page with search params
+        navigate(`/lodges?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&type=${lodgeType}`);
+        toast({
+          title: "Busca realizada!",
+          description: `${rooms.length} acomodação(ões) disponível(is) para suas datas.`,
+        });
       } else {
         toast({
           title: "Indisponível",
-          description: "Esta pousada está indisponível para as datas selecionadas. Escolha outras datas ou outra acomodação.",
+          description: "Nenhuma acomodação disponível para as datas selecionadas. Escolha outras datas ou reduza o número de hóspedes.",
           variant: "destructive",
         });
       }

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,41 +12,132 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Eye, Mail, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, Eye, Mail, Trash2, MessageCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+interface Message {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+  status: string;
+  created_at: string;
+}
 
 const Messages = () => {
   const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
 
-  const messages = [
-    {
-      id: "MSG-001",
-      name: "Carlos Ferreira",
-      email: "carlos@email.com",
-      phone: "+55 11 98765-4321",
-      message: "Gostaria de saber sobre disponibilidade para dezembro...",
-      status: "new",
-      date: "2025-10-25",
-    },
-    {
-      id: "MSG-002",
-      name: "Juliana Oliveira",
-      email: "juliana@email.com",
-      phone: "+55 21 98765-1234",
-      message: "Preciso de informações sobre transfer do aeroporto...",
-      status: "read",
-      date: "2025-10-24",
-    },
-    {
-      id: "MSG-003",
-      name: "Roberto Alves",
-      email: "roberto@email.com",
-      phone: "+55 31 98765-5678",
-      message: "Vocês aceitam grupos de 10 pessoas?",
-      status: "replied",
-      date: "2025-10-23",
-    },
-  ];
+  useEffect(() => {
+    fetchMessages();
+
+    // Setup realtime updates
+    const channel = supabase
+      .channel('messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contact_messages'
+        },
+        () => fetchMessages()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const fetchMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("contact_messages")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      toast.error("Erro ao carregar mensagens");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleView = (message: Message) => {
+    setSelectedMessage(message);
+    setIsViewDialogOpen(true);
+    
+    // Mark as read when viewing
+    if (message.status === 'new') {
+      handleUpdateStatus(message.id, 'read');
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, status: string) => {
+    try {
+      const { error } = await supabase
+        .from("contact_messages")
+        .update({ status })
+        .eq("id", id);
+
+      if (error) throw error;
+      fetchMessages();
+    } catch (error) {
+      console.error("Error updating message status:", error);
+      toast.error("Erro ao atualizar status");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta mensagem?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("contact_messages")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Mensagem excluída com sucesso!");
+      fetchMessages();
+    } catch (error) {
+      console.error("Error deleting message:", error);
+      toast.error("Erro ao excluir mensagem");
+    }
+  };
+
+  const handleContactEmail = (email: string) => {
+    window.location.href = `mailto:${email}`;
+  };
+
+  const handleContactWhatsApp = (phone: string, name: string) => {
+    const message = encodeURIComponent(`Olá ${name}, recebemos sua mensagem e gostaríamos de responder.`);
+    window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
+  };
 
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: any } = {
@@ -64,6 +155,10 @@ const Messages = () => {
       msg.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       msg.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return <div className="p-8">Carregando...</div>;
+  }
 
   return (
     <div className="p-8 space-y-6">
@@ -92,7 +187,6 @@ const Messages = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>{t("contact.name")}</TableHead>
                   <TableHead>{t("contact.email")}</TableHead>
                   <TableHead>{t("contact.phone")}</TableHead>
@@ -105,23 +199,61 @@ const Messages = () => {
               <TableBody>
                 {filteredMessages.map((message) => (
                   <TableRow key={message.id}>
-                    <TableCell className="font-medium">{message.id}</TableCell>
-                    <TableCell>{message.name}</TableCell>
+                    <TableCell className="font-medium">{message.name}</TableCell>
                     <TableCell>{message.email}</TableCell>
-                    <TableCell>{message.phone}</TableCell>
+                    <TableCell>{message.phone || "N/A"}</TableCell>
                     <TableCell className="max-w-xs truncate">{message.message}</TableCell>
-                    <TableCell>{getStatusBadge(message.status)}</TableCell>
-                    <TableCell>{new Date(message.date).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Select 
+                        value={message.status} 
+                        onValueChange={(value) => handleUpdateStatus(message.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue>{getStatusBadge(message.status)}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">Nova</SelectItem>
+                          <SelectItem value="read">Lida</SelectItem>
+                          <SelectItem value="replied">Respondida</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>{new Date(message.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => handleView(message)}
+                          title="Visualizar"
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="ghost">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleContactEmail(message.email)}
+                          title="Responder por e-mail"
+                        >
                           <Mail className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="ghost">
-                          <Trash2 className="h-4 w-4" />
+                        {message.phone && (
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => handleContactWhatsApp(message.phone!, message.name)}
+                            title="Responder por WhatsApp"
+                          >
+                            <MessageCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleDelete(message.id)}
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </div>
                     </TableCell>
@@ -132,6 +264,41 @@ const Messages = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes da Mensagem</DialogTitle>
+          </DialogHeader>
+          {selectedMessage && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Nome</p>
+                <p className="font-medium">{selectedMessage.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">E-mail</p>
+                <p className="font-medium">{selectedMessage.email}</p>
+              </div>
+              {selectedMessage.phone && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Telefone</p>
+                  <p className="font-medium">{selectedMessage.phone}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-sm text-muted-foreground">Data</p>
+                <p className="font-medium">{new Date(selectedMessage.created_at).toLocaleString()}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Mensagem</p>
+                <p className="font-medium whitespace-pre-wrap">{selectedMessage.message}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

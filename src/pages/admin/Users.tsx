@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,46 +19,165 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Edit, Trash2, UserPlus } from "lucide-react";
+import { Search, Edit, Trash2, UserPlus, Shield } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface UserProfile {
+  id: string;
+  email: string;
+  full_name?: string;
+  phone?: string;
+  created_at: string;
+}
+
+interface UserRole {
+  id: string;
+  user_id: string;
+  role: 'super_admin' | 'admin' | 'user';
+}
 
 const Users = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+  const [users, setUsers] = useState<(UserProfile & { role: string })[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserProfile & { role: string } | null>(null);
+  const [newUser, setNewUser] = useState({
+    email: "",
+    password: "",
+    full_name: "",
+    role: "user" as 'super_admin' | 'admin' | 'user',
+  });
 
-  const users = [
-    {
-      id: "USR-001",
-      name: "João Silva",
-      email: "joao@email.com",
-      role: "user",
-      status: "active",
-      created: "2025-01-15",
-    },
-    {
-      id: "USR-002",
-      name: "Maria Santos",
-      email: "maria@email.com",
-      role: "admin",
-      status: "active",
-      created: "2025-02-10",
-    },
-    {
-      id: "USR-003",
-      name: "Pedro Costa",
-      email: "pedro@email.com",
-      role: "user",
-      status: "inactive",
-      created: "2025-03-05",
-    },
-  ];
+  useEffect(() => {
+    checkUserRole();
+    fetchUsers();
+  }, []);
+
+  const checkUserRole = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+
+    setIsSuperAdmin(data?.role === 'super_admin');
+  };
+
+  const fetchUsers = async () => {
+    try {
+      // Fetch profiles
+      const { data: profiles, error: profilesError } = await supabase
+        .from("profiles")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (profilesError) throw profilesError;
+
+      // Fetch roles for each user
+      const { data: roles, error: rolesError } = await supabase
+        .from("user_roles")
+        .select("*");
+
+      if (rolesError) throw rolesError;
+
+      // Combine data
+      const usersWithRoles = profiles?.map(profile => {
+        const userRole = roles?.find(r => r.user_id === profile.id);
+        return {
+          ...profile,
+          role: userRole?.role || 'user'
+        };
+      }) || [];
+
+      setUsers(usersWithRoles);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Erro ao carregar usuários");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateUser = async () => {
+    if (!isSuperAdmin) {
+      toast.error("Apenas super administradores podem criar usuários");
+      return;
+    }
+
+    try {
+      // Create user in Supabase Auth (requires service role - will be handled by backend)
+      // For now, we'll show a message about implementing this with Edge Functions
+      toast.error("Criação de usuários requer implementação de Edge Function");
+      
+      // TODO: Implement user creation via Edge Function with service role
+      // This should call an edge function that uses service role to create user
+      
+      setIsAddDialogOpen(false);
+      setNewUser({ email: "", password: "", full_name: "", role: "user" });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      toast.error("Erro ao criar usuário");
+    }
+  };
+
+  const handleUpdateRole = async (userId: string, newRole: 'super_admin' | 'admin' | 'user') => {
+    if (!isSuperAdmin) {
+      toast.error("Apenas super administradores podem alterar funções");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("user_roles")
+        .update({ role: newRole })
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      toast.success("Função atualizada com sucesso!");
+      fetchUsers();
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast.error("Erro ao atualizar função");
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!isSuperAdmin) {
+      toast.error("Apenas super administradores podem excluir usuários");
+      return;
+    }
+
+    if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+
+    try {
+      // Delete user requires service role - needs Edge Function
+      toast.error("Exclusão de usuários requer implementação de Edge Function");
+      
+      // TODO: Implement user deletion via Edge Function with service role
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Erro ao excluir usuário");
+    }
+  };
 
   const getRoleBadge = (role: string) => {
     const variants: { [key: string]: any } = {
@@ -71,19 +190,31 @@ const Users = () => {
     return <Badge className={variant.className}>{variant.label}</Badge>;
   };
 
-  const getStatusBadge = (status: string) => {
-    return status === "active" ? (
-      <Badge className="bg-green-100 text-green-800">Ativo</Badge>
-    ) : (
-      <Badge className="bg-gray-100 text-gray-800">Inativo</Badge>
-    );
-  };
-
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (loading) {
+    return <div className="p-8">Carregando...</div>;
+  }
+
+  if (!isSuperAdmin) {
+    return (
+      <div className="p-8">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Shield className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-bold mb-2">Acesso Restrito</h2>
+            <p className="text-muted-foreground">
+              Apenas super administradores podem gerenciar usuários.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 space-y-6">
@@ -94,7 +225,7 @@ const Users = () => {
           </h1>
           <p className="text-muted-foreground">Gerencie usuários e permissões</p>
         </div>
-        <Dialog>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-forest">
               <UserPlus className="h-4 w-4 mr-2" />
@@ -108,15 +239,27 @@ const Users = () => {
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label>{t("contact.name")}</Label>
-                <Input placeholder="Nome completo" />
+                <Input 
+                  placeholder="Nome completo" 
+                  value={newUser.full_name}
+                  onChange={(e) => setNewUser({...newUser, full_name: e.target.value})}
+                />
               </div>
               <div className="space-y-2">
                 <Label>{t("contact.email")}</Label>
-                <Input type="email" placeholder="email@exemplo.com" />
+                <Input 
+                  type="email" 
+                  placeholder="email@exemplo.com" 
+                  value={newUser.email}
+                  onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                />
               </div>
               <div className="space-y-2">
                 <Label>{t("admin.role")}</Label>
-                <Select>
+                <Select 
+                  value={newUser.role}
+                  onValueChange={(value: any) => setNewUser({...newUser, role: value})}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o papel" />
                   </SelectTrigger>
@@ -129,10 +272,18 @@ const Users = () => {
               </div>
               <div className="space-y-2">
                 <Label>{t("auth.password")}</Label>
-                <Input type="password" placeholder="••••••••" />
+                <Input 
+                  type="password" 
+                  placeholder="••••••••" 
+                  value={newUser.password}
+                  onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                />
               </div>
-              <Button className="w-full bg-gradient-forest">Criar Usuário</Button>
             </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleCreateUser} className="bg-gradient-forest">Criar Usuário</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
@@ -155,11 +306,9 @@ const Users = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>ID</TableHead>
                   <TableHead>{t("contact.name")}</TableHead>
                   <TableHead>{t("contact.email")}</TableHead>
                   <TableHead>{t("admin.role")}</TableHead>
-                  <TableHead>{t("admin.status")}</TableHead>
                   <TableHead>Data de Cadastro</TableHead>
                   <TableHead className="text-right">{t("admin.actions")}</TableHead>
                 </TableRow>
@@ -167,19 +316,33 @@ const Users = () => {
               <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.id}</TableCell>
-                    <TableCell>{user.name}</TableCell>
+                    <TableCell className="font-medium">{user.full_name || "N/A"}</TableCell>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell>{getRoleBadge(user.role)}</TableCell>
-                    <TableCell>{getStatusBadge(user.status)}</TableCell>
-                    <TableCell>{new Date(user.created).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Select 
+                        value={user.role}
+                        onValueChange={(value: any) => handleUpdateRole(user.id, value)}
+                      >
+                        <SelectTrigger className="w-40">
+                          <SelectValue>{getRoleBadge(user.role)}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">Usuário</SelectItem>
+                          <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
-                        <Button size="sm" variant="ghost">
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          <Trash2 className="h-4 w-4" />
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => handleDeleteUser(user.id)}
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
                         </Button>
                       </div>
                     </TableCell>
