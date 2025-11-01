@@ -132,7 +132,7 @@ export type Database = {
           status: string | null
           total_price: number
           updated_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           check_in: string
@@ -150,7 +150,7 @@ export type Database = {
           status?: string | null
           total_price: number
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           check_in?: string
@@ -168,7 +168,7 @@ export type Database = {
           status?: string | null
           total_price?: number
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {

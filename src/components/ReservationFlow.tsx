@@ -73,51 +73,109 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   };
 
   const handleConfirm = async () => {
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
+
+      // Validate required fields
+      if (!checkIn || !checkOut) {
+        toast.error("Por favor, selecione as datas de check-in e check-out");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!guestName || !guestEmail || !guestPhone) {
+        toast.error("Por favor, preencha todos os dados pessoais");
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!paymentMethod) {
+        toast.error("Por favor, selecione um método de pagamento");
+        setIsSubmitting(false);
+        return;
+      }
+
       const totalPrice = calculateTotal();
-      
-      // Create reservation - allow guests without login
+
+      // Create reservation record - guests don't need to be logged in
+      const reservationData = {
+        room_id: roomId,
+        user_id: user?.id || null, // Allow null for non-logged users
+        guest_name: guestName,
+        guest_email: guestEmail,
+        guest_phone: guestPhone,
+        check_in: checkIn?.toISOString().split('T')[0],
+        check_out: checkOut?.toISOString().split('T')[0],
+        guests: parseInt(guests),
+        total_price: totalPrice,
+        status: "pending",
+        payment_status: "pending",
+        payment_method: paymentMethod,
+        special_requests: specialRequests || null,
+      };
+
       const { data: reservation, error: reservationError } = await supabase
         .from("reservations")
-        .insert({
-          user_id: user?.id || null, // Optional user_id for guests
-          room_id: roomId,
-          check_in: checkIn?.toISOString().split('T')[0],
-          check_out: checkOut?.toISOString().split('T')[0],
-          guests: parseInt(guests),
-          guest_name: guestName,
-          guest_email: guestEmail,
-          guest_phone: guestPhone,
-          special_requests: specialRequests,
-          payment_method: paymentMethod,
-          total_price: totalPrice,
-          status: "confirmed",
-          payment_status: "pending",
-        })
+        .insert(reservationData)
         .select()
         .single();
 
       if (reservationError) throw reservationError;
 
       // Create payment record
-      // TODO: Future integration with external payment API (Stripe, MercadoPago, etc.)
-      // This will be replaced with actual payment processing
+      const paymentData = {
+        reservation_id: reservation.id,
+        amount: totalPrice,
+        payment_method: paymentMethod,
+        status: "pending",
+      };
+
       const { error: paymentError } = await supabase
         .from("payments")
-        .insert({
-          reservation_id: reservation.id,
-          amount: totalPrice,
-          payment_method: paymentMethod,
-          status: "pending", // Will be updated by payment gateway webhook
-        });
+        .insert(paymentData);
 
       if (paymentError) throw paymentError;
 
-      toast.success(t("reservation.reservationSuccess"));
+      // ====== FUTURE INTEGRATION POINT - External Payment Gateway ======
+      // This is where payment processing with external API should be implemented
+      // 
+      // Suggested implementation flow:
+      // 1. Initialize payment with gateway (Stripe, MercadoPago, PagSeguro, etc.)
+      // 2. Redirect user to secure payment page or show payment modal
+      // 3. Handle payment callback/webhook from gateway
+      // 4. Update reservation and payment status accordingly
+      // 
+      // Example implementation with Stripe:
+      // const paymentResult = await initializeStripePayment({
+      //   amount: totalPrice,
+      //   reservationId: reservation.id,
+      //   customerEmail: guestEmail,
+      //   customerName: guestName
+      // });
+      // 
+      // if (paymentResult.status === 'success') {
+      //   await supabase.from('payments').update({ 
+      //     status: 'completed' 
+      //   }).eq('id', paymentResult.paymentId);
+      //   
+      //   await supabase.from('reservations').update({ 
+      //     payment_status: 'paid',
+      //     status: 'confirmed'
+      //   }).eq('id', reservation.id);
+      // }
+      // ================================================================
+
+      console.log("Reservation created successfully:", {
+        reservationId: reservation.id,
+        guestName,
+        totalPrice,
+        paymentMethod
+      });
+
+      toast.success("Reserva criada com sucesso! Você receberá um e-mail de confirmação.");
       onClose();
     } catch (error) {
-      console.error("Reservation error:", error);
+      console.error("Error creating reservation:", error);
       toast.error("Erro ao criar reserva. Tente novamente.");
     } finally {
       setIsSubmitting(false);

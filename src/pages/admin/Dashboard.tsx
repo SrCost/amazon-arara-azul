@@ -51,8 +51,13 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Get total reservations
+      // Get total reservations (all status)
       const { count: reservationsCount } = await supabase
+        .from("reservations")
+        .select("*", { count: "exact", head: true });
+
+      // Get confirmed reservations for occupancy
+      const { count: confirmedReservationsCount } = await supabase
         .from("reservations")
         .select("*", { count: "exact", head: true })
         .eq("status", "confirmed");
@@ -75,15 +80,16 @@ const Dashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("status", "new");
 
-      // Get recent reservations for activity
+      // Get recent reservations for activity (últimas 5 ações)
       const { data: recentReservations } = await supabase
         .from("reservations")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(5);
 
-      const occupancy = roomsCount && reservationsCount 
-        ? Math.round((reservationsCount / roomsCount) * 100) 
+      // Calculate occupancy rate: (confirmed reservations ÷ total rooms) × 100
+      const occupancy = roomsCount && confirmedReservationsCount 
+        ? Math.round((confirmedReservationsCount / roomsCount) * 100) 
         : 0;
 
       setStats({
@@ -93,20 +99,35 @@ const Dashboard = () => {
         newMessages: messagesCount || 0,
       });
 
-      // Format recent activity
+      // Format recent activity with proper status translation
       if (recentReservations) {
-        const activity = recentReservations.map((res) => ({
-          action: res.status === "confirmed" ? "Nova reserva" : "Reserva atualizada",
-          user: res.guest_name,
-          time: new Date(res.created_at).toLocaleDateString("pt-BR", {
-            day: "2-digit",
-            month: "short",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        }));
+        const activity = recentReservations.map((res) => {
+          let action = "Reserva atualizada";
+          if (res.status === "confirmed") action = "Nova reserva confirmada";
+          else if (res.status === "pending") action = "Nova reserva pendente";
+          else if (res.status === "cancelled") action = "Reserva cancelada";
+          
+          return {
+            action,
+            user: res.guest_name,
+            time: new Date(res.created_at).toLocaleDateString("pt-BR", {
+              day: "2-digit",
+              month: "short",
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          };
+        });
         setRecentActivity(activity);
       }
+
+      console.log("Dashboard data loaded:", {
+        totalReservations: reservationsCount,
+        confirmedReservations: confirmedReservationsCount,
+        occupancyRate: occupancy,
+        pendingPayments: pendingPaymentsCount,
+        newMessages: messagesCount
+      });
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {

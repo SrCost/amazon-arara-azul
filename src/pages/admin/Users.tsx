@@ -76,9 +76,12 @@ const Users = () => {
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
-    setIsSuperAdmin(data?.role === 'super_admin');
+    const isSuper = data?.role === 'super_admin';
+    setIsSuperAdmin(isSuper);
+
+    console.log("User role checked:", { userId: user.id, role: data?.role, isSuperAdmin: isSuper });
   };
 
   const fetchUsers = async () => {
@@ -139,8 +142,9 @@ const Users = () => {
   };
 
   const handleUpdateRole = async (userId: string, newRole: 'super_admin' | 'admin' | 'user') => {
+    // SECURITY: Only super_admin can update roles
     if (!isSuperAdmin) {
-      toast.error("Apenas super administradores podem alterar funções");
+      toast.error("Apenas Super Administradores podem alterar funções de usuários");
       return;
     }
 
@@ -152,8 +156,9 @@ const Users = () => {
 
       if (error) throw error;
 
-      toast.success("Função atualizada com sucesso!");
+      toast.success("Função atualizada com sucesso");
       fetchUsers();
+      console.log("Role updated:", { userId, newRole });
     } catch (error) {
       console.error("Error updating role:", error);
       toast.error("Erro ao atualizar função");

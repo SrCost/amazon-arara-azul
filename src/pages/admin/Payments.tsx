@@ -103,8 +103,6 @@ const Payments = () => {
 
   const handleUpdateStatus = async (paymentId: string, newStatus: string) => {
     try {
-      // TODO: When integrating with payment gateway (Stripe, MercadoPago, etc.)
-      // this will need to sync with the external payment provider
       const { error } = await supabase
         .from("payments")
         .update({ status: newStatus })
@@ -112,17 +110,35 @@ const Payments = () => {
 
       if (error) throw error;
 
-      toast.success("Status do pagamento atualizado!");
+      // FUTURE INTEGRATION: When payment gateway is integrated, this should also
+      // trigger a webhook to update the payment status in the external system
+      // Example: await updatePaymentGatewayStatus(paymentId, newStatus);
+      // Suggested APIs: Stripe, MercadoPago, PagSeguro
+      // Implementation point: Create edge function to handle payment webhooks
+
+      toast.success("Status do pagamento atualizado");
       fetchPayments();
+      console.log("Payment status updated:", { paymentId, newStatus });
     } catch (error) {
       console.error("Error updating payment status:", error);
-      toast.error("Erro ao atualizar status");
+      toast.error("Erro ao atualizar status do pagamento");
     }
   };
 
   const handleDownloadReceipt = (payment: Payment) => {
-    // TODO: Implement PDF generation for receipt
-    toast.info("Funcionalidade de download de comprovante em desenvolvimento");
+    // FUTURE IMPLEMENTATION: Generate PDF receipt
+    // This will require a PDF generation library like jsPDF or pdfmake
+    // Example implementation:
+    // import jsPDF from 'jspdf';
+    // const doc = new jsPDF();
+    // doc.text(`Comprovante de Pagamento - Pousada Arara Azul`, 20, 20);
+    // doc.text(`Reserva: ${payment.reservations?.guest_name}`, 20, 30);
+    // doc.text(`Valor: R$ ${payment.amount}`, 20, 40);
+    // doc.text(`Data: ${new Date(payment.created_at).toLocaleString()}`, 20, 50);
+    // doc.save(`comprovante-${payment.id}.pdf`);
+    
+    toast.info("Funcionalidade de download em desenvolvimento");
+    console.log("Receipt download requested for payment:", payment.id);
   };
 
   const getStatusBadge = (status: string) => {
