@@ -136,33 +136,68 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
       if (paymentError) throw paymentError;
 
-      // ====== FUTURE INTEGRATION POINT - External Payment Gateway ======
-      // This is where payment processing with external API should be implemented
+      // ====== FUTURE INTEGRATION POINT - BANCO CAIXA ======
+      // This is where automatic payment processing with Banco Caixa will be implemented
       // 
-      // Suggested implementation flow:
-      // 1. Initialize payment with gateway (Stripe, MercadoPago, PagSeguro, etc.)
-      // 2. Redirect user to secure payment page or show payment modal
-      // 3. Handle payment callback/webhook from gateway
-      // 4. Update reservation and payment status accordingly
-      // 
-      // Example implementation with Stripe:
-      // const paymentResult = await initializeStripePayment({
-      //   amount: totalPrice,
-      //   reservationId: reservation.id,
-      //   customerEmail: guestEmail,
-      //   customerName: guestName
+      // BANCO CAIXA INTEGRATION REQUIREMENTS:
+      // API Endpoint: https://api.caixa.gov.br/payments/v1 (exemplo)
+      // Authentication: Bearer token from Banco Caixa credentials
+      // Required credentials: BANCO_CAIXA_CLIENT_ID, BANCO_CAIXA_SECRET_KEY
+      //
+      // IMPLEMENTATION FLOW:
+      // 1. Create Edge Function: /supabase/functions/banco-caixa-payment/index.ts
+      // 2. Store Banco Caixa credentials in Supabase secrets
+      // 3. Call the edge function from here to initialize payment
+      // 4. Receive payment response and update database accordingly
+      //
+      // EXPECTED API CALL STRUCTURE:
+      // const response = await fetch(`${SUPABASE_URL}/functions/v1/banco-caixa-payment`, {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${session.access_token}`
+      //   },
+      //   body: JSON.stringify({
+      //     reservation_id: reservation.id,
+      //     payment_id: paymentData.id,
+      //     amount: totalPrice,
+      //     customer: {
+      //       name: guestName,
+      //       email: guestEmail,
+      //       phone: guestPhone
+      //     },
+      //     payment_method: paymentMethod
+      //   })
       // });
-      // 
-      // if (paymentResult.status === 'success') {
-      //   await supabase.from('payments').update({ 
-      //     status: 'completed' 
-      //   }).eq('id', paymentResult.paymentId);
-      //   
-      //   await supabase.from('reservations').update({ 
-      //     payment_status: 'paid',
-      //     status: 'confirmed'
-      //   }).eq('id', reservation.id);
+      //
+      // EXPECTED BANCO CAIXA API RESPONSE FORMAT:
+      // {
+      //   success: boolean,
+      //   transaction_id: string,         // Banco Caixa transaction reference
+      //   bank_reference: string,         // Código de barras or PIX code
+      //   status: 'paid' | 'pending' | 'failed' | 'refunded',
+      //   payment_link: string,           // Link for customer to complete payment
+      //   expires_at: string,             // Payment expiration timestamp
+      //   updated_at: string
       // }
+      //
+      // AUTOMATIC STATUS UPDATE WORKFLOW:
+      // 1. Banco Caixa sends webhook when payment status changes
+      // 2. Edge function receives webhook at /functions/v1/banco-caixa-webhook
+      // 3. Webhook updates both 'payments' and 'reservations' tables
+      // 4. Realtime listeners automatically refresh admin dashboard
+      //
+      // DATABASE SYNC LOGIC:
+      // When payment status = 'paid' (from Banco Caixa):
+      //   - Update payments.status = 'completed'
+      //   - Update reservations.payment_status = 'paid'
+      //   - Update reservations.status = 'confirmed'
+      //   - Send confirmation email to customer
+      //
+      // WEBHOOK SECURITY:
+      // - Validate webhook signature using Banco Caixa secret key
+      // - Check timestamp to prevent replay attacks
+      // - Verify transaction_id matches database records
       // ================================================================
 
       console.log("Reservation created successfully:", {

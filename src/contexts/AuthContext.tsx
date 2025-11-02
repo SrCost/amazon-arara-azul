@@ -102,8 +102,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       if (error) throw error;
+      
+      // After successful login, redirect to admin panel
       toast.success('Login realizado com sucesso!');
-      navigate('/');
+      
+      // Wait a bit for user role to be checked
+      setTimeout(() => {
+        navigate('/admin');
+      }, 500);
     } catch (error: any) {
       toast.error(error.message || 'Erro ao fazer login');
       throw error;

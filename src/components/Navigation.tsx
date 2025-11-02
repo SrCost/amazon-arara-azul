@@ -92,8 +92,8 @@ const Navigation = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* User Menu */}
-            {user ? (
+            {/* User Menu - Only for authenticated admins */}
+            {user && isAdmin && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm">
@@ -102,22 +102,13 @@ const Navigation = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem asChild>
-                    <Link to="/minhas-reservas">{t("nav.myReservations")}</Link>
+                    <Link to="/admin">{t("nav.admin")}</Link>
                   </DropdownMenuItem>
-                  {isAdmin && (
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin">{t("nav.admin")}</Link>
-                    </DropdownMenuItem>
-                  )}
                   <DropdownMenuItem onClick={signOut}>
                     {t("nav.logout")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/auth">{t("nav.login")}</Link>
-              </Button>
             )}
 
             <Button variant="default" size="lg" asChild>
@@ -176,46 +167,27 @@ const Navigation = () => {
                 ))}
               </div>
 
-              {/* User Menu Mobile */}
-              <div className="border-t border-border pt-3">
-                {user ? (
-                  <>
-                    <Link
-                      to="/minhas-reservas"
-                      className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {t("nav.myReservations")}
-                    </Link>
-                    {isAdmin && (
-                      <Link
-                        to="/admin"
-                        className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        {t("nav.admin")}
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => {
-                        signOut();
-                        setIsOpen(false);
-                      }}
-                      className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
-                    >
-                      {t("nav.logout")}
-                    </button>
-                  </>
-                ) : (
+              {/* User Menu Mobile - Only for authenticated admins */}
+              {user && isAdmin && (
+                <div className="border-t border-border pt-3">
                   <Link
-                    to="/auth"
+                    to="/admin"
                     className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    {t("nav.login")}
+                    {t("nav.admin")}
                   </Link>
-                )}
-              </div>
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setIsOpen(false);
+                    }}
+                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
+                  >
+                    {t("nav.logout")}
+                  </button>
+                </div>
+              )}
 
               <Button
                 variant="default"

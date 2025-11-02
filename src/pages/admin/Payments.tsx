@@ -103,22 +103,75 @@ const Payments = () => {
 
   const handleUpdateStatus = async (paymentId: string, newStatus: string) => {
     try {
-      const { error } = await supabase
+      // Get the payment details to find the reservation_id
+      const { data: payment, error: paymentError } = await supabase
+        .from("payments")
+        .select("reservation_id")
+        .eq("id", paymentId)
+        .single();
+
+      if (paymentError) throw paymentError;
+
+      // Update payment status
+      const { error: updateError } = await supabase
         .from("payments")
         .update({ status: newStatus })
         .eq("id", paymentId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
-      // FUTURE INTEGRATION: When payment gateway is integrated, this should also
-      // trigger a webhook to update the payment status in the external system
-      // Example: await updatePaymentGatewayStatus(paymentId, newStatus);
-      // Suggested APIs: Stripe, MercadoPago, PagSeguro
-      // Implementation point: Create edge function to handle payment webhooks
+      // SYNC WITH RESERVATIONS: Update payment_status in reservations table
+      // Map payment status to reservation payment_status
+      let reservationPaymentStatus = 'pending';
+      if (newStatus === 'completed') {
+        reservationPaymentStatus = 'paid';
+      } else if (newStatus === 'pending') {
+        reservationPaymentStatus = 'pending';
+      } else if (newStatus === 'refunded') {
+        reservationPaymentStatus = 'refunded';
+      }
 
-      toast.success("Status do pagamento atualizado");
+      const { error: reservationError } = await supabase
+        .from("reservations")
+        .update({ payment_status: reservationPaymentStatus })
+        .eq("id", payment.reservation_id);
+
+      if (reservationError) {
+        console.error("Error updating reservation payment status:", reservationError);
+        toast.error("Status do pagamento atualizado, mas erro ao sincronizar com reserva");
+        return;
+      }
+
+      // FUTURE INTEGRATION POINT - BANCO CAIXA:
+      // When integrating with Banco Caixa API, add the following call here:
+      // await fetch('/api/banco-caixa/update-payment', {
+      //   method: 'POST',
+      //   body: JSON.stringify({
+      //     payment_id: paymentId,
+      //     reservation_id: payment.reservation_id,
+      //     status: newStatus,
+      //     amount: payment.amount,
+      //     date: new Date().toISOString()
+      //   })
+      // });
+      //
+      // Expected API Response Format:
+      // {
+      //   success: boolean,
+      //   transaction_id: string,
+      //   bank_reference: string,
+      //   status: 'paid' | 'pending' | 'failed' | 'refunded',
+      //   updated_at: string
+      // }
+
+      toast.success("Status do pagamento e reserva atualizados");
       fetchPayments();
-      console.log("Payment status updated:", { paymentId, newStatus });
+      console.log("Payment and reservation status synced:", { 
+        paymentId, 
+        newStatus, 
+        reservationId: payment.reservation_id,
+        reservationPaymentStatus 
+      });
     } catch (error) {
       console.error("Error updating payment status:", error);
       toast.error("Erro ao atualizar status do pagamento");

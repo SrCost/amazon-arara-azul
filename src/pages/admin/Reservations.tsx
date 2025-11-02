@@ -60,8 +60,8 @@ const Reservations = () => {
   useEffect(() => {
     fetchReservations();
 
-    // Setup realtime updates
-    const channel = supabase
+    // Setup realtime updates for reservations table
+    const reservationsChannel = supabase
       .channel('reservations-changes')
       .on(
         'postgres_changes',
@@ -74,8 +74,27 @@ const Reservations = () => {
       )
       .subscribe();
 
+    // Setup realtime updates for payments table
+    // When payment status changes, automatically update related reservation
+    const paymentsChannel = supabase
+      .channel('payments-changes-reservations')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'payments'
+        },
+        () => {
+          // Refetch reservations when payment is updated to sync payment_status
+          fetchReservations();
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(reservationsChannel);
+      supabase.removeChannel(paymentsChannel);
     };
   }, []);
 

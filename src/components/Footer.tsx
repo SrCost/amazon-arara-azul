@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
-import { Facebook, Instagram, Mail, Phone, Shield } from "lucide-react";
+import { Facebook, Instagram, Mail, Phone, Shield, LogIn } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -67,17 +68,6 @@ const Footer = () => {
                   {t("footer.cancellationPolicy")}
                 </a>
               </li>
-              {(isAdmin || isSuperAdmin) && (
-                <li>
-                  <Link 
-                    to="/admin" 
-                    className="flex items-center opacity-70 hover:opacity-100 transition-opacity text-xs"
-                  >
-                    <Shield className="h-3 w-3 mr-1" />
-                    {t("admin.adminAccess")}
-                  </Link>
-                </li>
-              )}
             </ul>
           </div>
 
@@ -104,8 +94,33 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/20 mt-8 pt-8 text-center text-sm opacity-80">
-          <p>&copy; 2025 Pousadas Amazônia. {t("footer.allRightsReserved")}</p>
+        <div className="border-t border-primary-foreground/20 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p className="text-sm opacity-80">&copy; 2025 Pousadas Amazônia. {t("footer.allRightsReserved")}</p>
+          
+          {/* Admin Login Button - Discreto no rodapé */}
+          {(isAdmin || isSuperAdmin) ? (
+            <Link to="/admin">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-primary-foreground/70 hover:text-primary-foreground/100 text-xs"
+              >
+                <Shield className="h-3 w-3 mr-1" />
+                Painel Admin
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/auth">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-primary-foreground/50 hover:text-primary-foreground/80 text-xs"
+              >
+                <LogIn className="h-3 w-3 mr-1" />
+                Acesso Administrativo
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </footer>

@@ -125,19 +125,55 @@ const Users = () => {
       return;
     }
 
+    // Validate input
+    if (!newUser.email || !newUser.password || !newUser.full_name || !newUser.role) {
+      toast.error("Todos os campos são obrigatórios");
+      return;
+    }
+
+    if (newUser.password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
     try {
-      // Create user in Supabase Auth (requires service role - will be handled by backend)
-      // For now, we'll show a message about implementing this with Edge Functions
-      toast.error("Criação de usuários requer implementação de Edge Function");
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // TODO: Implement user creation via Edge Function with service role
-      // This should call an edge function that uses service role to create user
-      
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+
+      // Call Edge Function to create user with service role
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          email: newUser.email,
+          password: newUser.password,
+          full_name: newUser.full_name,
+          role: newUser.role,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao criar usuário');
+      }
+
+      toast.success("Usuário criado com sucesso!");
       setIsAddDialogOpen(false);
       setNewUser({ email: "", password: "", full_name: "", role: "user" });
-    } catch (error) {
+      fetchUsers();
+      
+      console.log("User created successfully:", result.user);
+    } catch (error: any) {
       console.error("Error creating user:", error);
-      toast.error("Erro ao criar usuário");
+      toast.error(error.message || "Erro ao criar usuário");
     }
   };
 
@@ -171,16 +207,41 @@ const Users = () => {
       return;
     }
 
-    if (!confirm("Tem certeza que deseja excluir este usuário?")) return;
+    if (!confirm("Tem certeza que deseja excluir este usuário? Esta ação não pode ser desfeita.")) return;
 
     try {
-      // Delete user requires service role - needs Edge Function
-      toast.error("Exclusão de usuários requer implementação de Edge Function");
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // TODO: Implement user deletion via Edge Function with service role
-    } catch (error) {
+      if (!session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        return;
+      }
+
+      // Call Edge Function to delete user with service role
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao excluir usuário');
+      }
+
+      toast.success("Usuário excluído com sucesso!");
+      fetchUsers();
+      
+      console.log("User deleted successfully:", { userId });
+    } catch (error: any) {
       console.error("Error deleting user:", error);
-      toast.error("Erro ao excluir usuário");
+      toast.error(error.message || "Erro ao excluir usuário");
     }
   };
 

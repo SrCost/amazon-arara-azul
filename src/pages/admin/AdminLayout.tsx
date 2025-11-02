@@ -29,6 +29,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return null;
   }
 
+  // Menu items baseado em permissões
+  // Usuário: apenas Messages, Reservations, Dashboard
+  // Admin: Messages, Reservations, Dashboard, Payments
+  // Super Admin: tudo, incluindo Users
+  
   const baseMenuItems = [
     {
       icon: LayoutDashboard,
@@ -47,13 +52,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
   ];
 
-  const superAdminItems = isSuperAdmin
+  // Admin e Super Admin têm acesso a Payments
+  const adminItems = isAdmin || isSuperAdmin
     ? [
-        {
-          icon: UsersIcon,
-          label: t("admin.users"),
-          path: "/admin/users",
-        },
         {
           icon: DollarSign,
           label: "Pagamentos",
@@ -62,7 +63,18 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       ]
     : [];
 
-  const menuItems = [...baseMenuItems, ...superAdminItems];
+  // Apenas Super Admin tem acesso a Users
+  const superAdminItems = isSuperAdmin
+    ? [
+        {
+          icon: UsersIcon,
+          label: t("admin.users"),
+          path: "/admin/users",
+        },
+      ]
+    : [];
+
+  const menuItems = [...baseMenuItems, ...adminItems, ...superAdminItems];
 
   const handleSignOut = async () => {
     await signOut();
