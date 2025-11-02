@@ -96,12 +96,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error, data } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
+      
+      // Check if user has an active role (user, admin, or super_admin)
+      if (data.user) {
+        const { data: roles } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id);
+        
+        if (!roles || roles.length === 0) {
+          await supabase.auth.signOut();
+          throw new Error('Usuário sem permissões de acesso. Contate o administrador.');
+        }
+      }
       
       // After successful login, redirect to admin panel
       toast.success('Login realizado com sucesso!');

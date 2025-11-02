@@ -22,11 +22,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, isAdmin, isSuperAdmin } = useAuth();
+  const { signOut, isAdmin, isSuperAdmin, user, loading } = useAuth();
 
-  if (!isAdmin && !isSuperAdmin) {
+  // Allow access to all authenticated users (user, admin, super_admin)
+  if (!loading && !user) {
     navigate("/auth");
     return null;
+  }
+
+  if (loading) {
+    return null; // Show nothing while checking auth
   }
 
   // Menu items baseado em permissões

@@ -25,27 +25,7 @@ const Auth = () => {
     setLoading(true);
     try {
       await signIn(loginEmail, loginPassword);
-      // Check if user is admin
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: roles } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id);
-        
-        const isAdmin = roles?.some(r => r.role === "admin" || r.role === "super_admin");
-        
-        if (isAdmin) {
-          window.location.href = "/admin";
-        } else {
-          toast({
-            title: t("auth.accessDenied"),
-            description: "Acesso restrito a administradores",
-            variant: "destructive",
-          });
-          await signOut();
-        }
-      }
+      // AuthContext handles redirection to /admin automatically
     } catch (error: any) {
       toast({
         title: t("common.error"),
