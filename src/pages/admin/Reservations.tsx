@@ -20,6 +20,17 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -49,6 +60,7 @@ interface Reservation {
 
 const Reservations = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +68,8 @@ const Reservations = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editForm, setEditForm] = useState<Partial<Reservation>>({});
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReservations();
@@ -137,6 +151,17 @@ const Reservations = () => {
 
       if (error) throw error;
 
+      // Log activity
+      await supabase.from("activity_log").insert([{
+        user_id: user?.id || null,
+        user_email: user?.email || "unknown",
+        action: "update",
+        description: `Reserva de ${selectedReservation.guest_name} atualizada`,
+        entity_type: "reservation",
+        entity_id: selectedReservation.id,
+        metadata: { changes: editForm }
+      }]);
+
       toast.success("Reserva atualizada com sucesso!");
       setIsEditDialogOpen(false);
       fetchReservations();
@@ -146,18 +171,43 @@ const Reservations = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta reserva?")) return;
+  const handleDeleteClick = (id: string) => {
+    setReservationToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!reservationToDelete) return;
 
     try {
+      const reservationToLog = reservations.find(r => r.id === reservationToDelete);
+      
       const { error } = await supabase
         .from("reservations")
         .delete()
-        .eq("id", id);
+        .eq("id", reservationToDelete);
 
       if (error) throw error;
 
+      // Log activity
+      await supabase.from("activity_log").insert([{
+        user_id: user?.id || null,
+        user_email: user?.email || "unknown",
+        action: "delete",
+        description: `Reserva de ${reservationToLog?.guest_name || "N/A"} excluída`,
+        entity_type: "reservation",
+        entity_id: reservationToDelete,
+        metadata: { 
+          guest_name: reservationToLog?.guest_name,
+          guest_email: reservationToLog?.guest_email,
+          check_in: reservationToLog?.check_in,
+          check_out: reservationToLog?.check_out
+        }
+      }]);
+
       toast.success("Reserva excluída com sucesso!");
+      setDeleteDialogOpen(false);
+      setReservationToDelete(null);
       fetchReservations();
     } catch (error) {
       console.error("Error deleting reservation:", error);
@@ -282,7 +332,7 @@ const Reservations = () => {
                         <Button 
                           size="sm" 
                           variant="ghost" 
-                          onClick={() => handleDelete(reservation.id)}
+                          onClick={() => handleDeleteClick(reservation.id)}
                           title="Excluir"
                         >
                           <X className="h-4 w-4 text-red-600" />
@@ -422,6 +472,29 @@ const Reservations = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja realmente excluir esta reserva? Esta ação não poderá ser desfeita e todos os dados relacionados serão permanentemente removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setReservationToDelete(null)}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

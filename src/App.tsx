@@ -20,6 +20,7 @@ import Reservations from "./pages/admin/Reservations";
 import Messages from "./pages/admin/Messages";
 import Users from "./pages/admin/Users";
 import Payments from "./pages/admin/Payments";
+import Audit from "./pages/admin/Audit";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,14 @@ const App = () => (
               element={
                 <AdminLayout>
                   <Payments />
+                </AdminLayout>
+              }
+            />
+            <Route
+              path="/admin/audit"
+              element={
+                <AdminLayout>
+                  <Audit />
                 </AdminLayout>
               }
             />

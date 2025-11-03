@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          created_at: string | null
+          description: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          user_email: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          description: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          user_email: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          description?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          user_email?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string | null
@@ -263,6 +299,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_activity_logs: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

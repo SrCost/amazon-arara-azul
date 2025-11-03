@@ -28,6 +28,7 @@ import {
 import { Search, Eye, Download, CreditCard } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Payment {
   id: string;
@@ -45,6 +46,7 @@ interface Payment {
 
 const Payments = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -163,6 +165,22 @@ const Payments = () => {
       //   status: 'paid' | 'pending' | 'failed' | 'refunded',
       //   updated_at: string
       // }
+
+      // Log activity
+      const paymentDetails = payments.find(p => p.id === paymentId);
+      await supabase.from("activity_log").insert([{
+        user_id: user?.id || null,
+        user_email: user?.email || "unknown",
+        action: "update",
+        description: `Status do pagamento alterado para ${newStatus} (Reserva: ${payment.reservation_id.slice(0, 8)}...)`,
+        entity_type: "payment",
+        entity_id: paymentId,
+        metadata: { 
+          old_status: paymentDetails?.status,
+          new_status: newStatus,
+          reservation_id: payment.reservation_id 
+        }
+      }]);
 
       toast.success("Status do pagamento e reserva atualizados");
       fetchPayments();

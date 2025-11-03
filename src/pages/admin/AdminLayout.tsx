@@ -11,6 +11,7 @@ import {
   Home,
   Users as UsersIcon,
   DollarSign,
+  History,
 } from "lucide-react";
 import logoArara from "@/assets/logo-arara-azul.jpg";
 
@@ -68,13 +69,18 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       ]
     : [];
 
-  // Apenas Super Admin tem acesso a Users
+  // Apenas Super Admin tem acesso a Users e Audit
   const superAdminItems = isSuperAdmin
     ? [
         {
           icon: UsersIcon,
           label: t("admin.users"),
           path: "/admin/users",
+        },
+        {
+          icon: History,
+          label: "Histórico",
+          path: "/admin/audit",
         },
       ]
     : [];
