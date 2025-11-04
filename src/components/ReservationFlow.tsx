@@ -107,6 +107,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       }
 
       const totalPrice = calculateTotal();
+      const nights = Math.ceil(
+        (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       // Create reservation record - guests don't need to be logged in
       const reservationData = {
@@ -131,7 +134,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         .select()
         .single();
 
-      if (reservationError) throw reservationError;
+      if (reservationError) {
+        console.error("Erro ao criar reserva:", reservationError);
+        throw new Error("Falha ao registrar reserva no banco de dados.");
+      }
 
       // Create payment record
       const paymentData = {
@@ -145,7 +151,35 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         .from("payments")
         .insert(paymentData);
 
-      if (paymentError) throw paymentError;
+      if (paymentError) {
+        console.error("Erro ao criar pagamento:", paymentError);
+        throw new Error("Falha ao registrar pagamento.");
+      }
+
+      // Log activity in audit table
+      try {
+        await supabase.from("activity_log").insert([{
+          action: "create",
+          entity_type: "reservation",
+          entity_id: reservation.id,
+          description: `Nova reserva criada para ${lodgeName}`,
+          user_id: user?.id || null,
+          user_email: guestEmail,
+          metadata: {
+            lodge_name: lodgeName,
+            guest_name: guestName,
+            check_in: checkIn?.toISOString().split('T')[0],
+            check_out: checkOut?.toISOString().split('T')[0],
+            total_nights: nights,
+            total_price: totalPrice,
+            payment_method: paymentMethod,
+            guests: parseInt(guests)
+          }
+        }]);
+      } catch (logError) {
+        // Don't fail reservation if logging fails
+        console.warn("Falha ao registrar log de auditoria:", logError);
+      }
 
       // ====== FUTURE INTEGRATION POINT - BANCO CAIXA ======
       // This is where automatic payment processing with Banco Caixa will be implemented
@@ -211,22 +245,27 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       // - Verify transaction_id matches database records
       // ================================================================
 
-      console.log("Reservation created successfully:", {
+      console.log("Reserva criada com sucesso:", {
         reservationId: reservation.id,
         guestName,
+        lodgeName,
         totalPrice,
-        paymentMethod
+        paymentMethod,
+        nights
       });
 
-      toast.success("Reserva criada com sucesso! Você receberá um e-mail de confirmação.");
+      toast.success("Reserva confirmada com sucesso! Redirecionando...");
       
-      // Redirect to success page
-      const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}`;
-      window.location.href = successUrl;
-    } catch (error) {
-      console.error("Error creating reservation:", error);
-      toast.error("Erro ao criar reserva. Tente novamente.");
-    } finally {
+      // Small delay to show success message before redirect
+      setTimeout(() => {
+        const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}&guests=${guests}&total=${totalPrice}`;
+        window.location.href = successUrl;
+      }, 1000);
+      
+    } catch (error: any) {
+      console.error("Erro ao criar reserva:", error);
+      const errorMessage = error?.message || "Não foi possível completar a operação. Verifique sua conexão e tente novamente.";
+      toast.error(errorMessage);
       setIsSubmitting(false);
     }
   };
@@ -602,7 +641,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 disabled={isSubmitting}
                 className="bg-gradient-forest"
               >
-                {isSubmitting ? t("common.loading") : t("reservation.confirmReservation")}
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processando...
+                  </span>
+                ) : (
+                  t("reservation.confirmReservation")
+                )}
               </Button>
             )}
           </div>

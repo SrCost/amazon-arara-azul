@@ -14,6 +14,8 @@ const ReservationSuccess = () => {
   const lodgeName = searchParams.get("lodge") || "Pousada";
   const checkIn = searchParams.get("checkIn");
   const checkOut = searchParams.get("checkOut");
+  const guests = searchParams.get("guests") || "2";
+  const total = searchParams.get("total") || "0";
 
   useEffect(() => {
     // If no params, redirect to home
@@ -60,6 +62,14 @@ const ReservationSuccess = () => {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Check-out:</span>
                     <span className="font-medium">{checkOut && new Date(checkOut).toLocaleDateString('pt-BR')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Hóspedes:</span>
+                    <span className="font-medium">{guests} {parseInt(guests) === 1 ? 'pessoa' : 'pessoas'}</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-3 mt-3">
+                    <span className="text-muted-foreground font-semibold">Valor Total:</span>
+                    <span className="font-bold text-primary">R$ {parseFloat(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                   </div>
                 </div>
               </div>
