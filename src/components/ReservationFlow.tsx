@@ -38,6 +38,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [guestPhone, setGuestPhone] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [cardName, setCardName] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
+  const [cardCpf, setCardCpf] = useState("");
 
   const steps = [
     { number: 1, title: t("reservation.step2") },
@@ -63,9 +68,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
-    if (step === 3 && !paymentMethod) {
-      toast.error("Selecione um método de pagamento");
-      return;
+    if (step === 3) {
+      if (!paymentMethod) {
+        toast.error("Selecione um método de pagamento");
+        return;
+      }
+      if (paymentMethod === "credit" && (!cardName || !cardNumber || !cardExpiry || !cardCvv || !cardCpf)) {
+        toast.error("Preencha todos os dados do cartão");
+        return;
+      }
     }
     if (step < 4) {
       setStep(step + 1);
@@ -208,7 +219,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       });
 
       toast.success("Reserva criada com sucesso! Você receberá um e-mail de confirmação.");
-      onClose();
+      
+      // Redirect to success page
+      const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}`;
+      window.location.href = successUrl;
     } catch (error) {
       console.error("Error creating reservation:", error);
       toast.error("Erro ao criar reserva. Tente novamente.");
@@ -391,7 +405,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 {[
                   { value: "credit", label: t("reservation.creditCard") },
                   { value: "pix", label: t("reservation.pix") },
-                  { value: "paypal", label: t("reservation.paypal") },
+                  { value: "paypal", label: "Mercado Pago" },
                 ].map((method) => (
                   <button
                     key={method.value}
@@ -411,6 +425,102 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                   </button>
                 ))}
               </div>
+
+              {/* Credit Card Form */}
+              {paymentMethod === "credit" && (
+                <div className="space-y-4 border-t pt-4">
+                  <div>
+                    <Label htmlFor="cardName">Nome no Cartão</Label>
+                    <Input
+                      id="cardName"
+                      value={cardName}
+                      onChange={(e) => setCardName(e.target.value)}
+                      placeholder="Nome completo"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="cardNumber">Número do Cartão</Label>
+                    <Input
+                      id="cardNumber"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16))}
+                      placeholder="0000 0000 0000 0000"
+                      maxLength={16}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="col-span-1">
+                      <Label htmlFor="cardExpiry">Validade</Label>
+                      <Input
+                        id="cardExpiry"
+                        value={cardExpiry}
+                        onChange={(e) => {
+                          let val = e.target.value.replace(/\D/g, "");
+                          if (val.length >= 2) {
+                            val = val.slice(0, 2) + "/" + val.slice(2, 4);
+                          }
+                          setCardExpiry(val);
+                        }}
+                        placeholder="MM/AA"
+                        maxLength={5}
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Label htmlFor="cardCvv">CVV</Label>
+                      <Input
+                        id="cardCvv"
+                        value={cardCvv}
+                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        placeholder="123"
+                        maxLength={4}
+                      />
+                    </div>
+                    <div className="col-span-1">
+                      <Label htmlFor="cardCpf">CPF</Label>
+                      <Input
+                        id="cardCpf"
+                        value={cardCpf}
+                        onChange={(e) => setCardCpf(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                        placeholder="000.000.000-00"
+                        maxLength={11}
+                      />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    💳 Seus dados estão seguros e criptografados. Integração com gateway de pagamento será implementada em breve.
+                  </p>
+                </div>
+              )}
+
+              {/* PIX Display */}
+              {paymentMethod === "pix" && (
+                <div className="border-t pt-4">
+                  <div className="bg-muted p-6 rounded-lg text-center">
+                    <div className="w-48 h-48 bg-white mx-auto mb-4 flex items-center justify-center border-2 border-dashed">
+                      <p className="text-sm text-muted-foreground px-4">
+                        QR Code PIX será gerado após confirmar
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Após confirmar, você receberá o código PIX para pagamento
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Mercado Pago Display */}
+              {paymentMethod === "paypal" && (
+                <div className="border-t pt-4">
+                  <div className="bg-muted p-6 rounded-lg text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Você será redirecionado para o Mercado Pago para concluir o pagamento
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Integração com Mercado Pago será implementada em breve
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-muted p-4 rounded-lg">
                 <div className="flex justify-between items-center">

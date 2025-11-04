@@ -12,6 +12,7 @@ import Sustainability from "./pages/Sustainability";
 import HowToGetThere from "./pages/HowToGetThere";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
+import ReservationSuccess from "./pages/ReservationSuccess";
 import NotFound from "./pages/NotFound";
 import FloatingSupportButton from "./components/FloatingSupportButton";
 import AdminLayout from "./pages/admin/AdminLayout";
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/como-chegar" element={<HowToGetThere />} />
             <Route path="/contato" element={<Contact />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reserva-concluida" element={<ReservationSuccess />} />
             <Route
               path="/admin"
               element={
