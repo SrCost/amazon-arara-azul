@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ReservationFlow from "@/components/ReservationFlow";
+import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
@@ -217,6 +218,9 @@ const LodgeDetail = () => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Availability Calendar */}
+              <AvailabilityCalendar roomId={lodge.id} />
             </div>
 
             {/* Booking Sidebar */}

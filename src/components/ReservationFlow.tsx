@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,10 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, ChevronLeft, ChevronRight } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, CalendarX, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoomAvailability } from "@/hooks/useRoomAvailability";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ReservationFlowProps {
   lodgeName: string;
@@ -28,6 +30,14 @@ interface ReservationFlowProps {
 const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: ReservationFlowProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const {
+    loading: loadingAvailability,
+    blockedDates,
+    isDateAvailable,
+    checkAvailability,
+    getNextAvailableDates,
+  } = useRoomAvailability(roomId);
+  
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [checkIn, setCheckIn] = useState<Date | undefined>();
@@ -43,6 +53,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [cardCpf, setCardCpf] = useState("");
+
+  // Show next available dates when component loads
+  useEffect(() => {
+    if (!loadingAvailability && !checkIn && !checkOut) {
+      const { checkIn: nextCheckIn, checkOut: nextCheckOut } = getNextAvailableDates();
+      if (nextCheckIn && nextCheckOut) {
+        setCheckIn(nextCheckIn);
+        setCheckOut(nextCheckOut);
+      }
+    }
+  }, [loadingAvailability]);
 
   const steps = [
     { number: 1, title: t("reservation.step2") },
@@ -60,9 +81,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   };
 
   const handleNext = () => {
-    if (step === 1 && (!checkIn || !checkOut)) {
-      toast.error("Selecione as datas de check-in e check-out");
-      return;
+    if (step === 1) {
+      if (!checkIn || !checkOut) {
+        toast.error("Selecione as datas de check-in e check-out");
+        return;
+      }
+      
+      // Validate availability for selected dates
+      if (!checkAvailability(checkIn, checkOut)) {
+        toast.error("As datas selecionadas não estão disponíveis. Por favor, escolha outras datas.");
+        return;
+      }
     }
     if (step === 2 && (!guestName || !guestEmail)) {
       toast.error("Preencha todos os campos obrigatórios");
@@ -103,6 +132,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       if (!paymentMethod) {
         toast.error("Por favor, selecione um método de pagamento");
         setIsSubmitting(false);
+        return;
+      }
+
+      // Final availability check before creating reservation
+      if (!checkAvailability(checkIn, checkOut)) {
+        toast.error("Desculpe, as datas selecionadas foram reservadas por outro cliente. Por favor, escolha outras datas.");
+        setIsSubmitting(false);
+        setStep(1); // Go back to date selection
         return;
       }
 
@@ -316,28 +353,86 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <Label className="mb-2 block">{t("search.checkIn")}</Label>
-                  <Calendar
-                    mode="single"
-                    selected={checkIn}
-                    onSelect={setCheckIn}
-                    disabled={(date) => date < new Date()}
-                    className="rounded-md border"
-                  />
+              {loadingAvailability ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <span className="ml-3 text-muted-foreground">Carregando disponibilidade...</span>
                 </div>
-                <div>
-                  <Label className="mb-2 block">{t("search.checkOut")}</Label>
-                  <Calendar
-                    mode="single"
-                    selected={checkOut}
-                    onSelect={setCheckOut}
-                    disabled={(date) => date < new Date() || (checkIn ? date <= checkIn : false)}
-                    className="rounded-md border"
-                  />
-                </div>
-              </div>
+              ) : (
+                <>
+                  {blockedDates.length > 0 && (
+                    <Alert>
+                      <CalendarX className="h-4 w-4" />
+                      <AlertDescription>
+                        Algumas datas já estão reservadas e aparecerão desabilitadas no calendário.
+                        Datas bloqueadas não podem ser selecionadas.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <Label className="mb-2 block">{t("search.checkIn")}</Label>
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={(date) => {
+                          setCheckIn(date);
+                          // Reset checkout if it conflicts
+                          if (checkOut && date && date >= checkOut) {
+                            setCheckOut(undefined);
+                          }
+                        }}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          
+                          // Disable past dates
+                          if (date < today) return true;
+                          
+                          // Disable blocked dates
+                          return !isDateAvailable(date);
+                        }}
+                        className="rounded-md border pointer-events-auto"
+                      />
+                    </div>
+                    <div>
+                      <Label className="mb-2 block">{t("search.checkOut")}</Label>
+                      <Calendar
+                        mode="single"
+                        selected={checkOut}
+                        onSelect={setCheckOut}
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          
+                          // Disable past dates
+                          if (date < today) return true;
+                          
+                          // Must be after check-in
+                          if (checkIn && date <= checkIn) return true;
+                          
+                          // Check if any date between check-in and this date is blocked
+                          if (checkIn) {
+                            const testDate = new Date(checkIn);
+                            testDate.setDate(testDate.getDate() + 1);
+                            
+                            while (testDate < date) {
+                              if (!isDateAvailable(testDate)) {
+                                return true;
+                              }
+                              testDate.setDate(testDate.getDate() + 1);
+                            }
+                          }
+                          
+                          return false;
+                        }}
+                        className="rounded-md border pointer-events-auto"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
 
               <div>
                 <Label htmlFor="guests">{t("search.guests")}</Label>
