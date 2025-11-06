@@ -135,7 +135,7 @@ const Messages = () => {
   };
 
   const handleContactWhatsApp = (phone: string, name: string) => {
-    const message = encodeURIComponent(`Olá ${name}, recebemos sua mensagem e gostaríamos de responder.`);
+    const message = encodeURIComponent(`Olá ${name}! Nós da Pousada Arara Azul recebemos sua mensagem e gostaríamos de esclarecer suas dúvidas.`);
     window.open(`https://wa.me/${phone.replace(/\D/g, '')}?text=${message}`, '_blank');
   };
 

@@ -114,6 +114,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       // Create reservation record - guests don't need to be logged in
       const reservationData = {
         room_id: roomId,
+        room_name: lodgeName, // Store lodge name for easy display
         user_id: user?.id || null, // Allow null for non-logged users
         guest_name: guestName,
         guest_email: guestEmail,

@@ -1,6 +1,8 @@
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   MapPin,
   Users,
@@ -25,40 +27,98 @@ import lodge4 from "@/assets/lodge-4.jpg";
 
 const LodgeDetail = () => {
   const { id } = useParams();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [showReservation, setShowReservation] = useState(false);
+  const [lodge, setLodge] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const lodgeData: { [key: string]: any } = {
-    "canopy-retreat": {
-      id: "00000000-0000-0000-0000-000000000001",
-      name: "Canopy Retreat",
-      location: "Reserva do Jaú, Amazonas",
-      images: [lodge1, lodge2, lodge3],
-      price: "R$ 850",
-      pricePerNight: 850,
-      guests: 4,
-      description:
-        "O Canopy Retreat é um refúgio exclusivo projetado para oferecer uma experiência única de imersão na floresta amazônica. Construído com materiais sustentáveis e integrado harmoniosamente ao dossel da floresta, este lodge oferece vistas panorâmicas espetaculares, conforto moderno e uma conexão profunda com a natureza.",
-      amenities: [
-        "Wi-Fi de alta velocidade",
-        "Café da manhã incluído",
-        "Ar condicionado",
-        "Varanda privativa",
-        "Energia solar",
-        "Água quente",
-      ],
-      experiences: [
-        "Trilhas guiadas na floresta",
-        "Observação de aves",
-        "Passeios de canoa",
-        "Visita a comunidades locais",
-      ],
-      rating: 4.9,
-      reviews: 127,
-    },
+  useEffect(() => {
+    fetchLodgeDetails();
+  }, [id, i18n.language]);
+
+  const fetchLodgeDetails = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("*")
+        .eq("id", id)
+        .eq("is_active", true)
+        .single();
+
+      if (error) throw error;
+
+      if (!data) {
+        toast.error("Pousada não encontrada");
+        return;
+      }
+
+      // Map database fields to component format
+      const currentLang = i18n.language;
+      const lodgeData = {
+        id: data.id,
+        name: data[`name_${currentLang}`] || data.name_pt,
+        location: "Reserva do Jaú, Amazonas", // Default location
+        images: data.image_url ? [data.image_url, lodge1, lodge2] : [lodge1, lodge2, lodge3],
+        price: `R$ ${data.price_per_night.toLocaleString()}`,
+        pricePerNight: Number(data.price_per_night),
+        guests: data.max_guests,
+        description: data[`description_${currentLang}`] || data.description_pt,
+        amenities: data.amenities || [
+          "Wi-Fi de alta velocidade",
+          "Café da manhã incluído",
+          "Ar condicionado",
+          "Varanda privativa",
+          "Energia solar",
+          "Água quente",
+        ],
+        experiences: [
+          "Trilhas guiadas na floresta",
+          "Observação de aves",
+          "Passeios de canoa",
+          "Visita a comunidades locais",
+        ],
+        rating: 4.9,
+        reviews: 127,
+      };
+
+      setLodge(lodgeData);
+    } catch (error) {
+      console.error("Error fetching lodge:", error);
+      toast.error("Erro ao carregar detalhes da pousada");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const lodge = lodgeData[id || ""] || lodgeData["canopy-retreat"];
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="pt-24 pb-16 flex items-center justify-center">
+          <p className="text-lg">Carregando...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!lodge) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="pt-24 pb-16 container mx-auto px-4">
+          <p className="text-lg">Pousada não encontrada</p>
+          <Button variant="ghost" asChild className="mt-4">
+            <Link to="/pousadas">
+              <ArrowLeft className="mr-2" />
+              Voltar para pousadas
+            </Link>
+          </Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   const amenityIcons: { [key: string]: any } = {
     "Wi-Fi de alta velocidade": Wifi,

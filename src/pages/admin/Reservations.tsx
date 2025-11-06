@@ -44,6 +44,7 @@ import { toast } from "sonner";
 
 interface Reservation {
   id: string;
+  room_name: string;
   guest_name: string;
   guest_email: string;
   guest_phone: string;
@@ -285,6 +286,7 @@ const Reservations = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Pousada</TableHead>
                   <TableHead>Hóspede</TableHead>
                   <TableHead>Check-in</TableHead>
                   <TableHead>Check-out</TableHead>
@@ -297,6 +299,7 @@ const Reservations = () => {
               <TableBody>
                 {filteredReservations.map((reservation) => (
                   <TableRow key={reservation.id}>
+                    <TableCell className="font-medium">{reservation.room_name || "N/A"}</TableCell>
                     <TableCell className="font-medium">{reservation.guest_name}</TableCell>
                     <TableCell>{new Date(reservation.check_in).toLocaleDateString()}</TableCell>
                     <TableCell>{new Date(reservation.check_out).toLocaleDateString()}</TableCell>
@@ -308,24 +311,6 @@ const Reservations = () => {
                         <Button size="sm" variant="ghost" onClick={() => handleView(reservation)} title="Visualizar">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost" 
-                          onClick={() => handleContactEmail(reservation.guest_email)}
-                          title="Enviar e-mail"
-                        >
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                        {reservation.guest_phone && (
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleContactWhatsApp(reservation.guest_phone, reservation.guest_name)}
-                            title="Enviar WhatsApp"
-                          >
-                            <MessageCircle className="h-4 w-4" />
-                          </Button>
-                        )}
                         <Button size="sm" variant="ghost" onClick={() => handleEdit(reservation)} title="Editar">
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -356,6 +341,10 @@ const Reservations = () => {
           {selectedReservation && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-muted-foreground">Pousada</Label>
+                  <p className="font-medium">{selectedReservation.room_name || "N/A"}</p>
+                </div>
                 <div>
                   <Label className="text-muted-foreground">Hóspede</Label>
                   <p className="font-medium">{selectedReservation.guest_name}</p>

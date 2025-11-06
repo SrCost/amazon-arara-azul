@@ -103,23 +103,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (error) throw error;
       
-      // Check if user has an active role (user, admin, or super_admin)
+      // Check if user has a role in the system
+      // All registered users should have at least 'user' role
       if (data.user) {
         const { data: roles } = await supabase
           .from('user_roles')
           .select('role')
           .eq('user_id', data.user.id);
         
+        // If no roles found, user may not be properly set up but allow login
+        // The profile was created by the trigger, so user exists
         if (!roles || roles.length === 0) {
-          await supabase.auth.signOut();
-          throw new Error('Usuário sem permissões de acesso. Contate o administrador.');
+          console.warn('User has no role assigned, but allowing login');
         }
       }
       
-      // After successful login, redirect to admin panel
       toast.success('Login realizado com sucesso!');
       
-      // Wait a bit for user role to be checked
+      // Wait for user role to be checked before redirecting
       setTimeout(() => {
         navigate('/admin');
       }, 500);

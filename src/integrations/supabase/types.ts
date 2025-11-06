@@ -164,6 +164,7 @@ export type Database = {
           payment_method: string | null
           payment_status: string | null
           room_id: string
+          room_name: string | null
           special_requests: string | null
           status: string | null
           total_price: number
@@ -182,6 +183,7 @@ export type Database = {
           payment_method?: string | null
           payment_status?: string | null
           room_id: string
+          room_name?: string | null
           special_requests?: string | null
           status?: string | null
           total_price: number
@@ -200,6 +202,7 @@ export type Database = {
           payment_method?: string | null
           payment_status?: string | null
           room_id?: string
+          room_name?: string | null
           special_requests?: string | null
           status?: string | null
           total_price?: number
