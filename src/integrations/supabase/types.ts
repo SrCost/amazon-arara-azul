@@ -303,6 +303,7 @@ export type Database = {
     }
     Functions: {
       cleanup_old_activity_logs: { Args: never; Returns: undefined }
+      get_current_user_email: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

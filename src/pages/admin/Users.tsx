@@ -111,6 +111,24 @@ const Users = () => {
       }) || [];
 
       setUsers(usersWithRoles);
+
+      // Setup realtime updates
+      const profilesChannel = supabase
+        .channel('profiles-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'profiles'
+          },
+          () => fetchUsers()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(profilesChannel);
+      };
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Erro ao carregar usuários");
@@ -165,16 +183,6 @@ const Users = () => {
         throw new Error(result.error || 'Erro ao criar usuário');
       }
 
-      // Log activity
-      await supabase.from("activity_log").insert([{
-        user_id: user?.id || null,
-        user_email: user?.email || "unknown",
-        action: "create",
-        description: `Usuário ${newUser.full_name} (${newUser.email}) criado com função ${newUser.role}`,
-        entity_type: "user",
-        metadata: { role: newUser.role, email: newUser.email }
-      }]);
-
       toast.success("Usuário criado com sucesso!");
       setIsAddDialogOpen(false);
       setNewUser({ email: "", password: "", full_name: "", role: "user" });
@@ -201,18 +209,6 @@ const Users = () => {
         .eq("user_id", userId);
 
       if (error) throw error;
-
-      // Log activity
-      const targetUser = users.find(u => u.id === userId);
-      await supabase.from("activity_log").insert([{
-        user_id: user?.id || null,
-        user_email: user?.email || "unknown",
-        action: "update",
-        description: `Função de ${targetUser?.full_name || "usuário"} alterada para ${newRole}`,
-        entity_type: "user",
-        entity_id: userId,
-        metadata: { new_role: newRole }
-      }]);
 
       toast.success("Função atualizada com sucesso");
       fetchUsers();
@@ -256,18 +252,6 @@ const Users = () => {
       if (!result.success) {
         throw new Error(result.error || 'Erro ao excluir usuário');
       }
-
-      // Log activity
-      const targetUser = users.find(u => u.id === userId);
-      await supabase.from("activity_log").insert([{
-        user_id: user?.id || null,
-        user_email: user?.email || "unknown",
-        action: "delete",
-        description: `Usuário ${targetUser?.full_name || "N/A"} (${targetUser?.email || "N/A"}) excluído`,
-        entity_type: "user",
-        entity_id: userId,
-        metadata: { deleted_email: targetUser?.email }
-      }]);
 
       toast.success("Usuário excluído com sucesso!");
       fetchUsers();

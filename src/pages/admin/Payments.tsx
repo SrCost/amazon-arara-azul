@@ -105,44 +105,13 @@ const Payments = () => {
 
   const handleUpdateStatus = async (paymentId: string, newStatus: string) => {
     try {
-      // Get the payment details to find the reservation_id
-      const { data: payment, error: paymentError } = await supabase
-        .from("payments")
-        .select("reservation_id")
-        .eq("id", paymentId)
-        .single();
-
-      if (paymentError) throw paymentError;
-
-      // Update payment status
+      // Update payment status - trigger will automatically sync with reservations
       const { error: updateError } = await supabase
         .from("payments")
         .update({ status: newStatus })
         .eq("id", paymentId);
 
       if (updateError) throw updateError;
-
-      // SYNC WITH RESERVATIONS: Update payment_status in reservations table
-      // Map payment status to reservation payment_status
-      let reservationPaymentStatus = 'pending';
-      if (newStatus === 'completed') {
-        reservationPaymentStatus = 'paid';
-      } else if (newStatus === 'pending') {
-        reservationPaymentStatus = 'pending';
-      } else if (newStatus === 'refunded') {
-        reservationPaymentStatus = 'refunded';
-      }
-
-      const { error: reservationError } = await supabase
-        .from("reservations")
-        .update({ payment_status: reservationPaymentStatus })
-        .eq("id", payment.reservation_id);
-
-      if (reservationError) {
-        console.error("Error updating reservation payment status:", reservationError);
-        toast.error("Status do pagamento atualizado, mas erro ao sincronizar com reserva");
-        return;
-      }
 
       // FUTURE INTEGRATION POINT - BANCO CAIXA:
       // When integrating with Banco Caixa API, add the following call here:
@@ -166,30 +135,8 @@ const Payments = () => {
       //   updated_at: string
       // }
 
-      // Log activity
-      const paymentDetails = payments.find(p => p.id === paymentId);
-      await supabase.from("activity_log").insert([{
-        user_id: user?.id || null,
-        user_email: user?.email || "unknown",
-        action: "update",
-        description: `Status do pagamento alterado para ${newStatus} (Reserva: ${payment.reservation_id.slice(0, 8)}...)`,
-        entity_type: "payment",
-        entity_id: paymentId,
-        metadata: { 
-          old_status: paymentDetails?.status,
-          new_status: newStatus,
-          reservation_id: payment.reservation_id 
-        }
-      }]);
-
-      toast.success("Status do pagamento e reserva atualizados");
+      toast.success("Status de pagamento atualizado com sucesso.");
       fetchPayments();
-      console.log("Payment and reservation status synced:", { 
-        paymentId, 
-        newStatus, 
-        reservationId: payment.reservation_id,
-        reservationPaymentStatus 
-      });
     } catch (error) {
       console.error("Error updating payment status:", error);
       toast.error("Erro ao atualizar status do pagamento");
@@ -214,8 +161,8 @@ const Payments = () => {
 
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: any } = {
-      completed: { label: t("admin.completed"), className: "bg-green-100 text-green-800" },
-      pending: { label: t("admin.pending"), className: "bg-yellow-100 text-yellow-800" },
+      completed: { label: "Concluído", className: "bg-green-100 text-green-800" },
+      pending: { label: "Pendente", className: "bg-yellow-100 text-yellow-800" },
       refunded: { label: "Reembolsado", className: "bg-blue-100 text-blue-800" },
       failed: { label: "Falhou", className: "bg-red-100 text-red-800" },
     };

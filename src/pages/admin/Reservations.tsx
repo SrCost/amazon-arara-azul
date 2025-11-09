@@ -152,17 +152,6 @@ const Reservations = () => {
 
       if (error) throw error;
 
-      // Log activity
-      await supabase.from("activity_log").insert([{
-        user_id: user?.id || null,
-        user_email: user?.email || "unknown",
-        action: "update",
-        description: `Reserva de ${selectedReservation.guest_name} atualizada`,
-        entity_type: "reservation",
-        entity_id: selectedReservation.id,
-        metadata: { changes: editForm }
-      }]);
-
       toast.success("Reserva atualizada com sucesso!");
       setIsEditDialogOpen(false);
       fetchReservations();
@@ -189,22 +178,6 @@ const Reservations = () => {
         .eq("id", reservationToDelete);
 
       if (error) throw error;
-
-      // Log activity
-      await supabase.from("activity_log").insert([{
-        user_id: user?.id || null,
-        user_email: user?.email || "unknown",
-        action: "delete",
-        description: `Reserva de ${reservationToLog?.guest_name || "N/A"} excluída`,
-        entity_type: "reservation",
-        entity_id: reservationToDelete,
-        metadata: { 
-          guest_name: reservationToLog?.guest_name,
-          guest_email: reservationToLog?.guest_email,
-          check_in: reservationToLog?.check_in,
-          check_out: reservationToLog?.check_out
-        }
-      }]);
 
       toast.success("Reserva excluída com sucesso!");
       setDeleteDialogOpen(false);
@@ -240,8 +213,9 @@ const Reservations = () => {
   const getPaymentStatusBadge = (status: string) => {
     const variants: { [key: string]: any } = {
       pending: { label: "Pendente", className: "bg-yellow-100 text-yellow-800" },
-      completed: { label: "Pago", className: "bg-green-100 text-green-800" },
+      paid: { label: "Pago", className: "bg-green-100 text-green-800" },
       failed: { label: "Falhou", className: "bg-red-100 text-red-800" },
+      refunded: { label: "Reembolsado", className: "bg-blue-100 text-blue-800" },
     };
 
     const variant = variants[status] || variants.pending;
@@ -423,20 +397,13 @@ const Reservations = () => {
                 </Select>
               </div>
               <div>
-                <Label>Status do Pagamento</Label>
-                <Select 
-                  value={editForm.payment_status} 
-                  onValueChange={(value) => setEditForm({...editForm, payment_status: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="completed">Pago</SelectItem>
-                    <SelectItem value="failed">Falhou</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Status do Pagamento (Sincronizado automaticamente)</Label>
+                <div className="mt-2 p-3 bg-muted/50 rounded-md border border-border">
+                  {getPaymentStatusBadge(editForm.payment_status)}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Este campo é atualizado automaticamente quando o status do pagamento é alterado em /admin/payments
+                  </p>
+                </div>
               </div>
             </div>
             <div>

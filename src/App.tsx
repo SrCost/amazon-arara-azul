@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import "@/i18n/config";
 import Index from "./pages/Index";
 import Lodges from "./pages/Lodges";
@@ -44,49 +45,61 @@ const App = () => (
             <Route
               path="/admin"
               element={
-                <AdminLayout>
-                  <Dashboard />
-                </AdminLayout>
+                <ProtectedRoute requiredRole="user">
+                  <AdminLayout>
+                    <Dashboard />
+                  </AdminLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/reservations"
               element={
-                <AdminLayout>
-                  <Reservations />
-                </AdminLayout>
+                <ProtectedRoute requiredRole="user">
+                  <AdminLayout>
+                    <Reservations />
+                  </AdminLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/messages"
               element={
-                <AdminLayout>
-                  <Messages />
-                </AdminLayout>
-              }
-            />
-            <Route
-              path="/admin/users"
-              element={
-                <AdminLayout>
-                  <Users />
-                </AdminLayout>
+                <ProtectedRoute requiredRole="user">
+                  <AdminLayout>
+                    <Messages />
+                  </AdminLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/payments"
               element={
-                <AdminLayout>
-                  <Payments />
-                </AdminLayout>
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <Payments />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute requiredRole="super_admin">
+                  <AdminLayout>
+                    <Users />
+                  </AdminLayout>
+                </ProtectedRoute>
               }
             />
             <Route
               path="/admin/audit"
               element={
-                <AdminLayout>
-                  <Audit />
-                </AdminLayout>
+                <ProtectedRoute requiredRole="super_admin">
+                  <AdminLayout>
+                    <Audit />
+                  </AdminLayout>
+                </ProtectedRoute>
               }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
