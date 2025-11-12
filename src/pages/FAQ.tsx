@@ -1,0 +1,122 @@
+import { useTranslation } from "react-i18next";
+import Navigation from "@/components/Navigation";
+import Footer from "@/components/Footer";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const FAQ = () => {
+  const { t } = useTranslation();
+
+  const faqItems = [
+    {
+      question: t("faq.checkInTime.question"),
+      answer: t("faq.checkInTime.answer"),
+    },
+    {
+      question: t("faq.vaccines.question"),
+      answer: t("faq.vaccines.answer"),
+    },
+    {
+      question: t("faq.transfer.question"),
+      answer: t("faq.transfer.answer"),
+    },
+    {
+      question: t("faq.cancellation.question"),
+      answer: t("faq.cancellation.answer"),
+    },
+    {
+      question: t("faq.payment.question"),
+      answer: t("faq.payment.answer"),
+    },
+    {
+      question: t("faq.amenities.question"),
+      answer: t("faq.amenities.answer"),
+    },
+    {
+      question: t("faq.activities.question"),
+      answer: t("faq.activities.answer"),
+    },
+    {
+      question: t("faq.contact.question"),
+      answer: t("faq.contact.answer"),
+    },
+  ];
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+
+      {/* Header */}
+      <section className="pt-32 pb-16 bg-gradient-to-b from-muted/50 to-background">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">
+              {t("faq.title")}
+            </h1>
+            <p className="text-lg text-muted-foreground">
+              {t("faq.subtitle")}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Content */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqItems.map((item, index) => (
+              <AccordionItem
+                key={index}
+                value={`item-${index}`}
+                className="bg-card border border-border rounded-lg px-6"
+              >
+                <AccordionTrigger className="text-left hover:no-underline py-4">
+                  <span className="font-semibold text-foreground">
+                    {item.question}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="text-muted-foreground pb-4">
+                  {item.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+
+          {/* Contact CTA */}
+          <div className="mt-16 text-center bg-muted/30 rounded-lg p-8">
+            <h3 className="text-2xl font-display font-bold text-foreground mb-4">
+              {t("faq.stillHaveQuestions")}
+            </h3>
+            <p className="text-muted-foreground mb-6">
+              {t("faq.contactUs")}
+            </p>
+            <Button
+              size="lg"
+              className="bg-gradient-forest hover:opacity-90"
+              asChild
+            >
+              <a
+                href="https://wa.me/559284829983"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                {t("faq.whatsappButton")}
+              </a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default FAQ;

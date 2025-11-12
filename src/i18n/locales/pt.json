@@ -55,6 +55,7 @@
   "footer": {
     "about": "Sobre Nós",
     "contact": "Contato",
+    "faq": "Perguntas Frequentes",
     "phone": "Telefone",
     "email": "E-mail",
     "followUs": "Siga-nos",
@@ -214,5 +215,44 @@
     "importantTips": "Dicas Importantes",
     "documentation": "Documentação",
     "whatToBring": "O que Levar"
+  },
+  "faq": {
+    "title": "Perguntas Frequentes",
+    "subtitle": "Encontre respostas para as dúvidas mais comuns sobre sua estadia",
+    "checkInTime": {
+      "question": "Qual o horário de check-in e check-out?",
+      "answer": "Check-in: a partir das 14h. Check-out: até as 12h. Para horários especiais, consulte-nos via WhatsApp."
+    },
+    "vaccines": {
+      "question": "Quais vacinas são necessárias?",
+      "answer": "Recomendamos fortemente a vacina de febre amarela, aplicada pelo menos 10 dias antes da viagem. Outras vacinas como hepatite A e tétano também são recomendadas."
+    },
+    "transfer": {
+      "question": "Vocês oferecem serviço de transfer?",
+      "answer": "Sim! Oferecemos transfer do aeroporto de Manaus até a pousada. O serviço deve ser agendado com antecedência e tem custo adicional."
+    },
+    "cancellation": {
+      "question": "Qual a política de cancelamento?",
+      "answer": "Cancelamento gratuito até 7 dias antes do check-in. Entre 3-7 dias: reembolso de 50%. Menos de 3 dias: não há reembolso."
+    },
+    "payment": {
+      "question": "Quais formas de pagamento vocês aceitam?",
+      "answer": "Aceitamos cartão de crédito, débito, PIX e transferência bancária. É necessário um depósito de 30% para confirmar a reserva."
+    },
+    "amenities": {
+      "question": "Quais comodidades estão incluídas?",
+      "answer": "Todas as acomodações incluem café da manhã, Wi-Fi, roupa de cama e banho, ar-condicionado e kit de higiene sustentável."
+    },
+    "activities": {
+      "question": "Quais atividades posso fazer?",
+      "answer": "Oferecemos trilhas guiadas, passeios de canoa, observação de aves, pesca esportiva, visitas a comunidades ribeirinhas e expedições noturnas."
+    },
+    "contact": {
+      "question": "Como posso entrar em contato?",
+      "answer": "Entre em contato via WhatsApp: +55 92 8482-9983, telefone: +55 92 3232-5050 ou e-mail: contato@pousadasamazonia.com"
+    },
+    "stillHaveQuestions": "Ainda tem dúvidas?",
+    "contactUs": "Entre em contato conosco pelo WhatsApp e teremos prazer em ajudar!",
+    "whatsappButton": "Falar no WhatsApp"
   }
 }

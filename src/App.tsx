@@ -12,6 +12,7 @@ import LodgeDetail from "./pages/LodgeDetail";
 import Sustainability from "./pages/Sustainability";
 import HowToGetThere from "./pages/HowToGetThere";
 import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
 import Auth from "./pages/Auth";
 import ReservationSuccess from "./pages/ReservationSuccess";
 import NotFound from "./pages/NotFound";
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/sustentabilidade" element={<Sustainability />} />
             <Route path="/como-chegar" element={<HowToGetThere />} />
             <Route path="/contato" element={<Contact />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reserva-concluida" element={<ReservationSuccess />} />
             <Route

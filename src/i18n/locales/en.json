@@ -55,6 +55,7 @@
   "footer": {
     "about": "About Us",
     "contact": "Contact",
+    "faq": "FAQ",
     "phone": "Phone",
     "email": "Email",
     "followUs": "Follow Us",
@@ -213,5 +214,44 @@
     "importantTips": "Important Tips",
     "documentation": "Documentation",
     "whatToBring": "What to Bring"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to common questions about your stay",
+    "checkInTime": {
+      "question": "What are the check-in and check-out times?",
+      "answer": "Check-in: from 2 PM. Check-out: until 12 PM. For special times, contact us via WhatsApp."
+    },
+    "vaccines": {
+      "question": "What vaccines are required?",
+      "answer": "We strongly recommend the yellow fever vaccine, applied at least 10 days before travel. Other vaccines like hepatitis A and tetanus are also recommended."
+    },
+    "transfer": {
+      "question": "Do you offer transfer service?",
+      "answer": "Yes! We offer transfer from Manaus airport to the lodge. The service must be scheduled in advance and has an additional cost."
+    },
+    "cancellation": {
+      "question": "What is the cancellation policy?",
+      "answer": "Free cancellation up to 7 days before check-in. Between 3-7 days: 50% refund. Less than 3 days: no refund."
+    },
+    "payment": {
+      "question": "What payment methods do you accept?",
+      "answer": "We accept credit card, debit card, PIX, and bank transfer. A 30% deposit is required to confirm the reservation."
+    },
+    "amenities": {
+      "question": "What amenities are included?",
+      "answer": "All accommodations include breakfast, Wi-Fi, bed and bath linens, air conditioning, and sustainable hygiene kit."
+    },
+    "activities": {
+      "question": "What activities can I do?",
+      "answer": "We offer guided trails, canoe trips, bird watching, sport fishing, visits to riverside communities, and night expeditions."
+    },
+    "contact": {
+      "question": "How can I contact you?",
+      "answer": "Contact us via WhatsApp: +55 92 8482-9983, phone: +55 92 3232-5050, or email: contato@pousadasamazonia.com"
+    },
+    "stillHaveQuestions": "Still have questions?",
+    "contactUs": "Contact us via WhatsApp and we'll be happy to help!",
+    "whatsappButton": "Chat on WhatsApp"
   }
 }

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
-import { Facebook, Instagram, Mail, Phone, Shield, LogIn } from "lucide-react";
+import { Facebook, Instagram, Mail, Phone, Shield, LogIn, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Footer = () => {
@@ -54,6 +54,11 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/faq" className="opacity-90 hover:opacity-100 transition-opacity">
+                  {t("footer.faq")}
+                </Link>
+              </li>
+              <li>
                 <a href="#" className="opacity-90 hover:opacity-100 transition-opacity">
                   {t("footer.privacyPolicy")}
                 </a>
@@ -74,6 +79,15 @@ const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">{t("footer.contact")}</h4>
             <div className="space-y-3 text-sm">
+              <a 
+                href="https://wa.me/559284829983" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 opacity-90 hover:opacity-100 transition-opacity"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span>+55 92 8482-9983</span>
+              </a>
               <div className="flex items-center space-x-2 opacity-90">
                 <Phone className="h-4 w-4" />
                 <span>+55 92 3232-5050</span>
@@ -83,11 +97,21 @@ const Footer = () => {
                 <span>contato@pousadasamazonia.com</span>
               </div>
               <div className="flex space-x-4 mt-4">
-                <a href="#" className="opacity-90 hover:opacity-100 transition-opacity">
-                  <Facebook className="h-5 w-5" />
-                </a>
-                <a href="#" className="opacity-90 hover:opacity-100 transition-opacity">
+                <a 
+                  href="https://www.instagram.com/pousadararazul/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="opacity-90 hover:opacity-100 transition-opacity"
+                  aria-label="Instagram"
+                >
                   <Instagram className="h-5 w-5" />
+                </a>
+                <a 
+                  href="#" 
+                  className="opacity-90 hover:opacity-100 transition-opacity"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-5 w-5" />
                 </a>
               </div>
             </div>

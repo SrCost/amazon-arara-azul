@@ -55,6 +55,7 @@
   "footer": {
     "about": "À Propos",
     "contact": "Contact",
+    "faq": "FAQ",
     "phone": "Téléphone",
     "email": "E-mail",
     "followUs": "Suivez-nous",
@@ -213,5 +214,44 @@
     "importantTips": "Conseils Importants",
     "documentation": "Documentation",
     "whatToBring": "Quoi Apporter"
+  },
+  "faq": {
+    "title": "Questions Fréquentes",
+    "subtitle": "Trouvez des réponses aux questions les plus courantes sur votre séjour",
+    "checkInTime": {
+      "question": "Quels sont les horaires d'arrivée et de départ?",
+      "answer": "Arrivée: à partir de 14h. Départ: jusqu'à 12h. Pour des horaires spéciaux, contactez-nous par WhatsApp."
+    },
+    "vaccines": {
+      "question": "Quels vaccins sont nécessaires?",
+      "answer": "Nous recommandons fortement le vaccin contre la fièvre jaune, appliqué au moins 10 jours avant le voyage. D'autres vaccins comme l'hépatite A et le tétanos sont également recommandés."
+    },
+    "transfer": {
+      "question": "Proposez-vous un service de transfert?",
+      "answer": "Oui! Nous proposons un transfert depuis l'aéroport de Manaus jusqu'à l'auberge. Le service doit être réservé à l'avance et a un coût supplémentaire."
+    },
+    "cancellation": {
+      "question": "Quelle est la politique d'annulation?",
+      "answer": "Annulation gratuite jusqu'à 7 jours avant l'arrivée. Entre 3-7 jours: remboursement de 50%. Moins de 3 jours: pas de remboursement."
+    },
+    "payment": {
+      "question": "Quels moyens de paiement acceptez-vous?",
+      "answer": "Nous acceptons carte de crédit, carte de débit, PIX et virement bancaire. Un acompte de 30% est nécessaire pour confirmer la réservation."
+    },
+    "amenities": {
+      "question": "Quelles commodités sont incluses?",
+      "answer": "Tous les logements incluent petit-déjeuner, Wi-Fi, linge de lit et de bain, climatisation et kit d'hygiène durable."
+    },
+    "activities": {
+      "question": "Quelles activités puis-je faire?",
+      "answer": "Nous proposons des sentiers guidés, balades en canoë, observation des oiseaux, pêche sportive, visites de communautés riveraines et expéditions nocturnes."
+    },
+    "contact": {
+      "question": "Comment puis-je vous contacter?",
+      "answer": "Contactez-nous par WhatsApp: +55 92 8482-9983, téléphone: +55 92 3232-5050 ou email: contato@pousadasamazonia.com"
+    },
+    "stillHaveQuestions": "Vous avez encore des questions?",
+    "contactUs": "Contactez-nous par WhatsApp et nous serons ravis de vous aider!",
+    "whatsappButton": "Discuter sur WhatsApp"
   }
 }

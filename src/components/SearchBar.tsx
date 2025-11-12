@@ -43,6 +43,16 @@ const SearchBar = () => {
       return;
     }
 
+    const guestsNum = parseInt(guests);
+    if (guestsNum > 3) {
+      toast({
+        title: t("common.error"),
+        description: "Máx. 3 hóspedes por acomodação",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSearching(true);
     try {
       // Check for conflicting reservations
@@ -142,8 +152,6 @@ const SearchBar = () => {
               <SelectItem value="1">1 pessoa</SelectItem>
               <SelectItem value="2">2 pessoas</SelectItem>
               <SelectItem value="3">3 pessoas</SelectItem>
-              <SelectItem value="4">4 pessoas</SelectItem>
-              <SelectItem value="5">5+ pessoas</SelectItem>
             </SelectContent>
           </Select>
         </div>
