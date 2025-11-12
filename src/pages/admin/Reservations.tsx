@@ -145,19 +145,64 @@ const Reservations = () => {
     if (!selectedReservation) return;
 
     try {
+      // Validate required fields
+      if (!editForm.guest_name || !editForm.guest_email) {
+        toast.error("Nome e email do hóspede são obrigatórios");
+        return;
+      }
+
+      if (!editForm.check_in || !editForm.check_out) {
+        toast.error("Datas de check-in e check-out são obrigatórias");
+        return;
+      }
+
+      // Validate dates
+      const checkInDate = new Date(editForm.check_in);
+      const checkOutDate = new Date(editForm.check_out);
+      
+      if (checkOutDate <= checkInDate) {
+        toast.error("A data de check-out deve ser posterior ao check-in");
+        return;
+      }
+
       const { error } = await supabase
         .from("reservations")
-        .update(editForm)
+        .update({
+          guest_name: editForm.guest_name,
+          guest_email: editForm.guest_email,
+          guest_phone: editForm.guest_phone,
+          check_in: editForm.check_in,
+          check_out: editForm.check_out,
+          guests: editForm.guests,
+          status: editForm.status,
+          payment_method: editForm.payment_method,
+          total_price: editForm.total_price,
+          special_requests: editForm.special_requests,
+        })
         .eq("id", selectedReservation.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Erro ao atualizar reserva:", error);
+        throw error;
+      }
 
-      toast.success("Reserva atualizada com sucesso!");
+      console.log("✅ Reserva atualizada:", {
+        id: selectedReservation.id,
+        guest: editForm.guest_name,
+        status: editForm.status
+      });
+
+      toast.success("✅ Reserva atualizada com sucesso!", {
+        description: "Todas as alterações foram salvas e registradas no log de auditoria."
+      });
+      
       setIsEditDialogOpen(false);
       fetchReservations();
-    } catch (error) {
-      console.error("Error updating reservation:", error);
-      toast.error("Erro ao atualizar reserva");
+    } catch (error: any) {
+      console.error("❌ Erro ao atualizar reserva:", error);
+      toast.error("Erro ao atualizar reserva", {
+        description: error.message || "Verifique as permissões e tente novamente."
+      });
     }
   };
 
@@ -177,15 +222,29 @@ const Reservations = () => {
         .delete()
         .eq("id", reservationToDelete);
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Erro ao excluir reserva:", error);
+        throw error;
+      }
 
-      toast.success("Reserva excluída com sucesso!");
+      console.log("✅ Reserva excluída:", {
+        id: reservationToDelete,
+        guest: reservationToLog?.guest_name,
+        lodge: reservationToLog?.room_name
+      });
+
+      toast.success("🗑️ Reserva excluída com sucesso!", {
+        description: "A reserva foi permanentemente removida e a ação foi registrada no log de auditoria."
+      });
+      
       setDeleteDialogOpen(false);
       setReservationToDelete(null);
       fetchReservations();
-    } catch (error) {
-      console.error("Error deleting reservation:", error);
-      toast.error("Erro ao excluir reserva");
+    } catch (error: any) {
+      console.error("❌ Erro ao excluir reserva:", error);
+      toast.error("Erro ao excluir reserva", {
+        description: error.message || "Verifique as permissões e tente novamente."
+      });
     }
   };
 
@@ -373,58 +432,178 @@ const Reservations = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Editar Reserva</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Status da Reserva</Label>
-                <Select 
-                  value={editForm.status} 
-                  onValueChange={(value) => setEditForm({...editForm, status: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="confirmed">Confirmada</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="completed">Concluída</SelectItem>
-                    <SelectItem value="cancelled">Cancelada</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Status do Pagamento (Sincronizado automaticamente)</Label>
-                <div className="mt-2 p-3 bg-muted/50 rounded-md border border-border">
-                  {getPaymentStatusBadge(editForm.payment_status)}
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Este campo é atualizado automaticamente quando o status do pagamento é alterado em /admin/payments
-                  </p>
+          <div className="space-y-6">
+            {/* Guest Information Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Informações do Hóspede
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Nome Completo</Label>
+                  <Input 
+                    value={editForm.guest_name || ""} 
+                    onChange={(e) => setEditForm({...editForm, guest_name: e.target.value})}
+                    placeholder="Nome do hóspede"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">E-mail</Label>
+                  <Input 
+                    type="email"
+                    value={editForm.guest_email || ""} 
+                    onChange={(e) => setEditForm({...editForm, guest_email: e.target.value})}
+                    placeholder="email@example.com"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Telefone</Label>
+                  <Input 
+                    value={editForm.guest_phone || ""} 
+                    onChange={(e) => setEditForm({...editForm, guest_phone: e.target.value})}
+                    placeholder="+55 (92) 99999-9999"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Número de Hóspedes</Label>
+                  <Select 
+                    value={String(editForm.guests || 1)} 
+                    onValueChange={(value) => setEditForm({...editForm, guests: parseInt(value)})}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 pessoa</SelectItem>
+                      <SelectItem value="2">2 pessoas</SelectItem>
+                      <SelectItem value="3">3 pessoas</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
-            <div>
-              <Label>Método de Pagamento</Label>
-              <Input 
-                value={editForm.payment_method || ""} 
-                onChange={(e) => setEditForm({...editForm, payment_method: e.target.value})}
-              />
+
+            {/* Dates Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Datas da Reserva
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Check-in</Label>
+                  <Input 
+                    type="date"
+                    value={editForm.check_in || ""} 
+                    onChange={(e) => setEditForm({...editForm, check_in: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Check-out</Label>
+                  <Input 
+                    type="date"
+                    value={editForm.check_out || ""} 
+                    onChange={(e) => setEditForm({...editForm, check_out: e.target.value})}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <Label>Valor Total (R$)</Label>
+
+            {/* Status and Payment Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Status e Pagamento
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Status da Reserva</Label>
+                  <Select 
+                    value={editForm.status} 
+                    onValueChange={(value) => setEditForm({...editForm, status: value})}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="confirmed">Confirmada</SelectItem>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="completed">Concluída</SelectItem>
+                      <SelectItem value="cancelled">Cancelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">
+                    Status do Pagamento 
+                    <span className="text-xs text-muted-foreground ml-1">(Somente Leitura)</span>
+                  </Label>
+                  <div className="mt-2 p-3 bg-muted/50 rounded-md border border-border">
+                    {getPaymentStatusBadge(editForm.payment_status || 'pending')}
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ℹ️ Atualizado automaticamente via <strong>/admin/payments</strong>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Financial Section */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                Informações Financeiras
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Método de Pagamento</Label>
+                  <Input 
+                    value={editForm.payment_method || ""} 
+                    onChange={(e) => setEditForm({...editForm, payment_method: e.target.value})}
+                    placeholder="PIX, Cartão de Crédito, etc."
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Valor Total (R$)</Label>
+                  <Input 
+                    type="number"
+                    step="0.01"
+                    value={editForm.total_price || 0} 
+                    onChange={(e) => setEditForm({...editForm, total_price: parseFloat(e.target.value)})}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Special Requests Section */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Solicitações Especiais</Label>
               <Input 
-                type="number"
-                value={editForm.total_price || 0} 
-                onChange={(e) => setEditForm({...editForm, total_price: parseFloat(e.target.value)})}
+                value={editForm.special_requests || ""} 
+                onChange={(e) => setEditForm({...editForm, special_requests: e.target.value})}
+                placeholder="Observações ou solicitações do hóspede..."
+                className="mt-1"
               />
+              <p className="text-xs text-muted-foreground">
+                Campo opcional para notas adicionais sobre a reserva
+              </p>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleUpdateReservation} className="bg-gradient-forest">Salvar Alterações</Button>
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateReservation} className="bg-gradient-forest">
+              💾 Salvar Alterações
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -433,9 +612,29 @@ const Reservations = () => {
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-            <AlertDialogDescription>
-              Deseja realmente excluir esta reserva? Esta ação não poderá ser desfeita e todos os dados relacionados serão permanentemente removidos.
+            <AlertDialogTitle className="flex items-center gap-2">
+              🗑️ Confirmar Exclusão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p className="font-medium text-foreground">
+                Deseja realmente excluir esta reserva?
+              </p>
+              {reservationToDelete && (() => {
+                const reservation = reservations.find(r => r.id === reservationToDelete);
+                return reservation ? (
+                  <div className="bg-muted p-3 rounded-md text-sm space-y-1">
+                    <p><strong>Hóspede:</strong> {reservation.guest_name}</p>
+                    <p><strong>Pousada:</strong> {reservation.room_name}</p>
+                    <p><strong>Check-in:</strong> {new Date(reservation.check_in).toLocaleDateString()}</p>
+                  </div>
+                ) : null;
+              })()}
+              <p className="text-destructive">
+                ⚠️ Esta ação não poderá ser desfeita. Todos os dados relacionados serão permanentemente removidos do sistema.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                A exclusão será registrada no log de auditoria para rastreabilidade.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -446,7 +645,7 @@ const Reservations = () => {
               onClick={handleConfirmDelete}
               className="bg-red-600 hover:bg-red-700"
             >
-              Excluir
+              Excluir Permanentemente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
