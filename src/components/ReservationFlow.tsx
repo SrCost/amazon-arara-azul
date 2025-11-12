@@ -174,7 +174,18 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
       if (reservationError) {
         console.error("Erro ao criar reserva:", reservationError);
-        throw new Error("Falha ao registrar reserva no banco de dados.");
+        
+        // Provide more specific error messages
+        let errorMsg = "Falha ao registrar reserva. ";
+        if (reservationError.message?.includes("violates row-level security")) {
+          errorMsg += "Erro de permissão. Por favor, tente novamente.";
+        } else if (reservationError.message?.includes("duplicate")) {
+          errorMsg += "Esta reserva já existe.";
+        } else {
+          errorMsg += reservationError.message || "Erro desconhecido.";
+        }
+        
+        throw new Error(errorMsg);
       }
 
       // Create payment record
@@ -283,27 +294,39 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       // - Verify transaction_id matches database records
       // ================================================================
 
-      console.log("Reserva criada com sucesso:", {
+      console.log("✅ Reserva criada com sucesso:", {
         reservationId: reservation.id,
         guestName,
+        guestEmail,
         lodgeName,
+        roomId,
+        checkIn: checkIn?.toISOString().split('T')[0],
+        checkOut: checkOut?.toISOString().split('T')[0],
         totalPrice,
         paymentMethod,
+        paymentStatus: "pending",
         nights
       });
 
-      toast.success("Reserva confirmada com sucesso! Redirecionando...");
+      toast.success("🎉 Reserva confirmada com sucesso! Redirecionando...", {
+        duration: 2000,
+      });
       
       // Small delay to show success message before redirect
       setTimeout(() => {
-        const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}&guests=${guests}&total=${totalPrice}`;
+        const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}&guests=${guests}&total=${totalPrice}&email=${encodeURIComponent(guestEmail)}`;
         window.location.href = successUrl;
-      }, 1000);
+      }, 1500);
       
     } catch (error: any) {
-      console.error("Erro ao criar reserva:", error);
-      const errorMessage = error?.message || "Não foi possível completar a operação. Verifique sua conexão e tente novamente.";
-      toast.error(errorMessage);
+      console.error("❌ Erro ao criar reserva:", error);
+      const errorMessage = error?.message || "Não foi possível completar a reserva. Verifique sua conexão e tente novamente.";
+      
+      toast.error(errorMessage, {
+        duration: 5000,
+        description: "Por favor, tente novamente ou entre em contato conosco via WhatsApp."
+      });
+      
       setIsSubmitting(false);
     }
   };
@@ -434,7 +457,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 </>
               )}
 
-              <div>
+               <div>
                 <Label htmlFor="guests">{t("search.guests")}</Label>
                 <Select value={guests} onValueChange={setGuests}>
                   <SelectTrigger>
@@ -444,9 +467,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                     <SelectItem value="1">1 pessoa</SelectItem>
                     <SelectItem value="2">2 pessoas</SelectItem>
                     <SelectItem value="3">3 pessoas</SelectItem>
-                    <SelectItem value="4">4 pessoas</SelectItem>
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Máximo de 3 hóspedes por acomodação
+                </p>
               </div>
 
               {checkIn && checkOut && (
@@ -478,46 +503,66 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">{t("reservation.guestName")}</Label>
-                  <Input
-                    id="name"
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="Nome completo"
-                  />
+              <div className="grid grid-cols-1 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name" className="text-sm font-medium">
+                      {t("reservation.guestName")} <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="name"
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Nome completo"
+                      className="mt-1"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email" className="text-sm font-medium">
+                      {t("reservation.guestEmail")} <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={guestEmail}
+                      onChange={(e) => setGuestEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      className="mt-1"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="email">{t("reservation.guestEmail")}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={guestEmail}
-                    onChange={(e) => setGuestEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="phone">{t("reservation.guestPhone")}</Label>
+                  <Label htmlFor="phone" className="text-sm font-medium">
+                    {t("reservation.guestPhone")} <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="phone"
                     value={guestPhone}
                     onChange={(e) => setGuestPhone(e.target.value)}
-                    placeholder="+55 (11) 99999-9999"
+                    placeholder="+55 (92) 99999-9999"
+                    className="mt-1"
+                    required
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Incluir código do país e DDD
+                  </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="requests">{t("reservation.specialRequests")}</Label>
+                  <Label htmlFor="requests" className="text-sm font-medium">
+                    {t("reservation.specialRequests")}
+                  </Label>
                   <Textarea
                     id="requests"
                     value={specialRequests}
                     onChange={(e) => setSpecialRequests(e.target.value)}
-                    placeholder="Alguma solicitação especial?"
+                    placeholder="Alguma solicitação especial? (opcional)"
                     rows={4}
+                    className="mt-1"
                   />
                 </div>
               </div>
