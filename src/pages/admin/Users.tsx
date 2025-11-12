@@ -112,7 +112,7 @@ const Users = () => {
 
       setUsers(usersWithRoles);
 
-      // Setup realtime updates
+      // Setup realtime updates for both profiles and user_roles
       const profilesChannel = supabase
         .channel('profiles-changes')
         .on(
@@ -126,8 +126,22 @@ const Users = () => {
         )
         .subscribe();
 
+      const rolesChannel = supabase
+        .channel('user-roles-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_roles'
+          },
+          () => fetchUsers()
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(profilesChannel);
+        supabase.removeChannel(rolesChannel);
       };
     } catch (error) {
       console.error("Error fetching users:", error);
