@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -18,9 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, History } from "lucide-react";
+import { Search, History, Calendar, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ActivityLog {
   id: string;
@@ -35,44 +37,74 @@ interface ActivityLog {
 
 const Audit = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAction, setFilterAction] = useState<string>("all");
   const [filterEntity, setFilterEntity] = useState<string>("all");
+  const [filterDateRange, setFilterDateRange] = useState<string>("7"); // Days
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
-    fetchLogs();
+    checkUserRole();
+  }, [user]);
 
-    // Setup realtime updates
-    const channel = supabase
-      .channel('activity-log-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'activity_log'
-        },
-        () => fetchLogs()
-      )
-      .subscribe();
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchLogs();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+      // Setup realtime updates
+      const channel = supabase
+        .channel('activity-log-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'activity_log'
+          },
+          () => fetchLogs()
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [isSuperAdmin, filterDateRange]);
+
+  const checkUserRole = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    setIsSuperAdmin(data?.role === 'super_admin');
+  };
 
   const fetchLogs = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      const daysAgo = parseInt(filterDateRange);
+      const dateThreshold = new Date();
+      dateThreshold.setDate(dateThreshold.getDate() - daysAgo);
+
+      let query = supabase
         .from("activity_log")
         .select("*")
+        .gte("created_at", dateThreshold.toISOString())
         .order("created_at", { ascending: false })
-        .limit(100);
+        .limit(500);
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setLogs(data || []);
+      console.log(`Loaded ${data?.length || 0} audit logs from last ${daysAgo} days`);
     } catch (error) {
       console.error("Error fetching activity logs:", error);
       toast.error("Erro ao carregar histórico de atividades");
@@ -94,15 +126,25 @@ const Audit = () => {
   };
 
   const getEntityBadge = (entityType: string) => {
-    const variants: { [key: string]: any } = {
-      user: { label: "Usuário", className: "bg-indigo-100 text-indigo-800" },
-      reservation: { label: "Reserva", className: "bg-amber-100 text-amber-800" },
-      payment: { label: "Pagamento", className: "bg-emerald-100 text-emerald-800" },
-      message: { label: "Mensagem", className: "bg-cyan-100 text-cyan-800" },
+    const entityMap: { [key: string]: string } = {
+      'profiles': 'Perfil',
+      'user_roles': 'Role de Usuário',
+      'reservations': 'Reserva',
+      'payments': 'Pagamento',
+      'contact_messages': 'Mensagem',
     };
 
-    const variant = variants[entityType] || { label: entityType, className: "bg-gray-100 text-gray-800" };
-    return <Badge className={variant.className}>{variant.label}</Badge>;
+    const label = entityMap[entityType] || entityType;
+    const variants: { [key: string]: any } = {
+      'profiles': { className: "bg-indigo-100 text-indigo-800" },
+      'user_roles': { className: "bg-purple-100 text-purple-800" },
+      'reservations': { className: "bg-amber-100 text-amber-800" },
+      'payments': { className: "bg-emerald-100 text-emerald-800" },
+      'contact_messages': { className: "bg-cyan-100 text-cyan-800" },
+    };
+
+    const variant = variants[entityType] || { className: "bg-gray-100 text-gray-800" };
+    return <Badge className={variant.className}>{label}</Badge>;
   };
 
   const filteredLogs = logs.filter((log) => {
@@ -116,6 +158,22 @@ const Audit = () => {
 
     return matchesSearch && matchesAction && matchesEntity;
   });
+
+  if (!isSuperAdmin && !loading) {
+    return (
+      <div className="p-8">
+        <Card>
+          <CardContent className="p-12 text-center">
+            <History className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-bold mb-2">Acesso Restrito</h2>
+            <p className="text-muted-foreground">
+              Apenas super administradores podem visualizar o histórico de auditoria.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="p-8">Carregando...</div>;
@@ -148,6 +206,17 @@ const Audit = () => {
               />
             </div>
             
+            <Select value={filterDateRange} onValueChange={setFilterDateRange}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">Últimas 24 horas</SelectItem>
+                <SelectItem value="7">Últimos 7 dias</SelectItem>
+                <SelectItem value="15">Últimos 15 dias</SelectItem>
+              </SelectContent>
+            </Select>
+
             <Select value={filterAction} onValueChange={setFilterAction}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Filtrar por ação" />
@@ -166,19 +235,34 @@ const Audit = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos os tipos</SelectItem>
-                <SelectItem value="user">Usuários</SelectItem>
-                <SelectItem value="reservation">Reservas</SelectItem>
-                <SelectItem value="payment">Pagamentos</SelectItem>
-                <SelectItem value="message">Mensagens</SelectItem>
+                <SelectItem value="profiles">Perfis</SelectItem>
+                <SelectItem value="user_roles">Roles</SelectItem>
+                <SelectItem value="reservations">Reservas</SelectItem>
+                <SelectItem value="payments">Pagamentos</SelectItem>
+                <SelectItem value="contact_messages">Mensagens</SelectItem>
               </SelectContent>
             </Select>
+
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={fetchLogs}
+              title="Atualizar"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
 
-          <div className="mb-4 p-4 bg-muted/50 rounded-lg border border-border">
-            <p className="text-sm text-muted-foreground">
-              <strong>Retenção de dados:</strong> Os registros são automaticamente excluídos após 15 dias para otimização de armazenamento. 
-              Total de registros atuais: <strong>{logs.length}</strong>
-            </p>
+          <div className="mb-4 p-4 bg-muted/50 rounded-lg border border-border flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                <strong>Retenção:</strong> Registros são automaticamente excluídos após 15 dias (diariamente às 2h).
+              </p>
+            </div>
+            <div className="text-sm font-medium">
+              {filteredLogs.length} de {logs.length} registros
+            </div>
           </div>
 
           <div className="rounded-md border">
