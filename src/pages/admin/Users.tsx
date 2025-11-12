@@ -135,7 +135,10 @@ const Users = () => {
             schema: 'public',
             table: 'user_roles'
           },
-          () => fetchUsers()
+          () => {
+            console.log('Role changed - refreshing users list');
+            fetchUsers();
+          }
         )
         .subscribe();
 
@@ -216,6 +219,12 @@ const Users = () => {
       return;
     }
 
+    // Prevent changing own role
+    if (userId === user?.id) {
+      toast.error("Você não pode alterar sua própria função");
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("user_roles")
@@ -224,9 +233,12 @@ const Users = () => {
 
       if (error) throw error;
 
-      toast.success("Função atualizada com sucesso");
-      fetchUsers();
-      console.log("Role updated:", { userId, newRole });
+      toast.success("Função atualizada com sucesso. O usuário terá novas permissões na próxima ação.");
+      
+      // Force immediate refresh to show the change
+      await fetchUsers();
+      
+      console.log("Role updated:", { userId, newRole, timestamp: new Date().toISOString() });
     } catch (error) {
       console.error("Error updating role:", error);
       toast.error("Erro ao atualizar função");
