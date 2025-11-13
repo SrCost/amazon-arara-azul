@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Leaf, Shield, Heart } from "lucide-react";
@@ -6,60 +7,55 @@ import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-amazon.jpg";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
 import lodge4 from "@/assets/lodge-4.jpg";
 
+const lodgeImages = [lodge1, lodge2, lodge3, lodge4];
+
 const Index = () => {
-  const { t } = useTranslation();
-  const lodges = [
-    {
-      id: "canopy-retreat",
-      name: "Canopy Retreat",
-      location: "Reserva do Jaú, Amazonas",
-      image: lodge1,
-      price: "R$ 850",
-      guests: 4,
-      description:
-        "Refúgio sustentável integrado à floresta, com vistas panorâmicas do dossel amazônico e arquitetura ecológica moderna.",
-      amenities: ["wifi", "breakfast"],
-    },
-    {
-      id: "rio-serenidade",
-      name: "Rio Serenidade",
-      location: "Beira do Rio Negro, AM",
-      image: lodge2,
-      price: "R$ 720",
-      guests: 2,
-      description:
-        "Bangalô tradicional à beira do rio, com deck privativo, redes e vista privilegiada para o pôr do sol amazônico.",
-      amenities: ["wifi", "breakfast"],
-    },
-    {
-      id: "casa-arvore-esmeralda",
-      name: "Casa na Árvore Esmeralda",
-      location: "Parque Nacional, Amazonas",
-      image: lodge3,
-      price: "R$ 950",
-      guests: 3,
-      description:
-        "Experiência única em casa circular suspensa nas árvores, envolta pela neblina matinal e cantos de aves exóticas.",
-      amenities: ["wifi", "breakfast"],
-    },
-    {
-      id: "flutuante-ama",
-      name: "Flutuante AMA",
-      location: "Lago do Jacaré, AM",
-      image: lodge4,
-      price: "R$ 1.200",
-      guests: 4,
-      description:
-        "Lodge flutuante de design contemporâneo com energia solar, refletindo as cores do entardecer nas águas amazônicas.",
-      amenities: ["wifi", "breakfast"],
-    },
-  ];
+  const { t, i18n } = useTranslation();
+  const [lodges, setLodges] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLodges = async () => {
+      try {
+        const { data: rooms, error } = await supabase
+          .from("rooms")
+          .select("*")
+          .eq("is_active", true)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        // Map rooms to lodge format with localized content
+        const mappedLodges = rooms?.map((room, index) => ({
+          id: room.id,
+          slug: room.slug || room.id,
+          name: room[`name_${i18n.language}`] || room.name_pt,
+          location: "MANACAPURU, AMAZONIA - AM",
+          image: lodgeImages[index % lodgeImages.length],
+          price: `R$ ${room.price_per_night}`,
+          guests: room.max_guests,
+          description: room[`description_${i18n.language}`] || room.description_pt,
+          amenities: room.amenities || ["wifi", "breakfast"],
+        })) || [];
+
+        setLodges(mappedLodges);
+      } catch (error) {
+        console.error("Error fetching lodges:", error);
+        setLodges([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLodges();
+  }, [i18n.language]);
 
   const features = [
     {
@@ -157,11 +153,21 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {lodges.map((lodge) => (
-              <LodgeCard key={lodge.id} {...lodge} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground">Carregando pousadas...</p>
+            </div>
+          ) : lodges.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-lg text-muted-foreground">Nenhuma pousada disponível no momento.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {lodges.map((lodge) => (
+                <LodgeCard key={lodge.id} {...lodge} />
+              ))}
+            </div>
+          )}
 
           <div className="text-center">
             <Button size="lg" variant="outline" asChild>
