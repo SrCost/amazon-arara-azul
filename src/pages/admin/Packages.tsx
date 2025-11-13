@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import AdminLayout from "./AdminLayout";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -253,16 +253,14 @@ const Packages = () => {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-screen">
-          <p className="text-muted-foreground">Carregando...</p>
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-muted-foreground">Carregando...</p>
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
+    
       <div className="p-8">
         {/* Header */}
         <div className="mb-8">
@@ -623,7 +621,7 @@ const Packages = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </AdminLayout>
+    
   );
 };
 
