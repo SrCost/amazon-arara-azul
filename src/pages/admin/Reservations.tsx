@@ -45,6 +45,8 @@ import { toast } from "sonner";
 interface Reservation {
   id: string;
   room_name: string;
+  package_id?: string;
+  package_name?: string;
   guest_name: string;
   guest_email: string;
   guest_phone: string;
@@ -117,11 +119,23 @@ const Reservations = () => {
     try {
       const { data, error } = await supabase
         .from("reservations")
-        .select("*")
+        .select(`
+          *,
+          packages (
+            name
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setReservations(data || []);
+      
+      // Map the data to include package_name
+      const mappedData = (data || []).map(reservation => ({
+        ...reservation,
+        package_name: reservation.packages?.name || null,
+      }));
+      
+      setReservations(mappedData as Reservation[]);
     } catch (error) {
       console.error("Error fetching reservations:", error);
       toast.error("Erro ao carregar reservas");
@@ -320,6 +334,7 @@ const Reservations = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Pousada</TableHead>
+                  <TableHead>Pacote</TableHead>
                   <TableHead>Hóspede</TableHead>
                   <TableHead>Check-in</TableHead>
                   <TableHead>Check-out</TableHead>
@@ -333,6 +348,9 @@ const Reservations = () => {
                 {filteredReservations.map((reservation) => (
                   <TableRow key={reservation.id}>
                     <TableCell className="font-medium">{reservation.room_name || "N/A"}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {reservation.package_name || "-"}
+                    </TableCell>
                     <TableCell className="font-medium">{reservation.guest_name}</TableCell>
                     <TableCell>{new Date(reservation.check_in).toLocaleDateString()}</TableCell>
                     <TableCell>{new Date(reservation.check_out).toLocaleDateString()}</TableCell>

@@ -12,6 +12,7 @@ import {
   Users as UsersIcon,
   DollarSign,
   History,
+  Package,
 } from "lucide-react";
 import logoArara from "@/assets/logo-arara-azul.jpg";
 
@@ -58,9 +59,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
   ];
 
-  // Admin e Super Admin têm acesso a Payments
+  // Admin e Super Admin têm acesso a Payments e Packages
   const adminItems = isAdmin || isSuperAdmin
     ? [
+        {
+          icon: Package,
+          label: "Pacotes",
+          path: "/admin/packages",
+        },
         {
           icon: DollarSign,
           label: "Pagamentos",

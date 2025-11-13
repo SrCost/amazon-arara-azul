@@ -80,6 +80,51 @@ export type Database = {
         }
         Relationships: []
       }
+      packages: {
+        Row: {
+          created_at: string
+          description: string
+          duration: string
+          experiences: Json
+          id: string
+          inclusions: Json
+          is_active: boolean
+          name: string
+          people: number
+          price: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration: string
+          experiences?: Json
+          id?: string
+          inclusions?: Json
+          is_active?: boolean
+          name: string
+          people?: number
+          price: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: string
+          experiences?: Json
+          id?: string
+          inclusions?: Json
+          is_active?: boolean
+          name?: string
+          people?: number
+          price?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payments: {
         Row: {
           amount: number
@@ -161,6 +206,7 @@ export type Database = {
           guest_phone: string | null
           guests: number
           id: string
+          package_id: string | null
           payment_method: string | null
           payment_status: string | null
           room_id: string
@@ -180,6 +226,7 @@ export type Database = {
           guest_phone?: string | null
           guests: number
           id?: string
+          package_id?: string | null
           payment_method?: string | null
           payment_status?: string | null
           room_id: string
@@ -199,6 +246,7 @@ export type Database = {
           guest_phone?: string | null
           guests?: number
           id?: string
+          package_id?: string | null
           payment_method?: string | null
           payment_status?: string | null
           room_id?: string
@@ -210,6 +258,20 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "reservations_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservations_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages_public"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "reservations_room_id_fkey"
             columns: ["room_id"]
@@ -299,7 +361,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      packages_public: {
+        Row: {
+          description: string | null
+          duration: string | null
+          experiences: Json | null
+          id: string | null
+          inclusions: Json | null
+          name: string | null
+          people: number | null
+          price: number | null
+          slug: string | null
+        }
+        Insert: {
+          description?: string | null
+          duration?: string | null
+          experiences?: Json | null
+          id?: string | null
+          inclusions?: Json | null
+          name?: string | null
+          people?: number | null
+          price?: number | null
+          slug?: string | null
+        }
+        Update: {
+          description?: string | null
+          duration?: string | null
+          experiences?: Json | null
+          id?: string | null
+          inclusions?: Json | null
+          name?: string | null
+          people?: number | null
+          price?: number | null
+          slug?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_old_activity_logs: { Args: never; Returns: undefined }

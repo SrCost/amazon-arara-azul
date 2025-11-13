@@ -12,6 +12,7 @@ const ReservationSuccess = () => {
   
   const guestName = searchParams.get("name") || "Hóspede";
   const lodgeName = searchParams.get("lodge") || "Pousada";
+  const packageName = searchParams.get("package");
   const checkIn = searchParams.get("checkIn");
   const checkOut = searchParams.get("checkOut");
   const guests = searchParams.get("guests") || "2";
@@ -55,6 +56,12 @@ const ReservationSuccess = () => {
                     <span className="text-muted-foreground">Pousada:</span>
                     <span className="font-medium">{lodgeName}</span>
                   </div>
+                  {packageName && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Pacote:</span>
+                      <span className="font-medium">{packageName}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Check-in:</span>
                     <span className="font-medium">{checkIn && new Date(checkIn).toLocaleDateString('pt-BR')}</span>

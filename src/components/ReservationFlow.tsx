@@ -40,6 +40,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+  const [packages, setPackages] = useState<any[]>([]);
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
   const [guests, setGuests] = useState("2");
@@ -65,11 +67,21 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
   }, [loadingAvailability]);
 
+  // Load packages
+  useEffect(() => {
+    const loadPackages = async () => {
+      const { data } = await supabase.from("packages_public").select("*");
+      setPackages(data || []);
+    };
+    loadPackages();
+  }, []);
+
   const steps = [
-    { number: 1, title: t("reservation.step2") },
-    { number: 2, title: t("reservation.step3") },
-    { number: 3, title: t("reservation.step4") },
-    { number: 4, title: t("reservation.step5") },
+    { number: 1, title: "Escolher Pacote (Opcional)" },
+    { number: 2, title: t("reservation.step2") },
+    { number: 3, title: t("reservation.step3") },
+    { number: 4, title: t("reservation.step4") },
+    { number: 5, title: t("reservation.step5") },
   ];
 
   const calculateTotal = () => {
@@ -82,6 +94,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
   const handleNext = () => {
     if (step === 1) {
+      // Package selection is optional, just proceed
+    }
+    if (step === 2) {
       if (!checkIn || !checkOut) {
         toast.error("Selecione as datas de check-in e check-out");
         return;
@@ -93,11 +108,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
     }
-    if (step === 2 && (!guestName || !guestEmail)) {
+    if (step === 3 && (!guestName || !guestEmail)) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
     }
-    if (step === 3) {
+    if (step === 4) {
       if (!paymentMethod) {
         toast.error("Selecione um método de pagamento");
         return;
@@ -107,7 +122,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
     }
-    if (step < 4) {
+    if (step < 5) {
       setStep(step + 1);
     }
   };
@@ -152,6 +167,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       const reservationData = {
         room_id: roomId,
         room_name: lodgeName, // Store lodge name for easy display
+        package_id: selectedPackage || null, // Include selected package
         user_id: user?.id || null, // Allow null for non-logged users
         guest_name: guestName,
         guest_email: guestEmail,
@@ -314,7 +330,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       
       // Small delay to show success message before redirect
       setTimeout(() => {
-        const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}&guests=${guests}&total=${totalPrice}&email=${encodeURIComponent(guestEmail)}`;
+        const selectedPkg = packages.find(p => p.id === selectedPackage);
+        const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}&guests=${guests}&total=${totalPrice}&email=${encodeURIComponent(guestEmail)}${selectedPkg ? `&package=${encodeURIComponent(selectedPkg.name)}` : ''}`;
         window.location.href = successUrl;
       }, 1500);
       
@@ -364,8 +381,62 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
       <Card>
         <CardContent className="p-6">
-          {/* Step 1: Dates */}
+          {/* Step 1: Package Selection */}
           {step === 1 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-display font-bold mb-4">
+                  Escolher Pacote (Opcional)
+                </h2>
+                <p className="text-muted-foreground mb-6">
+                  Selecione um dos nossos pacotes turísticos ou prossiga sem pacote
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card
+                  className={`cursor-pointer transition-all ${
+                    selectedPackage === null
+                      ? "border-primary border-2"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  onClick={() => setSelectedPackage(null)}
+                >
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold mb-2">Sem Pacote</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Reservar apenas a hospedagem
+                    </p>
+                  </CardContent>
+                </Card>
+
+                {packages.map((pkg: any) => (
+                  <Card
+                    key={pkg.id}
+                    className={`cursor-pointer transition-all ${
+                      selectedPackage === pkg.id
+                        ? "border-primary border-2"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                    onClick={() => setSelectedPackage(pkg.id)}
+                  >
+                    <CardContent className="p-4">
+                      <h3 className="font-semibold mb-2">{pkg.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {pkg.duration} • {pkg.people} pessoas
+                      </p>
+                      <p className="text-lg font-bold text-primary">
+                        R$ {Number(pkg.price).toFixed(2)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Dates */}
+          {step === 2 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-display font-bold mb-4">
@@ -569,8 +640,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             </div>
           )}
 
-          {/* Step 3: Payment */}
-          {step === 3 && (
+          {/* Step 4: Payment */}
+          {step === 4 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-display font-bold mb-4">
@@ -713,8 +784,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             </div>
           )}
 
-          {/* Step 4: Confirmation */}
-          {step === 4 && (
+          {/* Step 5: Confirmation */}
+          {step === 5 && (
             <div className="space-y-6 text-center">
               <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
                 <Check className="h-10 w-10 text-green-600" />
