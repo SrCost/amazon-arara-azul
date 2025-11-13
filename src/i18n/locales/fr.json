@@ -2,6 +2,7 @@
   "nav": {
     "home": "Accueil",
     "lodges": "Lodges",
+    "packages": "Forfaits",
     "sustainability": "Durabilité",
     "howToGetThere": "Comment s'y rendre",
     "contact": "Contact",
@@ -253,5 +254,16 @@
     "stillHaveQuestions": "Vous avez encore des questions?",
     "contactUs": "Contactez-nous par WhatsApp et nous serons ravis de vous aider!",
     "whatsappButton": "Discuter sur WhatsApp"
+  },
+  "packages": {
+    "title": "Forfaits Amazoniens – Expériences Inoubliables",
+    "subtitle": "Explorez le cœur de l'Amazonie avec confort et authenticité. Nos forfaits combinent aventure, repos et gastronomie régionale, tout conçu pour faire de chaque moment une immersion dans la nature et la culture locale.",
+    "people": "personnes",
+    "inclusions": "Inclusions",
+    "experiences": "Expériences Incluses",
+    "totalValue": "Valeur Totale",
+    "bookButton": "Réserver ce Forfait",
+    "qualityTitle": "Cuisine Maison, Hospitalité et Confort Amazonien",
+    "qualityDescription": "Chaque expérience est accompagnée d'une authentique gastronomie régionale, préparée avec des ingrédients locaux et beaucoup de soin. Ici, vous vous sentez chez vous, au milieu de la forêt."
   }
 }

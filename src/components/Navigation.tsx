@@ -21,6 +21,7 @@ const Navigation = () => {
   const menuItems = [
     { label: t("nav.home"), href: "/" },
     { label: t("nav.lodges"), href: "/pousadas" },
+    { label: t("nav.packages"), href: "/pacotes" },
     { label: t("nav.sustainability"), href: "/sustentabilidade" },
     { label: t("nav.howToGetThere"), href: "/como-chegar" },
     { label: t("nav.contact"), href: "/contato" },

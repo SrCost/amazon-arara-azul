@@ -2,6 +2,7 @@
   "nav": {
     "home": "Inicio",
     "lodges": "Posadas",
+    "packages": "Paquetes",
     "sustainability": "Sostenibilidad",
     "howToGetThere": "Cómo Llegar",
     "contact": "Contacto",
@@ -253,5 +254,16 @@
     "stillHaveQuestions": "¿Aún tienes dudas?",
     "contactUs": "¡Contáctanos por WhatsApp y estaremos encantados de ayudarte!",
     "whatsappButton": "Chatear en WhatsApp"
+  },
+  "packages": {
+    "title": "Paquetes Amazónicos – Experiencias Inolvidables",
+    "subtitle": "Explora el corazón del Amazonas con comodidad y autenticidad. Nuestros paquetes combinan aventura, descanso y gastronomía regional, todo pensado para que cada momento sea una inmersión en la naturaleza y la cultura local.",
+    "people": "personas",
+    "inclusions": "Inclusiones",
+    "experiences": "Experiencias Incluidas",
+    "totalValue": "Valor Total",
+    "bookButton": "Reservar este Paquete",
+    "qualityTitle": "Comida Casera, Hospitalidad y Confort Amazónico",
+    "qualityDescription": "Cada experiencia viene acompañada de auténtica gastronomía regional, preparada con ingredientes locales y mucho cariño. Aquí, te sientes como en casa, en medio de la selva."
   }
 }

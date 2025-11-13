@@ -2,6 +2,7 @@
   "nav": {
     "home": "Início",
     "lodges": "Pousadas",
+    "packages": "Pacotes",
     "sustainability": "Sustentabilidade",
     "howToGetThere": "Como Chegar",
     "contact": "Contato",
@@ -254,5 +255,16 @@
     "stillHaveQuestions": "Ainda tem dúvidas?",
     "contactUs": "Entre em contato conosco pelo WhatsApp e teremos prazer em ajudar!",
     "whatsappButton": "Falar no WhatsApp"
+  },
+  "packages": {
+    "title": "Pacotes Amazônicos – Experiências Inesquecíveis",
+    "subtitle": "Explore o coração da Amazônia com conforto e autenticidade. Nossos pacotes combinam aventura, descanso e gastronomia regional, tudo pensado para que cada momento seja uma imersão na natureza e na cultura local.",
+    "people": "pessoas",
+    "inclusions": "Inclusões",
+    "experiences": "Experiências Incluídas",
+    "totalValue": "Valor Total",
+    "bookButton": "Reservar este Pacote",
+    "qualityTitle": "Comida Caseira, Hospitalidade e Conforto Amazônico",
+    "qualityDescription": "Cada experiência é acompanhada de gastronomia regional autêntica, preparada com ingredientes locais e muito carinho. Aqui, você se sente em casa, em meio à floresta."
   }
 }

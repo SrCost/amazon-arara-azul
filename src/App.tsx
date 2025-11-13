@@ -9,6 +9,7 @@ import "@/i18n/config";
 import Index from "./pages/Index";
 import Lodges from "./pages/Lodges";
 import LodgeDetail from "./pages/LodgeDetail";
+import Packages from "./pages/Packages";
 import Sustainability from "./pages/Sustainability";
 import HowToGetThere from "./pages/HowToGetThere";
 import Contact from "./pages/Contact";
@@ -38,6 +39,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/pousadas" element={<Lodges />} />
             <Route path="/pousadas/:id" element={<LodgeDetail />} />
+            <Route path="/pacotes" element={<Packages />} />
             <Route path="/sustentabilidade" element={<Sustainability />} />
             <Route path="/como-chegar" element={<HowToGetThere />} />
             <Route path="/contato" element={<Contact />} />

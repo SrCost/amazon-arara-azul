@@ -2,6 +2,7 @@
   "nav": {
     "home": "Home",
     "lodges": "Lodges",
+    "packages": "Packages",
     "sustainability": "Sustainability",
     "howToGetThere": "How to Get There",
     "contact": "Contact",
@@ -253,5 +254,16 @@
     "stillHaveQuestions": "Still have questions?",
     "contactUs": "Contact us via WhatsApp and we'll be happy to help!",
     "whatsappButton": "Chat on WhatsApp"
+  },
+  "packages": {
+    "title": "Amazon Packages – Unforgettable Experiences",
+    "subtitle": "Explore the heart of the Amazon with comfort and authenticity. Our packages combine adventure, rest, and regional cuisine, all designed to make every moment an immersion in nature and local culture.",
+    "people": "people",
+    "inclusions": "Inclusions",
+    "experiences": "Included Experiences",
+    "totalValue": "Total Value",
+    "bookButton": "Book this Package",
+    "qualityTitle": "Homemade Food, Hospitality, and Amazonian Comfort",
+    "qualityDescription": "Each experience is accompanied by authentic regional cuisine, prepared with local ingredients and lots of care. Here, you feel at home, in the middle of the forest."
   }
 }
