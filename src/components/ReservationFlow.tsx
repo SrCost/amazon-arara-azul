@@ -575,8 +575,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             </div>
           )}
 
-          {/* Step 2: Guest Info */}
-          {step === 2 && (
+          {/* Step 3: Guest Info */}
+          {step === 3 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-2xl font-display font-bold mb-4">

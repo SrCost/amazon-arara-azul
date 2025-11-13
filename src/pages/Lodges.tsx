@@ -61,6 +61,7 @@ const Lodges = () => {
         // Map rooms to lodge format with localized content
         const mappedLodges = rooms?.map((room, index) => ({
           id: room.id,
+          slug: room.slug || room.id,
           name: room[`name_${i18n.language}`] || room.name_pt,
           location: "MANACAPURU, AMAZONIA - AM",
           image: lodgeImages[index % lodgeImages.length],

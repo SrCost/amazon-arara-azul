@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 interface LodgeCardProps {
   id: string;
+  slug?: string;
   name: string;
   location: string;
   image: string;
@@ -16,6 +17,7 @@ interface LodgeCardProps {
 
 const LodgeCard = ({
   id,
+  slug,
   name,
   location,
   image,
@@ -77,7 +79,7 @@ const LodgeCard = ({
         </div>
 
         <Button asChild className="w-full bg-gradient-forest hover:opacity-90">
-          <Link to={`/pousadas/${id}`}>Ver Detalhes</Link>
+          <Link to={`/pousadas/${slug || id}`}>Ver Detalhes</Link>
         </Button>
       </CardContent>
     </Card>

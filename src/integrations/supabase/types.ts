@@ -298,6 +298,7 @@ export type Database = {
           name_fr: string
           name_pt: string
           price_per_night: number
+          slug: string | null
           updated_at: string | null
         }
         Insert: {
@@ -316,6 +317,7 @@ export type Database = {
           name_fr: string
           name_pt: string
           price_per_night: number
+          slug?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -334,6 +336,7 @@ export type Database = {
           name_fr?: string
           name_pt?: string
           price_per_night?: number
+          slug?: string | null
           updated_at?: string | null
         }
         Relationships: []

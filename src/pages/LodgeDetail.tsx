@@ -39,12 +39,22 @@ const LodgeDetail = () => {
 
   const fetchLodgeDetails = async () => {
     try {
-      const { data, error } = await supabase
+      // Try to fetch by slug first, fallback to id
+      let query = supabase
         .from("rooms")
         .select("*")
-        .eq("id", id)
-        .eq("is_active", true)
-        .single();
+        .eq("is_active", true);
+      
+      // Check if id looks like a UUID or a slug
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || "");
+      
+      if (isUUID) {
+        query = query.eq("id", id);
+      } else {
+        query = query.eq("slug", id);
+      }
+      
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
 
