@@ -14,7 +14,7 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-xl font-display font-bold mb-4">Pousadas Amazônia</h3>
+            <h3 className="text-xl font-display font-bold mb-4">Pousada Arara Azul</h3>
             <p className="text-sm opacity-90">
               {t("home.heroSubtitle")}
             </p>
@@ -122,7 +122,7 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-primary-foreground/20 mt-8 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm opacity-80">&copy; 2025 Pousadas Amazônia. {t("footer.allRightsReserved")}</p>
+          <p className="text-sm opacity-80">&copy; 2025 Pousada Arara Azul. {t("footer.allRightsReserved")}</p>
           
           {/* Admin Login Button - Discreto no rodapé */}
           {(isAdmin || isSuperAdmin) ? (
