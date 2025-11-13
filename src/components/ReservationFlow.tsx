@@ -191,15 +191,23 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       if (reservationError) {
         console.error("Erro ao criar reserva:", reservationError);
         
-        // Provide more specific error messages
-        let errorMsg = "Falha ao registrar reserva. ";
+        // Provide user-friendly error messages
+        let errorMsg = "Não foi possível registrar a reserva. ";
+        
         if (reservationError.message?.includes("violates row-level security")) {
-          errorMsg += "Erro de permissão. Por favor, tente novamente.";
+          errorMsg += "Por favor, tente novamente ou entre em contato via WhatsApp.";
         } else if (reservationError.message?.includes("duplicate")) {
-          errorMsg += "Esta reserva já existe.";
+          errorMsg += "Esta reserva já existe. Verifique suas reservas anteriores.";
+        } else if (reservationError.message?.includes("foreign key")) {
+          errorMsg += "Dados inválidos. Por favor, verifique as informações e tente novamente.";
         } else {
-          errorMsg += reservationError.message || "Erro desconhecido.";
+          errorMsg += "Por favor, tente novamente ou entre em contato conosco via WhatsApp.";
         }
+        
+        toast.error(errorMsg, {
+          duration: 5000,
+          description: "Precisa de ajuda? Clique no botão do WhatsApp no canto da tela."
+        });
         
         throw new Error(errorMsg);
       }
@@ -324,8 +332,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         nights
       });
 
-      toast.success("🎉 Reserva confirmada com sucesso! Redirecionando...", {
-        duration: 2000,
+      toast.success("🎉 Reserva confirmada com sucesso!", {
+        duration: 2500,
+        description: "Você receberá um email de confirmação em breve."
       });
       
       // Small delay to show success message before redirect
@@ -337,12 +346,16 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       
     } catch (error: any) {
       console.error("❌ Erro ao criar reserva:", error);
-      const errorMessage = error?.message || "Não foi possível completar a reserva. Verifique sua conexão e tente novamente.";
       
-      toast.error(errorMessage, {
-        duration: 5000,
-        description: "Por favor, tente novamente ou entre em contato conosco via WhatsApp."
-      });
+      // Only show additional toast if error wasn't already handled above
+      if (!error?.message?.includes("Não foi possível registrar a reserva")) {
+        const errorMessage = error?.message || "Não foi possível completar a reserva. Verifique sua conexão e tente novamente.";
+        
+        toast.error(errorMessage, {
+          duration: 5000,
+          description: "Por favor, tente novamente ou entre em contato conosco via WhatsApp."
+        });
+      }
       
       setIsSubmitting(false);
     }
