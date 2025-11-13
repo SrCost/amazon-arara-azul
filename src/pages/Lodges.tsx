@@ -62,7 +62,7 @@ const Lodges = () => {
         const mappedLodges = rooms?.map((room, index) => ({
           id: room.id,
           name: room[`name_${i18n.language}`] || room.name_pt,
-          location: "Amazonas, Brasil",
+          location: "MANACAPURU, AMAZONIA - AM",
           image: lodgeImages[index % lodgeImages.length],
           price: `R$ ${room.price_per_night}`,
           guests: room.max_guests,

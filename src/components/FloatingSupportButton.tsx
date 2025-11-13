@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { MessageCircle, X, MessageSquare, HelpCircle, Share2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import {
   Sheet,
@@ -9,12 +10,13 @@ import {
   SheetHeader,
   SheetTitle,
 } from './ui/sheet';
+import { SOCIAL_LINKS } from '@/config/socialLinks';
 
 const FloatingSupportButton = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
-  const whatsappNumber = '5592999999999'; // Replace with actual number
   const whatsappMessage = encodeURIComponent('Olá! Gostaria de mais informações sobre as pousadas.');
 
   return (
@@ -38,7 +40,7 @@ const FloatingSupportButton = () => {
 
           <div className="mt-6 space-y-4">
             <a
-              href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+              href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"
@@ -55,7 +57,7 @@ const FloatingSupportButton = () => {
             <button
               onClick={() => {
                 setIsOpen(false);
-                // Navigate to FAQ section or open FAQ dialog
+                navigate('/faq');
               }}
               className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors w-full text-left"
             >
@@ -74,7 +76,7 @@ const FloatingSupportButton = () => {
                 <p className="font-semibold">{t('support.social')}</p>
                 <div className="flex gap-2 mt-2">
                   <a
-                    href="https://facebook.com"
+                    href={SOCIAL_LINKS.facebook}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-primary transition-colors"
@@ -82,7 +84,7 @@ const FloatingSupportButton = () => {
                     Facebook
                   </a>
                   <a
-                    href="https://instagram.com"
+                    href={SOCIAL_LINKS.instagram}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-primary transition-colors"

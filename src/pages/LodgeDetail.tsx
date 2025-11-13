@@ -58,7 +58,7 @@ const LodgeDetail = () => {
       const lodgeData = {
         id: data.id,
         name: data[`name_${currentLang}`] || data.name_pt,
-        location: "Reserva do Jaú, Amazonas", // Default location
+        location: "MANACAPURU, AMAZONIA - AM",
         images: data.image_url ? [data.image_url, lodge1, lodge2] : [lodge1, lodge2, lodge3],
         price: `R$ ${data.price_per_night.toLocaleString()}`,
         pricePerNight: Number(data.price_per_night),
