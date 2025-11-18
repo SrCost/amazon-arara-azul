@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { useAllGalleryImages } from "@/hooks/useGalleryImages";
 import { deleteGalleryImage } from "@/lib/galleryUpload";
@@ -17,12 +18,21 @@ import Lightbox from "@/components/Lightbox";
 
 const Gallery = () => {
   const queryClient = useQueryClient();
-  const { data: images = [], isLoading } = useAllGalleryImages();
+  const { data: allImages = [], isLoading } = useAllGalleryImages();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<any>(null);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [bungalowFilter, setBungalowFilter] = useState<string>('all');
+
+  // Filtrar imagens baseado nos filtros selecionados
+  const images = allImages.filter(img => {
+    if (categoryFilter !== 'all' && img.category !== categoryFilter) return false;
+    if (categoryFilter === 'bungalows' && bungalowFilter !== 'all' && img.bungalow_slug !== bungalowFilter) return false;
+    return true;
+  });
 
   const handleUploadComplete = () => {
     queryClient.invalidateQueries({ queryKey: ['gallery-images-admin'] });
@@ -88,6 +98,16 @@ const Gallery = () => {
     return labels[category] || category;
   };
 
+  const getBungalowLabel = (slug: string | null) => {
+    if (!slug) return null;
+    const labels: Record<string, string> = {
+      'suite-peneira': 'Suíte Peneira',
+      'suite-paneiro': 'Suíte Paneiro',
+      'suite-tipiti': 'Suíte Tipiti',
+    };
+    return labels[slug] || slug;
+  };
+
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
@@ -95,17 +115,60 @@ const Gallery = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-display font-bold">Gerenciar Galeria</h1>
-          <p className="text-muted-foreground">
-            Faça upload e gerencie as fotos da galeria pública
-          </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-display font-bold">Gerenciar Galeria</h1>
+            <p className="text-muted-foreground">
+              Faça upload e gerencie as fotos da galeria pública
+            </p>
+          </div>
+          <Button onClick={() => setUploadDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Upload de Fotos
+          </Button>
         </div>
-        <Button onClick={() => setUploadDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Upload de Fotos
-        </Button>
+
+        {/* Filtros */}
+        <div className="flex gap-4 items-end">
+          <div className="flex-1 max-w-xs">
+            <label className="text-sm font-medium mb-2 block">Categoria</label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as Categorias</SelectItem>
+                <SelectItem value="experiences">Experiências</SelectItem>
+                <SelectItem value="bungalows">Bangalôs</SelectItem>
+                <SelectItem value="food">Gastronomia</SelectItem>
+                <SelectItem value="nature">Natureza</SelectItem>
+                <SelectItem value="wildlife">Fauna</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {categoryFilter === 'bungalows' && (
+            <div className="flex-1 max-w-xs">
+              <label className="text-sm font-medium mb-2 block">Bangalô</label>
+              <Select value={bungalowFilter} onValueChange={setBungalowFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Bangalôs</SelectItem>
+                  <SelectItem value="suite-peneira">Suíte Peneira</SelectItem>
+                  <SelectItem value="suite-paneiro">Suíte Paneiro</SelectItem>
+                  <SelectItem value="suite-tipiti">Suíte Tipiti</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="text-sm text-muted-foreground">
+            {images.length} foto(s) encontrada(s)
+          </div>
+        </div>
       </div>
 
       {isLoading ? (
@@ -167,9 +230,16 @@ const Gallery = () => {
                 <div className="p-3 space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm line-clamp-2 flex-1">{image.alt_text}</p>
-                    <Badge variant="secondary" className="text-xs shrink-0">
-                      {getCategoryLabel(image.category)}
-                    </Badge>
+                    <div className="flex flex-col gap-1 shrink-0">
+                      <Badge variant="secondary" className="text-xs">
+                        {getCategoryLabel(image.category)}
+                      </Badge>
+                      {image.bungalow_slug && (
+                        <Badge variant="outline" className="text-xs">
+                          {getBungalowLabel(image.bungalow_slug)}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Ordem: {image.display_order}

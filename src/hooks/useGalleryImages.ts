@@ -3,9 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-export const useGalleryImages = (category?: string) => {
+export const useGalleryImages = (category?: string, bungalowSlug?: string) => {
   return useQuery({
-    queryKey: ['gallery-images', category],
+    queryKey: ['gallery-images', category, bungalowSlug],
     queryFn: async () => {
       let query = supabase
         .from('gallery_images')
@@ -15,6 +15,10 @@ export const useGalleryImages = (category?: string) => {
       
       if (category) {
         query = query.eq('category', category);
+      }
+      
+      if (bungalowSlug) {
+        query = query.eq('bungalow_slug', bungalowSlug);
       }
       
       const { data, error } = await query;

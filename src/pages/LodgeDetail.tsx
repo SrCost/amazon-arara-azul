@@ -21,6 +21,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ReservationFlow from "@/components/ReservationFlow";
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
@@ -32,6 +33,10 @@ const LodgeDetail = () => {
   const [showReservation, setShowReservation] = useState(false);
   const [lodge, setLodge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [bungalowSlug, setBungalowSlug] = useState<string>("");
+  
+  // Buscar fotos do bangalô específico
+  const { data: bungalowImages = [] } = useGalleryImages('bungalows', bungalowSlug || undefined);
 
   useEffect(() => {
     fetchLodgeDetails();
@@ -63,10 +68,16 @@ const LodgeDetail = () => {
         return;
       }
 
+      // Set bungalow slug for fetching images
+      if (data.slug) {
+        setBungalowSlug(data.slug);
+      }
+
       // Map database fields to component format
       const currentLang = i18n.language;
       const lodgeData = {
         id: data.id,
+        slug: data.slug,
         name: data[`name_${currentLang}`] || data.name_pt,
         location: "MANACAPURU, AMAZONIA - AM",
         images: data.image_url ? [data.image_url, lodge1, lodge2] : [lodge1, lodge2, lodge3],
@@ -153,26 +164,45 @@ const LodgeDetail = () => {
           </Button>
 
           {/* Image Gallery */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div className="h-96 md:h-[500px] overflow-hidden rounded-lg">
+          <div className="mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <img
-                src={lodge.images[0]}
-                alt={lodge.name}
-                className="w-full h-full object-cover"
+                src={bungalowImages[0]?.src || lodge.images[0]}
+                alt={bungalowImages[0]?.alt || lodge.name}
+                className="w-full h-[400px] object-cover rounded-lg"
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {lodge.images.slice(1).map((img: string, idx: number) => (
-                <div key={idx} className="h-44 md:h-60 overflow-hidden rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                {(bungalowImages.length > 1 
+                  ? bungalowImages.slice(1, 3)
+                  : lodge.images.slice(1, 3).map((img: string, idx: number) => ({ src: img, alt: `${lodge.name} ${idx + 2}` }))
+                ).map((img: any, idx: number) => (
                   <img
-                    src={img}
-                    alt={`${lodge.name} ${idx + 2}`}
-                    className="w-full h-full object-cover"
+                    key={idx}
+                    src={img.src}
+                    alt={img.alt}
+                    className="w-full h-[192px] object-cover rounded-lg"
                   />
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
+            
+            {bungalowImages.length > 3 && (
+              <div className="mt-4">
+                <h3 className="text-xl font-display font-semibold mb-3">Mais Fotos do Bangalô</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {bungalowImages.slice(3).map((img: any, idx: number) => (
+                    <img
+                      key={idx}
+                      src={img.src}
+                      alt={img.alt}
+                      className="w-full h-[150px] object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
