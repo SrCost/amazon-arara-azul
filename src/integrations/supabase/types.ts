@@ -198,15 +198,25 @@ export type Database = {
       }
       reservations: {
         Row: {
+          address: string | null
+          birth_date: string | null
           check_in: string
           check_out: string
+          country: string | null
+          cpf: string | null
           created_at: string | null
+          dietary_restrictions: string | null
+          emergency_contact: string | null
           guest_email: string
           guest_name: string
           guest_phone: string | null
           guests: number
           id: string
+          is_foreign: boolean | null
+          nationality: string | null
+          next_destination: string | null
           package_id: string | null
+          passport: string | null
           payment_method: string | null
           payment_status: string | null
           room_id: string
@@ -218,15 +228,25 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          address?: string | null
+          birth_date?: string | null
           check_in: string
           check_out: string
+          country?: string | null
+          cpf?: string | null
           created_at?: string | null
+          dietary_restrictions?: string | null
+          emergency_contact?: string | null
           guest_email: string
           guest_name: string
           guest_phone?: string | null
           guests: number
           id?: string
+          is_foreign?: boolean | null
+          nationality?: string | null
+          next_destination?: string | null
           package_id?: string | null
+          passport?: string | null
           payment_method?: string | null
           payment_status?: string | null
           room_id: string
@@ -238,15 +258,25 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          address?: string | null
+          birth_date?: string | null
           check_in?: string
           check_out?: string
+          country?: string | null
+          cpf?: string | null
           created_at?: string | null
+          dietary_restrictions?: string | null
+          emergency_contact?: string | null
           guest_email?: string
           guest_name?: string
           guest_phone?: string | null
           guests?: number
           id?: string
+          is_foreign?: boolean | null
+          nationality?: string | null
+          next_destination?: string | null
           package_id?: string | null
+          passport?: string | null
           payment_method?: string | null
           payment_status?: string | null
           room_id?: string

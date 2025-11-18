@@ -19,6 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoomAvailability } from "@/hooks/useRoomAvailability";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ReservationFlowProps {
   lodgeName: string;
@@ -55,6 +56,18 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [cardCpf, setCardCpf] = useState("");
+  
+  // New fields for guest information
+  const [isForeign, setIsForeign] = useState(false);
+  const [cpf, setCpf] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [country, setCountry] = useState("");
+  const [nationality, setNationality] = useState("");
+  const [passport, setPassport] = useState("");
+  const [address, setAddress] = useState("");
+  const [nextDestination, setNextDestination] = useState("");
+  const [dietaryRestrictions, setDietaryRestrictions] = useState("");
+  const [emergencyContact, setEmergencyContact] = useState("");
 
   // Show next available dates when component loads
   useEffect(() => {
@@ -111,6 +124,20 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     if (step === 3 && (!guestName || !guestEmail)) {
       toast.error("Preencha todos os campos obrigatórios");
       return;
+    }
+    // Validate Brazilian or Foreign required fields
+    if (step === 3) {
+      if (isForeign) {
+        if (!country || !nationality || !passport || !birthDate) {
+          toast.error("Preencha todos os campos obrigatórios para hóspedes estrangeiros");
+          return;
+        }
+      } else {
+        if (!cpf || !birthDate) {
+          toast.error("Preencha CPF e Data de Nascimento");
+          return;
+        }
+      }
     }
     if (step === 4) {
       if (!paymentMethod) {
@@ -180,6 +207,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         payment_status: "pending",
         payment_method: paymentMethod,
         special_requests: specialRequests || null,
+        // New guest information fields
+        is_foreign: isForeign,
+        cpf: !isForeign ? cpf : null,
+        birth_date: birthDate || null,
+        country: isForeign ? country : null,
+        nationality: isForeign ? nationality : null,
+        passport: isForeign ? passport : null,
+        address: address || null,
+        next_destination: nextDestination || null,
+        dietary_restrictions: dietaryRestrictions || null,
+        emergency_contact: emergencyContact || null,
       };
 
       const { data: reservation, error: reservationError } = await supabase
@@ -587,11 +625,26 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 </p>
               </div>
 
+              {/* Foreign Guest Checkbox */}
+              <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
+                <Checkbox
+                  id="isForeign"
+                  checked={isForeign}
+                  onCheckedChange={(checked) => setIsForeign(checked as boolean)}
+                />
+                <Label
+                  htmlFor="isForeign"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                >
+                  Sou estrangeiro
+                </Label>
+              </div>
+
               <div className="grid grid-cols-1 gap-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="name" className="text-sm font-medium">
-                      {t("reservation.guestName")} <span className="text-destructive">*</span>
+                      Nome Completo <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="name"
@@ -605,7 +658,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
                   <div>
                     <Label htmlFor="email" className="text-sm font-medium">
-                      {t("reservation.guestEmail")} <span className="text-destructive">*</span>
+                      E-mail <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="email"
@@ -619,21 +672,202 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                   </div>
                 </div>
 
+                {/* Conditional Fields - Brazilian Guest */}
+                {!isForeign && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="cpf" className="text-sm font-medium">
+                          CPF <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="cpf"
+                          value={cpf}
+                          onChange={(e) => setCpf(e.target.value)}
+                          placeholder="000.000.000-00"
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="birthDate" className="text-sm font-medium">
+                          Data de Nascimento <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="birthDate"
+                          type="date"
+                          value={birthDate}
+                          onChange={(e) => setBirthDate(e.target.value)}
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="phone" className="text-sm font-medium">
+                        Telefone <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="phone"
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        placeholder="+55 (92) 99999-9999"
+                        className="mt-1"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="address" className="text-sm font-medium">
+                        Endereço
+                      </Label>
+                      <Input
+                        id="address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Rua, número, bairro, cidade, estado"
+                        className="mt-1"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Conditional Fields - Foreign Guest */}
+                {isForeign && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="country" className="text-sm font-medium">
+                          País de Origem <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="country"
+                          value={country}
+                          onChange={(e) => setCountry(e.target.value)}
+                          placeholder="Brazil, United States, etc."
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="nationality" className="text-sm font-medium">
+                          Nacionalidade <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="nationality"
+                          value={nationality}
+                          onChange={(e) => setNationality(e.target.value)}
+                          placeholder="Brazilian, American, etc."
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="passport" className="text-sm font-medium">
+                          Passaporte <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="passport"
+                          value={passport}
+                          onChange={(e) => setPassport(e.target.value)}
+                          placeholder="Número do passaporte"
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="birthDate" className="text-sm font-medium">
+                          Data de Nascimento <span className="text-destructive">*</span>
+                        </Label>
+                        <Input
+                          id="birthDate"
+                          type="date"
+                          value={birthDate}
+                          onChange={(e) => setBirthDate(e.target.value)}
+                          className="mt-1"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="phone" className="text-sm font-medium">
+                        Telefone Internacional <span className="text-destructive">*</span>
+                      </Label>
+                      <Input
+                        id="phone"
+                        value={guestPhone}
+                        onChange={(e) => setGuestPhone(e.target.value)}
+                        placeholder="+1 (555) 123-4567"
+                        className="mt-1"
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Incluir código do país
+                      </p>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="address" className="text-sm font-medium">
+                        Endereço no País de Origem
+                      </Label>
+                      <Input
+                        id="address"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Street, City, State, Country"
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="nextDestination" className="text-sm font-medium">
+                        Próximo Destino Após Hospedagem
+                      </Label>
+                      <Input
+                        id="nextDestination"
+                        value={nextDestination}
+                        onChange={(e) => setNextDestination(e.target.value)}
+                        placeholder="Cidade/País"
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="emergencyContact" className="text-sm font-medium">
+                        Contato de Emergência Internacional
+                      </Label>
+                      <Input
+                        id="emergencyContact"
+                        value={emergencyContact}
+                        onChange={(e) => setEmergencyContact(e.target.value)}
+                        placeholder="Nome e telefone"
+                        className="mt-1"
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Common Fields */}
                 <div>
-                  <Label htmlFor="phone" className="text-sm font-medium">
-                    {t("reservation.guestPhone")} <span className="text-destructive">*</span>
+                  <Label htmlFor="dietaryRestrictions" className="text-sm font-medium">
+                    Alergias ou Restrições Alimentares
                   </Label>
-                  <Input
-                    id="phone"
-                    value={guestPhone}
-                    onChange={(e) => setGuestPhone(e.target.value)}
-                    placeholder="+55 (92) 99999-9999"
+                  <Textarea
+                    id="dietaryRestrictions"
+                    value={dietaryRestrictions}
+                    onChange={(e) => setDietaryRestrictions(e.target.value)}
+                    placeholder="Descreva qualquer alergia ou restrição alimentar"
+                    rows={3}
                     className="mt-1"
-                    required
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Incluir código do país e DDD
-                  </p>
                 </div>
 
                 <div>

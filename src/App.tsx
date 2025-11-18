@@ -17,6 +17,7 @@ import FAQ from "./pages/FAQ";
 import Auth from "./pages/Auth";
 import ReservationSuccess from "./pages/ReservationSuccess";
 import NotFound from "./pages/NotFound";
+import Experiencias from "./pages/Experiencias";
 import FloatingSupportButton from "./components/FloatingSupportButton";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/pousadas" element={<Lodges />} />
             <Route path="/pousadas/:id" element={<LodgeDetail />} />
             <Route path="/pacotes" element={<Packages />} />
+            <Route path="/experiencias" element={<Experiencias />} />
             <Route path="/sustentabilidade" element={<Sustainability />} />
             <Route path="/como-chegar" element={<HowToGetThere />} />
             <Route path="/contato" element={<Contact />} />

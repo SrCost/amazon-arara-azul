@@ -95,9 +95,17 @@ const PackageCard = ({
         <div className="mt-auto">
           <div className="mb-4 text-center">
             <div className="text-sm text-muted-foreground mb-1">
-              {t("packages.totalValue")}
+              A partir de 12x de
             </div>
-            <div className="text-3xl font-bold text-primary">{total}</div>
+            <div className="text-3xl font-bold text-primary">
+              {(parseFloat(total.replace("R$ ", "").replace(".", "").replace(",", ".")) / 12).toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL",
+              })}
+            </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              ou {total} à vista
+            </div>
           </div>
 
           <Button
