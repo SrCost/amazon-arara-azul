@@ -2,6 +2,12 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Compass, Bird, Droplets, Users, Sunset, Camera } from "lucide-react";
+import samaumaTree from "@/assets/experiencias-samauma-tree.jpg";
+import samaumaPerson from "@/assets/experiencias-samauma-person.jpg";
+import sunset from "@/assets/experiencias-sunset.jpg";
+import monkey from "@/assets/experiencias-monkey.jpg";
+import piranha from "@/assets/experiencias-piranha.jpg";
+import groupForest from "@/assets/experiencias-group.jpg";
 
 const Experiencias = () => {
   const experiences = [
@@ -35,6 +41,15 @@ const Experiencias = () => {
       title: "Fotografia de Natureza",
       description: "Capture momentos inesquecíveis da fauna e flora amazônica em cenários paradisíacos.",
     },
+  ];
+
+  const galleryImages = [
+    { src: samaumaTree, alt: "Samaúma - Árvore gigante da Amazônia" },
+    { src: samaumaPerson, alt: "Visitante admirando a majestosa Samaúma" },
+    { src: sunset, alt: "Pôr do sol amazônico no Rio Negro" },
+    { src: monkey, alt: "Macaco-de-cheiro em seu habitat natural" },
+    { src: piranha, alt: "Pesca de piranha - experiência autêntica" },
+    { src: groupForest, alt: "Grupo explorando a floresta amazônica" },
   ];
 
   return (
@@ -87,16 +102,21 @@ const Experiencias = () => {
               Galeria de Momentos
             </h2>
             <p className="text-lg text-muted-foreground">
-              Em breve: fotos e vídeos das experiências
+              Registros autênticos das experiências vividas em nossa pousada
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+            {galleryImages.map((image, index) => (
               <div
-                key={i}
-                className="aspect-video bg-gradient-to-br from-muted to-muted/50 rounded-lg flex items-center justify-center"
+                key={index}
+                className="aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer group"
               >
-                <Camera className="h-12 w-12 text-muted-foreground/30" />
+                <img
+                  src={image.src}
+                  alt={image.alt}
+                  className="w-full h-full object-cover group-hover:brightness-110 transition-all"
+                  loading="lazy"
+                />
               </div>
             ))}
           </div>
