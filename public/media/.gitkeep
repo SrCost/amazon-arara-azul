@@ -1,0 +1,7 @@
+# This directory contains video assets for the hero section
+
+Place your video files here:
+- home-hero-video.mp4 (desktop version - 1080p)
+- home-hero-video-mobile.mp4 (mobile version - 720p)
+
+See VIDEO_GUIDE.md for detailed specifications and instructions.

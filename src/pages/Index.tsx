@@ -8,7 +8,7 @@ import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import HeroCarousel from "@/components/HeroCarousel";
+import HeroVideo from "@/components/HeroVideo";
 import FindUsSection from "@/components/FindUsSection";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
@@ -80,40 +80,40 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section with Carousel */}
-      <section className="relative flex items-center justify-center overflow-hidden">
-        <HeroCarousel />
-        <div className="absolute inset-0 z-10 flex items-center justify-center">
-          <div className="text-center px-4 max-w-4xl mx-auto">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in">
-              {t("home.heroTitle")}
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto text-balance">
-              {t("home.heroSubtitle")}
-            </p>
+      {/* Hero Section with Video */}
+      <section className="relative">
+        <HeroVideo>
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center px-4 max-w-4xl mx-auto">
+              <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in drop-shadow-lg">
+                {t("home.heroTitle")}
+              </h1>
+              <p className="text-lg md:text-xl text-white/95 mb-8 max-w-2xl mx-auto text-balance drop-shadow-md">
+                {t("home.heroSubtitle")}
+              </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-              <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
-                <Link to="/pousadas">
-                  Explorar Bangalôs
-                  <ArrowRight className="ml-2" />
-                </Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
-                asChild
-              >
-                <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
-              </Button>
-            </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
+                  <Link to="/pousadas">
+                    Explorar Bangalôs
+                    <ArrowRight className="ml-2" />
+                  </Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
+                  asChild>
+                  <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
+                </Button>
+              </div>
 
-            <div className="flex justify-center -mb-20">
-              <SearchBar />
+              <div className="flex justify-center -mb-20">
+                <SearchBar />
+              </div>
             </div>
           </div>
-        </div>
+        </HeroVideo>
       </section>
 
       {/* Features Section */}
