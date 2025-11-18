@@ -8,8 +8,8 @@ import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import HeroVideo from "@/components/HeroVideo";
 import FindUsSection from "@/components/FindUsSection";
+import heroAmazon from "@/assets/hero-amazon.jpg";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
@@ -80,40 +80,52 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section with Video */}
+      {/* Hero Section with Static Image */}
       <section className="relative">
-        <HeroVideo>
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center px-4 max-w-4xl mx-auto">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in drop-shadow-lg">
-                {t("home.heroTitle")}
-              </h1>
-              <p className="text-lg md:text-xl text-white/95 mb-8 max-w-2xl mx-auto text-balance drop-shadow-md">
-                {t("home.heroSubtitle")}
-              </p>
+        <div className="relative w-full h-[600px] md:h-[700px] overflow-hidden">
+          {/* Static Background Image */}
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroAmazon})` }}
+          />
+          
+          {/* Dark Overlay for Text Legibility */}
+          <div className="absolute inset-0 bg-black/20" />
+          
+          {/* Content Overlay */}
+          <div className="absolute inset-0 z-10">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center px-4 max-w-4xl mx-auto">
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in drop-shadow-lg">
+                  {t("home.heroTitle")}
+                </h1>
+                <p className="text-lg md:text-xl text-white/95 mb-8 max-w-2xl mx-auto text-balance drop-shadow-md">
+                  {t("home.heroSubtitle")}
+                </p>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
-                  <Link to="/pousadas">
-                    Explorar Bangalôs
-                    <ArrowRight className="ml-2" />
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
-                  asChild>
-                  <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
-                </Button>
-              </div>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                  <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
+                    <Link to="/pousadas">
+                      Explorar Bangalôs
+                      <ArrowRight className="ml-2" />
+                    </Link>
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
+                    asChild>
+                    <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
+                  </Button>
+                </div>
 
-              <div className="flex justify-center -mb-20">
-                <SearchBar />
+                <div className="flex justify-center -mb-20">
+                  <SearchBar />
+                </div>
               </div>
             </div>
           </div>
-        </HeroVideo>
+        </div>
       </section>
 
       {/* Features Section */}
