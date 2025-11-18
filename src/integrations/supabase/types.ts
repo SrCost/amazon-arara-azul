@@ -85,6 +85,7 @@ export type Database = {
           alt_text: string
           bungalow_slug: string | null
           category: string | null
+          compression_stats: Json | null
           created_at: string | null
           display_order: number | null
           file_name: string
@@ -98,6 +99,7 @@ export type Database = {
           alt_text: string
           bungalow_slug?: string | null
           category?: string | null
+          compression_stats?: Json | null
           created_at?: string | null
           display_order?: number | null
           file_name: string
@@ -111,6 +113,7 @@ export type Database = {
           alt_text?: string
           bungalow_slug?: string | null
           category?: string | null
+          compression_stats?: Json | null
           created_at?: string | null
           display_order?: number | null
           file_name?: string
