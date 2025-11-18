@@ -135,14 +135,13 @@ const SearchBar = () => {
           </label>
           <Select value={lodgeType} onValueChange={setLodgeType}>
             <SelectTrigger>
-              <SelectValue placeholder="Todas" />
+              <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todas</SelectItem>
-              <SelectItem value="riverside">Beira-Rio</SelectItem>
-              <SelectItem value="treehouse">Casa na Árvore</SelectItem>
-              <SelectItem value="floating">Flutuante</SelectItem>
-              <SelectItem value="canopy">No Dossel</SelectItem>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="bangalo-peneira">Bangalô Peneira</SelectItem>
+              <SelectItem value="bangalo-paneiro">Bangalô Paneiro</SelectItem>
+              <SelectItem value="bangalo-tipiti">Bangalô Tipiti</SelectItem>
             </SelectContent>
           </Select>
         </div>
