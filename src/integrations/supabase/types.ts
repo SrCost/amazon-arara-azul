@@ -80,6 +80,45 @@ export type Database = {
         }
         Relationships: []
       }
+      gallery_images: {
+        Row: {
+          alt_text: string
+          category: string | null
+          created_at: string | null
+          display_order: number | null
+          file_name: string
+          id: string
+          is_active: boolean | null
+          storage_path: string
+          updated_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          alt_text: string
+          category?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          file_name: string
+          id?: string
+          is_active?: boolean | null
+          storage_path: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          alt_text?: string
+          category?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          file_name?: string
+          id?: string
+          is_active?: boolean | null
+          storage_path?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       packages: {
         Row: {
           created_at: string

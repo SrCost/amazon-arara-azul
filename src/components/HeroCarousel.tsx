@@ -1,19 +1,22 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { galleryImages } from "@/config/galleryImages";
-
-const images = galleryImages.slice(0, 9).map(img => img.src);
+import { Skeleton } from "@/components/ui/skeleton";
+import { useGalleryImages } from "@/hooks/useGalleryImages";
 
 const HeroCarousel = () => {
+  const { data: galleryImages = [], isLoading } = useGalleryImages('experiences');
+  const images = galleryImages.slice(0, 9).map(img => img.src);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    if (images.length === 0) return;
+    
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [images.length]);
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
@@ -22,6 +25,14 @@ const HeroCarousel = () => {
   const goToNext = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
   };
+
+  if (isLoading) {
+    return <Skeleton className="w-full h-screen" />;
+  }
+
+  if (images.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative h-screen overflow-hidden">
