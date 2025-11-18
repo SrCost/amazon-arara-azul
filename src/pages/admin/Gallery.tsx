@@ -16,6 +16,8 @@ import GalleryUploader from "@/components/admin/GalleryUploader";
 import GalleryImageEditor from "@/components/admin/GalleryImageEditor";
 import Lightbox from "@/components/Lightbox";
 import { uploadPaneiroImagesToGallery } from "@/lib/uploadPaneiroImages";
+import { uploadPeneiraImagesToGallery } from "@/lib/uploadPeneiraImages";
+import { uploadTipitiImagesToGallery } from "@/lib/uploadTipitiImages";
 
 const Gallery = () => {
   const queryClient = useQueryClient();
@@ -28,6 +30,8 @@ const Gallery = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [bungalowFilter, setBungalowFilter] = useState<string>('all');
   const [isUploadingPaneiro, setIsUploadingPaneiro] = useState(false);
+  const [isUploadingPeneira, setIsUploadingPeneira] = useState(false);
+  const [isUploadingTipiti, setIsUploadingTipiti] = useState(false);
 
   // Filtrar imagens baseado nos filtros selecionados
   const images = allImages.filter(img => {
@@ -92,12 +96,24 @@ const Gallery = () => {
   const handlePaneiroUpload = async () => {
     setIsUploadingPaneiro(true);
     try {
-      await uploadPaneiroImagesToGallery();
+      const results = await uploadPaneiroImagesToGallery();
+      const successCount = results.filter(r => r.success).length;
+      const errorCount = results.filter(r => !r.success).length;
+      
+      if (errorCount === 0) {
+        toast({
+          title: "Upload concluído",
+          description: `${successCount} fotos do Bangalô Paneiro foram adicionadas à galeria.`,
+        });
+      } else {
+        toast({
+          title: "Upload parcial",
+          description: `${successCount} fotos enviadas, ${errorCount} com erro.`,
+          variant: "destructive",
+        });
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['gallery-images-admin'] });
-      toast({
-        title: "Upload concluído",
-        description: "5 imagens do Bangalô Paneiro foram adicionadas à galeria.",
-      });
     } catch (error) {
       toast({
         title: "Erro no upload",
@@ -106,6 +122,70 @@ const Gallery = () => {
       });
     } finally {
       setIsUploadingPaneiro(false);
+    }
+  };
+
+  const handlePeneiraUpload = async () => {
+    setIsUploadingPeneira(true);
+    try {
+      const results = await uploadPeneiraImagesToGallery();
+      const successCount = results.filter(r => r.success).length;
+      const errorCount = results.filter(r => !r.success).length;
+      
+      if (errorCount === 0) {
+        toast({
+          title: "Upload concluído",
+          description: `${successCount} fotos do Bangalô Peneira foram adicionadas à galeria.`,
+        });
+      } else {
+        toast({
+          title: "Upload parcial",
+          description: `${successCount} fotos enviadas, ${errorCount} com erro.`,
+          variant: "destructive",
+        });
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['gallery-images-admin'] });
+    } catch (error) {
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível fazer o upload das imagens.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingPeneira(false);
+    }
+  };
+
+  const handleTipitiUpload = async () => {
+    setIsUploadingTipiti(true);
+    try {
+      const results = await uploadTipitiImagesToGallery();
+      const successCount = results.filter(r => r.success).length;
+      const errorCount = results.filter(r => !r.success).length;
+      
+      if (errorCount === 0) {
+        toast({
+          title: "Upload concluído",
+          description: `${successCount} fotos do Bangalô Tipiti foram adicionadas à galeria.`,
+        });
+      } else {
+        toast({
+          title: "Upload parcial",
+          description: `${successCount} fotos enviadas, ${errorCount} com erro.`,
+          variant: "destructive",
+        });
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['gallery-images-admin'] });
+    } catch (error) {
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível fazer o upload das imagens.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingTipiti(false);
     }
   };
 
@@ -150,12 +230,25 @@ const Gallery = () => {
               onClick={handlePaneiroUpload} 
               disabled={isUploadingPaneiro}
               variant="outline"
+              size="sm"
             >
-              {isUploadingPaneiro ? (
-                <>Enviando Paneiro...</>
-              ) : (
-                <>📸 Upload Paneiro</>
-              )}
+              {isUploadingPaneiro ? "Enviando..." : "📸 Paneiro"}
+            </Button>
+            <Button 
+              onClick={handlePeneiraUpload} 
+              disabled={isUploadingPeneira}
+              variant="outline"
+              size="sm"
+            >
+              {isUploadingPeneira ? "Enviando..." : "📸 Peneira"}
+            </Button>
+            <Button 
+              onClick={handleTipitiUpload} 
+              disabled={isUploadingTipiti}
+              variant="outline"
+              size="sm"
+            >
+              {isUploadingTipiti ? "Enviando..." : "📸 Tipiti"}
             </Button>
             <Button onClick={() => setUploadDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
