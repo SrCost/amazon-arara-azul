@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Globe, User } from "lucide-react";
+import { Menu, X, Globe, User, Instagram } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import logoAraraAzul from "@/assets/logo-arara-azul.jpg";
 import { Button } from "./ui/button";
+import { SOCIAL_LINKS } from "@/config/socialLinks";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,8 +21,9 @@ const Navigation = () => {
 
   const menuItems = [
     { label: t("nav.home"), href: "/" },
-    { label: t("nav.lodges"), href: "/pousadas" },
+    { label: "Bangalôs", href: "/pousadas" },
     { label: t("nav.packages"), href: "/pacotes" },
+    { label: "Experiências", href: "/experiencias" },
     { label: t("nav.sustainability"), href: "/sustentabilidade" },
     { label: t("nav.howToGetThere"), href: "/como-chegar" },
     { label: t("nav.contact"), href: "/contato" },
@@ -68,6 +70,16 @@ const Navigation = () => {
                 {item.label}
               </Link>
             ))}
+
+            {/* Instagram Link */}
+            <a
+              href={SOCIAL_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center hover:text-primary transition-colors"
+            >
+              <Instagram className="h-5 w-5" />
+            </a>
 
             {/* Language Selector */}
             <DropdownMenu>

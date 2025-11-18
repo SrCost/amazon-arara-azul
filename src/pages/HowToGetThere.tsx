@@ -23,8 +23,8 @@ const HowToGetThere = () => {
 
           <div className="max-w-5xl mx-auto mb-16">
             <img
-              src={riverAerial}
-              alt="Vista aérea do rio Amazonas"
+              src="https://images.unsplash.com/photo-1601979336287-0fdfc7a81d83?q=80&w=2000&auto=format&fit=crop"
+              alt="Rio Amazonas"
               className="w-full h-[400px] object-cover rounded-lg shadow-strong"
             />
           </div>

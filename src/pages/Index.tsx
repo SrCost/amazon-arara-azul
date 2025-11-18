@@ -8,7 +8,8 @@ import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage from "@/assets/hero-amazon.jpg";
+import HeroCarousel from "@/components/HeroCarousel";
+import FindUsSection from "@/components/FindUsSection";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
@@ -79,42 +80,38 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        >
-          <div className="absolute inset-0 bg-gradient-hero" />
-        </div>
+      {/* Hero Section with Carousel */}
+      <section className="relative flex items-center justify-center overflow-hidden">
+        <HeroCarousel />
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="text-center px-4 max-w-4xl mx-auto">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in">
+              {t("home.heroTitle")}
+            </h1>
+            <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto text-balance">
+              {t("home.heroSubtitle")}
+            </p>
 
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in">
-            {t("home.heroTitle")}
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 mb-8 max-w-2xl mx-auto text-balance">
-            {t("home.heroSubtitle")}
-          </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
+                <Link to="/pousadas">
+                  Explorar Bangalôs
+                  <ArrowRight className="ml-2" />
+                </Link>
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
+                asChild
+              >
+                <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
+              </Button>
+            </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
-              <Link to="/pousadas">
-                {t("home.exploreLodges")}
-                <ArrowRight className="ml-2" />
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
-              asChild
-            >
-              <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
-            </Button>
-          </div>
-
-          <div className="flex justify-center -mb-20">
-            <SearchBar />
+            <div className="flex justify-center -mb-20">
+              <SearchBar />
+            </div>
           </div>
         </div>
       </section>
@@ -146,10 +143,10 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
-              {t("home.ourLodges")}
+              Nossos Bangalôs
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              {t("home.lodgesDescription")}
+              Conheça nossos bangalôs exclusivos em meio à floresta amazônica
             </p>
           </div>
 
@@ -172,13 +169,16 @@ const Index = () => {
           <div className="text-center">
             <Button size="lg" variant="outline" asChild>
               <Link to="/pousadas">
-                {t("home.viewAllLodges")}
+                Ver Todos os Bangalôs
                 <ArrowRight className="ml-2" />
               </Link>
             </Button>
           </div>
         </div>
       </section>
+
+      {/* Find Us Section */}
+      <FindUsSection />
 
       {/* CTA Section */}
       <section className="py-24 bg-gradient-forest text-white">
