@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import GalleryUploader from "@/components/admin/GalleryUploader";
 import GalleryImageEditor from "@/components/admin/GalleryImageEditor";
 import Lightbox from "@/components/Lightbox";
+import { uploadPaneiroImagesToGallery } from "@/lib/uploadPaneiroImages";
 
 const Gallery = () => {
   const queryClient = useQueryClient();
@@ -26,6 +27,7 @@ const Gallery = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [bungalowFilter, setBungalowFilter] = useState<string>('all');
+  const [isUploadingPaneiro, setIsUploadingPaneiro] = useState(false);
 
   // Filtrar imagens baseado nos filtros selecionados
   const images = allImages.filter(img => {
@@ -87,6 +89,26 @@ const Gallery = () => {
     queryClient.invalidateQueries({ queryKey: ['gallery-images-admin'] });
   };
 
+  const handlePaneiroUpload = async () => {
+    setIsUploadingPaneiro(true);
+    try {
+      await uploadPaneiroImagesToGallery();
+      queryClient.invalidateQueries({ queryKey: ['gallery-images-admin'] });
+      toast({
+        title: "Upload concluído",
+        description: "5 imagens do Bangalô Paneiro foram adicionadas à galeria.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível fazer o upload das imagens.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingPaneiro(false);
+    }
+  };
+
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
       experiences: 'Experiências',
@@ -123,10 +145,23 @@ const Gallery = () => {
               Faça upload e gerencie as fotos da galeria pública
             </p>
           </div>
-          <Button onClick={() => setUploadDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Upload de Fotos
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handlePaneiroUpload} 
+              disabled={isUploadingPaneiro}
+              variant="outline"
+            >
+              {isUploadingPaneiro ? (
+                <>Enviando Paneiro...</>
+              ) : (
+                <>📸 Upload Paneiro</>
+              )}
+            </Button>
+            <Button onClick={() => setUploadDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Upload de Fotos
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}
