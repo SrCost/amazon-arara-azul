@@ -26,6 +26,7 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
       file,
       alt_text: '',
       category: 'experiences',
+      bungalow_slug: undefined,
       preview: URL.createObjectURL(file),
     }));
     setUploads(prev => [...prev, ...newUploads]);
@@ -38,7 +39,7 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
     });
   };
 
-  const updateUpload = (index: number, field: keyof GalleryImageUpload, value: string) => {
+  const updateUpload = (index: number, field: keyof GalleryImageUpload, value: string | undefined) => {
     setUploads(prev => prev.map((upload, i) => 
       i === index ? { ...upload, [field]: value } : upload
     ));
@@ -84,7 +85,8 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
         upload.file,
         upload.alt_text,
         upload.category,
-        i
+        i,
+        upload.bungalow_slug
       );
 
       if (result.success) {
@@ -209,6 +211,28 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
                             </SelectContent>
                           </Select>
                         </div>
+
+                        {upload.category === 'bungalows' && (
+                          <div>
+                            <Label htmlFor={`bungalow-${index}`} className="text-xs">
+                              Bangalô *
+                            </Label>
+                            <Select
+                              value={upload.bungalow_slug || ''}
+                              onValueChange={value => updateUpload(index, 'bungalow_slug', value || undefined)}
+                              disabled={isUploading}
+                            >
+                              <SelectTrigger id={`bungalow-${index}`} className="text-sm">
+                                <SelectValue placeholder="Selecione o bangalô" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="suite-peneira">Suíte Peneira</SelectItem>
+                                <SelectItem value="suite-paneiro">Suíte Paneiro</SelectItem>
+                                <SelectItem value="suite-tipiti">Suíte Tipiti</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
                       </div>
 
                       {uploadProgress && (

@@ -4,6 +4,7 @@ export interface GalleryImage {
   storage_path: string;
   alt_text: string;
   category: 'experiences' | 'bungalows' | 'food' | 'nature' | 'wildlife';
+  bungalow_slug?: string | null;
   display_order: number;
   is_active: boolean;
   uploaded_by: string | null;
@@ -15,6 +16,7 @@ export interface GalleryImageUpload {
   file: File;
   alt_text: string;
   category: string;
+  bungalow_slug?: string;
   preview: string; // Data URL
 }
 

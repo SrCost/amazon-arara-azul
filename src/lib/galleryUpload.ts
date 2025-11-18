@@ -10,7 +10,8 @@ export const uploadGalleryImage = async (
   file: File,
   altText: string,
   category: string,
-  displayOrder: number = 0
+  displayOrder: number = 0,
+  bungalowSlug?: string
 ): Promise<UploadResult> => {
   try {
     // Gerar nome único
@@ -37,6 +38,7 @@ export const uploadGalleryImage = async (
         storage_path: storagePath,
         alt_text: altText,
         category,
+        bungalow_slug: bungalowSlug,
         display_order: displayOrder,
       });
     

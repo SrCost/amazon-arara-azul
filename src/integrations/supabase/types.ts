@@ -83,6 +83,7 @@ export type Database = {
       gallery_images: {
         Row: {
           alt_text: string
+          bungalow_slug: string | null
           category: string | null
           created_at: string | null
           display_order: number | null
@@ -95,6 +96,7 @@ export type Database = {
         }
         Insert: {
           alt_text: string
+          bungalow_slug?: string | null
           category?: string | null
           created_at?: string | null
           display_order?: number | null
@@ -107,6 +109,7 @@ export type Database = {
         }
         Update: {
           alt_text?: string
+          bungalow_slug?: string | null
           category?: string | null
           created_at?: string | null
           display_order?: number | null
