@@ -129,8 +129,9 @@ const SearchBar = () => {
         </div>
 
         <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-foreground flex items-center">Tipos de Bangalôs  <Home className="h-4 w-4 mr-2 text-primary" />
-            Tipo de Pousada
+          <label className="text-sm font-medium text-foreground flex items-center">
+            <Home className="h-4 w-4 mr-2 text-primary" />
+            Bangalôs
           </label>
           <Select value={lodgeType} onValueChange={setLodgeType}>
             <SelectTrigger>
