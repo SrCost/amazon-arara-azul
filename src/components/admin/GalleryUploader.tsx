@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Check } from "lucide-react";
+import { X, Check, Loader2, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
 import { uploadGalleryImage } from "@/lib/galleryUpload";
-import { validateAltText } from "@/lib/galleryValidation";
+import { validateAltText, validateImageFile, validateImageDimensions } from "@/lib/galleryValidation";
 import ImageDropZone from "./ImageDropZone";
+import { compressImage, formatFileSize } from "@/lib/imageCompression";
+import { COMPRESSION_PRESETS } from "@/lib/compressionPresets";
 import type { GalleryImageUpload, UploadProgress } from "@/types/gallery";
 
 interface GalleryUploaderProps {
@@ -20,16 +22,84 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
   const [uploads, setUploads] = useState<GalleryImageUpload[]>([]);
   const [progress, setProgress] = useState<UploadProgress[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
+  const [compressionStats, setCompressionStats] = useState<{
+    original: number;
+    compressed: number;
+    saved: number;
+  }>({ original: 0, compressed: 0, saved: 0 });
 
-  const handleFilesSelected = (files: File[]) => {
-    const newUploads: GalleryImageUpload[] = files.map(file => ({
-      file,
-      alt_text: '',
-      category: 'experiences',
-      bungalow_slug: undefined,
-      preview: URL.createObjectURL(file),
-    }));
-    setUploads(prev => [...prev, ...newUploads]);
+  const handleFilesSelected = async (files: File[]) => {
+    setIsCompressing(true);
+    
+    const compressedUploads: GalleryImageUpload[] = [];
+    let totalOriginal = 0;
+    let totalCompressed = 0;
+    
+    for (const file of files) {
+      try {
+        const validationError = validateImageFile(file);
+        if (validationError) {
+          toast({
+            title: "Erro de validação",
+            description: `${file.name}: ${validationError}`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        const dimensionError = await validateImageDimensions(file);
+        if (dimensionError) {
+          toast({
+            title: "Dimensões inválidas",
+            description: `${file.name}: ${dimensionError}`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        const result = await compressImage(file, {
+          ...COMPRESSION_PRESETS.experiences,
+        });
+        
+        totalOriginal += result.originalSize;
+        totalCompressed += result.compressedSize;
+        
+        compressedUploads.push({
+          file: result.compressedFile,
+          alt_text: '',
+          category: 'experiences',
+          bungalow_slug: undefined,
+          preview: URL.createObjectURL(result.compressedFile),
+        });
+      } catch (error) {
+        console.error('Erro ao comprimir:', error);
+        toast({
+          title: "Erro na compactação",
+          description: `Não foi possível comprimir ${file.name}`,
+          variant: "destructive",
+        });
+      }
+    }
+    
+    setCompressionStats({
+      original: totalOriginal,
+      compressed: totalCompressed,
+      saved: totalOriginal - totalCompressed,
+    });
+    
+    setUploads(prev => [...prev, ...compressedUploads]);
+    setIsCompressing(false);
+    
+    if (compressedUploads.length > 0) {
+      const savedPercent = Math.round(
+        ((totalOriginal - totalCompressed) / totalOriginal) * 100
+      );
+      toast({
+        title: "Imagens otimizadas",
+        description: `${compressedUploads.length} foto(s) compactada(s). Economia de ${savedPercent}%`,
+      });
+    }
   };
 
   const removeUpload = (index: number) => {
@@ -39,10 +109,28 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
     });
   };
 
-  const updateUpload = (index: number, field: keyof GalleryImageUpload, value: string | undefined) => {
+  const updateUpload = async (index: number, field: keyof GalleryImageUpload, value: string | undefined) => {
     setUploads(prev => prev.map((upload, i) => 
       i === index ? { ...upload, [field]: value } : upload
     ));
+
+    if (field === 'category' && value && value in COMPRESSION_PRESETS) {
+      const upload = uploads[index];
+      const preset = COMPRESSION_PRESETS[value as keyof typeof COMPRESSION_PRESETS];
+      
+      try {
+        const result = await compressImage(upload.file, preset);
+        setUploads(prev => prev.map((u, i) => 
+          i === index ? {
+            ...u,
+            file: result.compressedFile,
+            preview: URL.createObjectURL(result.compressedFile),
+          } : u
+        ));
+      } catch (error) {
+        console.error('Erro ao recomprimir:', error);
+      }
+    }
   };
 
   const handleUpload = async () => {
@@ -126,7 +214,35 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
 
   return (
     <div className="space-y-6">
-      {uploads.length === 0 && (
+      {compressionStats.saved > 0 && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-center gap-2 text-sm">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <div>
+              <p className="font-semibold text-green-800">
+                Compactação Ativada
+              </p>
+              <p className="text-green-700">
+                Original: {formatFileSize(compressionStats.original)} →
+                Otimizado: {formatFileSize(compressionStats.compressed)} |
+                Economia: {formatFileSize(compressionStats.saved)} 
+                ({Math.round((compressionStats.saved / compressionStats.original) * 100)}%)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isCompressing && (
+        <div className="flex items-center justify-center gap-2 py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Otimizando imagens...
+          </p>
+        </div>
+      )}
+
+      {uploads.length === 0 && !isCompressing && (
         <ImageDropZone onFilesSelected={handleFilesSelected} disabled={isUploading} />
       )}
 
