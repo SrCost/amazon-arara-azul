@@ -27,6 +27,7 @@ import Users from "./pages/admin/Users";
 import Payments from "./pages/admin/Payments";
 import Audit from "./pages/admin/Audit";
 import AdminPackages from "./pages/admin/Packages";
+import Gallery from "./pages/admin/Gallery";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,16 @@ const App = () => (
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout>
                     <AdminPackages />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/gallery"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <Gallery />
                   </AdminLayout>
                 </ProtectedRoute>
               }
