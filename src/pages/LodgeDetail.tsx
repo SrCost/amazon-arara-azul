@@ -22,6 +22,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ReservationFlow from "@/components/ReservationFlow";
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
+import Lightbox from "@/components/Lightbox";
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
@@ -34,9 +35,25 @@ const LodgeDetail = () => {
   const [lodge, setLodge] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [bungalowSlug, setBungalowSlug] = useState<string>("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   
   // Buscar fotos do bangalô específico
   const { data: bungalowImages = [] } = useGalleryImages('bungalows', bungalowSlug || undefined);
+  
+  // Combine gallery images with fallback images
+  const allImages = bungalowImages.length > 0 
+    ? bungalowImages 
+    : lodge?.images?.map((img: string, idx: number) => ({ 
+        src: img, 
+        alt: `${lodge?.name} - Imagem ${idx + 1}`,
+        id: `fallback-${idx}`
+      })) || [];
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   useEffect(() => {
     fetchLodgeDetails();
@@ -163,42 +180,42 @@ const LodgeDetail = () => {
             </Link>
           </Button>
 
-          {/* Image Gallery */}
+          {/* Images Gallery with Carousel */}
           <div className="mb-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Main Image */}
+            <div 
+              className="relative h-96 rounded-lg overflow-hidden mb-4 cursor-pointer group"
+              onClick={() => openLightbox(0)}
+            >
               <img
-                src={bungalowImages[0]?.src || lodge.images[0]}
-                alt={bungalowImages[0]?.alt || lodge.name}
-                className="w-full h-[400px] object-cover rounded-lg"
+                src={allImages[0]?.src}
+                alt={allImages[0]?.alt}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="grid grid-cols-2 gap-4">
-                {(bungalowImages.length > 1 
-                  ? bungalowImages.slice(1, 3)
-                  : lodge.images.slice(1, 3).map((img: string, idx: number) => ({ src: img, alt: `${lodge.name} ${idx + 2}` }))
-                ).map((img: any, idx: number) => (
-                  <img
-                    key={idx}
-                    src={img.src}
-                    alt={img.alt}
-                    className="w-full h-[192px] object-cover rounded-lg"
-                  />
-                ))}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-4 py-2 rounded-lg">
+                  Clique para ampliar
+                </span>
               </div>
             </div>
-            
-            {bungalowImages.length > 3 && (
-              <div className="mt-4">
-                <h3 className="text-xl font-display font-semibold mb-3">Mais Fotos do Bangalô</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {bungalowImages.slice(3).map((img: any, idx: number) => (
+
+            {/* Thumbnails */}
+            {allImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {allImages.slice(0, 4).map((image: any, index: number) => (
+                  <div
+                    key={image.id || index}
+                    className="relative h-24 rounded-lg overflow-hidden cursor-pointer group"
+                    onClick={() => openLightbox(index)}
+                  >
                     <img
-                      key={idx}
-                      src={img.src}
-                      alt={img.alt}
-                      className="w-full h-[150px] object-cover rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                      src={image.src}
+                      alt={image.alt}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
-                  ))}
-                </div>
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                  </div>
+                ))}
               </div>
             )}
           </div>
@@ -316,6 +333,16 @@ const LodgeDetail = () => {
           />
         </DialogContent>
       </Dialog>
+
+      {/* Lightbox */}
+      {lightboxOpen && (
+        <Lightbox
+          images={allImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+          onNavigate={(index) => setLightboxIndex(index)}
+        />
+      )}
     </div>
   );
 };

@@ -43,6 +43,7 @@ const imagesToUpload: ImageUploadData[] = [
 
 export async function uploadPaneiroImagesToGallery() {
   console.log('Starting Paneiro images upload to gallery...');
+  const results = [];
   
   for (const imageData of imagesToUpload) {
     try {
@@ -65,6 +66,7 @@ export async function uploadPaneiroImagesToGallery() {
       
       if (uploadError) {
         console.error(`Upload error for ${imageData.fileName}:`, uploadError);
+        results.push({ success: false, error: uploadError.message });
         continue;
       }
       
@@ -83,14 +85,18 @@ export async function uploadPaneiroImagesToGallery() {
       
       if (dbError) {
         console.error(`Database error for ${imageData.fileName}:`, dbError);
+        results.push({ success: false, error: dbError.message });
         continue;
       }
       
       console.log(`✓ Successfully uploaded: ${imageData.fileName}`);
-    } catch (error) {
+      results.push({ success: true, file: imageData.fileName });
+    } catch (error: any) {
       console.error(`Error processing ${imageData.fileName}:`, error);
+      results.push({ success: false, error: error.message });
     }
   }
   
   console.log('Upload process completed!');
+  return results;
 }
