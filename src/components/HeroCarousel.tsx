@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import heroImage from "@/assets/hero-amazon.jpg";
-import lodge1 from "@/assets/lodge-1.jpg";
-import lodge2 from "@/assets/lodge-2.jpg";
-import lodge3 from "@/assets/lodge-3.jpg";
+import { galleryImages } from "@/config/galleryImages";
 
-const images = [heroImage, lodge1, lodge2, lodge3];
+const images = galleryImages.slice(0, 9).map(img => img.src);
 
 const HeroCarousel = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

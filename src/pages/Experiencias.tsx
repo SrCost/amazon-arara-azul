@@ -1,15 +1,20 @@
+import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
 import { Compass, Bird, Droplets, Users, Sunset, Camera } from "lucide-react";
-import samaumaTree from "@/assets/experiencias-samauma-tree.jpg";
-import samaumaPerson from "@/assets/experiencias-samauma-person.jpg";
-import sunset from "@/assets/experiencias-sunset.jpg";
-import monkey from "@/assets/experiencias-monkey.jpg";
-import piranha from "@/assets/experiencias-piranha.jpg";
-import groupForest from "@/assets/experiencias-group.jpg";
+import Lightbox from "@/components/Lightbox";
+import { galleryImages } from "@/config/galleryImages";
 
 const Experiencias = () => {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
+
   const experiences = [
     {
       icon: Compass,
@@ -43,14 +48,6 @@ const Experiencias = () => {
     },
   ];
 
-  const galleryImages = [
-    { src: samaumaTree, alt: "Samaúma - Árvore gigante da Amazônia" },
-    { src: samaumaPerson, alt: "Visitante admirando a majestosa Samaúma" },
-    { src: sunset, alt: "Pôr do sol amazônico no Rio Negro" },
-    { src: monkey, alt: "Macaco-de-cheiro em seu habitat natural" },
-    { src: piranha, alt: "Pesca de piranha - experiência autêntica" },
-    { src: groupForest, alt: "Grupo explorando a floresta amazônica" },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,6 +107,7 @@ const Experiencias = () => {
               <div
                 key={index}
                 className="aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer group"
+                onClick={() => openLightbox(index)}
               >
                 <img
                   src={image.src}
@@ -122,6 +120,16 @@ const Experiencias = () => {
           </div>
         </div>
       </section>
+
+      {/* Lightbox Modal */}
+      {lightboxOpen && (
+        <Lightbox
+          images={galleryImages}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+          onNavigate={setLightboxIndex}
+        />
+      )}
 
       <Footer />
     </div>
