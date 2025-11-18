@@ -12,11 +12,11 @@ const FloatingSupportButton = () => {
       className="fixed bottom-6 right-6 z-50"
     >
       <Button
-        className="h-16 w-16 rounded-full gradient-forest shadow-strong hover:scale-110 transition-transform"
+        className="h-16 w-16 rounded-full gradient-forest shadow-strong hover:scale-110 transition-transform animate-pulse"
         size="icon"
       >
         <svg 
-          className="h-8 w-8 text-white" 
+          className="h-10 w-10 text-white" 
           viewBox="0 0 24 24" 
           fill="currentColor"
         >
