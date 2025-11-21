@@ -35,15 +35,12 @@ const Lodges = () => {
             .select("room_id")
             .in("status", ["confirmed", "pending"])
             .or(`and(check_in.lte.${checkOut},check_out.gte.${checkIn})`);
-          
-          bookedRoomIds = reservations?.map(r => r.room_id) || [];
+
+          bookedRoomIds = reservations?.map((r) => r.room_id) || [];
         }
 
         // Build query for available rooms
-        let query = supabase
-          .from("rooms")
-          .select("*")
-          .eq("is_active", true);
+        let query = supabase.from("rooms").select("*").eq("is_active", true);
 
         if (guests) {
           query = query.gte("max_guests", parseInt(guests));
@@ -59,17 +56,18 @@ const Lodges = () => {
         if (error) throw error;
 
         // Map rooms to lodge format with localized content
-        const mappedLodges = rooms?.map((room, index) => ({
-          id: room.id,
-          slug: room.slug || room.id,
-          name: room[`name_${i18n.language}`] || room.name_pt,
-          location: "MANACAPURU, AMAZONIA - AM",
-          image: lodgeImages[index % lodgeImages.length],
-          price: `R$ ${room.price_per_night}`,
-          guests: room.max_guests,
-          description: room[`description_${i18n.language}`] || room.description_pt,
-          amenities: room.amenities || ["wifi", "breakfast"],
-        })) || [];
+        const mappedLodges =
+          rooms?.map((room, index) => ({
+            id: room.id,
+            slug: room.slug || room.id,
+            name: room[`name_${i18n.language}`] || room.name_pt,
+            location: "MANACAPURU, AMAZONIA - AM",
+            image: lodgeImages[index % lodgeImages.length],
+            price: `R$ ${room.price_per_night}`,
+            guests: room.max_guests,
+            description: room[`description_${i18n.language}`] || room.description_pt,
+            amenities: room.amenities || ["wifi", "breakfast"],
+          })) || [];
 
         setLodges(mappedLodges);
       } catch (error) {
@@ -91,9 +89,7 @@ const Lodges = () => {
       <section className="pt-32 pb-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">
-              Nossas Pousadas
-            </h1>
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">Nossos Bangalôs</h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Escolha sua experiência perfeita em meio à floresta amazônica
             </p>
@@ -110,16 +106,12 @@ const Lodges = () => {
         <div className="container mx-auto px-4">
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Buscando pousadas disponíveis...</p>
+              <p className="text-lg text-muted-foreground">Buscando bangalôs disponíveis...</p>
             </div>
           ) : lodges.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground mb-4">
-                Nenhuma pousada disponível para o período informado.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Tente outras datas ou reduza o número de hóspedes.
-              </p>
+              <p className="text-lg text-muted-foreground mb-4">Nenhum bangalô disponível para o período informado.</p>
+              <p className="text-sm text-muted-foreground">Tente outras datas ou reduza o número de hóspedes.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
