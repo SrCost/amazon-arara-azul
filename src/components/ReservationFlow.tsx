@@ -89,6 +89,19 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     loadPackages();
   }, []);
 
+  // Auto-fill dates when package is selected
+  useEffect(() => {
+    if (selectedPackage && packages.length > 0) {
+      const pkg = packages.find(p => p.id === selectedPackage);
+      if (pkg && checkIn) {
+        const nights = pkg.duration.includes("4 noites") ? 4 : 6;
+        const newCheckOut = new Date(checkIn);
+        newCheckOut.setDate(newCheckOut.getDate() + nights);
+        setCheckOut(newCheckOut);
+      }
+    }
+  }, [selectedPackage, checkIn, packages]);
+
   const steps = [
     { number: 1, title: "Escolher Pacote (Opcional)" },
     { number: 2, title: t("reservation.step2") },
@@ -102,7 +115,20 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     const nights = Math.ceil(
       (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
     );
-    return nights * pricePerNight;
+    
+    // Calculate base price (room nights)
+    const roomTotal = nights * pricePerNight;
+    
+    // Add package price if selected
+    let packageTotal = 0;
+    if (selectedPackage) {
+      const pkg = packages.find(p => p.id === selectedPackage);
+      if (pkg) {
+        packageTotal = Number(pkg.price) || 0;
+      }
+    }
+    
+    return roomTotal + packageTotal;
   };
 
   const handleNext = () => {
@@ -121,12 +147,12 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
     }
-    if (step === 3 && (!guestName || !guestEmail)) {
-      toast.error("Preencha todos os campos obrigatórios");
-      return;
-    }
-    // Validate Brazilian or Foreign required fields
     if (step === 3) {
+      if (!guestName || !guestEmail || !guestPhone) {
+        toast.error("Preencha todos os campos obrigatórios");
+        return;
+      }
+      // Validate Brazilian or Foreign required fields
       if (isForeign) {
         if (!country || !nationality || !passport || !birthDate) {
           toast.error("Preencha todos os campos obrigatórios para hóspedes estrangeiros");
@@ -135,6 +161,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       } else {
         if (!cpf || !birthDate) {
           toast.error("Preencha CPF e Data de Nascimento");
+          return;
+        }
+      }
+      
+      // Validate max guests for package
+      if (selectedPackage) {
+        const pkg = packages.find(p => p.id === selectedPackage);
+        if (pkg && parseInt(guests) > pkg.people) {
+          toast.error(`Este pacote é limitado a ${pkg.people} ${pkg.people === 1 ? 'pessoa' : 'pessoas'}`);
           return;
         }
       }
@@ -474,10 +509,18 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                     <CardContent className="p-4">
                       <h3 className="font-semibold mb-2">{pkg.name}</h3>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {pkg.duration} • {pkg.people} pessoas
+                        {pkg.duration} • {pkg.people} {pkg.people === 1 ? 'pessoa' : 'pessoas'}
                       </p>
+                      {pkg.description && (
+                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
+                          {pkg.description}
+                        </p>
+                      )}
                       <p className="text-lg font-bold text-primary">
-                        R$ {Number(pkg.price).toFixed(2)}
+                        Pacote: R$ {Number(pkg.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        + valor das diárias do bangalô
                       </p>
                     </CardContent>
                   </Card>
@@ -515,6 +558,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                     </Alert>
                   )}
 
+                  {selectedPackage && (
+                    <Alert className="mb-4">
+                      <AlertDescription>
+                        <strong>Pacote selecionado:</strong> As datas serão ajustadas automaticamente conforme a duração do pacote ({packages.find(p => p.id === selectedPackage)?.duration}).
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <Label className="mb-2 block">{t("search.checkIn")}</Label>
@@ -523,8 +574,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                         selected={checkIn}
                         onSelect={(date) => {
                           setCheckIn(date);
-                          // Reset checkout if it conflicts
-                          if (checkOut && date && date >= checkOut) {
+                          // Auto-adjust checkout based on package if selected
+                          if (selectedPackage && date) {
+                            const pkg = packages.find(p => p.id === selectedPackage);
+                            if (pkg) {
+                              const nights = pkg.duration.includes("4 noites") ? 4 : 6;
+                              const newCheckOut = new Date(date);
+                              newCheckOut.setDate(newCheckOut.getDate() + nights);
+                              setCheckOut(newCheckOut);
+                            }
+                          } else if (checkOut && date && date >= checkOut) {
+                            // Reset checkout if it conflicts
                             setCheckOut(undefined);
                           }
                         }}
@@ -543,37 +603,45 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                     </div>
                     <div>
                       <Label className="mb-2 block">{t("search.checkOut")}</Label>
-                      <Calendar
-                        mode="single"
-                        selected={checkOut}
-                        onSelect={setCheckOut}
-                        disabled={(date) => {
-                          const today = new Date();
-                          today.setHours(0, 0, 0, 0);
-                          
-                          // Disable past dates
-                          if (date < today) return true;
-                          
-                          // Must be after check-in
-                          if (checkIn && date <= checkIn) return true;
-                          
-                          // Check if any date between check-in and this date is blocked
-                          if (checkIn) {
-                            const testDate = new Date(checkIn);
-                            testDate.setDate(testDate.getDate() + 1);
+                      {selectedPackage ? (
+                        <div className="flex items-center justify-center h-full bg-muted rounded-md border p-4">
+                          <p className="text-sm text-center text-muted-foreground">
+                            Data de check-out definida automaticamente pelo pacote
+                          </p>
+                        </div>
+                      ) : (
+                        <Calendar
+                          mode="single"
+                          selected={checkOut}
+                          onSelect={setCheckOut}
+                          disabled={(date) => {
+                            const today = new Date();
+                            today.setHours(0, 0, 0, 0);
                             
-                            while (testDate < date) {
-                              if (!isDateAvailable(testDate)) {
-                                return true;
-                              }
+                            // Disable past dates
+                            if (date < today) return true;
+                            
+                            // Must be after check-in
+                            if (checkIn && date <= checkIn) return true;
+                            
+                            // Check if any date between check-in and this date is blocked
+                            if (checkIn) {
+                              const testDate = new Date(checkIn);
                               testDate.setDate(testDate.getDate() + 1);
+                              
+                              while (testDate < date) {
+                                if (!isDateAvailable(testDate)) {
+                                  return true;
+                                }
+                                testDate.setDate(testDate.getDate() + 1);
+                              }
                             }
-                          }
-                          
-                          return false;
-                        }}
-                        className="rounded-md border pointer-events-auto"
-                      />
+                            
+                            return false;
+                          }}
+                          className="rounded-md border pointer-events-auto"
+                        />
+                      )}
                     </div>
                   </div>
                 </>
@@ -597,17 +665,39 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               </div>
 
               {checkIn && checkOut && (
-                <div className="bg-muted p-4 rounded-lg">
-                  <p className="font-semibold mb-2">{t("reservation.total")}</p>
-                  <p className="text-2xl font-bold text-primary">
-                    R$ {calculateTotal().toLocaleString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {Math.ceil(
-                      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-                    )}{" "}
-                    noites
-                  </p>
+                <div className="bg-muted p-4 rounded-lg space-y-2">
+                  <p className="font-semibold mb-2">Resumo da Reserva</p>
+                  
+                  {selectedPackage && (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span>Pacote turístico:</span>
+                        <span className="font-medium">
+                          R$ {Number(packages.find(p => p.id === selectedPackage)?.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Hospedagem ({Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))} noites):</span>
+                        <span className="font-medium">
+                          R$ {(Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)) * pricePerNight).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                      <div className="border-t pt-2" />
+                    </>
+                  )}
+                  
+                  <div className="flex justify-between items-center">
+                    <p className="font-semibold">{t("reservation.total")}</p>
+                    <p className="text-2xl font-bold text-primary">
+                      R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  
+                  {!selectedPackage && (
+                    <p className="text-xs text-muted-foreground">
+                      {Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))} noites × R$ {pricePerNight.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -1024,9 +1114,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 <div className="flex justify-between items-center">
                   <span className="font-semibold">{t("reservation.total")}</span>
                   <span className="text-2xl font-bold text-primary">
-                    R$ {calculateTotal().toLocaleString()}
+                    R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
+                {checkIn && checkOut && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))} noites × R$ {pricePerNight.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    {selectedPackage && ` + Pacote R$ ${Number(packages.find(p => p.id === selectedPackage)?.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -1049,31 +1145,96 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
               <div className="bg-muted p-6 rounded-lg text-left space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Pousada:</span>
+                  <span className="text-muted-foreground">Bangalô:</span>
                   <span className="font-medium">{lodgeName}</span>
                 </div>
+                
+                {selectedPackage && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Pacote:</span>
+                    <span className="font-medium">
+                      {packages.find(p => p.id === selectedPackage)?.name}
+                    </span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Hóspede:</span>
                   <span className="font-medium">{guestName}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-in:</span>
-                  <span className="font-medium">
-                    {checkIn?.toLocaleDateString()}
-                  </span>
+                  <span className="text-muted-foreground">E-mail:</span>
+                  <span className="font-medium text-sm">{guestEmail}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Check-out:</span>
-                  <span className="font-medium">
-                    {checkOut?.toLocaleDateString()}
-                  </span>
+                  <span className="text-muted-foreground">Telefone:</span>
+                  <span className="font-medium">{guestPhone}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Hóspedes:</span>
+                  <span className="font-medium">{guests} {parseInt(guests) === 1 ? 'pessoa' : 'pessoas'}</span>
+                </div>
+                
+                <div className="border-t pt-3 mt-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Check-in:</span>
+                    <span className="font-medium">
+                      {checkIn?.toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <span className="text-muted-foreground">Check-out:</span>
+                    <span className="font-medium">
+                      {checkOut?.toLocaleDateString('pt-BR')}
+                    </span>
+                  </div>
+                  <div className="flex justify-between mt-2">
+                    <span className="text-muted-foreground">Noites:</span>
+                    <span className="font-medium">
+                      {Math.ceil((checkOut!.getTime() - checkIn!.getTime()) / (1000 * 60 * 60 * 24))}
+                    </span>
+                  </div>
+                </div>
+                
+                {selectedPackage && (
+                  <div className="border-t pt-3 mt-3 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Pacote turístico:</span>
+                      <span className="font-medium">
+                        R$ {Number(packages.find(p => p.id === selectedPackage)?.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Hospedagem:</span>
+                      <span className="font-medium">
+                        R$ {(Math.ceil((checkOut!.getTime() - checkIn!.getTime()) / (1000 * 60 * 60 * 24)) * pricePerNight).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="flex justify-between pt-3 border-t">
-                  <span className="font-semibold">Total:</span>
-                  <span className="text-xl font-bold text-primary">
-                    R$ {calculateTotal().toLocaleString()}
+                  <span className="font-semibold text-lg">Total:</span>
+                  <span className="text-2xl font-bold text-primary">
+                    R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
+                
+                <div className="flex justify-between pt-2">
+                  <span className="text-muted-foreground">Método de pagamento:</span>
+                  <span className="font-medium capitalize">
+                    {paymentMethod === 'credit' ? 'Cartão de Crédito' : 
+                     paymentMethod === 'pix' ? 'PIX' : 
+                     paymentMethod === 'paypal' ? 'Mercado Pago' : paymentMethod}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-left">
+                <p className="text-sm text-yellow-800">
+                  <strong>Importante:</strong> Após confirmar, você receberá um e-mail com os detalhes da reserva. 
+                  O pagamento será processado e você receberá a confirmação final em breve.
+                </p>
               </div>
             </div>
           )}
@@ -1089,7 +1250,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               <div />
             )}
 
-            {step < 4 ? (
+            {step < 5 ? (
               <Button onClick={handleNext} className="bg-gradient-forest">
                 {t("common.next")}
                 <ChevronRight className="ml-2 h-4 w-4" />
