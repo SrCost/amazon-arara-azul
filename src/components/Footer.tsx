@@ -29,7 +29,7 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/pousadas" className="opacity-90 hover:opacity-100 transition-opacity">
+                <Link to="/bangalos" className="opacity-90 hover:opacity-100 transition-opacity">
                   {t("nav.lodges")}
                 </Link>
               </li>

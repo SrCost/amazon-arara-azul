@@ -21,7 +21,7 @@ const Navigation = () => {
 
   const menuItems = [
     { label: t("nav.home"), href: "/" },
-    { label: "Bangalôs", href: "/pousadas" },
+    { label: "Bangalôs", href: "/bangalos" },
     { label: t("nav.packages"), href: "/pacotes" },
     { label: "Experiências", href: "/experiencias" },
     { label: t("nav.sustainability"), href: "/sustentabilidade" },

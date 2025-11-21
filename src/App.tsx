@@ -28,6 +28,7 @@ import Payments from "./pages/admin/Payments";
 import Audit from "./pages/admin/Audit";
 import AdminPackages from "./pages/admin/Packages";
 import Gallery from "./pages/admin/Gallery";
+import AdminBangalos from "./pages/admin/Bangalos";
 
 const queryClient = new QueryClient();
 
@@ -40,8 +41,8 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/pousadas" element={<Lodges />} />
-            <Route path="/pousadas/:id" element={<LodgeDetail />} />
+            <Route path="/bangalos" element={<Lodges />} />
+            <Route path="/bangalos/:id" element={<LodgeDetail />} />
             <Route path="/pacotes" element={<Packages />} />
             <Route path="/experiencias" element={<Experiencias />} />
             <Route path="/sustentabilidade" element={<Sustainability />} />
@@ -93,9 +94,19 @@ const App = () => (
             <Route
               path="/admin/gallery"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="user">
                   <AdminLayout>
                     <Gallery />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/bangalos"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <AdminBangalos />
                   </AdminLayout>
                 </ProtectedRoute>
               }

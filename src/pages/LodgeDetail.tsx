@@ -133,9 +133,8 @@ const LodgeDetail = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="pt-24 pb-16 container mx-auto px-4">
-          <p className="text-lg">Bangalô não encontrado</p>
           <Button variant="ghost" asChild className="mt-4">
-            <Link to="/pousadas">
+            <Link to="/bangalos">
               <ArrowLeft className="mr-2" />
               Voltar para bangalôs
             </Link>
@@ -159,9 +158,8 @@ const LodgeDetail = () => {
 
       <div className="pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Back Button */}
           <Button variant="ghost" asChild className="mb-6">
-            <Link to="/pousadas">
+            <Link to="/bangalos">
               <ArrowLeft className="mr-2" />
               {t("lodge.backToLodges")}
             </Link>

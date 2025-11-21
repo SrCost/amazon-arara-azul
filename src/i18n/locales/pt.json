@@ -1,7 +1,7 @@
 {
   "nav": {
     "home": "Início",
-    "lodges": "Pousadas",
+    "lodges": "Bangalôs",
     "packages": "Pacotes",
     "sustainability": "Sustentabilidade",
     "howToGetThere": "Como Chegar",
@@ -47,7 +47,7 @@
     "amenities": "Comodidades",
     "experiences": "Experiências Incluídas",
     "reviews": "avaliações",
-    "backToLodges": "Voltar para Pousadas",
+    "backToLodges": "Voltar para Bangalôs",
     "upTo": "Até",
     "notChargedYet": "Você não será cobrado ainda",
     "cancellationPolicy": "Política de Cancelamento",
@@ -150,11 +150,11 @@
   "home": {
     "heroTitle": "Viva a Amazônia com Responsabilidade",
     "heroSubtitle": "Hospedagem ecológica em meio à maior floresta tropical do planeta. Uma imersão única que une conforto, natureza e sustentabilidade.",
-    "exploreLodges": "Explorar Pousadas",
+    "exploreLodges": "Explorar Bangalôs",
     "ourMission": "Nossa Missão",
-    "ourLodges": "Nossas Pousadas",
-    "lodgesDescription": "Cada pousada oferece uma experiência autêntica, integrada à natureza e à cultura local",
-    "viewAllLodges": "Ver Todas as Pousadas",
+    "ourLodges": "Nossos Bangalôs",
+    "lodgesDescription": "Cada bangalô oferece uma experiência autêntica, integrada à natureza e à cultura local",
+    "viewAllLodges": "Ver Todos os Bangalôs",
     "readyForAdventure": "Pronto para Sua Aventura Amazônica?",
     "bookNowDescription": "Reserve agora e garanta sua experiência inesquecível em uma das regiões mais biodiversas do mundo",
     "getInTouch": "Entre em Contato",
@@ -166,7 +166,7 @@
     "localCommunityDesc": "Apoio direto às famílias ribeirinhas e valorização da cultura amazônica"
   },
   "lodges": {
-    "title": "Nossas Pousadas",
+    "title": "Nossos Bangalôs",
     "subtitle": "Escolha sua experiência perfeita em meio à floresta amazônica",
     "lodgeTypes": {
       "all": "Todas",

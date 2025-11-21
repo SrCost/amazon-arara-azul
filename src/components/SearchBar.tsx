@@ -69,8 +69,8 @@ const SearchBar = () => {
       } = await query;
       if (roomsError) throw roomsError;
       if (rooms && rooms.length > 0) {
-        // Navigate to pousadas page with search params
-        navigate(`/pousadas?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&type=${lodgeType}`);
+        // Navigate to bangalos page with search params
+        navigate(`/bangalos?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&type=${lodgeType}`);
         toast({
           title: "Busca realizada!",
           description: `${rooms.length} acomodação(ões) disponível(is) para suas datas.`
