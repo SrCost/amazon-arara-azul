@@ -29,7 +29,7 @@ const Packages = () => {
         "Recepção amazônica de boas-vindas",
         "Welcome drink cortesia no Sunset Jungle Bar",
       ],
-      total: "R$ 14.721,00",
+      total: "R$ 8.832,60",
       highlight:
         "Conforto, autenticidade e sabor regional. Viva a essência da floresta com acolhimento e comida caseira amazônica.",
     },
@@ -56,7 +56,7 @@ const Packages = () => {
         "Welcome drink cortesia no Sunset Jungle Bar",
         "Jantar amazônico sob o Chapéu de Sol",
       ],
-      total: "R$ 14.461,00",
+      total: "R$ 8.676,60",
       highlight:
         "Um convite à serenidade e à cultura amazônica, com experiências únicas e gastronomia local inesquecível.",
     },
@@ -86,7 +86,7 @@ const Packages = () => {
         "Recepção amazônica de boas-vindas",
         "Welcome drink cortesia no Sunset Jungle Bar",
       ],
-      total: "R$ 21.379,00",
+      total: "R$ 12.827,40",
       highlight:
         "O pacote mais completo e imersivo. Ideal para quem deseja mergulhar profundamente na natureza e cultura amazônica com conforto e exclusividade.",
     },
@@ -100,12 +100,8 @@ const Packages = () => {
       <section className="pt-32 pb-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">
-              {t("packages.title")}
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {t("packages.subtitle")}
-            </p>
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">{t("packages.title")}</h1>
+            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t("packages.subtitle")}</p>
           </div>
         </div>
       </section>
@@ -121,12 +117,8 @@ const Packages = () => {
 
           {/* Final Section */}
           <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 md:p-12 border border-border">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-4">
-              {t("packages.qualityTitle")}
-            </h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">
-              {t("packages.qualityDescription")}
-            </p>
+            <h2 className="text-3xl font-display font-bold text-foreground mb-4">{t("packages.qualityTitle")}</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed">{t("packages.qualityDescription")}</p>
           </div>
         </div>
       </section>
