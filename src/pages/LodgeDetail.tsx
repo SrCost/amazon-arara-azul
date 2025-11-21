@@ -165,44 +165,66 @@ const LodgeDetail = () => {
             </Link>
           </Button>
 
-          {/* Images Gallery with Carousel */}
+          {/* Gallery Section - Modern Hero + Grid Layout */}
           <div className="mb-8">
-            {/* Main Image */}
-            <div
-              className="relative h-96 rounded-lg overflow-hidden mb-4 cursor-pointer group"
-              onClick={() => openLightbox(0)}
-            >
-              <img
-                src={allImages[0]?.src}
-                alt={allImages[0]?.alt}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 px-4 py-2 rounded-lg">
-                  Clique para ampliar
-                </span>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-2 rounded-xl overflow-hidden">
+              {/* Hero Image - 2x2 grid space on desktop */}
+              <div 
+                className="md:col-span-2 md:row-span-2 relative aspect-[4/3] cursor-pointer group overflow-hidden"
+                onClick={() => openLightbox(0)}
+              >
+                <img
+                  src={allImages[0]?.src}
+                  alt={allImages[0]?.alt}
+                  className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                  <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 px-4 py-2 rounded-lg backdrop-blur-sm font-medium">
+                    Clique para ampliar
+                  </span>
+                </div>
               </div>
-            </div>
 
-            {/* Thumbnails */}
-            {allImages.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {allImages.slice(0, 4).map((image: any, index: number) => (
-                  <div
-                    key={image.id || index}
-                    className="relative h-24 rounded-lg overflow-hidden cursor-pointer group"
-                    onClick={() => openLightbox(index)}
-                  >
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+              {/* Secondary Images Grid 2x2 */}
+              {allImages.slice(1, 5).map((image: any, index: number) => (
+                <div
+                  key={image.id || index}
+                  className="relative aspect-[4/3] cursor-pointer group overflow-hidden"
+                  onClick={() => openLightbox(index + 1)}
+                >
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
+                </div>
+              ))}
+
+              {/* "View all photos" button - last grid position */}
+              {allImages.length > 5 && (
+                <div
+                  className="relative aspect-[4/3] cursor-pointer group overflow-hidden"
+                  onClick={() => openLightbox(5)}
+                >
+                  <img
+                    src={allImages[5]?.src}
+                    alt={allImages[5]?.alt}
+                    className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-black/60 group-hover:bg-black/70 transition-all duration-300 flex items-center justify-center">
+                    <div className="text-center">
+                      <span className="text-white text-lg font-semibold block">
+                        Ver todas as fotos
+                      </span>
+                      <span className="text-white/80 text-sm">
+                        +{allImages.length - 5} fotos
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
