@@ -3,17 +3,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import {
-  MapPin,
-  Users,
-  Wifi,
-  Coffee,
-  Tv,
-  Wind,
-  ArrowLeft,
-  Star,
-  Check,
-} from "lucide-react";
+import { MapPin, Users, Wifi, Coffee, Tv, Wind, ArrowLeft, Star, Check } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -37,18 +27,19 @@ const LodgeDetail = () => {
   const [bungalowSlug, setBungalowSlug] = useState<string>("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  
+
   // Buscar fotos do bangalô específico
-  const { data: bungalowImages = [] } = useGalleryImages('bungalows', bungalowSlug || undefined);
-  
+  const { data: bungalowImages = [] } = useGalleryImages("bungalows", bungalowSlug || undefined);
+
   // Combine gallery images with fallback images
-  const allImages = bungalowImages.length > 0 
-    ? bungalowImages 
-    : lodge?.images?.map((img: string, idx: number) => ({ 
-        src: img, 
-        alt: `${lodge?.name} - Imagem ${idx + 1}`,
-        id: `fallback-${idx}`
-      })) || [];
+  const allImages =
+    bungalowImages.length > 0
+      ? bungalowImages
+      : lodge?.images?.map((img: string, idx: number) => ({
+          src: img,
+          alt: `${lodge?.name} - Imagem ${idx + 1}`,
+          id: `fallback-${idx}`,
+        })) || [];
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -62,26 +53,23 @@ const LodgeDetail = () => {
   const fetchLodgeDetails = async () => {
     try {
       // Try to fetch by slug first, fallback to id
-      let query = supabase
-        .from("rooms")
-        .select("*")
-        .eq("is_active", true);
-      
+      let query = supabase.from("rooms").select("*").eq("is_active", true);
+
       // Check if id looks like a UUID or a slug
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || "");
-      
+
       if (isUUID) {
         query = query.eq("id", id);
       } else {
         query = query.eq("slug", id);
       }
-      
+
       const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
 
       if (!data) {
-        toast.error("Pousada não encontrada");
+        toast.error("Bangalô não encontrado");
         return;
       }
 
@@ -108,7 +96,6 @@ const LodgeDetail = () => {
           "Ar condicionado",
           "Varanda privativa",
           "Energia solar",
-          "Água quente",
         ],
         experiences: [
           "Trilhas guiadas na floresta",
@@ -123,7 +110,7 @@ const LodgeDetail = () => {
       setLodge(lodgeData);
     } catch (error) {
       console.error("Error fetching lodge:", error);
-      toast.error("Erro ao carregar detalhes da pousada");
+      toast.error("Erro ao carregar detalhes do bangalô");
     } finally {
       setLoading(false);
     }
@@ -146,11 +133,11 @@ const LodgeDetail = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="pt-24 pb-16 container mx-auto px-4">
-          <p className="text-lg">Pousada não encontrada</p>
+          <p className="text-lg">Bangalô não encontrado</p>
           <Button variant="ghost" asChild className="mt-4">
             <Link to="/pousadas">
               <ArrowLeft className="mr-2" />
-              Voltar para pousadas
+              Voltar para bangalôs
             </Link>
           </Button>
         </div>
@@ -183,7 +170,7 @@ const LodgeDetail = () => {
           {/* Images Gallery with Carousel */}
           <div className="mb-8">
             {/* Main Image */}
-            <div 
+            <div
               className="relative h-96 rounded-lg overflow-hidden mb-4 cursor-pointer group"
               onClick={() => openLightbox(0)}
             >
@@ -220,19 +207,18 @@ const LodgeDetail = () => {
             )}
           </div>
 
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               <div>
                 <div className="flex items-center justify-between mb-4">
-                  <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground">
-                    {lodge.name}
-                  </h1>
+                  <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground">{lodge.name}</h1>
                   <div className="flex items-center space-x-2">
                     <Star className="h-5 w-5 fill-golden text-golden" />
                     <span className="font-semibold">{lodge.rating}</span>
-                    <span className="text-muted-foreground">({lodge.reviews} {t("lodge.reviews")})</span>
+                    <span className="text-muted-foreground">
+                      ({lodge.reviews} {t("lodge.reviews")})
+                    </span>
                   </div>
                 </div>
 
@@ -262,9 +248,7 @@ const LodgeDetail = () => {
               {/* Experiences */}
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-display font-semibold mb-4">
-                    {t("lodge.experiences")}
-                  </h2>
+                  <h2 className="text-2xl font-display font-semibold mb-4">{t("lodge.experiences")}</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {lodge.experiences.map((exp: string, idx: number) => (
                       <div key={idx} className="flex items-center space-x-3">
@@ -296,22 +280,18 @@ const LodgeDetail = () => {
                     </div>
                   </div>
 
-                  <Button 
+                  <Button
                     className="w-full bg-gradient-forest hover:opacity-90 h-12 text-lg mb-4"
                     onClick={() => setShowReservation(true)}
                   >
                     {t("common.bookNow")}
                   </Button>
 
-                  <p className="text-xs text-center text-muted-foreground">
-                    {t("lodge.notChargedYet")}
-                  </p>
+                  <p className="text-xs text-center text-muted-foreground">{t("lodge.notChargedYet")}</p>
 
                   <div className="border-t border-border mt-6 pt-6">
                     <h3 className="font-semibold mb-3">{t("lodge.cancellationPolicy")}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {t("lodge.cancellationText")}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{t("lodge.cancellationText")}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -325,11 +305,11 @@ const LodgeDetail = () => {
       {/* Reservation Dialog */}
       <Dialog open={showReservation} onOpenChange={setShowReservation}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <ReservationFlow 
-            lodgeName={lodge.name} 
+          <ReservationFlow
+            lodgeName={lodge.name}
             pricePerNight={lodge.pricePerNight || parseInt(lodge.price.replace(/[^\d]/g, ""))}
             roomId={lodge.id || id || ""}
-            onClose={() => setShowReservation(false)} 
+            onClose={() => setShowReservation(false)}
           />
         </DialogContent>
       </Dialog>
