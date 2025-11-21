@@ -112,7 +112,7 @@ const PackageCard = ({
             asChild
             className="w-full bg-gradient-forest hover:opacity-90 transition-opacity"
           >
-            <Link to={`/pousadas?pacote=${id}`}>
+            <Link to={`/bangalos?pacote=${id}`}>
               {t("packages.bookButton")}
             </Link>
           </Button>

@@ -104,12 +104,12 @@ const Index = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                  <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
-                    <Link to="/pousadas">
-                      Explorar Bangalôs
-                      <ArrowRight className="ml-2" />
-                    </Link>
-                  </Button>
+                <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
+                  <Link to="/bangalos">
+                    Explorar Bangalôs
+                    <ArrowRight className="ml-2" />
+                  </Link>
+                </Button>
                   <Button
                     size="lg"
                     variant="outline"
@@ -164,11 +164,11 @@ const Index = () => {
 
           {loading ? (
             <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Carregando pousadas...</p>
+              <p className="text-lg text-muted-foreground">Carregando bangalôs...</p>
             </div>
           ) : lodges.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Nenhuma pousada disponível no momento.</p>
+              <p className="text-lg text-muted-foreground">Nenhum bangalô disponível no momento.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -180,7 +180,7 @@ const Index = () => {
 
           <div className="text-center">
             <Button size="lg" variant="outline" asChild>
-              <Link to="/pousadas">
+              <Link to="/bangalos">
                 Ver Todos os Bangalôs
                 <ArrowRight className="ml-2" />
               </Link>

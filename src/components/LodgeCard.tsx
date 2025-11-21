@@ -79,7 +79,7 @@ const LodgeCard = ({
         </div>
 
         <Button asChild className="w-full bg-gradient-forest hover:opacity-90">
-          <Link to={`/pousadas/${slug || id}`}>Ver Detalhes</Link>
+          <Link to={`/bangalos/${slug || id}`}>Ver Detalhes</Link>
         </Button>
       </CardContent>
     </Card>
