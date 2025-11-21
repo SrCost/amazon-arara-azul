@@ -59,20 +59,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       label: t("admin.messages"),
       path: "/admin/messages",
     },
+    {
+      icon: Images,
+      label: "Galeria",
+      path: "/admin/gallery",
+    },
   ];
 
-  // Admin e Super Admin têm acesso a Payments, Packages, Gallery e Bangalos
+  // Admin e Super Admin têm acesso adicional a Payments, Packages e Bangalôs
   const adminItems = isAdmin || isSuperAdmin
     ? [
         {
           icon: Package,
           label: "Pacotes",
           path: "/admin/packages",
-        },
-        {
-          icon: Images,
-          label: "Galeria",
-          path: "/admin/gallery",
         },
         {
           icon: Building2,

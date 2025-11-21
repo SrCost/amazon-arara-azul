@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Bangalo {
   id: string;
@@ -48,6 +50,7 @@ const AdminBangalos = () => {
   const [loading, setLoading] = useState(true);
   const [editingBangalo, setEditingBangalo] = useState<Bangalo | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bangaloToDelete, setBangaloToDelete] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -91,6 +94,7 @@ const AdminBangalos = () => {
 
   const handleEdit = (bangalo: Bangalo) => {
     setEditingBangalo(bangalo);
+    setIsCreating(false);
     setFormData({
       name_pt: bangalo.name_pt,
       name_en: bangalo.name_en,
@@ -108,40 +112,92 @@ const AdminBangalos = () => {
     setIsDialogOpen(true);
   };
 
+  const handleCreate = () => {
+    setEditingBangalo(null);
+    setIsCreating(true);
+    setFormData({
+      name_pt: "",
+      name_en: "",
+      name_es: "",
+      name_fr: "",
+      description_pt: "",
+      description_en: "",
+      description_es: "",
+      description_fr: "",
+      price_per_night: 1330,
+      max_guests: 3,
+      slug: "",
+      amenities: [],
+    });
+    setIsDialogOpen(true);
+  };
+
   const handleSave = async () => {
-    if (!editingBangalo) return;
+    // Validation
+    if (!formData.name_pt || !formData.slug) {
+      toast.error("Preencha ao menos o nome em português e o slug");
+      return;
+    }
 
     try {
       setSaving(true);
 
-      const { error } = await supabase
-        .from("rooms")
-        .update({
-          name_pt: formData.name_pt,
-          name_en: formData.name_en,
-          name_es: formData.name_es,
-          name_fr: formData.name_fr,
-          description_pt: formData.description_pt,
-          description_en: formData.description_en,
-          description_es: formData.description_es,
-          description_fr: formData.description_fr,
-          price_per_night: formData.price_per_night,
-          max_guests: formData.max_guests,
-          slug: formData.slug,
-          amenities: formData.amenities,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", editingBangalo.id);
+      if (isCreating) {
+        // Create new bangalo
+        const { error } = await supabase
+          .from("rooms")
+          .insert({
+            name_pt: formData.name_pt,
+            name_en: formData.name_en || formData.name_pt,
+            name_es: formData.name_es || formData.name_pt,
+            name_fr: formData.name_fr || formData.name_pt,
+            description_pt: formData.description_pt,
+            description_en: formData.description_en || formData.description_pt,
+            description_es: formData.description_es || formData.description_pt,
+            description_fr: formData.description_fr || formData.description_pt,
+            price_per_night: formData.price_per_night,
+            max_guests: formData.max_guests,
+            slug: formData.slug,
+            amenities: formData.amenities,
+            is_active: true,
+          });
 
-      if (error) throw error;
+        if (error) throw error;
+        toast.success("Bangalô criado com sucesso!");
+      } else {
+        // Update existing bangalo
+        if (!editingBangalo) return;
 
-      toast.success("Bangalô atualizado com sucesso!");
+        const { error } = await supabase
+          .from("rooms")
+          .update({
+            name_pt: formData.name_pt,
+            name_en: formData.name_en,
+            name_es: formData.name_es,
+            name_fr: formData.name_fr,
+            description_pt: formData.description_pt,
+            description_en: formData.description_en,
+            description_es: formData.description_es,
+            description_fr: formData.description_fr,
+            price_per_night: formData.price_per_night,
+            max_guests: formData.max_guests,
+            slug: formData.slug,
+            amenities: formData.amenities,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingBangalo.id);
+
+        if (error) throw error;
+        toast.success("Bangalô atualizado com sucesso!");
+      }
+
       setIsDialogOpen(false);
       setEditingBangalo(null);
+      setIsCreating(false);
       fetchBangalos();
     } catch (error: any) {
-      console.error("Error updating bangalo:", error);
-      toast.error("Erro ao atualizar bangalô");
+      console.error("Error saving bangalo:", error);
+      toast.error(isCreating ? "Erro ao criar bangalô" : "Erro ao atualizar bangalô");
     } finally {
       setSaving(false);
     }
@@ -190,6 +246,10 @@ const AdminBangalos = () => {
             Edite informações, preços e comodidades dos bangalôs
           </p>
         </div>
+        <Button onClick={handleCreate} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Criar Novo Bangalô
+        </Button>
       </div>
 
       {/* Bangalos Grid */}
@@ -240,6 +300,24 @@ const AdminBangalos = () => {
                   Editar
                 </Button>
                 <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                >
+                  <Link to={`/admin/gallery?category=bungalows&slug=${bangalo.slug}`}>
+                    <ImageIcon className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  asChild
+                >
+                  <Link to={`/bangalos/${bangalo.slug}`} target="_blank">
+                    <Eye className="h-4 w-4" />
+                  </Link>
+                </Button>
+                <Button
                   variant="destructive"
                   size="sm"
                   onClick={() => openDeleteDialog(bangalo.id)}
@@ -252,164 +330,199 @@ const AdminBangalos = () => {
         ))}
       </div>
 
-      {/* Edit Dialog */}
+      {/* Edit/Create Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Editar Bangalô</DialogTitle>
+            <DialogTitle>{isCreating ? "Criar Novo Bangalô" : "Editar Bangalô"}</DialogTitle>
             <DialogDescription>
-              Atualize as informações do bangalô em todos os idiomas
+              {isCreating ? "Preencha as informações do novo bangalô" : "Atualize as informações do bangalô em todos os idiomas"}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 py-4">
-            {/* Names in all languages */}
-            <div className="space-y-4">
-              <h3 className="font-semibold">Nome (todos os idiomas)</h3>
+          <Tabs defaultValue="pt" className="w-full">
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="pt">Português</TabsTrigger>
+              <TabsTrigger value="en">Inglês</TabsTrigger>
+              <TabsTrigger value="es">Espanhol</TabsTrigger>
+              <TabsTrigger value="fr">Francês</TabsTrigger>
+              <TabsTrigger value="config">Config</TabsTrigger>
+            </TabsList>
+
+            {/* Portuguese Tab */}
+            <TabsContent value="pt" className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="name_pt">Nome *</Label>
+                <Input
+                  id="name_pt"
+                  value={formData.name_pt}
+                  onChange={(e) => setFormData({ ...formData, name_pt: e.target.value })}
+                  placeholder="Suíte Peneira"
+                />
+              </div>
+              <div>
+                <Label htmlFor="desc_pt">Descrição</Label>
+                <Textarea
+                  id="desc_pt"
+                  value={formData.description_pt}
+                  onChange={(e) => setFormData({ ...formData, description_pt: e.target.value })}
+                  rows={6}
+                  placeholder="Descreva o bangalô..."
+                />
+              </div>
+            </TabsContent>
+
+            {/* English Tab */}
+            <TabsContent value="en" className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="name_en">Name</Label>
+                <Input
+                  id="name_en"
+                  value={formData.name_en}
+                  onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                  placeholder="Peneira Suite"
+                />
+              </div>
+              <div>
+                <Label htmlFor="desc_en">Description</Label>
+                <Textarea
+                  id="desc_en"
+                  value={formData.description_en}
+                  onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
+                  rows={6}
+                  placeholder="Describe the bungalow..."
+                />
+              </div>
+            </TabsContent>
+
+            {/* Spanish Tab */}
+            <TabsContent value="es" className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="name_es">Nombre</Label>
+                <Input
+                  id="name_es"
+                  value={formData.name_es}
+                  onChange={(e) => setFormData({ ...formData, name_es: e.target.value })}
+                  placeholder="Suite Peneira"
+                />
+              </div>
+              <div>
+                <Label htmlFor="desc_es">Descripción</Label>
+                <Textarea
+                  id="desc_es"
+                  value={formData.description_es}
+                  onChange={(e) => setFormData({ ...formData, description_es: e.target.value })}
+                  rows={6}
+                  placeholder="Describe el bungaló..."
+                />
+              </div>
+            </TabsContent>
+
+            {/* French Tab */}
+            <TabsContent value="fr" className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="name_fr">Nom</Label>
+                <Input
+                  id="name_fr"
+                  value={formData.name_fr}
+                  onChange={(e) => setFormData({ ...formData, name_fr: e.target.value })}
+                  placeholder="Suite Peneira"
+                />
+              </div>
+              <div>
+                <Label htmlFor="desc_fr">Description</Label>
+                <Textarea
+                  id="desc_fr"
+                  value={formData.description_fr}
+                  onChange={(e) => setFormData({ ...formData, description_fr: e.target.value })}
+                  rows={6}
+                  placeholder="Décrivez le bungalow..."
+                />
+              </div>
+            </TabsContent>
+
+            {/* Config Tab */}
+            <TabsContent value="config" className="space-y-4 py-4">
+              {/* Price and Capacity */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="name_pt">Português</Label>
+                  <Label htmlFor="price">Preço por noite (R$) *</Label>
                   <Input
-                    id="name_pt"
-                    value={formData.name_pt}
-                    onChange={(e) => setFormData({ ...formData, name_pt: e.target.value })}
+                    id="price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.price_per_night}
+                    onChange={(e) => setFormData({ ...formData, price_per_night: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="name_en">Inglês</Label>
+                  <Label htmlFor="guests">Máximo de hóspedes</Label>
                   <Input
-                    id="name_en"
-                    value={formData.name_en}
-                    onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="name_es">Espanhol</Label>
-                  <Input
-                    id="name_es"
-                    value={formData.name_es}
-                    onChange={(e) => setFormData({ ...formData, name_es: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="name_fr">Francês</Label>
-                  <Input
-                    id="name_fr"
-                    value={formData.name_fr}
-                    onChange={(e) => setFormData({ ...formData, name_fr: e.target.value })}
+                    id="guests"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={formData.max_guests}
+                    onChange={(e) => setFormData({ ...formData, max_guests: parseInt(e.target.value) })}
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Descriptions */}
-            <div className="space-y-4">
-              <h3 className="font-semibold">Descrição (todos os idiomas)</h3>
-              <div className="space-y-3">
-                <div>
-                  <Label htmlFor="desc_pt">Português</Label>
-                  <Textarea
-                    id="desc_pt"
-                    value={formData.description_pt}
-                    onChange={(e) => setFormData({ ...formData, description_pt: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="desc_en">Inglês</Label>
-                  <Textarea
-                    id="desc_en"
-                    value={formData.description_en}
-                    onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="desc_es">Espanhol</Label>
-                  <Textarea
-                    id="desc_es"
-                    value={formData.description_es}
-                    onChange={(e) => setFormData({ ...formData, description_es: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="desc_fr">Francês</Label>
-                  <Textarea
-                    id="desc_fr"
-                    value={formData.description_fr}
-                    onChange={(e) => setFormData({ ...formData, description_fr: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Price and Capacity */}
-            <div className="grid grid-cols-2 gap-4">
+              {/* Slug */}
               <div>
-                <Label htmlFor="price">Preço por noite (R$)</Label>
+                <Label htmlFor="slug">Slug (URL amigável) *</Label>
                 <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.price_per_night}
-                  onChange={(e) => setFormData({ ...formData, price_per_night: parseFloat(e.target.value) })}
+                  id="slug"
+                  value={formData.slug}
+                  onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                  placeholder="suite-peneira"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  URL: /bangalos/{formData.slug || "seu-slug"}
+                </p>
               </div>
+
+              {/* Amenities */}
               <div>
-                <Label htmlFor="guests">Máximo de hóspedes</Label>
-                <Input
-                  id="guests"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={formData.max_guests}
-                  onChange={(e) => setFormData({ ...formData, max_guests: parseInt(e.target.value) })}
+                <Label htmlFor="amenities">Comodidades (uma por linha)</Label>
+                <Textarea
+                  id="amenities"
+                  value={formData.amenities.join("\n")}
+                  onChange={(e) => setFormData({ ...formData, amenities: e.target.value.split("\n").filter(a => a.trim()) })}
+                  rows={6}
+                  placeholder="Wi-Fi de alta velocidade&#10;Ar condicionado&#10;Varanda privativa com rede&#10;Água quente"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Total: {formData.amenities.length} comodidades
+                </p>
               </div>
-            </div>
 
-            {/* Slug */}
-            <div>
-              <Label htmlFor="slug">Slug (URL amigável)</Label>
-              <Input
-                id="slug"
-                value={formData.slug}
-                onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
-                placeholder="bangalo-suite-paneiro"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                URL: /bangalos/{formData.slug}
-              </p>
-            </div>
+              {/* Preview */}
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <h4 className="font-semibold mb-2 text-sm">Preview</h4>
+                <div className="space-y-2 text-sm">
+                  <p><span className="font-medium">Nome:</span> {formData.name_pt || "Sem nome"}</p>
+                  <p><span className="font-medium">Preço:</span> R$ {formData.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  <p><span className="font-medium">Capacidade:</span> {formData.max_guests} hóspedes</p>
+                  <p><span className="font-medium">URL:</span> /bangalos/{formData.slug || "seu-slug"}</p>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
 
-            {/* Amenities */}
-            <div>
-              <Label htmlFor="amenities">Comodidades (uma por linha)</Label>
-              <Textarea
-                id="amenities"
-                value={formData.amenities.join("\n")}
-                onChange={(e) => setFormData({ ...formData, amenities: e.target.value.split("\n").filter(a => a.trim()) })}
-                rows={5}
-                placeholder="Wi-Fi de alta velocidade&#10;Ar condicionado&#10;Varanda privativa"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
+            <Button onClick={handleSave} disabled={saving || !formData.name_pt || !formData.slug}>
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Salvando...
+                  {isCreating ? "Criando..." : "Salvando..."}
                 </>
               ) : (
-                "Salvar Alterações"
+                isCreating ? "Criar Bangalô" : "Salvar Alterações"
               )}
             </Button>
           </div>
