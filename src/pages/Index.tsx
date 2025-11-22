@@ -9,13 +9,9 @@ import LodgeCard from "@/components/LodgeCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import FindUsSection from "@/components/FindUsSection";
-import heroAmazon from "@/assets/hero-amazon.jpg";
-import lodge1 from "@/assets/lodge-1.jpg";
-import lodge2 from "@/assets/lodge-2.jpg";
-import lodge3 from "@/assets/lodge-3.jpg";
-import lodge4 from "@/assets/lodge-4.jpg";
+import heroImage from "@/assets/hero-bungalow.jpg";
 
-const lodgeImages = [lodge1, lodge2, lodge3, lodge4];
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 const Index = () => {
   const { t, i18n } = useTranslation();
@@ -33,18 +29,36 @@ const Index = () => {
 
         if (error) throw error;
 
+        // Fetch gallery images for each room
+        const { data: galleryImages } = await supabase
+          .from("gallery_images")
+          .select("*")
+          .eq("is_active", true)
+          .order("display_order", { ascending: true });
+
         // Map rooms to lodge format with localized content
-        const mappedLodges = rooms?.map((room, index) => ({
-          id: room.id,
-          slug: room.slug || room.id,
-          name: room[`name_${i18n.language}`] || room.name_pt,
-          location: "MANACAPURU, AMAZONIA - AM",
-          image: lodgeImages[index % lodgeImages.length],
-          price: `R$ ${room.price_per_night}`,
-          guests: room.max_guests,
-          description: room[`description_${i18n.language}`] || room.description_pt,
-          amenities: room.amenities || ["wifi", "breakfast"],
-        })) || [];
+        const mappedLodges = rooms?.map((room) => {
+          // Find the first gallery image for this bungalow
+          const firstImage = galleryImages?.find(
+            (img) => img.bungalow_slug === room.slug
+          );
+          
+          const imageUrl = firstImage
+            ? `${SUPABASE_URL}/storage/v1/object/public/gallery/${firstImage.storage_path}`
+            : undefined;
+
+          return {
+            id: room.id,
+            slug: room.slug || room.id,
+            name: room[`name_${i18n.language}`] || room.name_pt,
+            location: "MANACAPURU, AMAZONIA - AM",
+            image: imageUrl,
+            price: `R$ ${room.price_per_night}`,
+            guests: room.max_guests,
+            description: room[`description_${i18n.language}`] || room.description_pt,
+            amenities: room.amenities || ["wifi", "breakfast"],
+          };
+        }) || [];
 
         setLodges(mappedLodges);
       } catch (error) {
@@ -86,7 +100,7 @@ const Index = () => {
           {/* Static Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroAmazon})` }}
+            style={{ backgroundImage: `url(${heroImage})` }}
           />
           
           {/* Dark Overlay for Text Legibility */}
