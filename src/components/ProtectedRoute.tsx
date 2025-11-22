@@ -55,7 +55,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
-  // Check role permissions
+  // Check role permissions with proper hierarchy
   if (requiredRole) {
     const roleHierarchy = {
       'user': 1,
@@ -66,8 +66,9 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     const userRoleLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] || 0;
     const requiredRoleLevel = roleHierarchy[requiredRole];
 
+    // Allow access if user role level is equal or higher than required
     if (userRoleLevel < requiredRoleLevel) {
-      toast.error("Acesso restrito. Contate o administrador do sistema.");
+      toast.error("Acesso restrito. Você não tem permissão para acessar esta página.");
       return <Navigate to="/admin" replace />;
     }
   }
