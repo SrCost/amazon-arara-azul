@@ -116,19 +116,16 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
     );
     
-    // Calculate base price (room nights)
-    const roomTotal = nights * pricePerNight;
-    
-    // Add package price if selected
-    let packageTotal = 0;
+    // If package is selected, return ONLY package price (accommodation is included)
     if (selectedPackage) {
       const pkg = packages.find(p => p.id === selectedPackage);
       if (pkg) {
-        packageTotal = Number(pkg.price) || 0;
+        return Number(pkg.price) || 0;
       }
     }
     
-    return roomTotal + packageTotal;
+    // Otherwise, calculate room nights only
+    return nights * pricePerNight;
   };
 
   const handleNext = () => {
