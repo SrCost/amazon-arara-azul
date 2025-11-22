@@ -8,7 +8,7 @@ interface LodgeCardProps {
   slug?: string;
   name: string;
   location: string;
-  image: string;
+  image?: string;
   price: string;
   guests: number;
   description: string;
@@ -33,12 +33,18 @@ const LodgeCard = ({
 
   return (
     <Card className="overflow-hidden group hover:shadow-strong transition-all duration-300">
-      <div className="relative h-64 overflow-hidden">
-        <img
-          src={image}
-          alt={name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-        />
+      <div className="relative h-64 overflow-hidden bg-muted">
+        {image ? (
+          <img
+            src={image}
+            alt={name}
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+            <Coffee className="h-12 w-12" />
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-hero opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       
