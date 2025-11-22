@@ -472,7 +472,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                   Escolher Pacote (Opcional)
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Selecione um dos nossos pacotes turísticos ou prossiga sem pacote
+                  Selecione um de nossos pacotes exclusivos ou prossiga sem pacote
                 </p>
               </div>
 
@@ -493,35 +493,51 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                   </CardContent>
                 </Card>
 
-                {packages.map((pkg: any) => (
-                  <Card
-                    key={pkg.id}
-                    className={`cursor-pointer transition-all ${
-                      selectedPackage === pkg.id
-                        ? "border-primary border-2"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                    onClick={() => setSelectedPackage(pkg.id)}
-                  >
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold mb-2">{pkg.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {pkg.duration} • {pkg.people} {pkg.people === 1 ? 'pessoa' : 'pessoas'}
-                      </p>
-                      {pkg.description && (
-                        <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                          {pkg.description}
+                {packages.map((pkg: any) => {
+                  const isUirapuru = pkg.name?.toLowerCase().includes('uirapuru');
+                  const shortDescription = isUirapuru 
+                    ? '💑 Exclusivo para casais. Jantar romântico + vivências amazônicas.' 
+                    : pkg.name?.toLowerCase().includes('japiim')
+                    ? '🦜 Experiência completa de 5 dias com passeios e vivências.'
+                    : pkg.name?.toLowerCase().includes('araraúna')
+                    ? '🦜 Pacote mais completo: 7 dias de imersão total na Amazônia.'
+                    : pkg.description;
+                  
+                  return (
+                    <Card
+                      key={pkg.id}
+                      className={`cursor-pointer transition-all ${
+                        selectedPackage === pkg.id
+                          ? "border-primary border-2"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                      onClick={() => setSelectedPackage(pkg.id)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold">{pkg.name}</h3>
+                          {isUirapuru && (
+                            <span className="text-xs bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full font-semibold">
+                              Casal
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {pkg.duration} • {pkg.people} {pkg.people === 1 ? 'pessoa' : 'pessoas'}
                         </p>
-                      )}
-                      <p className="text-lg font-bold text-primary">
-                        Pacote: R$ {Number(pkg.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        + valor das diárias do bangalô
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <p className="text-xs text-muted-foreground mb-3">
+                          {shortDescription}
+                        </p>
+                        <p className="text-lg font-bold text-primary">
+                          R$ {Number(pkg.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-green-600 font-medium mt-1">
+                          ✓ Estadia já inclusa no valor
+                        </p>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1196,21 +1212,18 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 {selectedPackage && (
                   <div className="border-t pt-3 mt-3 space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Pacote turístico:</span>
+                      <span className="text-muted-foreground">Pacote Selecionado:</span>
                       <span className="font-medium">
-                        R$ {Number(packages.find(p => p.id === selectedPackage)?.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        {packages.find(p => p.id === selectedPackage)?.name}
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Hospedagem:</span>
-                      <span className="font-medium">
-                        R$ {(Math.ceil((checkOut!.getTime() - checkIn!.getTime()) / (1000 * 60 * 60 * 24)) * pricePerNight).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
+                    <div className="bg-green-50 p-2 rounded text-xs text-green-800 mt-2">
+                      ✓ Estadia já incluída no valor do pacote
                     </div>
                   </div>
                 )}
                 
-                <div className="flex justify-between pt-3 border-t">
+                <div className="flex justify-between pt-3 border-t mt-3">
                   <span className="font-semibold text-lg">Total:</span>
                   <span className="text-2xl font-bold text-primary">
                     R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
