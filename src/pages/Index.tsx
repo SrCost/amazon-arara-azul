@@ -9,7 +9,7 @@ import LodgeCard from "@/components/LodgeCard";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import FindUsSection from "@/components/FindUsSection";
-import heroImage from "@/assets/hero-bungalow.jpg";
+import HeroCarousel from "@/components/HeroCarousel";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
@@ -94,17 +94,10 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section with Static Image */}
+      {/* Hero Section with Carousel */}
       <section className="relative">
         <div className="relative w-full h-[600px] md:h-[700px] overflow-hidden">
-          {/* Static Background Image */}
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroImage})` }}
-          />
-          
-          {/* Dark Overlay for Text Legibility */}
-          <div className="absolute inset-0 bg-black/20" />
+          <HeroCarousel />
           
           {/* Content Overlay */}
           <div className="absolute inset-0 z-10">
