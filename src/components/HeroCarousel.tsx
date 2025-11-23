@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useGalleryImages } from "@/hooks/useGalleryImages";
+import heroBungalow1 from "@/assets/hero-bungalow-1.jpg";
+import heroBungalow2 from "@/assets/hero-bungalow-2.jpg";
 
 const HeroCarousel = () => {
-  const { data: galleryImages = [], isLoading } = useGalleryImages('experiences');
-  const images = galleryImages.slice(0, 9).map(img => img.src);
+  const images = [heroBungalow1, heroBungalow2];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -26,14 +25,6 @@ const HeroCarousel = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
   };
 
-  if (isLoading) {
-    return <Skeleton className="w-full h-screen" />;
-  }
-
-  if (images.length === 0) {
-    return null;
-  }
-
   return (
     <div className="relative h-screen overflow-hidden">
       {/* Images */}
@@ -44,12 +35,12 @@ const HeroCarousel = () => {
             index === currentIndex ? "opacity-100" : "opacity-0"
           }`}
         >
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${image})` }}
-          >
-            <div className="absolute inset-0 bg-gradient-hero" />
-          </div>
+          <img
+            src={image}
+            alt={`Pousada Arara Azul - Bangalô ${index + 1}`}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/20" />
         </div>
       ))}
 
