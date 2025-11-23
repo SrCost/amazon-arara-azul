@@ -324,6 +324,66 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         console.warn("Falha ao registrar log de auditoria:", logError);
       }
 
+      // ====== MERCADO PAGO PAYMENT INTEGRATION ======
+      if (paymentMethod === "mercado_pago") {
+        console.log("Processando pagamento via Mercado Pago...");
+        
+        try {
+          const selectedPkg = packages.find(p => p.id === selectedPackage);
+          
+          const { data: mpData, error: mpError } = await supabase.functions.invoke(
+            'create-mercado-pago-payment',
+            {
+              body: {
+                reservationData: {
+                  reservationId: reservation.id,
+                  roomId: roomId,
+                  guestName: guestName,
+                  guestEmail: guestEmail,
+                  guestPhone: guestPhone,
+                  checkIn: checkIn?.toISOString().split('T')[0],
+                  checkOut: checkOut?.toISOString().split('T')[0],
+                  guests: parseInt(guests),
+                },
+                packageData: selectedPkg ? {
+                  id: selectedPkg.id,
+                  name: selectedPkg.name,
+                  duration: selectedPkg.duration,
+                } : null,
+                totalAmount: totalPrice.toFixed(2),
+              },
+            }
+          );
+
+          if (mpError) {
+            console.error("Erro Mercado Pago:", mpError);
+            throw new Error("Erro ao processar pagamento com Mercado Pago");
+          }
+
+          if (mpData?.success && mpData?.init_point) {
+            console.log("Redirecionando para checkout do Mercado Pago:", mpData.init_point);
+            toast.success("Redirecionando para o pagamento...", {
+              duration: 2000,
+            });
+            
+            // Redirect to Mercado Pago checkout
+            setTimeout(() => {
+              window.location.href = mpData.init_point;
+            }, 1000);
+            return;
+          } else {
+            throw new Error("Erro ao gerar link de pagamento");
+          }
+        } catch (mpError: any) {
+          console.error("Erro ao processar Mercado Pago:", mpError);
+          toast.error("Erro ao processar pagamento. Por favor, tente outro método ou entre em contato conosco.", {
+            duration: 5000,
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
       // ====== FUTURE INTEGRATION POINT - BANCO CAIXA ======
       // This is where automatic payment processing with Banco Caixa will be implemented
       // 
@@ -1006,7 +1066,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 {[
                   { value: "credit", label: t("reservation.creditCard") },
                   { value: "pix", label: t("reservation.pix") },
-                  { value: "paypal", label: "Mercado Pago" },
+                  { value: "mercado_pago", label: "Mercado Pago" },
                 ].map((method) => (
                   <button
                     key={method.value}
@@ -1110,14 +1170,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               )}
 
               {/* Mercado Pago Display */}
-              {paymentMethod === "paypal" && (
+              {paymentMethod === "mercado_pago" && (
                 <div className="border-t pt-4">
                   <div className="bg-muted p-6 rounded-lg text-center">
                     <p className="text-sm text-muted-foreground mb-2">
-                      Você será redirecionado para o Mercado Pago para concluir o pagamento
+                      Você será redirecionado para o Mercado Pago para concluir o pagamento de forma segura
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Integração com Mercado Pago será implementada em breve
+                      Aceita cartões de crédito, débito e outras formas de pagamento
                     </p>
                   </div>
                 </div>
@@ -1235,7 +1295,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                   <span className="font-medium capitalize">
                     {paymentMethod === 'credit' ? 'Cartão de Crédito' : 
                      paymentMethod === 'pix' ? 'PIX' : 
-                     paymentMethod === 'paypal' ? 'Mercado Pago' : paymentMethod}
+                     paymentMethod === 'mercado_pago' ? 'Mercado Pago' : paymentMethod}
                   </span>
                 </div>
               </div>
