@@ -86,7 +86,7 @@ const LodgeDetail = () => {
         name: data[`name_${currentLang}`] || data.name_pt,
         location: "MANACAPURU, AMAZONIA - AM",
         images: data.image_url ? [data.image_url, lodge1, lodge2] : [lodge1, lodge2, lodge3],
-        price: `R$ ${data.price_per_night.toLocaleString()}`,
+        price: `R$ ${data.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         pricePerNight: Number(data.price_per_night),
         guests: data.max_guests,
         description: data[`description_${currentLang}`] || data.description_pt,
