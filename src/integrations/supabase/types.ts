@@ -170,13 +170,74 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          error_code: string | null
+          error_message: string | null
+          id: string
+          payment_id: string | null
+          request_payload: Json | null
+          reservation_id: string | null
+          response_payload: Json | null
+          status: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          payment_id?: string | null
+          request_payload?: Json | null
+          reservation_id?: string | null
+          response_payload?: Json | null
+          status?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          payment_id?: string | null
+          request_payload?: Json | null
+          reservation_id?: string | null
+          response_payload?: Json | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_logs_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
           created_at: string
           id: string
+          installments: number | null
+          mercado_pago_payment_id: string | null
+          payer_cpf: string | null
+          payer_email: string | null
+          payer_name: string | null
           payment_date: string | null
           payment_method: string
+          refund_reason: string | null
+          refunded_at: string | null
           reservation_id: string
           status: string
           updated_at: string
@@ -185,8 +246,15 @@ export type Database = {
           amount: number
           created_at?: string
           id?: string
+          installments?: number | null
+          mercado_pago_payment_id?: string | null
+          payer_cpf?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
           payment_date?: string | null
           payment_method: string
+          refund_reason?: string | null
+          refunded_at?: string | null
           reservation_id: string
           status?: string
           updated_at?: string
@@ -195,8 +263,15 @@ export type Database = {
           amount?: number
           created_at?: string
           id?: string
+          installments?: number | null
+          mercado_pago_payment_id?: string | null
+          payer_cpf?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
           payment_date?: string | null
           payment_method?: string
+          refund_reason?: string | null
+          refunded_at?: string | null
           reservation_id?: string
           status?: string
           updated_at?: string
@@ -262,13 +337,22 @@ export type Database = {
           next_destination: string | null
           package_id: string | null
           passport: string | null
+          payer_cpf: string | null
+          payer_email: string | null
+          payer_name: string | null
+          payment_intent_id: string | null
           payment_method: string | null
+          payment_qr_code: string | null
+          payment_qr_code_base64: string | null
           payment_status: string | null
+          payment_ticket_url: string | null
           room_id: string
           room_name: string | null
           special_requests: string | null
           status: string | null
           total_price: number
+          transaction_amount: number | null
+          transaction_currency: string | null
           updated_at: string | null
           user_id: string | null
         }
@@ -292,13 +376,22 @@ export type Database = {
           next_destination?: string | null
           package_id?: string | null
           passport?: string | null
+          payer_cpf?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payment_intent_id?: string | null
           payment_method?: string | null
+          payment_qr_code?: string | null
+          payment_qr_code_base64?: string | null
           payment_status?: string | null
+          payment_ticket_url?: string | null
           room_id: string
           room_name?: string | null
           special_requests?: string | null
           status?: string | null
           total_price: number
+          transaction_amount?: number | null
+          transaction_currency?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
@@ -322,13 +415,22 @@ export type Database = {
           next_destination?: string | null
           package_id?: string | null
           passport?: string | null
+          payer_cpf?: string | null
+          payer_email?: string | null
+          payer_name?: string | null
+          payment_intent_id?: string | null
           payment_method?: string | null
+          payment_qr_code?: string | null
+          payment_qr_code_base64?: string | null
           payment_status?: string | null
+          payment_ticket_url?: string | null
           room_id?: string
           room_name?: string | null
           special_requests?: string | null
           status?: string | null
           total_price?: number
+          transaction_amount?: number | null
+          transaction_currency?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
