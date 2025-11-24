@@ -20,6 +20,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRoomAvailability } from "@/hooks/useRoomAvailability";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { validateCPF, maskCPF } from "@/lib/cpfValidator";
+import { maskCardNumber, maskExpiryDate, maskCVV, detectCardBrand, validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
 
 interface ReservationFlowProps {
   lodgeName: string;
@@ -56,6 +58,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
   const [cardCpf, setCardCpf] = useState("");
+  const [installments, setInstallments] = useState("1");
+  const [pixQrCode, setPixQrCode] = useState("");
+  const [pixQrCodeBase64, setPixQrCodeBase64] = useState("");
+  const [showPixCode, setShowPixCode] = useState(false);
   
   // New fields for guest information
   const [isForeign, setIsForeign] = useState(false);
