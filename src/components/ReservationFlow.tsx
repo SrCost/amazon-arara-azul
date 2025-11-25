@@ -23,6 +23,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { validateCPF, maskCPF } from "@/lib/cpfValidator";
 import { maskCardNumber, maskExpiryDate, maskCVV, detectCardBrand, validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
 
+declare global {
+  interface Window {
+    MercadoPago: any;
+  }
+}
+
 interface ReservationFlowProps {
   lodgeName: string;
   pricePerNight: number;
@@ -62,6 +68,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [pixQrCode, setPixQrCode] = useState("");
   const [pixQrCodeBase64, setPixQrCodeBase64] = useState("");
   const [showPixCode, setShowPixCode] = useState(false);
+  const [mercadoPago, setMercadoPago] = useState<any>(null);
   
   // New fields for guest information
   const [isForeign, setIsForeign] = useState(false);
@@ -74,6 +81,26 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [nextDestination, setNextDestination] = useState("");
   const [dietaryRestrictions, setDietaryRestrictions] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
+
+  // Initialize Mercado Pago SDK
+  useEffect(() => {
+    const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
+    if (publicKey && !mercadoPago) {
+      const script = document.createElement('script');
+      script.src = 'https://sdk.mercadopago.com/js/v2';
+      script.async = true;
+      script.onload = () => {
+        const mp = new window.MercadoPago(publicKey);
+        setMercadoPago(mp);
+        console.log('✅ Mercado Pago SDK carregado');
+      };
+      script.onerror = () => {
+        console.error('❌ Erro ao carregar SDK do Mercado Pago');
+        toast.error('Erro ao carregar sistema de pagamento');
+      };
+      document.body.appendChild(script);
+    }
+  }, [mercadoPago]);
 
   // Show next available dates when component loads
   useEffect(() => {
@@ -182,8 +209,25 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         toast.error("Selecione um método de pagamento");
         return;
       }
-      if (paymentMethod === "credit" && (!cardName || !cardNumber || !cardExpiry || !cardCvv || !cardCpf)) {
-        toast.error("Preencha todos os dados do cartão");
+      if (paymentMethod === "credit_card") {
+        if (!cardName || !cardNumber || !cardExpiry || !cardCvv || !cardCpf) {
+          toast.error("Preencha todos os dados do cartão");
+          return;
+        }
+        if (!validateCPF(cardCpf)) {
+          toast.error("CPF inválido");
+          return;
+        }
+        if (!validateCardNumber(cardNumber)) {
+          toast.error("Número do cartão inválido");
+          return;
+        }
+        if (!validateExpiryDate(cardExpiry)) {
+          toast.error("Data de validade inválida");
+          return;
+        }
+      } else if (paymentMethod === "pix" && !cardCpf) {
+        toast.error("CPF é obrigatório para pagamento via PIX");
         return;
       }
     }
@@ -331,59 +375,121 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       }
 
       // ====== MERCADO PAGO PAYMENT INTEGRATION ======
-      if (paymentMethod === "mercado_pago") {
-        console.log("Processando pagamento via Mercado Pago...");
+      if (paymentMethod === "pix" || paymentMethod === "credit_card") {
+        console.log(`Processando pagamento via ${paymentMethod.toUpperCase()}...`);
         
         try {
-          const selectedPkg = packages.find(p => p.id === selectedPackage);
-          
-          const { data: mpData, error: mpError } = await supabase.functions.invoke(
-            'create-mercado-pago-payment',
-            {
-              body: {
-                reservationData: {
-                  reservationId: reservation.id,
-                  roomId: roomId,
-                  guestName: guestName,
-                  guestEmail: guestEmail,
-                  guestPhone: guestPhone,
-                  checkIn: checkIn?.toISOString().split('T')[0],
-                  checkOut: checkOut?.toISOString().split('T')[0],
-                  guests: parseInt(guests),
-                },
-                packageData: selectedPkg ? {
-                  id: selectedPkg.id,
-                  name: selectedPkg.name,
-                  duration: selectedPkg.duration,
-                } : null,
-                totalAmount: totalPrice.toFixed(2),
-              },
+          let paymentIntentData: any = {
+            reservationId: reservation.id,
+            paymentMethod: paymentMethod,
+            amount: totalPrice,
+            payerName: guestName,
+            payerEmail: guestEmail,
+            payerCpf: cardCpf,
+            description: `Reserva ${lodgeName} - Pousada Arara Azul`
+          };
+
+          // For credit card, create token first
+          if (paymentMethod === "credit_card") {
+            if (!mercadoPago) {
+              throw new Error('Sistema de pagamento não carregado');
             }
+
+            const [month, year] = cardExpiry.split('/');
+            const cardData = {
+              cardNumber: cardNumber.replace(/\s/g, ''),
+              cardholderName: cardName,
+              cardExpirationMonth: month,
+              cardExpirationYear: `20${year}`,
+              securityCode: cardCvv,
+              identificationType: 'CPF',
+              identificationNumber: cardCpf.replace(/\D/g, '')
+            };
+
+            console.log('Criando token do cartão...');
+            const cardToken = await mercadoPago.createCardToken(cardData);
+            
+            if (!cardToken || !cardToken.id) {
+              throw new Error('Erro ao processar dados do cartão');
+            }
+
+            const cardBrand = detectCardBrand(cardNumber);
+            paymentIntentData = {
+              ...paymentIntentData,
+              cardToken: cardToken.id,
+              installments: parseInt(installments),
+              paymentMethodId: cardBrand
+            };
+          }
+
+          // Call payment intent edge function
+          console.log('Criando intenção de pagamento...');
+          const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
+            'create-payment-intent',
+            { body: paymentIntentData }
           );
 
-          if (mpError) {
-            console.error("Erro Mercado Pago:", mpError);
-            throw new Error("Erro ao processar pagamento com Mercado Pago");
+          if (paymentError) {
+            console.error("Erro ao criar pagamento:", paymentError);
+            throw new Error(paymentError.message || "Erro ao processar pagamento");
           }
 
-          if (mpData?.success && mpData?.init_point) {
-            console.log("Redirecionando para checkout do Mercado Pago:", mpData.init_point);
-            toast.success("Redirecionando para o pagamento...", {
-              duration: 2000,
-            });
-            
-            // Redirect to Mercado Pago checkout
-            setTimeout(() => {
-              window.location.href = mpData.init_point;
-            }, 1000);
-            return;
-          } else {
-            throw new Error("Erro ao gerar link de pagamento");
+          if (!paymentData || !paymentData.success) {
+            throw new Error(paymentData?.error_message || "Falha ao processar pagamento");
           }
+
+          // Update reservation with payment details
+          await supabase
+            .from("reservations")
+            .update({
+              payment_intent_id: paymentData.payment_id,
+              payment_status: paymentData.status === 'approved' ? 'paid' : 'processing',
+              payer_name: guestName,
+              payer_email: guestEmail,
+              payer_cpf: cardCpf,
+              payment_qr_code: paymentData.pix?.qr_code,
+              payment_qr_code_base64: paymentData.pix?.qr_code_base64,
+              payment_ticket_url: paymentData.pix?.ticket_url,
+            })
+            .eq('id', reservation.id);
+
+          // Update payment record
+          await supabase
+            .from("payments")
+            .update({
+              mercado_pago_payment_id: paymentData.payment_id,
+              status: paymentData.status === 'approved' ? 'completed' : 'pending',
+              payer_name: guestName,
+              payer_email: guestEmail,
+              payer_cpf: cardCpf,
+              installments: paymentMethod === 'credit_card' ? parseInt(installments) : 1
+            })
+            .eq('reservation_id', reservation.id);
+
+          if (paymentMethod === "pix") {
+            setPixQrCode(paymentData.pix?.qr_code || '');
+            setPixQrCodeBase64(paymentData.pix?.qr_code_base64 || '');
+            setShowPixCode(true);
+            toast.success("QR Code PIX gerado com sucesso!", {
+              duration: 3000,
+              description: "Escaneie o código para efetuar o pagamento"
+            });
+          } else if (paymentData.status === 'approved') {
+            toast.success("🎉 Pagamento aprovado com sucesso!", {
+              duration: 3000,
+            });
+          } else {
+            toast.info("Pagamento em processamento", {
+              duration: 3000,
+              description: "Você receberá uma confirmação em breve"
+            });
+          }
+
         } catch (mpError: any) {
           console.error("Erro ao processar Mercado Pago:", mpError);
-          toast.error("Erro ao processar pagamento. Por favor, tente outro método ou entre em contato conosco.", {
+          toast.error(mpError.message || "Erro ao processar pagamento", {
             duration: 5000,
+            description: "Por favor, tente novamente ou entre em contato via WhatsApp"
           });
           setIsSubmitting(false);
           return;
@@ -1070,9 +1176,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
               <div className="space-y-3">
                 {[
-                  { value: "credit", label: t("reservation.creditCard") },
-                  { value: "pix", label: t("reservation.pix") },
-                  { value: "mercado_pago", label: "Mercado Pago" },
+                  { value: "credit_card", label: "Cartão de Crédito" },
+                  { value: "pix", label: "PIX" },
                 ].map((method) => (
                   <button
                     key={method.value}
@@ -1094,100 +1199,157 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               </div>
 
               {/* Credit Card Form */}
-              {paymentMethod === "credit" && (
+              {paymentMethod === "credit_card" && (
                 <div className="space-y-4 border-t pt-4">
                   <div>
-                    <Label htmlFor="cardName">Nome no Cartão</Label>
+                    <Label htmlFor="cardName">Nome no Cartão *</Label>
                     <Input
                       id="cardName"
                       value={cardName}
                       onChange={(e) => setCardName(e.target.value)}
-                      placeholder="Nome completo"
+                      placeholder="Nome completo como no cartão"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="cardNumber">Número do Cartão</Label>
+                    <Label htmlFor="cardNumber">Número do Cartão *</Label>
                     <Input
                       id="cardNumber"
                       value={cardNumber}
-                      onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, "").slice(0, 16))}
+                      onChange={(e) => setCardNumber(maskCardNumber(e.target.value))}
                       placeholder="0000 0000 0000 0000"
-                      maxLength={16}
+                      maxLength={19}
                     />
+                    {cardNumber && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {detectCardBrand(cardNumber) !== 'unknown' ? `Bandeira: ${detectCardBrand(cardNumber).toUpperCase()}` : ''}
+                      </p>
+                    )}
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="col-span-1">
-                      <Label htmlFor="cardExpiry">Validade</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="cardExpiry">Validade *</Label>
                       <Input
                         id="cardExpiry"
                         value={cardExpiry}
-                        onChange={(e) => {
-                          let val = e.target.value.replace(/\D/g, "");
-                          if (val.length >= 2) {
-                            val = val.slice(0, 2) + "/" + val.slice(2, 4);
-                          }
-                          setCardExpiry(val);
-                        }}
+                        onChange={(e) => setCardExpiry(maskExpiryDate(e.target.value))}
                         placeholder="MM/AA"
                         maxLength={5}
                       />
                     </div>
-                    <div className="col-span-1">
-                      <Label htmlFor="cardCvv">CVV</Label>
+                    <div>
+                      <Label htmlFor="cardCvv">CVV *</Label>
                       <Input
                         id="cardCvv"
                         value={cardCvv}
-                        onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        onChange={(e) => setCardCvv(maskCVV(e.target.value))}
                         placeholder="123"
                         maxLength={4}
                       />
                     </div>
-                    <div className="col-span-1">
-                      <Label htmlFor="cardCpf">CPF</Label>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="cardCpf">CPF do Titular *</Label>
                       <Input
                         id="cardCpf"
                         value={cardCpf}
-                        onChange={(e) => setCardCpf(e.target.value.replace(/\D/g, "").slice(0, 11))}
+                        onChange={(e) => setCardCpf(maskCPF(e.target.value))}
                         placeholder="000.000.000-00"
-                        maxLength={11}
+                        maxLength={14}
                       />
+                    </div>
+                    <div>
+                      <Label htmlFor="installments">Parcelas *</Label>
+                      <Select value={installments} onValueChange={setInstallments}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Array.from({ length: 12 }, (_, i) => i + 1).map((num) => {
+                            const installmentValue = calculateTotal() / num;
+                            return (
+                              <SelectItem key={num} value={num.toString()}>
+                                {num}x de R$ {installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    💳 Seus dados estão seguros e criptografados. Integração com gateway de pagamento será implementada em breve.
+                    🔒 Seus dados estão protegidos com criptografia de ponta a ponta
                   </p>
+                  {!mercadoPago && (
+                    <div className="flex items-center gap-2 text-amber-600 bg-amber-50 p-3 rounded-lg">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <p className="text-sm">Carregando sistema de pagamento seguro...</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* PIX Display */}
+              {/* PIX Form */}
               {paymentMethod === "pix" && (
-                <div className="border-t pt-4">
-                  <div className="bg-muted p-6 rounded-lg text-center">
-                    <div className="w-48 h-48 bg-white mx-auto mb-4 flex items-center justify-center border-2 border-dashed">
-                      <p className="text-sm text-muted-foreground px-4">
-                        QR Code PIX será gerado após confirmar
+                <div className="border-t pt-4 space-y-4">
+                  <div>
+                    <Label htmlFor="pixCpf">CPF para PIX *</Label>
+                    <Input
+                      id="pixCpf"
+                      value={cardCpf}
+                      onChange={(e) => setCardCpf(maskCPF(e.target.value))}
+                      placeholder="000.000.000-00"
+                      maxLength={14}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      O CPF será utilizado para identificar o pagamento
+                    </p>
+                  </div>
+                  {!showPixCode && (
+                    <div className="bg-muted p-6 rounded-lg text-center">
+                      <div className="w-48 h-48 bg-white mx-auto mb-4 flex items-center justify-center border-2 border-dashed">
+                        <p className="text-sm text-muted-foreground px-4">
+                          QR Code PIX será gerado após confirmar
+                        </p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Após confirmar, você receberá o código PIX para pagamento
                       </p>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      Após confirmar, você receberá o código PIX para pagamento
-                    </p>
-                  </div>
+                  )}
+                  {showPixCode && pixQrCodeBase64 && (
+                    <div className="bg-white p-6 rounded-lg text-center border-2">
+                      <h3 className="font-semibold mb-4">Escaneie o QR Code para pagar</h3>
+                      <img 
+                        src={`data:image/png;base64,${pixQrCodeBase64}`} 
+                        alt="QR Code PIX" 
+                        className="w-64 h-64 mx-auto mb-4"
+                      />
+                      {pixQrCode && (
+                        <div className="mt-4">
+                          <p className="text-xs text-muted-foreground mb-2">Ou copie o código PIX:</p>
+                          <div className="bg-muted p-2 rounded font-mono text-xs break-all">
+                            {pixQrCode}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="mt-2"
+                            onClick={() => {
+                              navigator.clipboard.writeText(pixQrCode);
+                              toast.success('Código PIX copiado!');
+                            }}
+                          >
+                            Copiar código PIX
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* Mercado Pago Display */}
-              {paymentMethod === "mercado_pago" && (
-                <div className="border-t pt-4">
-                  <div className="bg-muted p-6 rounded-lg text-center">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      Você será redirecionado para o Mercado Pago para concluir o pagamento de forma segura
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Aceita cartões de crédito, débito e outras formas de pagamento
-                    </p>
-                  </div>
-                </div>
-              )}
+              {/* Remove Mercado Pago Display */}
 
               <div className="bg-muted p-4 rounded-lg">
                 <div className="flex justify-between items-center">
