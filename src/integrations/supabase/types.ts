@@ -222,6 +222,13 @@ export type Database = {
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payment_logs_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
         ]
       }
       payments: {
@@ -284,6 +291,13 @@ export type Database = {
             referencedRelation: "reservations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -315,6 +329,54 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      reservation_access_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          ip_address: string | null
+          reservation_id: string
+          token: string
+          used_at: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          reservation_id: string
+          token: string
+          used_at?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: string | null
+          reservation_id?: string
+          token?: string
+          used_at?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_access_tokens_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_access_tokens_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reservations: {
         Row: {
@@ -518,6 +580,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sensitive_data_access_log: {
+        Row: {
+          access_method: string | null
+          access_type: string
+          accessed_fields: string[] | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          reservation_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          access_method?: string | null
+          access_type: string
+          accessed_fields?: string[] | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          reservation_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          access_method?: string | null
+          access_type?: string
+          accessed_fields?: string[] | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          reservation_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -577,15 +675,91 @@ export type Database = {
         }
         Relationships: []
       }
+      reservations_public_summary: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string | null
+          guest_email_masked: string | null
+          guest_name_masked: string | null
+          guests: number | null
+          id: string | null
+          payment_status: string | null
+          room_id: string | null
+          status: string | null
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string | null
+          guest_email_masked?: never
+          guest_name_masked?: never
+          guests?: number | null
+          id?: string | null
+          payment_status?: never
+          room_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string | null
+          guest_email_masked?: never
+          guest_name_masked?: never
+          guests?: number | null
+          id?: string | null
+          payment_status?: never
+          room_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      cleanup_expired_tokens: { Args: never; Returns: undefined }
       cleanup_old_activity_logs: { Args: never; Returns: undefined }
+      generate_reservation_token: {
+        Args: { _reservation_id: string }
+        Returns: string
+      }
       get_current_user_email: { Args: never; Returns: string }
+      get_reservation_with_token: {
+        Args: { _reservation_id: string; _token: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          created_at: string
+          guest_email: string
+          guest_name: string
+          guest_phone: string
+          guests: number
+          id: string
+          payment_method: string
+          payment_status: string
+          room_id: string
+          room_name: string
+          special_requests: string
+          status: string
+          total_price: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      validate_reservation_token: {
+        Args: { _reservation_id: string; _token: string }
         Returns: boolean
       }
     }
