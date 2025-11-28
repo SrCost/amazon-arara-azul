@@ -21,16 +21,14 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase
-        .from('contact_messages')
-        .insert([
-          {
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone || null,
-            message: formData.message,
-          },
-        ]);
+      const { error } = await supabase.from("contact_messages").insert([
+        {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone || null,
+          message: formData.message,
+        },
+      ]);
 
       if (error) throw error;
 
@@ -55,12 +53,10 @@ const Contact = () => {
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6">
-              Entre em Contato
-            </h1>
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6">Entre em Contato</h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              Nossa equipe está pronta para ajudar você a planejar sua experiência perfeita na
-              Amazônia. Entre em contato conosco!
+              Nossa equipe está pronta para ajudar você a planejar sua experiência perfeita na Amazônia. Entre em
+              contato conosco!
             </p>
           </div>
 
@@ -90,12 +86,8 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">E-mail</h3>
-                      <p className="text-sm text-muted-foreground">
-                        contato@pousadasamazonia.com
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        reservas@pousadasamazonia.com
-                      </p>
+                      <p className="text-sm text-muted-foreground">administrativo@pousadararazul.com</p>
+                      <p className="text-sm text-muted-foreground">reservas@pousadararazul.com</p>
                     </div>
                   </div>
                 </CardContent>
@@ -135,9 +127,7 @@ const Contact = () => {
             <div className="lg:col-span-2">
               <Card>
                 <CardContent className="p-8">
-                  <h2 className="text-2xl font-display font-semibold mb-6 text-foreground">
-                    Envie sua Mensagem
-                  </h2>
+                  <h2 className="text-2xl font-display font-semibold mb-6 text-foreground">Envie sua Mensagem</h2>
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium mb-2">
@@ -198,10 +188,7 @@ const Contact = () => {
                       />
                     </div>
 
-                    <Button
-                      type="submit"
-                      className="w-full bg-gradient-forest hover:opacity-90 h-12 text-lg"
-                    >
+                    <Button type="submit" className="w-full bg-gradient-forest hover:opacity-90 h-12 text-lg">
                       <Send className="mr-2 h-5 w-5" />
                       Enviar Mensagem
                     </Button>
