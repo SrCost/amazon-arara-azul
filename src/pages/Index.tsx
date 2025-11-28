@@ -11,7 +11,17 @@ import { supabase } from "@/integrations/supabase/client";
 import FindUsSection from "@/components/FindUsSection";
 import HeroCarousel from "@/components/HeroCarousel";
 
+// Fallback cover images
+import tipitiExterior from "@/assets/tipiti-exterior.jpg";
+import peneiraBedroom from "@/assets/peneira-bedroom.jpg";
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+// Fallback cover images map
+const fallbackCoverImages: Record<string, string> = {
+  'bangalo-tipiti': tipitiExterior,
+  'bangalo-peneira': peneiraBedroom,
+};
 
 const Index = () => {
   const { t, i18n } = useTranslation();
@@ -43,9 +53,10 @@ const Index = () => {
             (img) => img.bungalow_slug === room.slug
           );
           
+          // Use gallery image, or fallback to local image
           const imageUrl = firstImage
             ? `${SUPABASE_URL}/storage/v1/object/public/gallery/${firstImage.storage_path}`
-            : undefined;
+            : (room.slug ? fallbackCoverImages[room.slug] : undefined);
 
           return {
             id: room.id,
@@ -53,7 +64,7 @@ const Index = () => {
             name: room[`name_${i18n.language}`] || room.name_pt,
             location: "MANACAPURU, AMAZONIA - AM",
             image: imageUrl,
-            price: `R$ ${room.price_per_night}`,
+            price: `R$ ${room.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
             amenities: room.amenities || ["wifi", "breakfast"],

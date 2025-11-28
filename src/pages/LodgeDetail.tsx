@@ -25,12 +25,27 @@ import tipitiInterior from "@/assets/tipiti-interior.jpg";
 import tipitiBathroomDetail from "@/assets/tipiti-bathroom-detail.jpg";
 import tipitiBathroom from "@/assets/tipiti-bathroom.jpg";
 
+// Peneira images
+import peneiraBedroom from "@/assets/peneira-bedroom.jpg";
+import peneiraBedroomHammock from "@/assets/peneira-bedroom-hammock.jpg";
+import peneiraBathroomDetail from "@/assets/peneira-bathroom-detail.jpg";
+import peneiraShower from "@/assets/peneira-shower.jpg";
+import peneiraBathroom from "@/assets/peneira-bathroom.jpg";
+
 const tipitiImages = [
   { src: tipitiExterior, alt: "Bangalô Tipiti - Vista externa com passarela de madeira", id: "tipiti-1" },
   { src: tipitiBedroom, alt: "Bangalô Tipiti - Quartos com camas confortáveis", id: "tipiti-2" },
   { src: tipitiInterior, alt: "Bangalô Tipiti - Interior em madeira com detalhes artesanais", id: "tipiti-3" },
   { src: tipitiBathroomDetail, alt: "Bangalô Tipiti - Detalhe do lavatório artesanal com escultura", id: "tipiti-4" },
   { src: tipitiBathroom, alt: "Bangalô Tipiti - Banheiro privativo em madeira", id: "tipiti-5" },
+];
+
+const peneiraImages = [
+  { src: peneiraBedroom, alt: "Bangalô Peneira - Quartos com camas e decoração rústica", id: "peneira-1" },
+  { src: peneiraBedroomHammock, alt: "Bangalô Peneira - Quarto com rede", id: "peneira-2" },
+  { src: peneiraBathroomDetail, alt: "Bangalô Peneira - Detalhe do lavatório artesanal com arara", id: "peneira-3" },
+  { src: peneiraShower, alt: "Bangalô Peneira - Chuveiro em madeira", id: "peneira-4" },
+  { src: peneiraBathroom, alt: "Bangalô Peneira - Banheiro rústico", id: "peneira-5" },
 ];
 
 const LodgeDetail = () => {

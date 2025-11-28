@@ -9,12 +9,14 @@ import { useTranslation } from "react-i18next";
 
 // Fallback images for bungalows
 import tipitiExterior from "@/assets/tipiti-exterior.jpg";
+import peneiraBedroom from "@/assets/peneira-bedroom.jpg";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 // Fallback cover images map
 const fallbackCoverImages: Record<string, string> = {
   'bangalo-tipiti': tipitiExterior,
+  'bangalo-peneira': peneiraBedroom,
 };
 
 const Lodges = () => {
