@@ -71,7 +71,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">Telefone</h3>
-                      <p className="text-sm text-muted-foreground">+55 92 3232-5050</p>
+                      <p className="text-sm text-muted-foreground">+55 92 9 8412-5475</p>
                       <p className="text-sm text-muted-foreground">WhatsApp: +55 92 99999-0000</p>
                     </div>
                   </div>
@@ -118,7 +118,7 @@ const Contact = () => {
                   <h3 className="font-semibold mb-2">Horário de Atendimento</h3>
                   <p className="text-sm opacity-90">Segunda a Sexta: 8h - 18h</p>
                   <p className="text-sm opacity-90">Sábado: 9h - 14h</p>
-                  <p className="text-sm opacity-90">Domingo: Fechado</p>
+                  <p className="text-sm opacity-90">Domingo: 9h - 14h</p>
                 </CardContent>
               </Card>
             </div>
