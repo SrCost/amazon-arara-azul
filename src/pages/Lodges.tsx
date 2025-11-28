@@ -7,7 +7,15 @@ import LodgeCard from "@/components/LodgeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
 
+// Fallback images for bungalows
+import tipitiExterior from "@/assets/tipiti-exterior.jpg";
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+
+// Fallback cover images map
+const fallbackCoverImages: Record<string, string> = {
+  'bangalo-tipiti': tipitiExterior,
+};
 
 const Lodges = () => {
   const { i18n } = useTranslation();
@@ -75,7 +83,9 @@ const Lodges = () => {
             slug: room.slug || room.id,
             name: room[`name_${i18n.language}`] || room.name_pt,
             location: "MANACAPURU, AMAZONIA - AM",
-            image: room.slug ? coverImageMap[room.slug] : undefined,
+            image: room.slug 
+              ? (coverImageMap[room.slug] || fallbackCoverImages[room.slug]) 
+              : undefined,
             price: `R$ ${room.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
