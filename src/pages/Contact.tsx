@@ -71,8 +71,8 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">Telefone</h3>
-                      <p className="text-sm text-muted-foreground">+55 92 9 8412-5475</p>
-                      <p className="text-sm text-muted-foreground">WhatsApp: +55 92 99999-0000</p>
+                      <p className="text-sm text-muted-foreground">WhatsApp: +55 92 9 8412-5475</p>
+                      <p className="text-sm text-muted-foreground"></p>
                     </div>
                   </div>
                 </CardContent>
@@ -102,9 +102,9 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">Endereço</h3>
                       <p className="text-sm text-muted-foreground">
-                        A margem esquerda do lago Acajatuba, S/N
+                        A MARGEM ESQUERDA DO LAGO ACAJATUBA, S/N
                         <br />
-                        Area rural de Manacapuru, Manaus - AM
+                        AREA RURAL DE MANACAPURU, MANAUS - AM
                         <br />
                         CEP: 69.409-899
                       </p>
