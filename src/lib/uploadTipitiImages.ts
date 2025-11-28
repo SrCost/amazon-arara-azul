@@ -2,35 +2,55 @@ import { supabase } from "@/integrations/supabase/client";
 import { compressImage } from "./imageCompression";
 import { COMPRESSION_PRESETS } from "./compressionPresets";
 
-// Import images
-import riverAerial from "@/assets/river-aerial.jpg";
-import lodge1 from "@/assets/lodge-1.jpg";
-import lodge2 from "@/assets/lodge-2.jpg";
-import lodge3 from "@/assets/lodge-3.jpg";
+// Import new Tipiti images
+import tipitiExterior from "@/assets/tipiti-exterior.jpg";
+import tipitiBedroom from "@/assets/tipiti-bedroom.jpg";
+import tipitiInterior from "@/assets/tipiti-interior.jpg";
+import tipitiBathroomDetail from "@/assets/tipiti-bathroom-detail.jpg";
+import tipitiBathroom from "@/assets/tipiti-bathroom.jpg";
 
 const images = [
-  { src: riverAerial, alt: "Bangalô Tipiti - Vista aérea da localização na floresta", order: 1 },
-  { src: lodge1, alt: "Bangalô Tipiti - Fachada com design amazônico", order: 2 },
-  { src: lodge2, alt: "Bangalô Tipiti - Varanda com vista para a natureza", order: 3 },
-  { src: lodge3, alt: "Bangalô Tipiti - Interior com decoração regional", order: 4 },
+  { src: tipitiExterior, alt: "Bangalô Tipiti - Vista externa com passarela de madeira", order: 1, fileName: "tipiti-exterior" },
+  { src: tipitiBedroom, alt: "Bangalô Tipiti - Quartos com camas confortáveis", order: 2, fileName: "tipiti-bedroom" },
+  { src: tipitiInterior, alt: "Bangalô Tipiti - Interior em madeira com detalhes artesanais", order: 3, fileName: "tipiti-interior" },
+  { src: tipitiBathroomDetail, alt: "Bangalô Tipiti - Detalhe do lavatório artesanal com escultura", order: 4, fileName: "tipiti-bathroom-detail" },
+  { src: tipitiBathroom, alt: "Bangalô Tipiti - Banheiro privativo em madeira", order: 5, fileName: "tipiti-bathroom" },
 ];
 
 export const uploadTipitiImagesToGallery = async () => {
   const results = [];
+  
+  // First, delete old Tipiti images
+  const { data: oldImages } = await supabase
+    .from('gallery_images')
+    .select('id, storage_path')
+    .eq('bungalow_slug', 'bangalo-tipiti');
+  
+  if (oldImages && oldImages.length > 0) {
+    // Delete from storage
+    const pathsToDelete = oldImages.map(img => img.storage_path);
+    await supabase.storage.from('gallery').remove(pathsToDelete);
+    
+    // Delete from database
+    await supabase
+      .from('gallery_images')
+      .delete()
+      .eq('bungalow_slug', 'bangalo-tipiti');
+  }
   
   for (const image of images) {
     try {
       // Fetch the image
       const response = await fetch(image.src);
       const blob = await response.blob();
-      const file = new File([blob], `tipiti-${image.order}.jpg`, { type: "image/jpeg" });
+      const file = new File([blob], `${image.fileName}.jpg`, { type: "image/jpeg" });
       
       // Compress image
       const compressionResult = await compressImage(file, COMPRESSION_PRESETS.bungalows);
       
       // Generate unique filename
       const timestamp = Date.now();
-      const fileName = `bungalows/tipiti-${image.order}-${timestamp}.jpg`;
+      const fileName = `bungalows/${image.fileName}-${timestamp}.jpg`;
       
       // Upload to storage
       const { error: uploadError } = await supabase.storage
@@ -46,7 +66,7 @@ export const uploadTipitiImagesToGallery = async () => {
       const { error: dbError } = await supabase
         .from('gallery_images')
         .insert({
-          file_name: `tipiti-${image.order}.jpg`,
+          file_name: `${image.fileName}.jpg`,
           storage_path: fileName,
           alt_text: image.alt,
           category: 'bungalows',

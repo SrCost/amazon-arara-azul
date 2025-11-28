@@ -6,12 +6,8 @@ import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
-import lodge1 from "@/assets/lodge-1.jpg";
-import lodge2 from "@/assets/lodge-2.jpg";
-import lodge3 from "@/assets/lodge-3.jpg";
-import lodge4 from "@/assets/lodge-4.jpg";
 
-const lodgeImages = [lodge1, lodge2, lodge3, lodge4];
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
 const Lodges = () => {
   const { i18n } = useTranslation();
@@ -55,15 +51,32 @@ const Lodges = () => {
 
         if (error) throw error;
 
+        // Fetch gallery images for cover photos
+        const { data: galleryImages } = await supabase
+          .from("gallery_images")
+          .select("*")
+          .eq("category", "bungalows")
+          .eq("is_active", true)
+          .eq("display_order", 1)
+          .order("display_order", { ascending: true });
+
+        // Create a map of bungalow_slug to cover image
+        const coverImageMap: Record<string, string> = {};
+        galleryImages?.forEach((img) => {
+          if (img.bungalow_slug && !coverImageMap[img.bungalow_slug]) {
+            coverImageMap[img.bungalow_slug] = `${SUPABASE_URL}/storage/v1/object/public/gallery/${img.storage_path}`;
+          }
+        });
+
         // Map rooms to lodge format with localized content
         const mappedLodges =
-          rooms?.map((room, index) => ({
+          rooms?.map((room) => ({
             id: room.id,
             slug: room.slug || room.id,
             name: room[`name_${i18n.language}`] || room.name_pt,
             location: "MANACAPURU, AMAZONIA - AM",
-            image: lodgeImages[index % lodgeImages.length],
-            price: `R$ ${room.price_per_night}`,
+            image: room.slug ? coverImageMap[room.slug] : undefined,
+            price: `R$ ${room.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
             amenities: room.amenities || ["wifi", "breakfast"],
