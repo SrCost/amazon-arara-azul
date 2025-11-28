@@ -61,10 +61,13 @@ const LodgeDetail = () => {
   // Buscar fotos do bangalô específico
   const { data: bungalowImages = [] } = useGalleryImages("bungalows", bungalowSlug || undefined);
 
-  // Combine gallery images with fallback images - use Tipiti local images as fallback
+  // Combine gallery images with fallback images
   const getFallbackImages = () => {
     if (bungalowSlug === 'bangalo-tipiti') {
       return tipitiImages;
+    }
+    if (bungalowSlug === 'bangalo-peneira') {
+      return peneiraImages;
     }
     return lodge?.images?.map((img: string, idx: number) => ({
       src: img,
