@@ -102,11 +102,11 @@ const Contact = () => {
                     <div>
                       <h3 className="font-semibold text-foreground mb-2">Endereço</h3>
                       <p className="text-sm text-muted-foreground">
-                        Av. Eduardo Ribeiro, 520
+                        A margem esquerda do lago Acajatuba, S/N
                         <br />
-                        Centro, Manaus - AM
+                        Area rural de Manacapuru, Manaus - AM
                         <br />
-                        CEP: 69010-001
+                        CEP: 69.409-899
                       </p>
                     </div>
                   </div>
