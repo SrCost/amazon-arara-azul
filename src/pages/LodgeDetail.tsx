@@ -18,6 +18,21 @@ import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
 import lodge4 from "@/assets/lodge-4.jpg";
 
+// Tipiti images
+import tipitiExterior from "@/assets/tipiti-exterior.jpg";
+import tipitiBedroom from "@/assets/tipiti-bedroom.jpg";
+import tipitiInterior from "@/assets/tipiti-interior.jpg";
+import tipitiBathroomDetail from "@/assets/tipiti-bathroom-detail.jpg";
+import tipitiBathroom from "@/assets/tipiti-bathroom.jpg";
+
+const tipitiImages = [
+  { src: tipitiExterior, alt: "Bangalô Tipiti - Vista externa com passarela de madeira", id: "tipiti-1" },
+  { src: tipitiBedroom, alt: "Bangalô Tipiti - Quartos com camas confortáveis", id: "tipiti-2" },
+  { src: tipitiInterior, alt: "Bangalô Tipiti - Interior em madeira com detalhes artesanais", id: "tipiti-3" },
+  { src: tipitiBathroomDetail, alt: "Bangalô Tipiti - Detalhe do lavatório artesanal com escultura", id: "tipiti-4" },
+  { src: tipitiBathroom, alt: "Bangalô Tipiti - Banheiro privativo em madeira", id: "tipiti-5" },
+];
+
 const LodgeDetail = () => {
   const { id } = useParams();
   const { t, i18n } = useTranslation();
@@ -31,15 +46,19 @@ const LodgeDetail = () => {
   // Buscar fotos do bangalô específico
   const { data: bungalowImages = [] } = useGalleryImages("bungalows", bungalowSlug || undefined);
 
-  // Combine gallery images with fallback images
-  const allImages =
-    bungalowImages.length > 0
-      ? bungalowImages
-      : lodge?.images?.map((img: string, idx: number) => ({
-          src: img,
-          alt: `${lodge?.name} - Imagem ${idx + 1}`,
-          id: `fallback-${idx}`,
-        })) || [];
+  // Combine gallery images with fallback images - use Tipiti local images as fallback
+  const getFallbackImages = () => {
+    if (bungalowSlug === 'bangalo-tipiti') {
+      return tipitiImages;
+    }
+    return lodge?.images?.map((img: string, idx: number) => ({
+      src: img,
+      alt: `${lodge?.name} - Imagem ${idx + 1}`,
+      id: `fallback-${idx}`,
+    })) || [];
+  };
+
+  const allImages = bungalowImages.length > 0 ? bungalowImages : getFallbackImages();
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
