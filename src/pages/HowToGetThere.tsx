@@ -143,6 +143,36 @@ const HowToGetThere = () => {
               </Card>
             </div>
           </div>
+
+          {/* Google Maps Location */}
+          <div className="max-w-4xl mx-auto mt-16">
+            <h2 className="text-3xl font-display font-bold text-foreground mb-6 text-center">
+              Nossa Localização
+            </h2>
+            <div className="rounded-lg overflow-hidden shadow-strong">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63773.68135042783!2d-60.548989418755264!3d-3.093691099999988!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x926c63e4533d9e21%3A0xd159f0067b07177d!2sPousada%20Arara%20Azul!5e0!3m2!1spt-BR!2sbr!4v1732857788999"
+                width="100%"
+                height="350"
+                style={{ border: 0, borderRadius: '8px' }}
+                loading="lazy"
+                allowFullScreen
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Localização da Pousada Arara Azul no Google Maps"
+              />
+            </div>
+            <div className="text-center mt-4">
+              <a
+                href="https://www.google.com/maps/place/Pousada+Arara+Azul/@-3.0936911,-60.4913731,17z"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 text-accent hover:text-accent/80 transition-colors font-medium"
+              >
+                <MapPin className="h-4 w-4" />
+                Abrir no Google Maps
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
