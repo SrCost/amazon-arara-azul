@@ -238,6 +238,8 @@ export type Database = {
           id: string
           installments: number | null
           mercado_pago_payment_id: string | null
+          method: string | null
+          mp_order_id: string | null
           payer_cpf: string | null
           payer_email: string | null
           payer_name: string | null
@@ -255,6 +257,8 @@ export type Database = {
           id?: string
           installments?: number | null
           mercado_pago_payment_id?: string | null
+          method?: string | null
+          mp_order_id?: string | null
           payer_cpf?: string | null
           payer_email?: string | null
           payer_name?: string | null
@@ -272,6 +276,8 @@ export type Database = {
           id?: string
           installments?: number | null
           mercado_pago_payment_id?: string | null
+          method?: string | null
+          mp_order_id?: string | null
           payer_cpf?: string | null
           payer_email?: string | null
           payer_name?: string | null
@@ -406,6 +412,7 @@ export type Database = {
           payment_method: string | null
           payment_qr_code: string | null
           payment_qr_code_base64: string | null
+          payment_reference: string | null
           payment_status: string | null
           payment_ticket_url: string | null
           room_id: string
@@ -445,6 +452,7 @@ export type Database = {
           payment_method?: string | null
           payment_qr_code?: string | null
           payment_qr_code_base64?: string | null
+          payment_reference?: string | null
           payment_status?: string | null
           payment_ticket_url?: string | null
           room_id: string
@@ -484,6 +492,7 @@ export type Database = {
           payment_method?: string | null
           payment_qr_code?: string | null
           payment_qr_code_base64?: string | null
+          payment_reference?: string | null
           payment_status?: string | null
           payment_ticket_url?: string | null
           room_id?: string
