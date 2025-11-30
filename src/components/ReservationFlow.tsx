@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, ChevronLeft, ChevronRight, CalendarX, Loader2, Copy, QrCode } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, CalendarX, Loader2, Copy, QrCode, RefreshCw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -66,6 +66,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [isGeneratingPix, setIsGeneratingPix] = useState(false);
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [paymentCreated, setPaymentCreated] = useState(false);
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+  const [isCheckingPayment, setIsCheckingPayment] = useState(false);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // Mercado Pago hook
   const { mercadoPago, isLoading: mpLoading, isConfigured: mpConfigured, error: mpError, createCardToken, getPaymentMethodFromBin } = useMercadoPago();
@@ -140,6 +145,99 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     // Otherwise, calculate room nights only
     return nights * pricePerNight;
   };
+
+  // Function to check payment status
+  const checkPaymentStatus = useCallback(async (paymentIdToCheck: string, resId: string) => {
+    try {
+      setIsCheckingPayment(true);
+      console.log('Checking payment status:', paymentIdToCheck);
+      
+      const { data, error } = await supabase.functions.invoke('check-payment-status', {
+        body: {
+          paymentId: paymentIdToCheck,
+          reservationId: resId
+        }
+      });
+
+      if (error) {
+        console.error('Error checking payment:', error);
+        return null;
+      }
+
+      console.log('Payment status response:', data);
+      
+      if (data?.status === 'approved') {
+        setPaymentStatus('approved');
+        setPaymentVerified(true);
+        
+        // Stop polling
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        
+        toast.success('✓ Pagamento confirmado!', {
+          description: 'Seu pagamento foi aprovado com sucesso.'
+        });
+        
+        return 'approved';
+      } else if (data?.status === 'rejected' || data?.status === 'cancelled') {
+        setPaymentStatus('failed');
+        
+        // Stop polling
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+        
+        toast.error('Pagamento não aprovado', {
+          description: data?.status_detail || 'Tente novamente ou use outro método.'
+        });
+        
+        return 'failed';
+      }
+      
+      return data?.status || 'pending';
+    } catch (err) {
+      console.error('Error checking payment:', err);
+      return null;
+    } finally {
+      setIsCheckingPayment(false);
+    }
+  }, []);
+
+  // Start polling for PIX payment status
+  const startPaymentPolling = useCallback((paymentIdToCheck: string, resId: string) => {
+    // Clear any existing interval
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+    
+    // Initial check
+    checkPaymentStatus(paymentIdToCheck, resId);
+    
+    // Poll every 5 seconds
+    pollingIntervalRef.current = setInterval(() => {
+      checkPaymentStatus(paymentIdToCheck, resId);
+    }, 5000);
+    
+    // Stop polling after 10 minutes
+    setTimeout(() => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    }, 600000);
+  }, [checkPaymentStatus]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
 
   const handleNext = () => {
     if (step === 1) {
@@ -304,6 +402,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         setReservationId(paymentData.reservation_id);
       }
 
+      // Save payment ID for status checking
+      if (paymentData.payment_id) {
+        setPaymentId(paymentData.payment_id);
+      }
+
       // Set PIX data
       if (paymentData.pix) {
         setPixQrCode(paymentData.pix.qr_code || '');
@@ -313,6 +416,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         toast.success("QR Code PIX gerado com sucesso!", {
           description: "Escaneie o código para efetuar o pagamento"
         });
+        
+        // Start polling for payment status
+        if (paymentData.payment_id && paymentData.reservation_id) {
+          startPaymentPolling(paymentData.payment_id, paymentData.reservation_id);
+        }
       } else {
         throw new Error("QR Code não retornado pela API");
       }
@@ -354,13 +462,35 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       );
 
       // ====== PIX PAYMENT ALREADY CREATED ======
-      // If PIX was generated in Step 4, just confirm and redirect
+      // If PIX was generated in Step 4, verify payment before confirming
       if (paymentMethod === "pix" && reservationId && paymentCreated) {
-        // Update reservation status to confirmed
+        // Check if payment is verified
+        if (!paymentVerified && paymentStatus !== 'approved') {
+          // Do a final check
+          if (paymentId) {
+            const finalStatus = await checkPaymentStatus(paymentId, reservationId);
+            if (finalStatus !== 'approved') {
+              toast.error("Aguardando confirmação do pagamento", {
+                description: "Por favor, complete o pagamento PIX antes de confirmar a reserva."
+              });
+              setIsSubmitting(false);
+              return;
+            }
+          } else {
+            toast.error("Pagamento não verificado", {
+              description: "Por favor, complete o pagamento PIX antes de confirmar a reserva."
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+        
+        // Payment is verified, update reservation status
         await supabase
           .from("reservations")
           .update({
             status: "confirmed",
+            payment_status: "paid",
           })
           .eq('id', reservationId);
 
@@ -370,22 +500,23 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             action: "confirm",
             entity_type: "reservation",
             entity_id: reservationId,
-            description: `Reserva confirmada para ${lodgeName} via PIX`,
+            description: `Reserva confirmada para ${lodgeName} via PIX - Pagamento aprovado`,
             user_id: user?.id || null,
             user_email: guestEmail,
             metadata: {
               lodge_name: lodgeName,
               guest_name: guestName,
               payment_method: "pix",
+              payment_verified: true,
             }
           }]);
         } catch (logError) {
           console.warn("Falha ao registrar log:", logError);
         }
 
-        toast.success("Reserva confirmada com sucesso!", {
+        toast.success("🎉 Reserva confirmada com sucesso!", {
           duration: 3000,
-          description: "Aguardando confirmação do pagamento PIX"
+          description: "Pagamento aprovado. Você receberá um email de confirmação."
         });
 
         // Redirect to success page
@@ -1417,8 +1548,43 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                           </Button>
                         </div>
                       )}
+                      
+                      {/* Payment Status Indicator */}
+                      <div className="mt-4 p-4 rounded-lg border">
+                        {paymentVerified || paymentStatus === 'approved' ? (
+                          <div className="flex items-center justify-center gap-2 text-green-600">
+                            <CheckCircle className="h-5 w-5" />
+                            <span className="font-semibold">Pagamento Confirmado!</span>
+                          </div>
+                        ) : isCheckingPayment ? (
+                          <div className="flex items-center justify-center gap-2 text-amber-600">
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                            <span>Verificando pagamento...</span>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-2 text-amber-600">
+                              <RefreshCw className="h-5 w-5" />
+                              <span>Aguardando pagamento...</span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => paymentId && reservationId && checkPaymentStatus(paymentId, reservationId)}
+                              disabled={!paymentId || isCheckingPayment}
+                            >
+                              <RefreshCw className="h-4 w-4 mr-2" />
+                              Verificar pagamento
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      
                       <p className="text-sm text-green-700 mt-4 bg-green-50 p-3 rounded">
-                        ✓ Após efetuar o pagamento, clique em "Próximo" para finalizar sua reserva
+                        {paymentVerified 
+                          ? "✓ Pagamento confirmado! Clique em \"Próximo\" para finalizar sua reserva"
+                          : "✓ Após efetuar o pagamento, aguarde a confirmação ou clique em \"Verificar pagamento\""
+                        }
                       </p>
                     </div>
                   )}

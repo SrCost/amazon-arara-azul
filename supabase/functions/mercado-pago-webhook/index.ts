@@ -7,6 +7,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Helper to send emails
+async function sendEmail(supabaseUrl: string, supabaseKey: string, emailData: any) {
+  try {
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-reservation-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${supabaseKey}`,
+      },
+      body: JSON.stringify(emailData),
+    });
+    
+    if (!response.ok) {
+      console.error('Error sending email:', await response.text());
+    } else {
+      console.log('Email sent successfully');
+    }
+  } catch (error) {
+    console.error('Error calling email function:', error);
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -14,8 +36,9 @@ serve(async (req) => {
 
   try {
     const mercadoPagoToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-    const supabaseUrl = Deno.env.get('VITE_SUPABASE_URL')!;
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
@@ -64,36 +87,103 @@ serve(async (req) => {
       console.log('Payment details:', {
         id: payment.id,
         status: payment.status,
+        status_detail: payment.status_detail,
         external_reference: payment.external_reference,
       });
 
       // Map Mercado Pago status to our payment status
       let paymentStatus = 'pending';
+      let reservationStatus = 'pending';
+      
       if (payment.status === 'approved') {
         paymentStatus = 'completed';
+        reservationStatus = 'confirmed';
       } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
         paymentStatus = 'failed';
+        reservationStatus = 'cancelled';
+      } else if (payment.status === 'in_process' || payment.status === 'pending') {
+        paymentStatus = 'processing';
       }
 
       // Update payment in database
       if (payment.external_reference) {
-        const { error: updateError } = await supabase
+        const reservationId = payment.external_reference;
+
+        // Get reservation details for email
+        const { data: reservation } = await supabase
+          .from('reservations')
+          .select('*')
+          .eq('id', reservationId)
+          .single();
+
+        // Update payment record
+        const { error: paymentUpdateError } = await supabase
           .from('payments')
           .update({
             status: paymentStatus,
+            payment_date: payment.date_approved || null,
             updated_at: new Date().toISOString(),
           })
-          .eq('reservation_id', payment.external_reference);
+          .eq('reservation_id', reservationId);
 
-        if (updateError) {
-          console.error('Error updating payment:', updateError);
-          throw updateError;
+        if (paymentUpdateError) {
+          console.error('Error updating payment:', paymentUpdateError);
         }
 
-        console.log('Payment updated successfully:', {
-          reservation_id: payment.external_reference,
-          status: paymentStatus,
+        // Update reservation status
+        const { error: reservationUpdateError } = await supabase
+          .from('reservations')
+          .update({
+            status: reservationStatus,
+            payment_status: payment.status === 'approved' ? 'paid' : paymentStatus,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', reservationId);
+
+        if (reservationUpdateError) {
+          console.error('Error updating reservation:', reservationUpdateError);
+        }
+
+        console.log('Payment and reservation updated:', {
+          reservation_id: reservationId,
+          payment_status: paymentStatus,
+          reservation_status: reservationStatus,
         });
+
+        // Send appropriate email based on payment status
+        if (reservation) {
+          if (payment.status === 'approved') {
+            // Send payment success email
+            await sendEmail(supabaseUrl, supabaseAnonKey, {
+              type: 'payment_success',
+              reservationId,
+              email: reservation.guest_email,
+              name: reservation.guest_name,
+              paymentDetails: {
+                method: reservation.payment_method,
+                amount: payment.transaction_amount,
+                paymentId: payment.id.toString(),
+              },
+            });
+
+            // Send reservation confirmation email
+            await sendEmail(supabaseUrl, supabaseAnonKey, {
+              type: 'reservation_confirmed',
+              reservationId,
+              email: reservation.guest_email,
+              name: reservation.guest_name,
+            });
+          } else if (payment.status === 'rejected' || payment.status === 'cancelled') {
+            // Send payment error email
+            await sendEmail(supabaseUrl, supabaseAnonKey, {
+              type: 'payment_error',
+              reservationId,
+              email: reservation.guest_email,
+              name: reservation.guest_name,
+              errorMessage: payment.status_detail || 'Pagamento recusado',
+            });
+          }
+        }
       }
     }
 

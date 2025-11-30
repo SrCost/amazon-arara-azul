@@ -130,6 +130,7 @@ serve(async (req) => {
     let paymentPayload: any = {
       transaction_amount: parseFloat(amount),
       description,
+      external_reference: currentReservationId, // Used by webhook to identify reservation
       payer: {
         email: payerEmail,
         first_name: firstName,
