@@ -34,13 +34,24 @@ interface Payment {
   id: string;
   reservation_id: string;
   amount: number;
+  total_amount?: number;
+  paid_amount?: number;
   payment_method: string;
   status: string;
+  status_detail?: string;
+  transaction_id?: string;
+  mercado_pago_payment_id?: string;
+  payer_email?: string;
+  payer_cpf?: string;
   payment_date: string;
   created_at: string;
+  updated_at?: string;
   reservations?: {
     guest_name: string;
     guest_email: string;
+    room_name?: string;
+    check_in?: string;
+    check_out?: string;
   };
 }
 
@@ -83,7 +94,10 @@ const Payments = () => {
           *,
           reservations (
             guest_name,
-            guest_email
+            guest_email,
+            room_name,
+            check_in,
+            check_out
           )
         `)
         .order("created_at", { ascending: false });
@@ -161,13 +175,20 @@ const Payments = () => {
 
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: any } = {
-      completed: { label: "Concluído", className: "bg-green-100 text-green-800" },
-      pending: { label: "Pendente", className: "bg-yellow-100 text-yellow-800" },
+      completed: { label: "Concluído", className: "bg-green-500 text-white" },
+      approved: { label: "Aprovado", className: "bg-green-500 text-white" },
+      aprovado: { label: "Aprovado", className: "bg-green-500 text-white" },
+      paid: { label: "Pago", className: "bg-green-500 text-white" },
+      pending: { label: "Pendente", className: "bg-yellow-500 text-white" },
+      pendente: { label: "Pendente", className: "bg-yellow-500 text-white" },
+      in_process: { label: "Processando", className: "bg-blue-500 text-white" },
       refunded: { label: "Reembolsado", className: "bg-blue-100 text-blue-800" },
-      failed: { label: "Falhou", className: "bg-red-100 text-red-800" },
+      failed: { label: "Falhou", className: "bg-red-500 text-white" },
+      rejected: { label: "Rejeitado", className: "bg-red-500 text-white" },
+      rejeitado: { label: "Rejeitado", className: "bg-red-500 text-white" },
     };
 
-    const variant = variants[status] || variants.pending;
+    const variant = variants[status] || { label: status, className: "bg-gray-100 text-gray-800" };
     return <Badge className={variant.className}>{variant.label}</Badge>;
   };
 
@@ -276,10 +297,11 @@ const Payments = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Hóspede</TableHead>
-                  <TableHead>Reserva ID</TableHead>
+                  <TableHead>Bangalô</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>{t("reservation.paymentMethod")}</TableHead>
                   <TableHead>{t("admin.status")}</TableHead>
+                  <TableHead>ID Transação</TableHead>
                   <TableHead>Data</TableHead>
                   <TableHead className="text-right">{t("admin.actions")}</TableHead>
                 </TableRow>
@@ -290,9 +312,13 @@ const Payments = () => {
                     <TableCell className="font-medium">
                       {payment.reservations?.guest_name || "N/A"}
                     </TableCell>
-                    <TableCell className="font-mono text-sm">{payment.reservation_id.slice(0, 8)}...</TableCell>
-                    <TableCell className="font-medium">R$ {Number(payment.amount).toLocaleString()}</TableCell>
-                    <TableCell>{payment.payment_method}</TableCell>
+                    <TableCell>{payment.reservations?.room_name || "N/A"}</TableCell>
+                    <TableCell className="font-medium">R$ {Number(payment.amount || payment.total_amount || 0).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {payment.payment_method === 'pix' ? 'PIX' : 
+                       payment.payment_method === 'credit_card' ? 'Cartão' : 
+                       payment.payment_method || 'N/A'}
+                    </TableCell>
                     <TableCell>
                       <Select 
                         value={payment.status}
@@ -303,11 +329,17 @@ const Payments = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pending">Pendente</SelectItem>
+                          <SelectItem value="approved">Aprovado</SelectItem>
                           <SelectItem value="completed">Concluído</SelectItem>
                           <SelectItem value="failed">Falhou</SelectItem>
                           <SelectItem value="refunded">Reembolsado</SelectItem>
                         </SelectContent>
                       </Select>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {payment.transaction_id || payment.mercado_pago_payment_id 
+                        ? (payment.transaction_id || payment.mercado_pago_payment_id)?.slice(0, 10) + '...'
+                        : 'N/A'}
                     </TableCell>
                     <TableCell>{new Date(payment.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
@@ -340,45 +372,102 @@ const Payments = () => {
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Detalhes do Pagamento</DialogTitle>
           </DialogHeader>
           {selectedPayment && (
             <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Hóspede</p>
-                <p className="font-medium">{selectedPayment.reservations?.guest_name || "N/A"}</p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Hóspede</p>
+                  <p className="font-medium">{selectedPayment.reservations?.guest_name || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">E-mail</p>
+                  <p className="font-medium text-sm">{selectedPayment.reservations?.guest_email || selectedPayment.payer_email || "N/A"}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">E-mail</p>
-                <p className="font-medium">{selectedPayment.reservations?.guest_email || "N/A"}</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Bangalô</p>
+                  <p className="font-medium">{selectedPayment.reservations?.room_name || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Período</p>
+                  <p className="font-medium text-sm">
+                    {selectedPayment.reservations?.check_in && selectedPayment.reservations?.check_out
+                      ? `${new Date(selectedPayment.reservations.check_in).toLocaleDateString('pt-BR')} - ${new Date(selectedPayment.reservations.check_out).toLocaleDateString('pt-BR')}`
+                      : "N/A"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">ID da Reserva</p>
-                <p className="font-mono text-sm">{selectedPayment.reservation_id}</p>
+
+              <div className="border-t pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valor Total</p>
+                    <p className="font-medium text-lg">R$ {Number(selectedPayment.total_amount || selectedPayment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valor Pago</p>
+                    <p className="font-medium text-lg text-green-600">R$ {Number(selectedPayment.paid_amount || selectedPayment.amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Valor</p>
-                <p className="font-medium text-lg">R$ {Number(selectedPayment.amount).toLocaleString()}</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Método</p>
+                  <p className="font-medium">
+                    {selectedPayment.payment_method === 'pix' ? 'PIX' : 
+                     selectedPayment.payment_method === 'credit_card' ? 'Cartão de Crédito' : 
+                     selectedPayment.payment_method || 'N/A'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <div className="mt-1">{getStatusBadge(selectedPayment.status)}</div>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Método de Pagamento</p>
-                <p className="font-medium">{selectedPayment.payment_method}</p>
+
+              {selectedPayment.status_detail && (
+                <div>
+                  <p className="text-sm text-muted-foreground">Status Técnico</p>
+                  <p className="font-mono text-xs bg-muted p-2 rounded">{selectedPayment.status_detail}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">ID Transação (MP)</p>
+                  <p className="font-mono text-xs">{selectedPayment.transaction_id || selectedPayment.mercado_pago_payment_id || "N/A"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">ID Reserva</p>
+                  <p className="font-mono text-xs">{selectedPayment.reservation_id?.slice(0, 8)}...</p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                <div className="mt-1">{getStatusBadge(selectedPayment.status)}</div>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Data de Criação</p>
-                <p className="font-medium">{new Date(selectedPayment.created_at).toLocaleString()}</p>
-              </div>
-              <div className="pt-4 border-t text-sm text-muted-foreground">
-                {/* Future payment gateway integration point */}
-                <p className="italic">
-                  Nota: Integração com gateway de pagamento (Stripe, MercadoPago) será implementada para processamento automático.
-                </p>
+
+              {selectedPayment.payer_cpf && (
+                <div>
+                  <p className="text-sm text-muted-foreground">CPF Pagador</p>
+                  <p className="font-mono text-sm">***.***.***-{selectedPayment.payer_cpf.slice(-2)}</p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 border-t pt-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Criado em</p>
+                  <p className="font-medium text-sm">{new Date(selectedPayment.created_at).toLocaleString('pt-BR')}</p>
+                </div>
+                {selectedPayment.updated_at && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Atualizado em</p>
+                    <p className="font-medium text-sm">{new Date(selectedPayment.updated_at).toLocaleString('pt-BR')}</p>
+                  </div>
+                )}
               </div>
             </div>
           )}

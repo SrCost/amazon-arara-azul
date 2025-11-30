@@ -1,8 +1,10 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Check, Mail, MessageCircle } from "lucide-react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
+import { Check, Mail, MessageCircle, Calendar, Users, Home, CreditCard, QrCode, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 
@@ -10,13 +12,17 @@ const ReservationSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
-  const guestName = searchParams.get("name") || "Hóspede";
-  const lodgeName = searchParams.get("lodge") || "Pousada";
+  const reservationId = searchParams.get("reservationId") || "";
+  const guestName = searchParams.get("name") || searchParams.get("guestName") || "Hóspede";
+  const lodgeName = searchParams.get("lodge") || searchParams.get("lodgeName") || "Bangalô";
   const packageName = searchParams.get("package");
   const checkIn = searchParams.get("checkIn");
   const checkOut = searchParams.get("checkOut");
   const guests = searchParams.get("guests") || "2";
   const total = searchParams.get("total") || "0";
+  const email = searchParams.get("email") || "";
+  const paymentMethod = searchParams.get("paymentMethod") || "pix";
+  const status = searchParams.get("status") || "pending";
 
   useEffect(() => {
     // If no params, redirect to home
@@ -25,9 +31,29 @@ const ReservationSuccess = () => {
     }
   }, [checkIn, checkOut, navigate]);
 
-  const whatsappMessage = encodeURIComponent(
-    `Olá! Acabei de fazer uma reserva em ${lodgeName} para ${checkIn} até ${checkOut}. Gostaria de mais informações.`
-  );
+  const getStatusBadge = () => {
+    switch (status) {
+      case 'approved':
+      case 'paid':
+      case 'pago':
+        return <Badge className="bg-green-100 text-green-800">Pagamento Aprovado</Badge>;
+      case 'pending':
+      case 'pendente':
+        return <Badge className="bg-yellow-100 text-yellow-800">Aguardando Pagamento</Badge>;
+      case 'rejected':
+      case 'failed':
+        return <Badge className="bg-red-100 text-red-800">Pagamento Não Aprovado</Badge>;
+      default:
+        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
+    }
+  };
+
+  const handleWhatsApp = () => {
+    const message = encodeURIComponent(
+      `Olá! Acabei de fazer uma reserva na Pousada Arara Azul.\n\nNome: ${guestName}\nBangalô: ${lodgeName}\nCheck-in: ${checkIn}\nCheck-out: ${checkOut}`
+    );
+    window.open(`https://wa.me/559284829983?text=${message}`, '_blank');
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -35,102 +61,158 @@ const ReservationSuccess = () => {
       
       <main className="flex-1 pt-32 pb-16">
         <div className="container mx-auto px-4 max-w-3xl">
-          <Card>
-            <CardContent className="p-8 text-center">
-              <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-                <Check className="h-10 w-10 text-green-600" />
+          {/* Success Header */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
+              <Check className="h-12 w-12 text-green-600" />
+            </div>
+            <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+              Reserva Confirmada!
+            </h1>
+            <p className="text-muted-foreground">
+              Obrigado, {guestName}! Sua reserva foi realizada com sucesso.
+            </p>
+          </div>
+
+          {/* Reservation Details Card */}
+          <Card className="mb-6">
+            <CardContent className="p-6 space-y-6">
+              {/* Status and ID */}
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Número da Reserva</p>
+                  <p className="font-mono text-sm font-medium">
+                    {reservationId ? reservationId.slice(0, 8).toUpperCase() : 'NOVA'}
+                  </p>
+                </div>
+                {getStatusBadge()}
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-display font-bold mb-4">
-                Reserva Confirmada!
-              </h1>
-              
-              <p className="text-lg text-muted-foreground mb-8">
-                Obrigado, {guestName}! Sua reserva foi realizada com sucesso.
-              </p>
+              <Separator />
 
-              <div className="bg-muted p-6 rounded-lg mb-8 text-left">
-                <h2 className="font-semibold text-lg mb-4">Detalhes da Reserva</h2>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Pousada:</span>
-                    <span className="font-medium">{lodgeName}</span>
+              {/* Reservation Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex items-start gap-3">
+                  <Home className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Bangalô</p>
+                    <p className="font-medium">{lodgeName}</p>
                   </div>
-                  {packageName && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Pacote:</span>
-                      <span className="font-medium">{packageName}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Check-in:</span>
-                    <span className="font-medium">{checkIn && new Date(checkIn).toLocaleDateString('pt-BR')}</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Calendar className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Período</p>
+                    <p className="font-medium">
+                      {checkIn && checkOut 
+                        ? `${new Date(checkIn).toLocaleDateString('pt-BR')} - ${new Date(checkOut).toLocaleDateString('pt-BR')}`
+                        : 'N/A'
+                      }
+                    </p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Check-out:</span>
-                    <span className="font-medium">{checkOut && new Date(checkOut).toLocaleDateString('pt-BR')}</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <Users className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Hóspedes</p>
+                    <p className="font-medium">{guests} {parseInt(guests) === 1 ? 'pessoa' : 'pessoas'}</p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Hóspedes:</span>
-                    <span className="font-medium">{guests} {parseInt(guests) === 1 ? 'pessoa' : 'pessoas'}</span>
-                  </div>
-                  <div className="flex justify-between border-t pt-3 mt-3">
-                    <span className="text-muted-foreground font-semibold">Valor Total:</span>
-                    <span className="font-bold text-primary">R$ {parseFloat(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <CreditCard className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm text-muted-foreground">Forma de Pagamento</p>
+                    <p className="font-medium">
+                      {paymentMethod === 'pix' ? 'PIX' : 
+                       paymentMethod === 'credit_card' ? 'Cartão de Crédito' : 
+                       paymentMethod}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-                <p className="text-sm text-blue-900">
-                  <Mail className="inline h-4 w-4 mr-2" />
-                  Um e-mail de confirmação foi enviado para você com todos os detalhes da reserva.
-                </p>
-              </div>
+              {/* Package if selected */}
+              {packageName && (
+                <>
+                  <Separator />
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Pacote Selecionado</p>
+                    <p className="font-medium">{packageName}</p>
+                  </div>
+                </>
+              )}
 
-              <div className="space-y-4">
-                <p className="text-sm text-muted-foreground mb-4">
-                  Precisa de ajuda ou tem alguma dúvida?
-                </p>
-                
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                  <Button
-                    size="lg"
-                    className="bg-gradient-forest hover:opacity-90"
-                    asChild
-                  >
-                    <a
-                      href={`https://wa.me/5511999999999?text=${whatsappMessage}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <MessageCircle className="mr-2 h-5 w-5" />
-                      WhatsApp
-                    </a>
-                  </Button>
-                  
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    asChild
-                  >
-                    <a href="mailto:contato@arara-azul.com.br">
-                      <Mail className="mr-2 h-5 w-5" />
-                      E-mail
-                    </a>
-                  </Button>
-                </div>
+              <Separator />
 
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/")}
-                  className="mt-6"
-                >
-                  Voltar para a página inicial
-                </Button>
+              {/* Total */}
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-semibold">Valor Total</p>
+                <p className="text-2xl font-bold text-primary">
+                  R$ {parseFloat(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                </p>
               </div>
             </CardContent>
           </Card>
+
+          {/* QR Code Card */}
+          <Card className="mb-6">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center">
+                  <QrCode className="h-12 w-12 text-muted-foreground" />
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-1">QR Code da Reserva</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Apresente este código no check-in para agilizar sua entrada.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Info Box */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+            <p className="text-sm text-blue-900">
+              <Mail className="inline h-4 w-4 mr-2" />
+              Um e-mail de confirmação será enviado para você com todos os detalhes da reserva.
+            </p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <Button
+              variant="outline"
+              size="lg"
+              asChild
+              className="w-full"
+            >
+              <a href={`mailto:${email || 'contato@arara-azul.com.br'}`}>
+                <Mail className="h-4 w-4 mr-2" />
+                Enviar para meu e-mail
+              </a>
+            </Button>
+
+            <Button
+              size="lg"
+              onClick={handleWhatsApp}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Conversar com a Pousada
+            </Button>
+          </div>
+
+          {/* Back to Home */}
+          <div className="text-center">
+            <Button variant="ghost" onClick={() => navigate("/")}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar para a página inicial
+            </Button>
+          </div>
         </div>
       </main>
 

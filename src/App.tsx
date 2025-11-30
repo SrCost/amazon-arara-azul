@@ -51,6 +51,9 @@ const App = () => (
             <Route path="/faq" element={<FAQ />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/reserva-concluida" element={<ReservationSuccess />} />
+            <Route path="/reserva-sucesso" element={<ReservationSuccess />} />
+            <Route path="/reserva-confirmada" element={<ReservationSuccess />} />
+            <Route path="/reserva/sucesso" element={<ReservationSuccess />} />
             <Route
               path="/admin"
               element={
