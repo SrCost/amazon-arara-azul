@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,26 +18,20 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!mercadoPagoToken) {
-      console.error('MERCADO_PAGO_ACCESS_TOKEN não configurado');
       throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado');
     }
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Supabase credentials não configuradas');
       throw new Error('Configuração do servidor incompleta');
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     const body = await req.json();
     console.log('Request body:', JSON.stringify(body, null, 2));
 
     const {
-      // Existing reservation ID (for existing reservations)
       reservationId,
-      // Reservation data (for creating new reservations)
       reservationData,
-      // Payment data
       paymentMethod,
       amount,
       payerName,
@@ -52,11 +45,10 @@ serve(async (req) => {
 
     let currentReservationId = reservationId;
 
-    // If reservationData is provided, try to find existing or create new reservation
+    // Find or create reservation
     if (reservationData && !reservationId) {
       console.log('Checking for existing reservation...');
       
-      // First, check if a reservation already exists with the same key fields
       const { data: existingReservation, error: findError } = await supabase
         .from('reservations')
         .select('id, payment_status, payment_intent_id')
@@ -74,12 +66,10 @@ serve(async (req) => {
         console.log('Found existing reservation:', existingReservation.id);
         currentReservationId = existingReservation.id;
         
-        // If payment is already completed, return error
         if (existingReservation.payment_status === 'paid' || existingReservation.payment_status === 'approved') {
-          throw new Error('Esta reserva já foi paga. Por favor, entre em contato com o suporte se precisar de assistência.');
+          throw new Error('Esta reserva já foi paga. Por favor, entre em contato com o suporte.');
         }
         
-        // Update the existing reservation with any new data
         const { error: updateError } = await supabase
           .from('reservations')
           .update({
@@ -109,7 +99,6 @@ serve(async (req) => {
           console.error('Error updating existing reservation:', updateError);
         }
       } else {
-        // Create new reservation
         console.log('Creating new reservation...');
         
         const { data: newReservation, error: reservationError } = await supabase
@@ -155,7 +144,6 @@ serve(async (req) => {
         currentReservationId = newReservation.id;
         console.log('Reservation created:', currentReservationId);
 
-        // Create payment record
         const { error: paymentInsertError } = await supabase.from('payments').insert({
           reservation_id: currentReservationId,
           amount: amount || reservationData.total_price,
@@ -168,7 +156,6 @@ serve(async (req) => {
 
         if (paymentInsertError) {
           console.error('Error creating payment record:', paymentInsertError);
-          // Don't fail the whole operation, just log
         }
       }
     }
@@ -179,52 +166,69 @@ serve(async (req) => {
 
     console.log('Processing payment for reservation:', currentReservationId);
 
-    // Split name into first and last name
-    const nameParts = (payerName || '').trim().split(' ');
-    const firstName = nameParts[0] || 'Cliente';
-    const lastName = nameParts.slice(1).join(' ') || firstName;
+    const idempotencyKey = crypto.randomUUID();
+    const transactionAmount = parseFloat(amount).toFixed(2);
 
-    let paymentPayload: any = {
-      transaction_amount: parseFloat(amount),
-      description,
-      external_reference: currentReservationId, // Used by webhook to identify reservation
-      payer: {
-        email: payerEmail,
-        first_name: firstName,
-        last_name: lastName,
-        identification: {
-          type: 'CPF',
-          number: (payerCpf || '').replace(/\D/g, '')
-        }
-      }
-    };
-
-    // Configure payment based on method
+    // Build payment method object for Orders API
+    let paymentMethodConfig: any = {};
+    
     if (paymentMethod === 'pix') {
-      paymentPayload.payment_method_id = 'pix';
+      paymentMethodConfig = {
+        id: 'pix',
+        type: 'bank_transfer'
+      };
     } else if (paymentMethod === 'credit_card') {
       if (!cardToken || !paymentMethodId) {
         throw new Error('Token do cartão e método de pagamento são obrigatórios');
       }
-      paymentPayload.token = cardToken;
-      paymentPayload.installments = parseInt(installments);
-      paymentPayload.payment_method_id = paymentMethodId;
+      paymentMethodConfig = {
+        id: paymentMethodId,
+        type: 'credit_card',
+        token: cardToken,
+        installments: parseInt(installments)
+      };
     } else {
       throw new Error('Método de pagamento inválido');
     }
 
-    console.log('Sending request to Mercado Pago...');
-    console.log('Payment payload:', JSON.stringify(paymentPayload, null, 2));
+    // Build Orders API payload
+    const orderPayload = {
+      type: 'online',
+      processing_mode: 'automatic',
+      total_amount: transactionAmount,
+      external_reference: currentReservationId,
+      description: description,
+      payer: {
+        email: payerEmail,
+        first_name: (payerName || '').split(' ')[0] || 'Cliente',
+        last_name: (payerName || '').split(' ').slice(1).join(' ') || 'Cliente',
+        identification: {
+          type: 'CPF',
+          number: (payerCpf || '').replace(/\D/g, '')
+        }
+      },
+      transactions: {
+        payments: [
+          {
+            amount: transactionAmount,
+            payment_method: paymentMethodConfig
+          }
+        ]
+      }
+    };
 
-    // Create payment with Mercado Pago
-    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+    console.log('Sending request to Mercado Pago Orders API...');
+    console.log('Order payload:', JSON.stringify(orderPayload, null, 2));
+
+    // Create order with Mercado Pago Orders API
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${mercadoPagoToken}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `${currentReservationId}-${Date.now()}`
+        'X-Idempotency-Key': idempotencyKey
       },
-      body: JSON.stringify(paymentPayload)
+      body: JSON.stringify(orderPayload)
     });
 
     const mpData = await mpResponse.json();
@@ -232,14 +236,13 @@ serve(async (req) => {
     console.log('Mercado Pago response:', JSON.stringify(mpData, null, 2));
 
     if (!mpResponse.ok) {
-      // Log error to payment_logs
       await supabase.from('payment_logs').insert({
         reservation_id: currentReservationId,
-        action: 'create_payment',
+        action: 'create_order',
         status: 'error',
         error_code: mpData.status?.toString() || mpData.error || 'UNKNOWN',
         error_message: mpData.message || mpData.cause?.[0]?.description || JSON.stringify(mpData),
-        request_payload: paymentPayload,
+        request_payload: orderPayload,
         response_payload: mpData
       });
 
@@ -247,11 +250,18 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-    // Map Mercado Pago status to valid payment_status values
-    // Valid values: 'pending', 'paid', 'failed', 'refunded'
+    // Extract payment info from order response
+    const orderPayment = mpData.transactions?.payments?.[0] || {};
+    const orderId = mpData.id;
+    const orderStatus = mpData.status;
+    const paymentId = orderPayment.id;
+    const paymentStatus = orderPayment.status || orderStatus;
+
+    // Map status to valid payment_status values
     const mapMpStatusToPaymentStatus = (mpStatus: string): string => {
       switch (mpStatus) {
         case 'approved':
+        case 'processed':
           return 'paid';
         case 'pending':
         case 'in_process':
@@ -267,34 +277,28 @@ serve(async (req) => {
       }
     };
 
-    // Extract payment data
-    const paymentData = {
-      mercado_pago_payment_id: mpData.id.toString(),
-      status: mpData.status,
-      method: paymentMethod,
-      amount: mpData.transaction_amount,
-      installments: mpData.installments || 1,
-      payer_name: payerName,
-      payer_email: payerEmail,
-      payer_cpf: payerCpf
-    };
-
-    // Update reservation with payment intent data
+    // Update reservation with order data
     const reservationUpdate: any = {
-      payment_intent_id: mpData.id.toString(),
+      payment_intent_id: orderId,
       payer_name: payerName,
       payer_email: payerEmail,
       payer_cpf: payerCpf,
-      transaction_amount: mpData.transaction_amount,
+      transaction_amount: parseFloat(transactionAmount),
       transaction_currency: 'BRL',
-      payment_status: mapMpStatusToPaymentStatus(mpData.status)
+      payment_status: mapMpStatusToPaymentStatus(paymentStatus)
     };
 
-    // Add PIX-specific data
-    if (paymentMethod === 'pix' && mpData.point_of_interaction?.transaction_data) {
-      reservationUpdate.payment_qr_code = mpData.point_of_interaction.transaction_data.qr_code;
-      reservationUpdate.payment_qr_code_base64 = mpData.point_of_interaction.transaction_data.qr_code_base64;
-      reservationUpdate.payment_ticket_url = mpData.point_of_interaction.transaction_data.ticket_url;
+    // Add PIX-specific data if available
+    if (paymentMethod === 'pix') {
+      const pixData = orderPayment.payment_method?.bank_transfer || 
+                      orderPayment.point_of_interaction?.transaction_data ||
+                      mpData.point_of_interaction?.transaction_data;
+      
+      if (pixData) {
+        reservationUpdate.payment_qr_code = pixData.qr_code || pixData.qr_code_base64;
+        reservationUpdate.payment_qr_code_base64 = pixData.qr_code_base64;
+        reservationUpdate.payment_ticket_url = pixData.ticket_url;
+      }
     }
 
     console.log('Updating reservation:', currentReservationId);
@@ -306,7 +310,6 @@ serve(async (req) => {
 
     if (reservationError) {
       console.error('Error updating reservation:', reservationError);
-      // Don't throw, payment was successful
     }
 
     // Update payment record
@@ -315,56 +318,62 @@ serve(async (req) => {
     const { error: paymentError } = await supabase
       .from('payments')
       .update({
-        mercado_pago_payment_id: mpData.id.toString(),
-        status: mpData.status,
-        payment_date: mpData.date_approved || null,
+        mercado_pago_payment_id: paymentId?.toString() || orderId,
+        status: paymentStatus,
+        payment_date: orderPayment.date_approved || null,
         payer_name: payerName,
         payer_email: payerEmail,
         payer_cpf: payerCpf,
-        installments: mpData.installments || 1
+        installments: parseInt(installments) || 1
       })
       .eq('reservation_id', currentReservationId);
 
     if (paymentError) {
       console.error('Error updating payment:', paymentError);
-      // Don't throw, payment was successful
     }
 
     // Log success
     await supabase.from('payment_logs').insert({
       reservation_id: currentReservationId,
-      action: 'create_payment',
+      action: 'create_order',
       status: 'success',
-      request_payload: paymentPayload,
+      request_payload: orderPayload,
       response_payload: mpData
     });
 
-    // Return response
+    // Build response
     const response: any = {
       success: true,
       reservation_id: currentReservationId,
-      payment_id: mpData.id.toString(),
-      status: mpData.status,
+      order_id: orderId,
+      payment_id: paymentId?.toString() || orderId,
+      status: paymentStatus,
       payment_method: paymentMethod
     };
 
-    if (paymentMethod === 'pix' && mpData.point_of_interaction?.transaction_data) {
-      response.pix = {
-        qr_code: mpData.point_of_interaction.transaction_data.qr_code,
-        qr_code_base64: mpData.point_of_interaction.transaction_data.qr_code_base64,
-        ticket_url: mpData.point_of_interaction.transaction_data.ticket_url
-      };
+    if (paymentMethod === 'pix') {
+      const pixData = orderPayment.payment_method?.bank_transfer || 
+                      orderPayment.point_of_interaction?.transaction_data ||
+                      mpData.point_of_interaction?.transaction_data;
+      
+      if (pixData) {
+        response.pix = {
+          qr_code: pixData.qr_code,
+          qr_code_base64: pixData.qr_code_base64,
+          ticket_url: pixData.ticket_url
+        };
+      }
     }
 
     if (paymentMethod === 'credit_card') {
       response.card = {
-        status: mpData.status,
-        status_detail: mpData.status_detail,
+        status: paymentStatus,
+        status_detail: orderPayment.status_detail || mpData.status_detail,
         external_reference: mpData.external_reference
       };
     }
 
-    console.log('Payment intent created successfully');
+    console.log('Order created successfully');
     console.log('Response:', JSON.stringify(response, null, 2));
 
     return new Response(JSON.stringify(response), {
