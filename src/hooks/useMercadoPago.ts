@@ -13,6 +13,7 @@ interface UseMercadoPagoReturn {
   isConfigured: boolean;
   error: string | null;
   createCardToken: (cardData: CardData) => Promise<{ id: string } | null>;
+  getPaymentMethodFromBin: (bin: string) => Promise<string>;
 }
 
 interface CardData {
@@ -90,6 +91,36 @@ export const useMercadoPago = (): UseMercadoPagoReturn => {
     };
   }, [isConfigured]);
 
+  // Get payment method ID from card BIN (first 6 digits)
+  const getPaymentMethodFromBin = useCallback(async (bin: string): Promise<string> => {
+    if (!mercadoPago) {
+      console.warn('Mercado Pago SDK not initialized, using fallback detection');
+      return detectCardBrandFallback(bin);
+    }
+
+    try {
+      // Use Mercado Pago's getPaymentMethods API with the BIN
+      const response = await fetch(
+        `https://api.mercadopago.com/v1/payment_methods/search?bins=${bin}&public_key=${MERCADO_PAGO_CONFIG.publicKey}`
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.results && data.results.length > 0) {
+          const paymentMethodId = data.results[0].id;
+          console.log('✅ Payment method identified by Mercado Pago:', paymentMethodId);
+          return paymentMethodId;
+        }
+      }
+      
+      console.warn('Could not identify payment method from Mercado Pago API, using fallback');
+      return detectCardBrandFallback(bin);
+    } catch (err) {
+      console.error('Error getting payment method:', err);
+      return detectCardBrandFallback(bin);
+    }
+  }, [mercadoPago]);
+
   const createCardToken = useCallback(async (cardData: CardData) => {
     if (!mercadoPago) {
       console.error('Mercado Pago SDK not initialized');
@@ -111,5 +142,40 @@ export const useMercadoPago = (): UseMercadoPagoReturn => {
     isConfigured,
     error,
     createCardToken,
+    getPaymentMethodFromBin,
   };
 };
+
+// Fallback card brand detection based on BIN patterns
+function detectCardBrandFallback(bin: string): string {
+  const cleanBin = bin.replace(/\D/g, '');
+  
+  // Visa
+  if (/^4/.test(cleanBin)) {
+    return 'visa';
+  }
+  
+  // Mastercard
+  if (/^5[1-5]/.test(cleanBin) || /^2[2-7]/.test(cleanBin)) {
+    return 'master';
+  }
+  
+  // Amex
+  if (/^3[47]/.test(cleanBin)) {
+    return 'amex';
+  }
+  
+  // Elo - common Brazilian card
+  if (/^(4011|4312|4389|4514|4576|5041|5066|5067|6277|6362|6363|6504|6505|6516)/.test(cleanBin)) {
+    return 'elo';
+  }
+  
+  // Hipercard
+  if (/^(606282|384100|384140|384160)/.test(cleanBin)) {
+    return 'hipercard';
+  }
+  
+  // Default to visa for testing purposes (most common)
+  console.warn('Could not detect card brand, defaulting to visa');
+  return 'visa';
+}
