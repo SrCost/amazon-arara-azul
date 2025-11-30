@@ -247,6 +247,7 @@ export type Database = {
           mercado_pago_payment_id: string | null
           method: string | null
           mp_order_id: string | null
+          paid_amount: number | null
           payer_cpf: string | null
           payer_email: string | null
           payer_name: string | null
@@ -256,6 +257,9 @@ export type Database = {
           refunded_at: string | null
           reservation_id: string
           status: string
+          status_detail: string | null
+          total_amount: number | null
+          transaction_id: string | null
           updated_at: string
         }
         Insert: {
@@ -266,6 +270,7 @@ export type Database = {
           mercado_pago_payment_id?: string | null
           method?: string | null
           mp_order_id?: string | null
+          paid_amount?: number | null
           payer_cpf?: string | null
           payer_email?: string | null
           payer_name?: string | null
@@ -275,6 +280,9 @@ export type Database = {
           refunded_at?: string | null
           reservation_id: string
           status?: string
+          status_detail?: string | null
+          total_amount?: number | null
+          transaction_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -285,6 +293,7 @@ export type Database = {
           mercado_pago_payment_id?: string | null
           method?: string | null
           mp_order_id?: string | null
+          paid_amount?: number | null
           payer_cpf?: string | null
           payer_email?: string | null
           payer_name?: string | null
@@ -294,6 +303,9 @@ export type Database = {
           refunded_at?: string | null
           reservation_id?: string
           status?: string
+          status_detail?: string | null
+          total_amount?: number | null
+          transaction_id?: string | null
           updated_at?: string
         }
         Relationships: [
