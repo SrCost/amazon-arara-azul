@@ -1,5 +1,11 @@
 project_id = "lhcjucaevoouqozihzpv"
 
+[functions.send-reservation-email]
+verify_jwt = false
+
+[functions.check-payment-status]
+verify_jwt = false
+
 [functions.create-user]
 verify_jwt = true
 
