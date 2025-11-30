@@ -243,69 +243,41 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     try {
       const totalPrice = calculateTotal();
 
-      // Create reservation first (if not already created)
-      let currentReservationId = reservationId;
+      // Prepare reservation data for the edge function
+      const reservationData = {
+        room_id: roomId,
+        room_name: lodgeName,
+        package_id: selectedPackage || null,
+        user_id: user?.id || null,
+        guest_name: guestName,
+        guest_email: guestEmail,
+        guest_phone: guestPhone || null,
+        check_in: checkIn.toISOString().split('T')[0],
+        check_out: checkOut.toISOString().split('T')[0],
+        guests: parseInt(guests),
+        total_price: totalPrice,
+        special_requests: specialRequests || null,
+        is_foreign: isForeign,
+        cpf: !isForeign ? cpf : null,
+        birth_date: birthDate || null,
+        country: isForeign ? country : null,
+        nationality: isForeign ? nationality : null,
+        passport: isForeign ? passport : null,
+        address: address || null,
+        next_destination: nextDestination || null,
+        dietary_restrictions: dietaryRestrictions || null,
+        emergency_contact: emergencyContact || null,
+      };
 
-      if (!currentReservationId) {
-        const reservationData = {
-          room_id: roomId,
-          room_name: lodgeName,
-          package_id: selectedPackage || null,
-          user_id: user?.id || null,
-          guest_name: guestName,
-          guest_email: guestEmail,
-          guest_phone: guestPhone,
-          check_in: checkIn.toISOString().split('T')[0],
-          check_out: checkOut.toISOString().split('T')[0],
-          guests: parseInt(guests),
-          total_price: totalPrice,
-          status: "pending",
-          payment_status: "pending",
-          payment_method: "pix",
-          special_requests: specialRequests || null,
-          is_foreign: isForeign,
-          cpf: !isForeign ? cpf : null,
-          birth_date: birthDate || null,
-          country: isForeign ? country : null,
-          nationality: isForeign ? nationality : null,
-          passport: isForeign ? passport : null,
-          address: address || null,
-          next_destination: nextDestination || null,
-          dietary_restrictions: dietaryRestrictions || null,
-          emergency_contact: emergencyContact || null,
-        };
-
-        const { data: reservation, error: reservationError } = await supabase
-          .from("reservations")
-          .insert(reservationData)
-          .select()
-          .single();
-
-        if (reservationError) {
-          console.error("Erro ao criar reserva:", reservationError);
-          throw new Error("Não foi possível criar a reserva");
-        }
-
-        currentReservationId = reservation.id;
-        setReservationId(reservation.id);
-
-        // Create payment record
-        await supabase.from("payments").insert({
-          reservation_id: reservation.id,
-          amount: totalPrice,
-          payment_method: "pix",
-          status: "pending",
-        });
-      }
-
-      // Call edge function to generate PIX
-      console.log('Gerando PIX para reserva:', currentReservationId);
+      console.log('Gerando PIX via Edge Function...');
       
+      // Call edge function to create reservation AND generate PIX
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
         'create-payment-intent',
         {
           body: {
-            reservationId: currentReservationId,
+            reservationData: reservationId ? undefined : reservationData,
+            reservationId: reservationId || undefined,
             paymentMethod: "pix",
             amount: totalPrice,
             payerName: guestName,
@@ -316,6 +288,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         }
       );
 
+      console.log('Edge function response:', paymentData);
+
       if (paymentError) {
         console.error("Erro ao gerar PIX:", paymentError);
         throw new Error(paymentError.message || "Erro ao gerar QR Code PIX");
@@ -323,6 +297,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
       if (!paymentData?.success) {
         throw new Error(paymentData?.error_message || "Falha ao gerar QR Code PIX");
+      }
+
+      // Save reservation ID from the response
+      if (paymentData.reservation_id) {
+        setReservationId(paymentData.reservation_id);
       }
 
       // Set PIX data
@@ -432,7 +411,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
 
-      // Create reservation record
+      // Prepare reservation data for the edge function
       const reservationData = {
         room_id: roomId,
         room_name: lodgeName,
@@ -440,14 +419,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         user_id: user?.id || null,
         guest_name: guestName,
         guest_email: guestEmail,
-        guest_phone: guestPhone,
+        guest_phone: guestPhone || null,
         check_in: checkIn.toISOString().split('T')[0],
         check_out: checkOut.toISOString().split('T')[0],
         guests: parseInt(guests),
         total_price: totalPrice,
-        status: "pending",
-        payment_status: "pending",
-        payment_method: paymentMethod,
         special_requests: specialRequests || null,
         is_foreign: isForeign,
         cpf: !isForeign ? cpf : null,
@@ -460,60 +436,6 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         dietary_restrictions: dietaryRestrictions || null,
         emergency_contact: emergencyContact || null,
       };
-
-      const { data: reservation, error: reservationError } = await supabase
-        .from("reservations")
-        .insert(reservationData)
-        .select()
-        .single();
-
-      if (reservationError) {
-        console.error("Erro ao criar reserva:", reservationError);
-        let errorMsg = "Não foi possível registrar a reserva. ";
-        
-        if (reservationError.message?.includes("violates row-level security")) {
-          errorMsg += "Por favor, tente novamente ou entre em contato via WhatsApp.";
-        } else if (reservationError.message?.includes("duplicate")) {
-          errorMsg += "Esta reserva já existe.";
-        } else {
-          errorMsg += "Por favor, tente novamente.";
-        }
-        
-        toast.error(errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      // Create payment record
-      await supabase.from("payments").insert({
-        reservation_id: reservation.id,
-        amount: totalPrice,
-        payment_method: paymentMethod,
-        status: "pending",
-      });
-
-      // Log activity
-      try {
-        await supabase.from("activity_log").insert([{
-          action: "create",
-          entity_type: "reservation",
-          entity_id: reservation.id,
-          description: `Nova reserva criada para ${lodgeName}`,
-          user_id: user?.id || null,
-          user_email: guestEmail,
-          metadata: {
-            lodge_name: lodgeName,
-            guest_name: guestName,
-            check_in: checkIn.toISOString().split('T')[0],
-            check_out: checkOut.toISOString().split('T')[0],
-            total_nights: nights,
-            total_price: totalPrice,
-            payment_method: paymentMethod,
-            guests: parseInt(guests)
-          }
-        }]);
-      } catch (logError) {
-        console.warn("Falha ao registrar log:", logError);
-      }
 
       // ====== CREDIT CARD PAYMENT ======
       if (paymentMethod === "credit_card") {
@@ -544,12 +466,12 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
           const cardBrand = detectCardBrand(cardNumber);
           
-          // Call edge function
+          // Call edge function to create reservation AND process payment
           const { data: paymentResult, error: paymentError } = await supabase.functions.invoke(
             'create-payment-intent',
             {
               body: {
-                reservationId: reservation.id,
+                reservationData,
                 paymentMethod: "credit_card",
                 amount: totalPrice,
                 payerName: guestName,
@@ -567,31 +489,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             throw new Error(paymentResult?.error_message || paymentError?.message || "Erro ao processar pagamento");
           }
 
-          // Update reservation status
-          await supabase
-            .from("reservations")
-            .update({
-              payment_intent_id: paymentResult.payment_id,
-              payment_status: paymentResult.status === 'approved' ? 'paid' : 'processing',
-              status: paymentResult.status === 'approved' ? 'confirmed' : 'pending',
-              payer_name: guestName,
-              payer_email: guestEmail,
-              payer_cpf: cardCpf,
-            })
-            .eq('id', reservation.id);
-
-          // Update payment record
-          await supabase
-            .from("payments")
-            .update({
-              mercado_pago_payment_id: paymentResult.payment_id,
-              status: paymentResult.status === 'approved' ? 'completed' : 'pending',
-              payer_name: guestName,
-              payer_email: guestEmail,
-              payer_cpf: cardCpf,
-              installments: parseInt(installments)
-            })
-            .eq('reservation_id', reservation.id);
+          // Save reservation ID from the response
+          if (paymentResult.reservation_id) {
+            setReservationId(paymentResult.reservation_id);
+          }
 
           if (paymentResult.status === 'approved') {
             toast.success("🎉 Pagamento aprovado!", { duration: 3000 });
@@ -600,6 +501,25 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               duration: 3000,
               description: "Você receberá uma confirmação em breve"
             });
+          }
+
+          // Log activity
+          try {
+            await supabase.from("activity_log").insert([{
+              action: "create",
+              entity_type: "reservation",
+              entity_id: paymentResult.reservation_id,
+              description: `Nova reserva criada para ${lodgeName} via cartão`,
+              user_id: user?.id || null,
+              user_email: guestEmail,
+              metadata: {
+                lodge_name: lodgeName,
+                guest_name: guestName,
+                payment_method: paymentMethod,
+              }
+            }]);
+          } catch (logError) {
+            console.warn("Falha ao registrar log:", logError);
           }
 
         } catch (cardError: any) {

@@ -19,13 +19,26 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!mercadoPagoToken) {
+      console.error('MERCADO_PAGO_ACCESS_TOKEN não configurado');
       throw new Error('MERCADO_PAGO_ACCESS_TOKEN não configurado');
     }
 
-    const supabase = createClient(supabaseUrl!, supabaseServiceKey!);
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Supabase credentials não configuradas');
+      throw new Error('Configuração do servidor incompleta');
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const body = await req.json();
+    console.log('Request body:', JSON.stringify(body, null, 2));
 
     const {
+      // Existing reservation ID (for existing reservations)
       reservationId,
+      // Reservation data (for creating new reservations)
+      reservationData,
+      // Payment data
       paymentMethod,
       amount,
       payerName,
@@ -35,19 +48,84 @@ serve(async (req) => {
       installments = 1,
       paymentMethodId,
       description = 'Reserva Bangalô - Pousada Arara Azul'
-    } = await req.json();
+    } = body;
 
-    console.log('Creating payment intent:', { 
-      reservationId, 
-      paymentMethod, 
-      amount,
-      payerEmail 
-    });
+    let currentReservationId = reservationId;
+
+    // If reservationData is provided, create a new reservation
+    if (reservationData && !reservationId) {
+      console.log('Creating new reservation...');
+      
+      const { data: newReservation, error: reservationError } = await supabase
+        .from('reservations')
+        .insert({
+          room_id: reservationData.room_id,
+          room_name: reservationData.room_name,
+          package_id: reservationData.package_id || null,
+          user_id: reservationData.user_id || null,
+          guest_name: reservationData.guest_name,
+          guest_email: reservationData.guest_email,
+          guest_phone: reservationData.guest_phone || null,
+          check_in: reservationData.check_in,
+          check_out: reservationData.check_out,
+          guests: reservationData.guests,
+          total_price: reservationData.total_price,
+          status: 'pending',
+          payment_status: 'pending',
+          payment_method: paymentMethod,
+          special_requests: reservationData.special_requests || null,
+          is_foreign: reservationData.is_foreign || false,
+          cpf: reservationData.cpf || null,
+          birth_date: reservationData.birth_date || null,
+          country: reservationData.country || null,
+          nationality: reservationData.nationality || null,
+          passport: reservationData.passport || null,
+          address: reservationData.address || null,
+          next_destination: reservationData.next_destination || null,
+          dietary_restrictions: reservationData.dietary_restrictions || null,
+          emergency_contact: reservationData.emergency_contact || null,
+          payer_name: payerName,
+          payer_email: payerEmail,
+          payer_cpf: payerCpf,
+        })
+        .select()
+        .single();
+
+      if (reservationError) {
+        console.error('Error creating reservation:', reservationError);
+        throw new Error(`Erro ao criar reserva: ${reservationError.message}`);
+      }
+
+      currentReservationId = newReservation.id;
+      console.log('Reservation created:', currentReservationId);
+
+      // Create payment record
+      const { error: paymentInsertError } = await supabase.from('payments').insert({
+        reservation_id: currentReservationId,
+        amount: amount || reservationData.total_price,
+        payment_method: paymentMethod,
+        status: 'pending',
+        payer_name: payerName,
+        payer_email: payerEmail,
+        payer_cpf: payerCpf,
+      });
+
+      if (paymentInsertError) {
+        console.error('Error creating payment record:', paymentInsertError);
+        // Don't fail the whole operation, just log
+      }
+    }
+
+    if (!currentReservationId) {
+      throw new Error('ID da reserva é obrigatório');
+    }
+
+    console.log('Processing payment for reservation:', currentReservationId);
 
     // Split name into first and last name
-    const nameParts = payerName.trim().split(' ');
-    const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(' ') || nameParts[0];
+    const nameParts = (payerName || '').trim().split(' ');
+    const firstName = nameParts[0] || 'Cliente';
+    const lastName = nameParts.slice(1).join(' ') || firstName;
 
     let paymentPayload: any = {
       transaction_amount: parseFloat(amount),
@@ -58,7 +136,7 @@ serve(async (req) => {
         last_name: lastName,
         identification: {
           type: 'CPF',
-          number: payerCpf.replace(/\D/g, '')
+          number: (payerCpf || '').replace(/\D/g, '')
         }
       }
     };
@@ -78,6 +156,7 @@ serve(async (req) => {
     }
 
     console.log('Sending request to Mercado Pago...');
+    console.log('Payment payload:', JSON.stringify(paymentPayload, null, 2));
 
     // Create payment with Mercado Pago
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
@@ -85,27 +164,29 @@ serve(async (req) => {
       headers: {
         'Authorization': `Bearer ${mercadoPagoToken}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': reservationId
+        'X-Idempotency-Key': `${currentReservationId}-${Date.now()}`
       },
       body: JSON.stringify(paymentPayload)
     });
 
     const mpData = await mpResponse.json();
-    console.log('Mercado Pago response:', mpData);
+    console.log('Mercado Pago response status:', mpResponse.status);
+    console.log('Mercado Pago response:', JSON.stringify(mpData, null, 2));
 
     if (!mpResponse.ok) {
       // Log error to payment_logs
       await supabase.from('payment_logs').insert({
-        reservation_id: reservationId,
+        reservation_id: currentReservationId,
         action: 'create_payment',
         status: 'error',
-        error_code: mpData.status || 'UNKNOWN',
-        error_message: mpData.message || JSON.stringify(mpData),
+        error_code: mpData.status?.toString() || mpData.error || 'UNKNOWN',
+        error_message: mpData.message || mpData.cause?.[0]?.description || JSON.stringify(mpData),
         request_payload: paymentPayload,
         response_payload: mpData
       });
 
-      throw new Error(mpData.message || 'Erro ao criar pagamento no Mercado Pago');
+      const errorMessage = mpData.message || mpData.cause?.[0]?.description || 'Erro ao criar pagamento no Mercado Pago';
+      throw new Error(errorMessage);
     }
 
     // Extract payment data
@@ -138,16 +219,16 @@ serve(async (req) => {
       reservationUpdate.payment_ticket_url = mpData.point_of_interaction.transaction_data.ticket_url;
     }
 
-    console.log('Updating reservation:', reservationId);
+    console.log('Updating reservation:', currentReservationId);
 
     const { error: reservationError } = await supabase
       .from('reservations')
       .update(reservationUpdate)
-      .eq('id', reservationId);
+      .eq('id', currentReservationId);
 
     if (reservationError) {
       console.error('Error updating reservation:', reservationError);
-      throw reservationError;
+      // Don't throw, payment was successful
     }
 
     // Update payment record
@@ -156,20 +237,24 @@ serve(async (req) => {
     const { error: paymentError } = await supabase
       .from('payments')
       .update({
-        ...paymentData,
+        mercado_pago_payment_id: mpData.id.toString(),
         status: mpData.status,
-        payment_date: mpData.date_approved || null
+        payment_date: mpData.date_approved || null,
+        payer_name: payerName,
+        payer_email: payerEmail,
+        payer_cpf: payerCpf,
+        installments: mpData.installments || 1
       })
-      .eq('reservation_id', reservationId);
+      .eq('reservation_id', currentReservationId);
 
     if (paymentError) {
       console.error('Error updating payment:', paymentError);
-      throw paymentError;
+      // Don't throw, payment was successful
     }
 
     // Log success
     await supabase.from('payment_logs').insert({
-      reservation_id: reservationId,
+      reservation_id: currentReservationId,
       action: 'create_payment',
       status: 'success',
       request_payload: paymentPayload,
@@ -179,6 +264,7 @@ serve(async (req) => {
     // Return response
     const response: any = {
       success: true,
+      reservation_id: currentReservationId,
       payment_id: mpData.id.toString(),
       status: mpData.status,
       payment_method: paymentMethod
@@ -201,6 +287,7 @@ serve(async (req) => {
     }
 
     console.log('Payment intent created successfully');
+    console.log('Response:', JSON.stringify(response, null, 2));
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
