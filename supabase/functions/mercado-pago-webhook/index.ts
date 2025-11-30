@@ -33,7 +33,6 @@ async function sendEmail(supabaseUrl: string, supabaseKey: string, emailData: an
 function mapMpStatusToPaymentStatus(mpStatus: string): string {
   switch (mpStatus) {
     case 'approved':
-    case 'processed':
       return 'paid';
     case 'pending':
     case 'in_process':
@@ -96,92 +95,51 @@ serve(async (req) => {
     const body = await req.json();
     console.log('Mercado Pago webhook received:', JSON.stringify(body, null, 2));
 
-    // Handle both payment and order notifications
-    const notificationType = body.type;
-    const dataId = body.data?.id;
-
-    if (!dataId) {
-      console.log('No data ID in webhook, ignoring');
+    // Only process payment notifications
+    if (body.type !== 'payment') {
+      console.log(`Notification type ${body.type} not handled, ignoring`);
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
-    let paymentInfo: any = null;
-    let externalReference: string | null = null;
+    const paymentId = body.data?.id;
 
-    // Fetch details based on notification type
-    if (notificationType === 'payment') {
-      // Fetch payment details
-      const mpResponse = await fetch(
-        `https://api.mercadopago.com/v1/payments/${dataId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${mercadoPagoToken}`,
-          },
-        }
-      );
-
-      if (!mpResponse.ok) {
-        console.error(`Failed to fetch payment details: ${mpResponse.status}`);
-        throw new Error(`Failed to fetch payment details: ${mpResponse.status}`);
-      }
-
-      paymentInfo = await mpResponse.json();
-      externalReference = paymentInfo.external_reference;
-      
-      console.log('Payment details:', {
-        id: paymentInfo.id,
-        status: paymentInfo.status,
-        status_detail: paymentInfo.status_detail,
-        external_reference: externalReference,
-      });
-    } else if (notificationType === 'order' || body.action?.includes('order')) {
-      // Fetch order details
-      const mpResponse = await fetch(
-        `https://api.mercadopago.com/v1/orders/${dataId}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${mercadoPagoToken}`,
-          },
-        }
-      );
-
-      if (!mpResponse.ok) {
-        console.error(`Failed to fetch order details: ${mpResponse.status}`);
-        throw new Error(`Failed to fetch order details: ${mpResponse.status}`);
-      }
-
-      const orderData = await mpResponse.json();
-      externalReference = orderData.external_reference;
-      
-      // Get payment info from order
-      const orderPayment = orderData.transactions?.payments?.[0];
-      paymentInfo = {
-        id: orderPayment?.id || orderData.id,
-        status: orderPayment?.status || orderData.status,
-        status_detail: orderPayment?.status_detail || orderData.status_detail,
-        external_reference: externalReference,
-        transaction_amount: parseFloat(orderData.total_amount),
-        date_approved: orderPayment?.date_approved || orderData.date_approved,
-      };
-
-      console.log('Order details:', {
-        order_id: orderData.id,
-        payment_id: paymentInfo.id,
-        status: paymentInfo.status,
-        external_reference: externalReference,
-      });
-    } else {
-      console.log(`Unhandled notification type: ${notificationType}`);
+    if (!paymentId) {
+      console.log('No payment ID in webhook, ignoring');
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
-    if (!externalReference) {
+    // Fetch payment details from Mercado Pago
+    const mpResponse = await fetch(
+      `https://api.mercadopago.com/v1/payments/${paymentId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${mercadoPagoToken}`,
+        },
+      }
+    );
+
+    if (!mpResponse.ok) {
+      console.error(`Failed to fetch payment details: ${mpResponse.status}`);
+      throw new Error(`Failed to fetch payment details: ${mpResponse.status}`);
+    }
+
+    const payment = await mpResponse.json();
+    console.log('Payment details:', {
+      id: payment.id,
+      status: payment.status,
+      status_detail: payment.status_detail,
+      external_reference: payment.external_reference,
+    });
+
+    const reservationId = payment.external_reference;
+
+    if (!reservationId) {
       console.log('No external reference found, ignoring');
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -189,8 +147,7 @@ serve(async (req) => {
       });
     }
 
-    const reservationId = externalReference;
-    const paymentStatus = mapMpStatusToPaymentStatus(paymentInfo.status);
+    const paymentStatus = mapMpStatusToPaymentStatus(payment.status);
     const reservationStatus = mapToReservationStatus(paymentStatus);
 
     // Get reservation details for email
@@ -200,12 +157,13 @@ serve(async (req) => {
       .eq('id', reservationId)
       .single();
 
-    // Update payment record
+    // Update payment record with new fields
     const { error: paymentUpdateError } = await supabase
       .from('payments')
       .update({
-        status: paymentInfo.status,
-        payment_date: paymentInfo.date_approved || null,
+        status: payment.status,
+        mp_payment_id: payment.id.toString(),
+        payment_date: payment.date_approved || null,
         updated_at: new Date().toISOString(),
       })
       .eq('reservation_id', reservationId);
@@ -220,6 +178,7 @@ serve(async (req) => {
       .update({
         status: reservationStatus,
         payment_status: paymentStatus,
+        payment_reference: payment.id.toString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', reservationId);
@@ -237,9 +196,8 @@ serve(async (req) => {
     // Log to audit
     await supabase.from('payment_logs').insert({
       reservation_id: reservationId,
-      payment_id: paymentInfo.id?.toString(),
       action: 'webhook_notification',
-      status: paymentInfo.status,
+      status: payment.status,
       response_payload: body
     });
 
@@ -253,8 +211,8 @@ serve(async (req) => {
           name: reservation.guest_name,
           paymentDetails: {
             method: reservation.payment_method,
-            amount: paymentInfo.transaction_amount,
-            paymentId: paymentInfo.id?.toString(),
+            amount: payment.transaction_amount,
+            paymentId: payment.id.toString(),
           },
         });
 
@@ -270,7 +228,7 @@ serve(async (req) => {
           reservationId,
           email: reservation.guest_email,
           name: reservation.guest_name,
-          errorMessage: paymentInfo.status_detail || 'Pagamento recusado',
+          errorMessage: payment.status_detail || 'Pagamento recusado',
         });
       }
     }

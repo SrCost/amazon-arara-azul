@@ -144,10 +144,12 @@ serve(async (req) => {
         currentReservationId = newReservation.id;
         console.log('Reservation created:', currentReservationId);
 
+        // Create payment record with new fields
         const { error: paymentInsertError } = await supabase.from('payments').insert({
           reservation_id: currentReservationId,
           amount: amount || reservationData.total_price,
           payment_method: paymentMethod,
+          method: paymentMethod, // New field
           status: 'pending',
           payer_name: payerName,
           payer_email: payerEmail,
@@ -167,68 +169,54 @@ serve(async (req) => {
     console.log('Processing payment for reservation:', currentReservationId);
 
     const idempotencyKey = crypto.randomUUID();
-    const transactionAmount = parseFloat(amount).toFixed(2);
+    const transactionAmount = parseFloat(amount);
 
-    // Build payment method object for Orders API
-    let paymentMethodConfig: any = {};
-    
-    if (paymentMethod === 'pix') {
-      paymentMethodConfig = {
-        id: 'pix',
-        type: 'bank_transfer'
-      };
-    } else if (paymentMethod === 'credit_card') {
-      if (!cardToken || !paymentMethodId) {
-        throw new Error('Token do cartão e método de pagamento são obrigatórios');
-      }
-      paymentMethodConfig = {
-        id: paymentMethodId,
-        type: 'credit_card',
-        token: cardToken,
-        installments: parseInt(installments)
-      };
-    } else {
-      throw new Error('Método de pagamento inválido');
-    }
+    // Split name into first and last name
+    const nameParts = (payerName || '').trim().split(' ');
+    const firstName = nameParts[0] || 'Cliente';
+    const lastName = nameParts.slice(1).join(' ') || firstName;
 
-    // Build Orders API payload
-    const orderPayload = {
-      type: 'online',
-      processing_mode: 'automatic',
-      total_amount: transactionAmount,
+    let paymentPayload: any = {
+      transaction_amount: transactionAmount,
+      description,
       external_reference: currentReservationId,
-      description: description,
       payer: {
         email: payerEmail,
-        first_name: (payerName || '').split(' ')[0] || 'Cliente',
-        last_name: (payerName || '').split(' ').slice(1).join(' ') || 'Cliente',
+        first_name: firstName,
+        last_name: lastName,
         identification: {
           type: 'CPF',
           number: (payerCpf || '').replace(/\D/g, '')
         }
-      },
-      transactions: {
-        payments: [
-          {
-            amount: transactionAmount,
-            payment_method: paymentMethodConfig
-          }
-        ]
       }
     };
 
-    console.log('Sending request to Mercado Pago Orders API...');
-    console.log('Order payload:', JSON.stringify(orderPayload, null, 2));
+    // Configure payment based on method
+    if (paymentMethod === 'pix') {
+      paymentPayload.payment_method_id = 'pix';
+    } else if (paymentMethod === 'credit_card') {
+      if (!cardToken || !paymentMethodId) {
+        throw new Error('Token do cartão e método de pagamento são obrigatórios');
+      }
+      paymentPayload.token = cardToken;
+      paymentPayload.installments = parseInt(installments);
+      paymentPayload.payment_method_id = paymentMethodId;
+    } else {
+      throw new Error('Método de pagamento inválido');
+    }
 
-    // Create order with Mercado Pago Orders API
-    const mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+    console.log('Sending request to Mercado Pago...');
+    console.log('Payment payload:', JSON.stringify(paymentPayload, null, 2));
+
+    // Create payment with Mercado Pago Payments API
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${mercadoPagoToken}`,
         'Content-Type': 'application/json',
         'X-Idempotency-Key': idempotencyKey
       },
-      body: JSON.stringify(orderPayload)
+      body: JSON.stringify(paymentPayload)
     });
 
     const mpData = await mpResponse.json();
@@ -238,11 +226,11 @@ serve(async (req) => {
     if (!mpResponse.ok) {
       await supabase.from('payment_logs').insert({
         reservation_id: currentReservationId,
-        action: 'create_order',
+        action: 'create_payment',
         status: 'error',
         error_code: mpData.status?.toString() || mpData.error || 'UNKNOWN',
         error_message: mpData.message || mpData.cause?.[0]?.description || JSON.stringify(mpData),
-        request_payload: orderPayload,
+        request_payload: paymentPayload,
         response_payload: mpData
       });
 
@@ -250,18 +238,13 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-    // Extract payment info from order response
-    const orderPayment = mpData.transactions?.payments?.[0] || {};
-    const orderId = mpData.id;
-    const orderStatus = mpData.status;
-    const paymentId = orderPayment.id;
-    const paymentStatus = orderPayment.status || orderStatus;
+    const mpPaymentId = mpData.id?.toString();
+    const mpStatus = mpData.status;
 
     // Map status to valid payment_status values
-    const mapMpStatusToPaymentStatus = (mpStatus: string): string => {
-      switch (mpStatus) {
+    const mapMpStatusToPaymentStatus = (status: string): string => {
+      switch (status) {
         case 'approved':
-        case 'processed':
           return 'paid';
         case 'pending':
         case 'in_process':
@@ -277,28 +260,27 @@ serve(async (req) => {
       }
     };
 
-    // Update reservation with order data
+    const paymentStatus = mapMpStatusToPaymentStatus(mpStatus);
+    const reservationStatus = paymentStatus === 'paid' ? 'confirmed' : 'pending';
+
+    // Update reservation with payment data
     const reservationUpdate: any = {
-      payment_intent_id: orderId,
+      payment_intent_id: mpPaymentId,
+      payment_reference: mpPaymentId, // New field
       payer_name: payerName,
       payer_email: payerEmail,
       payer_cpf: payerCpf,
-      transaction_amount: parseFloat(transactionAmount),
+      transaction_amount: mpData.transaction_amount,
       transaction_currency: 'BRL',
-      payment_status: mapMpStatusToPaymentStatus(paymentStatus)
+      payment_status: paymentStatus,
+      status: reservationStatus
     };
 
-    // Add PIX-specific data if available
-    if (paymentMethod === 'pix') {
-      const pixData = orderPayment.payment_method?.bank_transfer || 
-                      orderPayment.point_of_interaction?.transaction_data ||
-                      mpData.point_of_interaction?.transaction_data;
-      
-      if (pixData) {
-        reservationUpdate.payment_qr_code = pixData.qr_code || pixData.qr_code_base64;
-        reservationUpdate.payment_qr_code_base64 = pixData.qr_code_base64;
-        reservationUpdate.payment_ticket_url = pixData.ticket_url;
-      }
+    // Add PIX-specific data
+    if (paymentMethod === 'pix' && mpData.point_of_interaction?.transaction_data) {
+      reservationUpdate.payment_qr_code = mpData.point_of_interaction.transaction_data.qr_code;
+      reservationUpdate.payment_qr_code_base64 = mpData.point_of_interaction.transaction_data.qr_code_base64;
+      reservationUpdate.payment_ticket_url = mpData.point_of_interaction.transaction_data.ticket_url;
     }
 
     console.log('Updating reservation:', currentReservationId);
@@ -312,19 +294,21 @@ serve(async (req) => {
       console.error('Error updating reservation:', reservationError);
     }
 
-    // Update payment record
+    // Update payment record with new fields
     console.log('Updating payment record...');
 
     const { error: paymentError } = await supabase
       .from('payments')
       .update({
-        mercado_pago_payment_id: paymentId?.toString() || orderId,
-        status: paymentStatus,
-        payment_date: orderPayment.date_approved || null,
+        mercado_pago_payment_id: mpPaymentId,
+        mp_payment_id: mpPaymentId, // New field
+        status: mpStatus,
+        method: paymentMethod, // New field
+        payment_date: mpData.date_approved || null,
         payer_name: payerName,
         payer_email: payerEmail,
         payer_cpf: payerCpf,
-        installments: parseInt(installments) || 1
+        installments: mpData.installments || 1
       })
       .eq('reservation_id', currentReservationId);
 
@@ -335,9 +319,9 @@ serve(async (req) => {
     // Log success
     await supabase.from('payment_logs').insert({
       reservation_id: currentReservationId,
-      action: 'create_order',
+      action: 'create_payment',
       status: 'success',
-      request_payload: orderPayload,
+      request_payload: paymentPayload,
       response_payload: mpData
     });
 
@@ -345,35 +329,29 @@ serve(async (req) => {
     const response: any = {
       success: true,
       reservation_id: currentReservationId,
-      order_id: orderId,
-      payment_id: paymentId?.toString() || orderId,
-      status: paymentStatus,
+      payment_id: mpPaymentId,
+      status: mpStatus,
+      payment_status: paymentStatus,
       payment_method: paymentMethod
     };
 
-    if (paymentMethod === 'pix') {
-      const pixData = orderPayment.payment_method?.bank_transfer || 
-                      orderPayment.point_of_interaction?.transaction_data ||
-                      mpData.point_of_interaction?.transaction_data;
-      
-      if (pixData) {
-        response.pix = {
-          qr_code: pixData.qr_code,
-          qr_code_base64: pixData.qr_code_base64,
-          ticket_url: pixData.ticket_url
-        };
-      }
+    if (paymentMethod === 'pix' && mpData.point_of_interaction?.transaction_data) {
+      response.pix = {
+        qr_code: mpData.point_of_interaction.transaction_data.qr_code,
+        qr_code_base64: mpData.point_of_interaction.transaction_data.qr_code_base64,
+        ticket_url: mpData.point_of_interaction.transaction_data.ticket_url
+      };
     }
 
     if (paymentMethod === 'credit_card') {
       response.card = {
-        status: paymentStatus,
-        status_detail: orderPayment.status_detail || mpData.status_detail,
+        status: mpStatus,
+        status_detail: mpData.status_detail,
         external_reference: mpData.external_reference
       };
     }
 
-    console.log('Order created successfully');
+    console.log('Payment created successfully');
     console.log('Response:', JSON.stringify(response, null, 2));
 
     return new Response(JSON.stringify(response), {
