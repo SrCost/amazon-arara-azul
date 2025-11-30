@@ -68,7 +68,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [paymentCreated, setPaymentCreated] = useState(false);
   
   // Mercado Pago hook
-  const { mercadoPago, isLoading: mpLoading, isConfigured: mpConfigured, error: mpError, createCardToken } = useMercadoPago();
+  const { mercadoPago, isLoading: mpLoading, isConfigured: mpConfigured, error: mpError, createCardToken, getPaymentMethodFromBin } = useMercadoPago();
   
   // New fields for guest information
   const [isForeign, setIsForeign] = useState(false);
@@ -464,7 +464,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             throw new Error('Erro ao processar dados do cartão');
           }
 
-          const cardBrand = detectCardBrand(cardNumber);
+          // Get payment method ID from card BIN (first 6 digits)
+          const cardBin = cardNumber.replace(/\D/g, '').substring(0, 6);
+          const paymentMethodId = await getPaymentMethodFromBin(cardBin);
+          console.log('Payment method identified:', paymentMethodId);
           
           // Call edge function to create reservation AND process payment
           const { data: paymentResult, error: paymentError } = await supabase.functions.invoke(
@@ -479,7 +482,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                 payerCpf: cardCpf,
                 cardToken: cardToken.id,
                 installments: parseInt(installments),
-                paymentMethodId: cardBrand,
+                paymentMethodId: paymentMethodId,
                 description: `Reserva ${lodgeName} - Pousada Arara Azul`
               }
             }
