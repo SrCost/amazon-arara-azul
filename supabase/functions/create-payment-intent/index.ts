@@ -52,67 +52,124 @@ serve(async (req) => {
 
     let currentReservationId = reservationId;
 
-    // If reservationData is provided, create a new reservation
+    // If reservationData is provided, try to find existing or create new reservation
     if (reservationData && !reservationId) {
-      console.log('Creating new reservation...');
+      console.log('Checking for existing reservation...');
       
-      const { data: newReservation, error: reservationError } = await supabase
+      // First, check if a reservation already exists with the same key fields
+      const { data: existingReservation, error: findError } = await supabase
         .from('reservations')
-        .insert({
-          room_id: reservationData.room_id,
-          room_name: reservationData.room_name,
-          package_id: reservationData.package_id || null,
-          user_id: reservationData.user_id || null,
-          guest_name: reservationData.guest_name,
-          guest_email: reservationData.guest_email,
-          guest_phone: reservationData.guest_phone || null,
-          check_in: reservationData.check_in,
-          check_out: reservationData.check_out,
-          guests: reservationData.guests,
-          total_price: reservationData.total_price,
-          status: 'pending',
-          payment_status: 'pending',
+        .select('id, payment_status, payment_intent_id')
+        .eq('room_id', reservationData.room_id)
+        .eq('check_in', reservationData.check_in)
+        .eq('check_out', reservationData.check_out)
+        .eq('guest_email', reservationData.guest_email)
+        .maybeSingle();
+
+      if (findError) {
+        console.error('Error checking existing reservation:', findError);
+      }
+
+      if (existingReservation) {
+        console.log('Found existing reservation:', existingReservation.id);
+        currentReservationId = existingReservation.id;
+        
+        // If payment is already completed, return error
+        if (existingReservation.payment_status === 'paid' || existingReservation.payment_status === 'approved') {
+          throw new Error('Esta reserva já foi paga. Por favor, entre em contato com o suporte se precisar de assistência.');
+        }
+        
+        // Update the existing reservation with any new data
+        const { error: updateError } = await supabase
+          .from('reservations')
+          .update({
+            guest_name: reservationData.guest_name,
+            guest_phone: reservationData.guest_phone || null,
+            guests: reservationData.guests,
+            total_price: reservationData.total_price,
+            payment_method: paymentMethod,
+            special_requests: reservationData.special_requests || null,
+            is_foreign: reservationData.is_foreign || false,
+            cpf: reservationData.cpf || null,
+            birth_date: reservationData.birth_date || null,
+            country: reservationData.country || null,
+            nationality: reservationData.nationality || null,
+            passport: reservationData.passport || null,
+            address: reservationData.address || null,
+            next_destination: reservationData.next_destination || null,
+            dietary_restrictions: reservationData.dietary_restrictions || null,
+            emergency_contact: reservationData.emergency_contact || null,
+            payer_name: payerName,
+            payer_email: payerEmail,
+            payer_cpf: payerCpf,
+          })
+          .eq('id', currentReservationId);
+
+        if (updateError) {
+          console.error('Error updating existing reservation:', updateError);
+        }
+      } else {
+        // Create new reservation
+        console.log('Creating new reservation...');
+        
+        const { data: newReservation, error: reservationError } = await supabase
+          .from('reservations')
+          .insert({
+            room_id: reservationData.room_id,
+            room_name: reservationData.room_name,
+            package_id: reservationData.package_id || null,
+            user_id: reservationData.user_id || null,
+            guest_name: reservationData.guest_name,
+            guest_email: reservationData.guest_email,
+            guest_phone: reservationData.guest_phone || null,
+            check_in: reservationData.check_in,
+            check_out: reservationData.check_out,
+            guests: reservationData.guests,
+            total_price: reservationData.total_price,
+            status: 'pending',
+            payment_status: 'pending',
+            payment_method: paymentMethod,
+            special_requests: reservationData.special_requests || null,
+            is_foreign: reservationData.is_foreign || false,
+            cpf: reservationData.cpf || null,
+            birth_date: reservationData.birth_date || null,
+            country: reservationData.country || null,
+            nationality: reservationData.nationality || null,
+            passport: reservationData.passport || null,
+            address: reservationData.address || null,
+            next_destination: reservationData.next_destination || null,
+            dietary_restrictions: reservationData.dietary_restrictions || null,
+            emergency_contact: reservationData.emergency_contact || null,
+            payer_name: payerName,
+            payer_email: payerEmail,
+            payer_cpf: payerCpf,
+          })
+          .select()
+          .single();
+
+        if (reservationError) {
+          console.error('Error creating reservation:', reservationError);
+          throw new Error(`Erro ao criar reserva: ${reservationError.message}`);
+        }
+
+        currentReservationId = newReservation.id;
+        console.log('Reservation created:', currentReservationId);
+
+        // Create payment record
+        const { error: paymentInsertError } = await supabase.from('payments').insert({
+          reservation_id: currentReservationId,
+          amount: amount || reservationData.total_price,
           payment_method: paymentMethod,
-          special_requests: reservationData.special_requests || null,
-          is_foreign: reservationData.is_foreign || false,
-          cpf: reservationData.cpf || null,
-          birth_date: reservationData.birth_date || null,
-          country: reservationData.country || null,
-          nationality: reservationData.nationality || null,
-          passport: reservationData.passport || null,
-          address: reservationData.address || null,
-          next_destination: reservationData.next_destination || null,
-          dietary_restrictions: reservationData.dietary_restrictions || null,
-          emergency_contact: reservationData.emergency_contact || null,
+          status: 'pending',
           payer_name: payerName,
           payer_email: payerEmail,
           payer_cpf: payerCpf,
-        })
-        .select()
-        .single();
+        });
 
-      if (reservationError) {
-        console.error('Error creating reservation:', reservationError);
-        throw new Error(`Erro ao criar reserva: ${reservationError.message}`);
-      }
-
-      currentReservationId = newReservation.id;
-      console.log('Reservation created:', currentReservationId);
-
-      // Create payment record
-      const { error: paymentInsertError } = await supabase.from('payments').insert({
-        reservation_id: currentReservationId,
-        amount: amount || reservationData.total_price,
-        payment_method: paymentMethod,
-        status: 'pending',
-        payer_name: payerName,
-        payer_email: payerEmail,
-        payer_cpf: payerCpf,
-      });
-
-      if (paymentInsertError) {
-        console.error('Error creating payment record:', paymentInsertError);
-        // Don't fail the whole operation, just log
+        if (paymentInsertError) {
+          console.error('Error creating payment record:', paymentInsertError);
+          // Don't fail the whole operation, just log
+        }
       }
     }
 
@@ -190,6 +247,26 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
+    // Map Mercado Pago status to valid payment_status values
+    // Valid values: 'pending', 'paid', 'failed', 'refunded'
+    const mapMpStatusToPaymentStatus = (mpStatus: string): string => {
+      switch (mpStatus) {
+        case 'approved':
+          return 'paid';
+        case 'pending':
+        case 'in_process':
+        case 'authorized':
+          return 'pending';
+        case 'rejected':
+        case 'cancelled':
+          return 'failed';
+        case 'refunded':
+          return 'refunded';
+        default:
+          return 'pending';
+      }
+    };
+
     // Extract payment data
     const paymentData = {
       mercado_pago_payment_id: mpData.id.toString(),
@@ -210,7 +287,7 @@ serve(async (req) => {
       payer_cpf: payerCpf,
       transaction_amount: mpData.transaction_amount,
       transaction_currency: 'BRL',
-      payment_status: mpData.status === 'approved' ? 'paid' : 'processing'
+      payment_status: mapMpStatusToPaymentStatus(mpData.status)
     };
 
     // Add PIX-specific data
