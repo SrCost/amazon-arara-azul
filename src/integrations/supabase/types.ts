@@ -216,6 +216,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "payment_logs_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments_user_view"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "payment_logs_reservation_id_fkey"
             columns: ["reservation_id"]
             isOneToOne: false
@@ -683,6 +690,48 @@ export type Database = {
           slug?: string | null
         }
         Relationships: []
+      }
+      payments_user_view: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          id: string | null
+          payment_method: string | null
+          reservation_id: string | null
+          status: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          id?: string | null
+          payment_method?: string | null
+          reservation_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          id?: string | null
+          payment_method?: string | null
+          reservation_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reservations_public_summary: {
         Row: {
