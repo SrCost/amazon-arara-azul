@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Check, ChevronLeft, ChevronRight, CalendarX, Loader2 } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, CalendarX, Loader2, Copy, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,12 +22,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { validateCPF, maskCPF } from "@/lib/cpfValidator";
 import { maskCardNumber, maskExpiryDate, maskCVV, detectCardBrand, validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
-
-declare global {
-  interface Window {
-    MercadoPago: any;
-  }
-}
+import { useMercadoPago } from "@/hooks/useMercadoPago";
 
 interface ReservationFlowProps {
   lodgeName: string;
@@ -68,7 +63,12 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [pixQrCode, setPixQrCode] = useState("");
   const [pixQrCodeBase64, setPixQrCodeBase64] = useState("");
   const [showPixCode, setShowPixCode] = useState(false);
-  const [mercadoPago, setMercadoPago] = useState<any>(null);
+  const [isGeneratingPix, setIsGeneratingPix] = useState(false);
+  const [reservationId, setReservationId] = useState<string | null>(null);
+  const [paymentCreated, setPaymentCreated] = useState(false);
+  
+  // Mercado Pago hook
+  const { mercadoPago, isLoading: mpLoading, isConfigured: mpConfigured, error: mpError, createCardToken } = useMercadoPago();
   
   // New fields for guest information
   const [isForeign, setIsForeign] = useState(false);
@@ -81,26 +81,6 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [nextDestination, setNextDestination] = useState("");
   const [dietaryRestrictions, setDietaryRestrictions] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
-
-  // Initialize Mercado Pago SDK
-  useEffect(() => {
-    const publicKey = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY;
-    if (publicKey && !mercadoPago) {
-      const script = document.createElement('script');
-      script.src = 'https://sdk.mercadopago.com/js/v2';
-      script.async = true;
-      script.onload = () => {
-        const mp = new window.MercadoPago(publicKey);
-        setMercadoPago(mp);
-        console.log('✅ Mercado Pago SDK carregado');
-      };
-      script.onerror = () => {
-        console.error('❌ Erro ao carregar SDK do Mercado Pago');
-        toast.error('Erro ao carregar sistema de pagamento');
-      };
-      document.body.appendChild(script);
-    }
-  }, [mercadoPago]);
 
   // Show next available dates when component loads
   useEffect(() => {
@@ -230,9 +210,139 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         toast.error("CPF é obrigatório para pagamento via PIX");
         return;
       }
+      // For PIX, require QR code generation before proceeding
+      if (paymentMethod === "pix" && !showPixCode) {
+        toast.error("Por favor, gere o QR Code PIX antes de continuar");
+        return;
+      }
     }
     if (step < 5) {
       setStep(step + 1);
+    }
+  };
+
+  // Generate PIX QR Code in Step 4
+  const handleGeneratePixQrCode = async () => {
+    if (!cardCpf || !validateCPF(cardCpf)) {
+      toast.error("Informe um CPF válido para gerar o PIX");
+      return;
+    }
+
+    if (!checkIn || !checkOut) {
+      toast.error("Datas de check-in e check-out são obrigatórias");
+      return;
+    }
+
+    if (!guestName || !guestEmail) {
+      toast.error("Dados do hóspede são obrigatórios");
+      return;
+    }
+
+    setIsGeneratingPix(true);
+
+    try {
+      const totalPrice = calculateTotal();
+
+      // Create reservation first (if not already created)
+      let currentReservationId = reservationId;
+
+      if (!currentReservationId) {
+        const reservationData = {
+          room_id: roomId,
+          room_name: lodgeName,
+          package_id: selectedPackage || null,
+          user_id: user?.id || null,
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_phone: guestPhone,
+          check_in: checkIn.toISOString().split('T')[0],
+          check_out: checkOut.toISOString().split('T')[0],
+          guests: parseInt(guests),
+          total_price: totalPrice,
+          status: "pending",
+          payment_status: "pending",
+          payment_method: "pix",
+          special_requests: specialRequests || null,
+          is_foreign: isForeign,
+          cpf: !isForeign ? cpf : null,
+          birth_date: birthDate || null,
+          country: isForeign ? country : null,
+          nationality: isForeign ? nationality : null,
+          passport: isForeign ? passport : null,
+          address: address || null,
+          next_destination: nextDestination || null,
+          dietary_restrictions: dietaryRestrictions || null,
+          emergency_contact: emergencyContact || null,
+        };
+
+        const { data: reservation, error: reservationError } = await supabase
+          .from("reservations")
+          .insert(reservationData)
+          .select()
+          .single();
+
+        if (reservationError) {
+          console.error("Erro ao criar reserva:", reservationError);
+          throw new Error("Não foi possível criar a reserva");
+        }
+
+        currentReservationId = reservation.id;
+        setReservationId(reservation.id);
+
+        // Create payment record
+        await supabase.from("payments").insert({
+          reservation_id: reservation.id,
+          amount: totalPrice,
+          payment_method: "pix",
+          status: "pending",
+        });
+      }
+
+      // Call edge function to generate PIX
+      console.log('Gerando PIX para reserva:', currentReservationId);
+      
+      const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
+        'create-payment-intent',
+        {
+          body: {
+            reservationId: currentReservationId,
+            paymentMethod: "pix",
+            amount: totalPrice,
+            payerName: guestName,
+            payerEmail: guestEmail,
+            payerCpf: cardCpf,
+            description: `Reserva ${lodgeName} - Pousada Arara Azul`
+          }
+        }
+      );
+
+      if (paymentError) {
+        console.error("Erro ao gerar PIX:", paymentError);
+        throw new Error(paymentError.message || "Erro ao gerar QR Code PIX");
+      }
+
+      if (!paymentData?.success) {
+        throw new Error(paymentData?.error_message || "Falha ao gerar QR Code PIX");
+      }
+
+      // Set PIX data
+      if (paymentData.pix) {
+        setPixQrCode(paymentData.pix.qr_code || '');
+        setPixQrCodeBase64(paymentData.pix.qr_code_base64 || '');
+        setShowPixCode(true);
+        setPaymentCreated(true);
+        toast.success("QR Code PIX gerado com sucesso!", {
+          description: "Escaneie o código para efetuar o pagamento"
+        });
+      } else {
+        throw new Error("QR Code não retornado pela API");
+      }
+
+    } catch (error) {
+      console.error("Erro ao gerar PIX:", error);
+      toast.error(error instanceof Error ? error.message : "Erro ao gerar QR Code PIX");
+    } finally {
+      setIsGeneratingPix(false);
     }
   };
 
@@ -259,37 +369,86 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
 
-      // Final availability check before creating reservation
-      if (!checkAvailability(checkIn, checkOut)) {
-        toast.error("Desculpe, as datas selecionadas foram reservadas por outro cliente. Por favor, escolha outras datas.");
-        setIsSubmitting(false);
-        setStep(1); // Go back to date selection
-        return;
-      }
-
       const totalPrice = calculateTotal();
       const nights = Math.ceil(
         (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
       );
 
-      // Create reservation record - guests don't need to be logged in
+      // ====== PIX PAYMENT ALREADY CREATED ======
+      // If PIX was generated in Step 4, just confirm and redirect
+      if (paymentMethod === "pix" && reservationId && paymentCreated) {
+        // Update reservation status to confirmed
+        await supabase
+          .from("reservations")
+          .update({
+            status: "confirmed",
+          })
+          .eq('id', reservationId);
+
+        // Log activity
+        try {
+          await supabase.from("activity_log").insert([{
+            action: "confirm",
+            entity_type: "reservation",
+            entity_id: reservationId,
+            description: `Reserva confirmada para ${lodgeName} via PIX`,
+            user_id: user?.id || null,
+            user_email: guestEmail,
+            metadata: {
+              lodge_name: lodgeName,
+              guest_name: guestName,
+              payment_method: "pix",
+            }
+          }]);
+        } catch (logError) {
+          console.warn("Falha ao registrar log:", logError);
+        }
+
+        toast.success("Reserva confirmada com sucesso!", {
+          duration: 3000,
+          description: "Aguardando confirmação do pagamento PIX"
+        });
+
+        // Redirect to success page
+        const params = new URLSearchParams({
+          guestName,
+          lodgeName,
+          checkIn: checkIn.toISOString().split('T')[0],
+          checkOut: checkOut.toISOString().split('T')[0],
+          guests,
+          total: totalPrice.toString()
+        });
+        
+        window.location.href = `/reserva-sucesso?${params.toString()}`;
+        return;
+      }
+
+      // ====== CREATE NEW RESERVATION (Credit Card) ======
+      // Final availability check before creating reservation
+      if (!checkAvailability(checkIn, checkOut)) {
+        toast.error("Desculpe, as datas selecionadas foram reservadas. Por favor, escolha outras datas.");
+        setIsSubmitting(false);
+        setStep(2);
+        return;
+      }
+
+      // Create reservation record
       const reservationData = {
         room_id: roomId,
-        room_name: lodgeName, // Store lodge name for easy display
-        package_id: selectedPackage || null, // Include selected package
-        user_id: user?.id || null, // Allow null for non-logged users
+        room_name: lodgeName,
+        package_id: selectedPackage || null,
+        user_id: user?.id || null,
         guest_name: guestName,
         guest_email: guestEmail,
         guest_phone: guestPhone,
-        check_in: checkIn?.toISOString().split('T')[0],
-        check_out: checkOut?.toISOString().split('T')[0],
+        check_in: checkIn.toISOString().split('T')[0],
+        check_out: checkOut.toISOString().split('T')[0],
         guests: parseInt(guests),
         total_price: totalPrice,
         status: "pending",
         payment_status: "pending",
         payment_method: paymentMethod,
         special_requests: specialRequests || null,
-        // New guest information fields
         is_foreign: isForeign,
         cpf: !isForeign ? cpf : null,
         birth_date: birthDate || null,
@@ -310,46 +469,29 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
       if (reservationError) {
         console.error("Erro ao criar reserva:", reservationError);
-        
-        // Provide user-friendly error messages
         let errorMsg = "Não foi possível registrar a reserva. ";
         
         if (reservationError.message?.includes("violates row-level security")) {
           errorMsg += "Por favor, tente novamente ou entre em contato via WhatsApp.";
         } else if (reservationError.message?.includes("duplicate")) {
-          errorMsg += "Esta reserva já existe. Verifique suas reservas anteriores.";
-        } else if (reservationError.message?.includes("foreign key")) {
-          errorMsg += "Dados inválidos. Por favor, verifique as informações e tente novamente.";
+          errorMsg += "Esta reserva já existe.";
         } else {
-          errorMsg += "Por favor, tente novamente ou entre em contato conosco via WhatsApp.";
+          errorMsg += "Por favor, tente novamente.";
         }
         
-        toast.error(errorMsg, {
-          duration: 5000,
-          description: "Precisa de ajuda? Clique no botão do WhatsApp no canto da tela."
-        });
-        
+        toast.error(errorMsg);
         throw new Error(errorMsg);
       }
 
       // Create payment record
-      const paymentData = {
+      await supabase.from("payments").insert({
         reservation_id: reservation.id,
         amount: totalPrice,
         payment_method: paymentMethod,
         status: "pending",
-      };
+      });
 
-      const { error: paymentError } = await supabase
-        .from("payments")
-        .insert(paymentData);
-
-      if (paymentError) {
-        console.error("Erro ao criar pagamento:", paymentError);
-        throw new Error("Falha ao registrar pagamento.");
-      }
-
-      // Log activity in audit table
+      // Log activity
       try {
         await supabase.from("activity_log").insert([{
           action: "create",
@@ -361,8 +503,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           metadata: {
             lodge_name: lodgeName,
             guest_name: guestName,
-            check_in: checkIn?.toISOString().split('T')[0],
-            check_out: checkOut?.toISOString().split('T')[0],
+            check_in: checkIn.toISOString().split('T')[0],
+            check_out: checkOut.toISOString().split('T')[0],
             total_nights: nights,
             total_price: totalPrice,
             payment_method: paymentMethod,
@@ -370,86 +512,71 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           }
         }]);
       } catch (logError) {
-        // Don't fail reservation if logging fails
-        console.warn("Falha ao registrar log de auditoria:", logError);
+        console.warn("Falha ao registrar log:", logError);
       }
 
-      // ====== MERCADO PAGO PAYMENT INTEGRATION ======
-      if (paymentMethod === "pix" || paymentMethod === "credit_card") {
-        console.log(`Processando pagamento via ${paymentMethod.toUpperCase()}...`);
+      // ====== CREDIT CARD PAYMENT ======
+      if (paymentMethod === "credit_card") {
+        console.log('Processando pagamento via cartão...');
         
+        if (!mercadoPago) {
+          throw new Error('Sistema de pagamento não carregado. Aguarde ou recarregue a página.');
+        }
+
         try {
-          let paymentIntentData: any = {
-            reservationId: reservation.id,
-            paymentMethod: paymentMethod,
-            amount: totalPrice,
-            payerName: guestName,
-            payerEmail: guestEmail,
-            payerCpf: cardCpf,
-            description: `Reserva ${lodgeName} - Pousada Arara Azul`
+          const [month, year] = cardExpiry.split('/');
+          const cardData = {
+            cardNumber: cardNumber.replace(/\s/g, ''),
+            cardholderName: cardName,
+            cardExpirationMonth: month,
+            cardExpirationYear: `20${year}`,
+            securityCode: cardCvv,
+            identificationType: 'CPF',
+            identificationNumber: cardCpf.replace(/\D/g, '')
           };
 
-          // For credit card, create token first
-          if (paymentMethod === "credit_card") {
-            if (!mercadoPago) {
-              throw new Error('Sistema de pagamento não carregado');
-            }
-
-            const [month, year] = cardExpiry.split('/');
-            const cardData = {
-              cardNumber: cardNumber.replace(/\s/g, ''),
-              cardholderName: cardName,
-              cardExpirationMonth: month,
-              cardExpirationYear: `20${year}`,
-              securityCode: cardCvv,
-              identificationType: 'CPF',
-              identificationNumber: cardCpf.replace(/\D/g, '')
-            };
-
-            console.log('Criando token do cartão...');
-            const cardToken = await mercadoPago.createCardToken(cardData);
-            
-            if (!cardToken || !cardToken.id) {
-              throw new Error('Erro ao processar dados do cartão');
-            }
-
-            const cardBrand = detectCardBrand(cardNumber);
-            paymentIntentData = {
-              ...paymentIntentData,
-              cardToken: cardToken.id,
-              installments: parseInt(installments),
-              paymentMethodId: cardBrand
-            };
+          console.log('Criando token do cartão...');
+          const cardToken = await createCardToken(cardData);
+          
+          if (!cardToken || !cardToken.id) {
+            throw new Error('Erro ao processar dados do cartão');
           }
 
-          // Call payment intent edge function
-          console.log('Criando intenção de pagamento...');
-          const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
+          const cardBrand = detectCardBrand(cardNumber);
+          
+          // Call edge function
+          const { data: paymentResult, error: paymentError } = await supabase.functions.invoke(
             'create-payment-intent',
-            { body: paymentIntentData }
+            {
+              body: {
+                reservationId: reservation.id,
+                paymentMethod: "credit_card",
+                amount: totalPrice,
+                payerName: guestName,
+                payerEmail: guestEmail,
+                payerCpf: cardCpf,
+                cardToken: cardToken.id,
+                installments: parseInt(installments),
+                paymentMethodId: cardBrand,
+                description: `Reserva ${lodgeName} - Pousada Arara Azul`
+              }
+            }
           );
 
-          if (paymentError) {
-            console.error("Erro ao criar pagamento:", paymentError);
-            throw new Error(paymentError.message || "Erro ao processar pagamento");
+          if (paymentError || !paymentResult?.success) {
+            throw new Error(paymentResult?.error_message || paymentError?.message || "Erro ao processar pagamento");
           }
 
-          if (!paymentData || !paymentData.success) {
-            throw new Error(paymentData?.error_message || "Falha ao processar pagamento");
-          }
-
-          // Update reservation with payment details
+          // Update reservation status
           await supabase
             .from("reservations")
             .update({
-              payment_intent_id: paymentData.payment_id,
-              payment_status: paymentData.status === 'approved' ? 'paid' : 'processing',
+              payment_intent_id: paymentResult.payment_id,
+              payment_status: paymentResult.status === 'approved' ? 'paid' : 'processing',
+              status: paymentResult.status === 'approved' ? 'confirmed' : 'pending',
               payer_name: guestName,
               payer_email: guestEmail,
               payer_cpf: cardCpf,
-              payment_qr_code: paymentData.pix?.qr_code,
-              payment_qr_code_base64: paymentData.pix?.qr_code_base64,
-              payment_ticket_url: paymentData.pix?.ticket_url,
             })
             .eq('id', reservation.id);
 
@@ -457,27 +584,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           await supabase
             .from("payments")
             .update({
-              mercado_pago_payment_id: paymentData.payment_id,
-              status: paymentData.status === 'approved' ? 'completed' : 'pending',
+              mercado_pago_payment_id: paymentResult.payment_id,
+              status: paymentResult.status === 'approved' ? 'completed' : 'pending',
               payer_name: guestName,
               payer_email: guestEmail,
               payer_cpf: cardCpf,
-              installments: paymentMethod === 'credit_card' ? parseInt(installments) : 1
+              installments: parseInt(installments)
             })
             .eq('reservation_id', reservation.id);
 
-          if (paymentMethod === "pix") {
-            setPixQrCode(paymentData.pix?.qr_code || '');
-            setPixQrCodeBase64(paymentData.pix?.qr_code_base64 || '');
-            setShowPixCode(true);
-            toast.success("QR Code PIX gerado com sucesso!", {
-              duration: 3000,
-              description: "Escaneie o código para efetuar o pagamento"
-            });
-          } else if (paymentData.status === 'approved') {
-            toast.success("🎉 Pagamento aprovado com sucesso!", {
-              duration: 3000,
-            });
+          if (paymentResult.status === 'approved') {
+            toast.success("🎉 Pagamento aprovado!", { duration: 3000 });
           } else {
             toast.info("Pagamento em processamento", {
               duration: 3000,
@@ -485,11 +602,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             });
           }
 
-        } catch (mpError: any) {
-          console.error("Erro ao processar Mercado Pago:", mpError);
-          toast.error(mpError.message || "Erro ao processar pagamento", {
+        } catch (cardError: any) {
+          console.error("Erro ao processar cartão:", cardError);
+          toast.error(cardError.message || "Erro ao processar pagamento", {
             duration: 5000,
-            description: "Por favor, tente novamente ou entre em contato via WhatsApp"
+            description: "Verifique os dados do cartão ou tente outro método"
           });
           setIsSubmitting(false);
           return;
@@ -560,18 +677,13 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       // - Verify transaction_id matches database records
       // ================================================================
 
-      console.log("✅ Reserva criada com sucesso:", {
-        reservationId: reservation.id,
+      // Success - redirect to confirmation
+      const currentResId = reservationId || 'new';
+      console.log("✅ Reserva confirmada:", {
+        reservationId: currentResId,
         guestName,
-        guestEmail,
         lodgeName,
-        roomId,
-        checkIn: checkIn?.toISOString().split('T')[0],
-        checkOut: checkOut?.toISOString().split('T')[0],
-        totalPrice,
         paymentMethod,
-        paymentStatus: "pending",
-        nights
       });
 
       toast.success("🎉 Reserva confirmada com sucesso!", {
@@ -579,23 +691,30 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         description: "Você receberá um email de confirmação em breve."
       });
       
-      // Small delay to show success message before redirect
+      // Redirect to success page
       setTimeout(() => {
         const selectedPkg = packages.find(p => p.id === selectedPackage);
-        const successUrl = `/reserva-concluida?name=${encodeURIComponent(guestName)}&lodge=${encodeURIComponent(lodgeName)}&checkIn=${checkIn?.toISOString().split('T')[0]}&checkOut=${checkOut?.toISOString().split('T')[0]}&guests=${guests}&total=${totalPrice}&email=${encodeURIComponent(guestEmail)}${selectedPkg ? `&package=${encodeURIComponent(selectedPkg.name)}` : ''}`;
-        window.location.href = successUrl;
+        const params = new URLSearchParams({
+          name: guestName,
+          lodge: lodgeName,
+          checkIn: checkIn?.toISOString().split('T')[0] || '',
+          checkOut: checkOut?.toISOString().split('T')[0] || '',
+          guests,
+          total: totalPrice.toString(),
+          email: guestEmail,
+        });
+        if (selectedPkg) params.append('package', selectedPkg.name);
+        
+        window.location.href = `/reserva-concluida?${params.toString()}`;
       }, 1500);
       
     } catch (error: any) {
-      console.error("❌ Erro ao criar reserva:", error);
+      console.error("❌ Erro na reserva:", error);
       
-      // Only show additional toast if error wasn't already handled above
-      if (!error?.message?.includes("Não foi possível registrar a reserva")) {
-        const errorMessage = error?.message || "Não foi possível completar a reserva. Verifique sua conexão e tente novamente.";
-        
-        toast.error(errorMessage, {
+      if (!error?.message?.includes("Não foi possível")) {
+        toast.error(error?.message || "Erro ao completar reserva", {
           duration: 5000,
-          description: "Por favor, tente novamente ou entre em contato conosco via WhatsApp."
+          description: "Tente novamente ou entre em contato via WhatsApp."
         });
       }
       
@@ -1300,35 +1419,65 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                       onChange={(e) => setCardCpf(maskCPF(e.target.value))}
                       placeholder="000.000.000-00"
                       maxLength={14}
+                      disabled={showPixCode}
                     />
                     <p className="text-xs text-muted-foreground mt-1">
                       O CPF será utilizado para identificar o pagamento
                     </p>
                   </div>
+
                   {!showPixCode && (
-                    <div className="bg-muted p-6 rounded-lg text-center">
-                      <div className="w-48 h-48 bg-white mx-auto mb-4 flex items-center justify-center border-2 border-dashed">
-                        <p className="text-sm text-muted-foreground px-4">
-                          QR Code PIX será gerado após confirmar
-                        </p>
+                    <div className="bg-muted p-6 rounded-lg text-center space-y-4">
+                      <div className="w-48 h-48 bg-white mx-auto flex items-center justify-center border-2 border-dashed rounded-lg">
+                        <div className="text-center">
+                          <QrCode className="h-12 w-12 mx-auto text-muted-foreground/50 mb-2" />
+                          <p className="text-sm text-muted-foreground px-4">
+                            QR Code PIX
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        Após confirmar, você receberá o código PIX para pagamento
+                      
+                      <Button
+                        onClick={handleGeneratePixQrCode}
+                        disabled={isGeneratingPix || !cardCpf}
+                        className="w-full bg-gradient-forest"
+                        size="lg"
+                      >
+                        {isGeneratingPix ? (
+                          <span className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Gerando QR Code...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <QrCode className="h-4 w-4" />
+                            Gerar QR Code PIX
+                          </span>
+                        )}
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Clique acima para gerar o QR Code e realizar o pagamento
                       </p>
                     </div>
                   )}
+
                   {showPixCode && pixQrCodeBase64 && (
-                    <div className="bg-white p-6 rounded-lg text-center border-2">
+                    <div className="bg-white p-6 rounded-lg text-center border-2 border-green-200">
+                      <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm mb-4">
+                        <Check className="h-4 w-4" />
+                        QR Code gerado com sucesso!
+                      </div>
                       <h3 className="font-semibold mb-4">Escaneie o QR Code para pagar</h3>
                       <img 
                         src={`data:image/png;base64,${pixQrCodeBase64}`} 
                         alt="QR Code PIX" 
-                        className="w-64 h-64 mx-auto mb-4"
+                        className="w-64 h-64 mx-auto mb-4 border rounded-lg"
                       />
                       {pixQrCode && (
                         <div className="mt-4">
                           <p className="text-xs text-muted-foreground mb-2">Ou copie o código PIX:</p>
-                          <div className="bg-muted p-2 rounded font-mono text-xs break-all">
+                          <div className="bg-muted p-2 rounded font-mono text-xs break-all max-h-20 overflow-y-auto">
                             {pixQrCode}
                           </div>
                           <Button
@@ -1340,10 +1489,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
                               toast.success('Código PIX copiado!');
                             }}
                           >
+                            <Copy className="h-4 w-4 mr-2" />
                             Copiar código PIX
                           </Button>
                         </div>
                       )}
+                      <p className="text-sm text-green-700 mt-4 bg-green-50 p-3 rounded">
+                        ✓ Após efetuar o pagamento, clique em "Próximo" para finalizar sua reserva
+                      </p>
                     </div>
                   )}
                 </div>
