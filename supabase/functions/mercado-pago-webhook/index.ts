@@ -1,4 +1,3 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
 
@@ -7,72 +6,57 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Helper to send emails
-async function sendEmail(supabaseUrl: string, supabaseKey: string, emailData: any) {
-  try {
-    const response = await fetch(`${supabaseUrl}/functions/v1/send-reservation-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${supabaseKey}`,
-      },
-      body: JSON.stringify(emailData),
-    });
-    
-    if (!response.ok) {
-      console.error('Error sending email:', await response.text());
-    } else {
-      console.log('Email sent successfully');
-    }
-  } catch (error) {
-    console.error('Error calling email function:', error);
-  }
-}
-
-// Map Mercado Pago status to valid payment_status values
+// Map MP status to payments table status
 function mapMpStatusToPaymentStatus(mpStatus: string): string {
   switch (mpStatus) {
     case 'approved':
-      return 'paid';
+      return 'approved';
     case 'pending':
     case 'in_process':
     case 'authorized':
-      return 'pending';
+      return 'pendente';
     case 'rejected':
     case 'cancelled':
-      return 'failed';
+      return 'rejeitado';
     case 'refunded':
       return 'refunded';
     default:
-      return 'pending';
+      return 'pendente';
   }
 }
 
-// Map payment status to reservation status
-function mapToReservationStatus(paymentStatus: string): string {
-  switch (paymentStatus) {
-    case 'paid':
-      return 'confirmed';
-    case 'failed':
-      return 'cancelled';
+// Map MP status to reservations payment_status
+function mapToReservationPaymentStatus(mpStatus: string): string {
+  switch (mpStatus) {
+    case 'approved':
+      return 'pago';
+    case 'pending':
+    case 'in_process':
+    case 'authorized':
+      return 'pendente';
+    case 'rejected':
+    case 'cancelled':
+      return 'pagamento_rejeitado';
+    case 'refunded':
+      return 'refunded';
     default:
-      return 'pending';
+      return 'pendente';
   }
 }
 
 serve(async (req) => {
+  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const mercadoPagoToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   try {
-    const mercadoPagoToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
     // Handle GET requests (user redirect after payment)
     if (req.method === 'GET') {
       const url = new URL(req.url);
@@ -82,7 +66,9 @@ serve(async (req) => {
 
       console.log('Mercado Pago redirect:', { paymentId, status, externalReference });
 
-      const redirectUrl = new URL(`${url.origin}/reserva-confirmada`);
+      // Redirect to confirmation page
+      const baseUrl = Deno.env.get('SITE_URL') || 'https://pousada-arara-azul.lovable.app';
+      const redirectUrl = new URL(`${baseUrl}/reserva-confirmada`);
       if (externalReference) {
         redirectUrl.searchParams.set('reservationId', externalReference);
       }
@@ -91,30 +77,52 @@ serve(async (req) => {
       return Response.redirect(redirectUrl.toString(), 302);
     }
 
-    // Handle POST requests (webhook notifications)
+    // Handle POST requests (webhook notifications from Mercado Pago)
     const body = await req.json();
-    console.log('Mercado Pago webhook received:', JSON.stringify(body, null, 2));
+    console.log('=== WEBHOOK MERCADO PAGO RECEBIDO ===');
+    console.log('Body completo:', JSON.stringify(body, null, 2));
 
     // Only process payment notifications
     if (body.type !== 'payment') {
-      console.log(`Notification type ${body.type} not handled, ignoring`);
-      return new Response(JSON.stringify({ success: true }), {
+      console.log(`Tipo de notificação ${body.type} não processado, ignorando`);
+      return new Response(JSON.stringify({ success: true, message: 'Notificação ignorada' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
+    // Extract payment_id from body.data.id
     const paymentId = body.data?.id;
 
     if (!paymentId) {
-      console.log('No payment ID in webhook, ignoring');
-      return new Response(JSON.stringify({ success: true }), {
+      console.log('ID de pagamento ausente no webhook');
+      return new Response(JSON.stringify({ success: true, message: 'ID ausente' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
-    // Fetch payment details from Mercado Pago
+    console.log(`Processando pagamento ID: ${paymentId}`);
+
+    // Idempotency check - verify if we already processed this notification
+    const { data: existingLog } = await supabase
+      .from('payment_logs')
+      .select('id')
+      .eq('action', 'webhook_notification')
+      .eq('status', body.action)
+      .contains('response_payload', { data: { id: paymentId } })
+      .single();
+
+    if (existingLog) {
+      console.log(`Notificação duplicada para pagamento ${paymentId}, ignorando`);
+      return new Response(JSON.stringify({ success: true, message: 'Notificação já processada' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // Fetch payment details from Mercado Pago API
+    console.log(`Buscando detalhes do pagamento ${paymentId} na API do MP`);
     const mpResponse = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
@@ -125,132 +133,145 @@ serve(async (req) => {
     );
 
     if (!mpResponse.ok) {
-      console.error(`Failed to fetch payment details: ${mpResponse.status}`);
-      throw new Error(`Failed to fetch payment details: ${mpResponse.status}`);
-    }
-
-    const payment = await mpResponse.json();
-    console.log('Payment details:', {
-      id: payment.id,
-      status: payment.status,
-      status_detail: payment.status_detail,
-      external_reference: payment.external_reference,
-    });
-
-    const reservationId = payment.external_reference;
-
-    if (!reservationId) {
-      console.log('No external reference found, ignoring');
-      return new Response(JSON.stringify({ success: true }), {
+      console.error(`Erro ao buscar pagamento: ${mpResponse.status} ${mpResponse.statusText}`);
+      // Log the error but still return 200 to avoid MP retry
+      await supabase.from('payment_logs').insert({
+        action: 'webhook_error',
+        status: 'error',
+        error_code: mpResponse.status.toString(),
+        error_message: `Failed to fetch payment details: ${mpResponse.statusText}`,
+        response_payload: body
+      });
+      return new Response(JSON.stringify({ success: true, message: 'Erro ao buscar pagamento' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
+    const payment = await mpResponse.json();
+    console.log('=== DETALHES DO PAGAMENTO MP ===');
+    console.log('ID:', payment.id);
+    console.log('Status:', payment.status);
+    console.log('Status Detail:', payment.status_detail);
+    console.log('External Reference (reservation_id):', payment.external_reference);
+    console.log('Transaction Amount:', payment.transaction_amount);
+    console.log('Payer Email:', payment.payer?.email);
+    console.log('Payment Method:', payment.payment_method_id);
+
+    const reservationId = payment.external_reference;
+
+    if (!reservationId) {
+      console.log('External reference (reservation_id) não encontrado no pagamento');
+      await supabase.from('payment_logs').insert({
+        action: 'webhook_notification',
+        status: payment.status,
+        error_message: 'No external_reference found',
+        response_payload: body
+      });
+      return new Response(JSON.stringify({ success: true, message: 'Sem referência de reserva' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      });
+    }
+
+    // Map statuses
     const paymentStatus = mapMpStatusToPaymentStatus(payment.status);
-    const reservationStatus = mapToReservationStatus(paymentStatus);
+    const reservationPaymentStatus = mapToReservationPaymentStatus(payment.status);
 
-    // Get reservation details for email
-    const { data: reservation } = await supabase
-      .from('reservations')
-      .select('*')
-      .eq('id', reservationId)
-      .single();
+    console.log('=== MAPEAMENTO DE STATUS ===');
+    console.log(`MP Status: ${payment.status} -> Payment Status: ${paymentStatus}`);
+    console.log(`MP Status: ${payment.status} -> Reservation Payment Status: ${reservationPaymentStatus}`);
 
-    // Update payment record with new fields
+    // Update payments table
     const { error: paymentUpdateError } = await supabase
       .from('payments')
       .update({
-        status: payment.status,
-        mp_payment_id: payment.id.toString(),
+        status: paymentStatus,
+        mercado_pago_payment_id: payment.id.toString(),
         payment_date: payment.date_approved || null,
+        amount: payment.transaction_amount,
+        payer_email: payment.payer?.email || null,
+        payment_method: payment.payment_method_id || payment.payment_type_id,
         updated_at: new Date().toISOString(),
       })
       .eq('reservation_id', reservationId);
 
     if (paymentUpdateError) {
-      console.error('Error updating payment:', paymentUpdateError);
+      console.error('Erro ao atualizar payments:', paymentUpdateError);
+    } else {
+      console.log(`Payments atualizado com sucesso para reservation_id: ${reservationId}`);
     }
 
-    // Update reservation status
+    // Update reservations table
+    const reservationUpdateStatus = payment.status === 'approved' ? 'confirmed' : 
+                                   payment.status === 'rejected' ? 'cancelled' : 'pending';
+
     const { error: reservationUpdateError } = await supabase
       .from('reservations')
       .update({
-        status: reservationStatus,
-        payment_status: paymentStatus,
+        status: reservationUpdateStatus,
+        payment_status: reservationPaymentStatus,
         payment_reference: payment.id.toString(),
+        payment_method: payment.payment_method_id || payment.payment_type_id,
         updated_at: new Date().toISOString(),
       })
       .eq('id', reservationId);
 
     if (reservationUpdateError) {
-      console.error('Error updating reservation:', reservationUpdateError);
+      console.error('Erro ao atualizar reservations:', reservationUpdateError);
+    } else {
+      console.log(`Reservations atualizado com sucesso para id: ${reservationId}`);
     }
 
-    console.log('Payment and reservation updated:', {
-      reservation_id: reservationId,
-      payment_status: paymentStatus,
-      reservation_status: reservationStatus,
-    });
-
-    // Log to audit
+    // Log the webhook processing
     await supabase.from('payment_logs').insert({
       reservation_id: reservationId,
       action: 'webhook_notification',
       status: payment.status,
-      response_payload: body
+      response_payload: {
+        ...body,
+        processed_payment: {
+          id: payment.id,
+          status: payment.status,
+          status_detail: payment.status_detail,
+          transaction_amount: payment.transaction_amount,
+          payer_email: payment.payer?.email,
+          mapped_payment_status: paymentStatus,
+          mapped_reservation_status: reservationPaymentStatus
+        }
+      }
     });
 
-    // Send appropriate email based on payment status
-    if (reservation) {
-      if (paymentStatus === 'paid') {
-        await sendEmail(supabaseUrl, supabaseAnonKey, {
-          type: 'payment_success',
-          reservationId,
-          email: reservation.guest_email,
-          name: reservation.guest_name,
-          paymentDetails: {
-            method: reservation.payment_method,
-            amount: payment.transaction_amount,
-            paymentId: payment.id.toString(),
-          },
-        });
-
-        await sendEmail(supabaseUrl, supabaseAnonKey, {
-          type: 'reservation_confirmed',
-          reservationId,
-          email: reservation.guest_email,
-          name: reservation.guest_name,
-        });
-      } else if (paymentStatus === 'failed') {
-        await sendEmail(supabaseUrl, supabaseAnonKey, {
-          type: 'payment_error',
-          reservationId,
-          email: reservation.guest_email,
-          name: reservation.guest_name,
-          errorMessage: payment.status_detail || 'Pagamento recusado',
-        });
-      }
-    }
+    console.log('=== WEBHOOK PROCESSADO COM SUCESSO ===');
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true,
+        message: 'Webhook processado',
+        payment_id: paymentId,
+        reservation_id: reservationId,
+        status: payment.status
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
     );
   } catch (error) {
-    console.error('Error processing Mercado Pago webhook:', error);
+    console.error('=== ERRO NO WEBHOOK ===');
+    console.error('Erro:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Always return 200 to avoid MP retry storms
     return new Response(
       JSON.stringify({
-        success: false,
+        success: true,
+        message: 'Erro interno processado',
         error: errorMessage,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500,
+        status: 200,
       }
     );
   }
