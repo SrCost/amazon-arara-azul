@@ -41,9 +41,6 @@ serve(async (req) => {
     if (!reservation_id) {
       throw new Error('reservation_id é obrigatório');
     }
-    if (!amount || amount <= 0) {
-      throw new Error('amount deve ser maior que zero');
-    }
     if (!payer_email) {
       throw new Error('payer_email é obrigatório');
     }
@@ -54,6 +51,12 @@ serve(async (req) => {
       throw new Error('payment_method deve ser "credit_card" ou "pix"');
     }
 
+    // Validate and parse amount as number
+    const transactionAmount = parseFloat(amount);
+    if (isNaN(transactionAmount) || transactionAmount <= 0) {
+      throw new Error('amount deve ser um número válido maior que zero');
+    }
+
     // CPF validation (basic)
     const cleanCpf = payer_cpf.replace(/\D/g, '');
     if (cleanCpf.length !== 11) {
@@ -62,65 +65,78 @@ serve(async (req) => {
 
     // Idempotency key
     const idempotencyKey = crypto.randomUUID();
-    const transactionAmount = parseFloat(amount);
 
     console.log('=== DADOS DO PAGAMENTO ===');
     console.log('Reservation ID:', reservation_id);
-    console.log('Amount:', transactionAmount);
+    console.log('Amount (validated number):', transactionAmount);
     console.log('Payment Method:', payment_method);
     console.log('Payer Email:', payer_email);
     console.log('Payer CPF:', cleanCpf);
 
     let mpResponse;
     let mpData;
+    let mpPaymentId: string | undefined;
+    let mpStatus: string = 'pending';
+    let mpStatusDetail: string | undefined;
 
-    // ========== CREDIT CARD - Use Payments API (v1/payments) ==========
+    // ========== CREDIT CARD - Use Orders API (POST /v1/orders) ==========
     if (payment_method === 'credit_card') {
-      console.log('Processando pagamento via CARTÃO DE CRÉDITO...');
+      console.log('Processando pagamento via CARTÃO DE CRÉDITO (Orders API)...');
 
       if (!card_token) {
         throw new Error('card_token é obrigatório para pagamento com cartão');
       }
 
-      // Build Payments API payload for credit card
-      const cardPayload = {
-        transaction_amount: transactionAmount,
-        token: card_token,
-        description,
-        installments: parseInt(installments),
-        payment_method_id: payment_method_id || 'master',
+      // Build Orders API payload
+      const orderPayload = {
+        type: "online",
+        processing_mode: "automatic",
+        total_amount: transactionAmount.toFixed(2),
+        external_reference: reservation_id,
         payer: {
-          email: payer_email,
-          first_name: payer_name?.split(' ')[0] || 'Cliente',
-          last_name: payer_name?.split(' ').slice(1).join(' ') || '',
-          identification: {
-            type: 'CPF',
-            number: cleanCpf
-          }
+          email: payer_email
         },
-        external_reference: reservation_id
+        transactions: {
+          payments: [
+            {
+              amount: transactionAmount.toFixed(2),
+              payment_method: {
+                id: payment_method_id || "master",
+                type: "credit_card",
+                token: card_token,
+                installments: parseInt(String(installments))
+              }
+            }
+          ]
+        }
       };
 
-      console.log('Payments API (Credit Card) payload:', JSON.stringify(cardPayload, null, 2));
+      console.log('Orders API payload:', JSON.stringify(orderPayload, null, 2));
 
-      mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+      mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mercadoPagoToken}`,
           'Content-Type': 'application/json',
           'X-Idempotency-Key': idempotencyKey
         },
-        body: JSON.stringify(cardPayload)
+        body: JSON.stringify(orderPayload)
       });
 
       mpData = await mpResponse.json();
-      console.log('Payments API (Credit Card) response:', JSON.stringify(mpData, null, 2));
+      console.log('Orders API response:', JSON.stringify(mpData, null, 2));
+
+      // Extract payment info from Orders API response
+      mpPaymentId = mpData?.id?.toString() || mpData?.transactions?.payments?.[0]?.id?.toString();
+      mpStatus = mpData?.status || mpData?.transactions?.payments?.[0]?.status || 'pending';
+      mpStatusDetail = mpData?.status_detail || mpData?.transactions?.payments?.[0]?.status_detail;
 
     } 
-    // ========== PIX - Use Payments API ==========
+    // ========== PIX - Use Payments API (POST /v1/payments) ==========
     else if (payment_method === 'pix') {
-      console.log('Processando pagamento via PIX...');
+      console.log('Processando pagamento via PIX (Payments API)...');
 
+      // PIX payload with validated number amount
       const pixPayload = {
         transaction_amount: transactionAmount,
         payment_method_id: "pix",
@@ -151,6 +167,11 @@ serve(async (req) => {
 
       mpData = await mpResponse.json();
       console.log('Payments API (PIX) response:', JSON.stringify(mpData, null, 2));
+
+      // Extract payment info from Payments API response
+      mpPaymentId = mpData?.id?.toString();
+      mpStatus = mpData?.status || 'pending';
+      mpStatusDetail = mpData?.status_detail;
     }
 
     // Check for API errors
@@ -171,11 +192,6 @@ serve(async (req) => {
       throw new Error(mpData?.message || mpData?.cause?.[0]?.description || 'Erro na API do Mercado Pago');
     }
 
-    // Extract payment info - payment.id is the transaction_id
-    const mpPaymentId = mpData?.id?.toString();
-    const mpStatus = mpData?.status || 'pending';
-    const mpStatusDetail = mpData?.status_detail;
-
     console.log('=== PAGAMENTO PROCESSADO ===');
     console.log('MP Payment ID (transaction_id):', mpPaymentId);
     console.log('Status:', mpStatus);
@@ -183,13 +199,13 @@ serve(async (req) => {
 
     // Map MP status to English database statuses
     // payments.status: pending, paid, failed, refunded
-    const mappedPaymentStatus = mpStatus === 'approved' ? 'paid' 
+    const mappedPaymentStatus = mpStatus === 'approved' || mpStatus === 'processed' ? 'paid' 
       : ['rejected', 'cancelled'].includes(mpStatus) ? 'failed'
       : mpStatus === 'refunded' ? 'refunded'
       : 'pending';
 
     // reservations.payment_status: pending, paid, refunded (DB constraint - no 'failed')
-    const mappedReservationStatus = mpStatus === 'approved' ? 'paid' 
+    const mappedReservationStatus = mpStatus === 'approved' || mpStatus === 'processed' ? 'paid' 
       : mpStatus === 'refunded' ? 'refunded'
       : 'pending';
 
@@ -205,14 +221,14 @@ serve(async (req) => {
       status_detail: mpStatusDetail || null,
       payment_method: payment_method, // Always "credit_card" or "pix"
       method: payment_method,
-      transaction_id: mpPaymentId, // This is the key field!
-      mercado_pago_payment_id: mpPaymentId,
+      transaction_id: mpPaymentId || null, // This is the key field!
+      mercado_pago_payment_id: mpPaymentId || null,
       payer_name: payer_name || null,
       payer_email: payer_email,
       payer_cpf: cleanCpf,
       total_amount: transactionAmount,
-      paid_amount: mpStatus === 'approved' ? transactionAmount : null,
-      installments: parseInt(installments),
+      paid_amount: ['approved', 'processed'].includes(mpStatus) ? transactionAmount : null,
+      installments: parseInt(String(installments)),
       payment_date: mpData?.date_approved || mpData?.date_created || new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -237,8 +253,8 @@ serve(async (req) => {
       .update({
         payment_status: mappedReservationStatus,
         payment_method: payment_method, // Always "credit_card" or "pix"
-        payment_reference: mpPaymentId,
-        status: mpStatus === 'approved' ? 'confirmed' : 'pending',
+        payment_reference: mpPaymentId || null,
+        status: ['approved', 'processed'].includes(mpStatus) ? 'confirmed' : 'pending',
         updated_at: new Date().toISOString()
       })
       .eq('id', reservation_id);
@@ -269,14 +285,15 @@ serve(async (req) => {
       payment_method: payment_method // Return the correct payment method
     };
 
-    // Add PIX-specific data
+    // Add PIX-specific data (qr_code, qr_code_base64, ticket_url)
     if (payment_method === 'pix' && mpData?.point_of_interaction?.transaction_data) {
       response.pix = {
-        qr_code: mpData.point_of_interaction.transaction_data.qr_code,
-        qr_code_base64: mpData.point_of_interaction.transaction_data.qr_code_base64,
-        ticket_url: mpData.point_of_interaction.transaction_data.ticket_url
+        qr_code: mpData.point_of_interaction.transaction_data.qr_code || null,
+        qr_code_base64: mpData.point_of_interaction.transaction_data.qr_code_base64 || null,
+        ticket_url: mpData.point_of_interaction.transaction_data.ticket_url || null
       };
       console.log('PIX QR Code gerado com sucesso');
+      console.log('ticket_url:', response.pix.ticket_url);
     }
 
     // Add credit card specific data
@@ -284,7 +301,8 @@ serve(async (req) => {
       response.card = {
         status: mpStatus,
         status_detail: mpStatusDetail,
-        installments: mpData?.installments || installments
+        installments: mpData?.installments || installments,
+        order_id: mpData?.id
       };
     }
 
