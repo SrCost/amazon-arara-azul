@@ -53,7 +53,7 @@ function mapMpStatusToPaymentStatus(mpStatus: string): string {
   }
 }
 
-// Map MP status to reservations payment_status (must match DB constraint)
+// Map MP status to reservations payment_status (must match DB constraint: pending, paid, refunded ONLY)
 function mapToReservationPaymentStatus(mpStatus: string): string {
   switch (mpStatus) {
     case 'approved':
@@ -61,10 +61,10 @@ function mapToReservationPaymentStatus(mpStatus: string): string {
     case 'pending':
     case 'in_process':
     case 'authorized':
-      return 'pending';
     case 'rejected':
     case 'cancelled':
-      return 'failed';
+      // DB constraint only allows: pending, paid, refunded - no 'failed' value
+      return 'pending';
     case 'refunded':
     case 'charged_back':
       return 'refunded';
@@ -243,16 +243,16 @@ serve(async (req) => {
     const dateCreated = payment.date_created;
 
     console.log('=== DADOS EXTRAÍDOS DO PAGAMENTO MP ===');
-    console.log('Payment ID:', payment.id);
-    console.log('Status:', mpStatus);
-    console.log('Status Detail:', mpStatusDetail);
-    console.log('Transaction Amount:', transactionAmount);
-    console.log('Payment Method ID:', paymentMethodId);
-    console.log('Payment Method Type:', paymentMethodType);
-    console.log('Payer Email:', payerEmail);
-    console.log('Payer Name:', payerFullName);
-    console.log('External Reference (Reservation ID):', reservationId);
-    console.log('Date Approved:', dateApproved);
+    console.log('🔑 TRANSACTION_ID (payment.id):', payment.id);
+    console.log('📊 Status:', mpStatus);
+    console.log('📝 Status Detail:', mpStatusDetail);
+    console.log('💰 Transaction Amount:', transactionAmount);
+    console.log('💳 Payment Method ID:', paymentMethodId);
+    console.log('💳 Payment Method Type:', paymentMethodType);
+    console.log('📧 Payer Email:', payerEmail || '(não informado)');
+    console.log('👤 Payer Name:', payerFullName || '(não informado)');
+    console.log('🔗 External Reference (Reservation ID):', reservationId);
+    console.log('📅 Date Approved:', dateApproved || '(pendente)');
 
     if (!reservationId) {
       console.log('ATENÇÃO: external_reference (reservation_id) não encontrado');
@@ -295,19 +295,21 @@ serve(async (req) => {
     
     const paymentUpdateData = {
       status: mappedPaymentStatus,
-      status_detail: mpStatusDetail,
+      status_detail: mpStatusDetail || null,
       paid_amount: mpStatus === 'approved' ? transactionAmount : null,
-      transaction_id: payment.id.toString(),
-      payment_method: paymentMethodId || paymentMethodType,
-      payer_email: payerEmail,
+      transaction_id: payment.id?.toString() || null,
+      payment_method: paymentMethodId || paymentMethodType || null,
+      payer_email: payerEmail || null,
       payer_name: payerFullName || null,
-      mercado_pago_payment_id: payment.id.toString(),
-      total_amount: transactionAmount,
-      payment_date: dateApproved || dateCreated,
+      mercado_pago_payment_id: payment.id?.toString() || null,
+      total_amount: transactionAmount || null,
+      payment_date: dateApproved || dateCreated || null,
       updated_at: new Date().toISOString(),
     };
 
-    console.log('Dados para atualização payments:', JSON.stringify(paymentUpdateData, null, 2));
+    console.log('=== ATUALIZANDO TABELA PAYMENTS ===');
+    console.log('🔑 transaction_id a salvar:', payment.id?.toString());
+    console.log('Dados completos:', JSON.stringify(paymentUpdateData, null, 2));
 
     const { data: paymentData, error: paymentUpdateError } = await supabase
       .from('payments')
@@ -434,11 +436,11 @@ serve(async (req) => {
     // Mark as processed for idempotency
     markAsProcessed(paymentId, webhookAction);
 
-    console.log('=== WEBHOOK PROCESSADO COM SUCESSO ===');
-    console.log(`Evento: ${webhookAction}`);
-    console.log(`Payment ID: ${paymentId}`);
-    console.log(`Reservation ID: ${reservationId}`);
-    console.log(`Status Final: ${mpStatus} -> ${mappedPaymentStatus}`);
+    console.log('=== ✅ WEBHOOK PROCESSADO COM SUCESSO ===');
+    console.log(`📌 Evento: ${webhookAction}`);
+    console.log(`🔑 TRANSACTION_ID SALVO: ${payment.id}`);
+    console.log(`📦 Reservation ID: ${reservationId}`);
+    console.log(`📊 Status MP: ${mpStatus} -> Payment: ${mappedPaymentStatus} | Reservation: ${mappedReservationStatus}`);
 
     return new Response(
       JSON.stringify({ 
