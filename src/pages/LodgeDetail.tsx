@@ -8,7 +8,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import ReservationFlow from "@/components/ReservationFlow";
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
@@ -361,13 +361,21 @@ const LodgeDetail = () => {
 
       {/* Reservation Dialog */}
       <Dialog open={showReservation} onOpenChange={setShowReservation}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <ReservationFlow
-            lodgeName={lodge.name}
-            pricePerNight={lodge.pricePerNight || parseInt(lodge.price.replace(/[^\d]/g, ""))}
-            roomId={lodge.id || id || ""}
-            onClose={() => setShowReservation(false)}
-          />
+        <DialogContent 
+          className="max-w-4xl h-[85vh] flex flex-col overflow-hidden p-0"
+          aria-describedby={undefined}
+        >
+          <DialogTitle className="sr-only">
+            Reservar {lodge.name}
+          </DialogTitle>
+          <div className="flex-1 overflow-y-auto p-6">
+            <ReservationFlow
+              lodgeName={lodge.name}
+              pricePerNight={lodge.pricePerNight || parseInt(lodge.price.replace(/[^\d]/g, ""))}
+              roomId={lodge.id || id || ""}
+              onClose={() => setShowReservation(false)}
+            />
+          </div>
         </DialogContent>
       </Dialog>
 

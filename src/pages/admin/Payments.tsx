@@ -372,7 +372,7 @@ const Payments = () => {
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Detalhes do Pagamento</DialogTitle>
           </DialogHeader>
