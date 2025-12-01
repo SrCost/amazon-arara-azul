@@ -209,7 +209,51 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }, 600000);
   }, [checkPaymentStatus]);
 
-  // Generate PIX QR Code
+  // Create reservation first, then process payment
+  const createReservation = async (): Promise<string> => {
+    if (reservationId) return reservationId;
+
+    const totalPrice = calculateTotal();
+    const reservationData = {
+      room_id: roomId,
+      room_name: lodgeName,
+      package_id: selectedPackage || null,
+      user_id: user?.id || null,
+      guest_name: guestName,
+      guest_email: guestEmail,
+      guest_phone: guestPhone || null,
+      check_in: checkIn!.toISOString().split('T')[0],
+      check_out: checkOut!.toISOString().split('T')[0],
+      guests: parseInt(guests),
+      total_price: totalPrice,
+      special_requests: specialRequests || null,
+      is_foreign: isForeign,
+      cpf: !isForeign ? cpf : null,
+      birth_date: birthDate || null,
+      country: isForeign ? country : null,
+      nationality: isForeign ? nationality : null,
+      passport: isForeign ? passport : null,
+      address: address || null,
+      next_destination: nextDestination || null,
+      dietary_restrictions: dietaryRestrictions || null,
+      emergency_contact: emergencyContact || null,
+      status: 'pending',
+      payment_status: 'pending',
+    };
+
+    const { data, error } = await supabase
+      .from('reservations')
+      .insert(reservationData)
+      .select('id')
+      .single();
+
+    if (error) throw new Error('Erro ao criar reserva: ' + error.message);
+    
+    setReservationId(data.id);
+    return data.id;
+  };
+
+  // Generate PIX QR Code - using mercadopago-checkout
   const handleGeneratePixQrCode = async () => {
     if (!cardCpf || !validateCPF(cardCpf)) {
       toast.error("Informe um CPF válido para gerar o PIX");
@@ -224,43 +268,21 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     setIsGeneratingPix(true);
 
     try {
+      // Create reservation first
+      const resId = await createReservation();
       const totalPrice = calculateTotal();
-      const reservationData = {
-        room_id: roomId,
-        room_name: lodgeName,
-        package_id: selectedPackage || null,
-        user_id: user?.id || null,
-        guest_name: guestName,
-        guest_email: guestEmail,
-        guest_phone: guestPhone || null,
-        check_in: checkIn.toISOString().split('T')[0],
-        check_out: checkOut.toISOString().split('T')[0],
-        guests: parseInt(guests),
-        total_price: totalPrice,
-        special_requests: specialRequests || null,
-        is_foreign: isForeign,
-        cpf: !isForeign ? cpf : null,
-        birth_date: birthDate || null,
-        country: isForeign ? country : null,
-        nationality: isForeign ? nationality : null,
-        passport: isForeign ? passport : null,
-        address: address || null,
-        next_destination: nextDestination || null,
-        dietary_restrictions: dietaryRestrictions || null,
-        emergency_contact: emergencyContact || null,
-      };
-      
+
+      // Call mercadopago-checkout with payment_method: "pix"
       const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
-        'create-payment-intent',
+        'mercadopago-checkout',
         {
           body: {
-            reservationData: reservationId ? undefined : reservationData,
-            reservationId: reservationId || undefined,
-            paymentMethod: "pix",
+            reservation_id: resId,
             amount: totalPrice,
-            payerName: guestName,
-            payerEmail: guestEmail,
-            payerCpf: cardCpf,
+            payer_name: guestName,
+            payer_email: guestEmail,
+            payer_cpf: cardCpf.replace(/\D/g, ''),
+            payment_method: "pix", // Explicitly PIX
             description: `Reserva ${lodgeName} - Pousada Arara Azul`
           }
         }
@@ -270,7 +292,6 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         throw new Error(paymentData?.error_message || "Falha ao gerar QR Code PIX");
       }
 
-      if (paymentData.reservation_id) setReservationId(paymentData.reservation_id);
       if (paymentData.payment_id) setPaymentId(paymentData.payment_id);
 
       if (paymentData.pix) {
@@ -280,8 +301,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         setPaymentCreated(true);
         toast.success("QR Code PIX gerado com sucesso!");
         
-        if (paymentData.payment_id && paymentData.reservation_id) {
-          startPaymentPolling(paymentData.payment_id, paymentData.reservation_id);
+        if (paymentData.payment_id && resId) {
+          startPaymentPolling(paymentData.payment_id, resId);
         }
       } else {
         throw new Error("QR Code não retornado pela API");
@@ -293,7 +314,6 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
   };
 
-  // Step validation and navigation
   // Email validation helper
   const isValidEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -415,18 +435,21 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
         toast.success("🎉 Reserva confirmada com sucesso!");
         
+        const selectedPkg = packages.find(p => p.id === selectedPackage);
         const params = new URLSearchParams({
-          guestName, lodgeName,
+          name: guestName, lodge: lodgeName,
           checkIn: checkIn.toISOString().split('T')[0],
           checkOut: checkOut.toISOString().split('T')[0],
-          guests, total: totalPrice.toString()
+          guests, total: totalPrice.toString(), email: guestEmail,
+          paymentMethod: "pix"
         });
+        if (selectedPkg) params.append('package', selectedPkg.name);
         
-        window.location.href = `/reserva-sucesso?${params.toString()}`;
+        window.location.href = `/reserva-concluida?${params.toString()}`;
         return;
       }
 
-      // Credit card payment
+      // Credit card payment - create reservation first, then process payment
       if (paymentMethod === "credit_card") {
         if (!checkAvailability(checkIn, checkOut)) {
           toast.error("Desculpe, as datas já foram reservadas");
@@ -435,35 +458,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           return;
         }
 
-        const reservationData = {
-          room_id: roomId,
-          room_name: lodgeName,
-          package_id: selectedPackage || null,
-          user_id: user?.id || null,
-          guest_name: guestName,
-          guest_email: guestEmail,
-          guest_phone: guestPhone || null,
-          check_in: checkIn.toISOString().split('T')[0],
-          check_out: checkOut.toISOString().split('T')[0],
-          guests: parseInt(guests),
-          total_price: totalPrice,
-          special_requests: specialRequests || null,
-          is_foreign: isForeign,
-          cpf: !isForeign ? cpf : null,
-          birth_date: birthDate || null,
-          country: isForeign ? country : null,
-          nationality: isForeign ? nationality : null,
-          passport: isForeign ? passport : null,
-          address: address || null,
-          next_destination: nextDestination || null,
-          dietary_restrictions: dietaryRestrictions || null,
-          emergency_contact: emergencyContact || null,
-        };
+        // Create reservation first
+        const resId = await createReservation();
 
         if (!mercadoPago) {
           throw new Error('Sistema de pagamento não carregado');
         }
 
+        // Create card token
         const [month, year] = cardExpiry.split('/');
         const cardData = {
           cardNumber: cardNumber.replace(/\s/g, ''),
@@ -478,22 +480,24 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         const cardToken = await createCardToken(cardData);
         if (!cardToken?.id) throw new Error('Erro ao processar dados do cartão');
 
+        // Get payment method from card BIN
         const cardBin = cardNumber.replace(/\D/g, '').substring(0, 6);
         const paymentMethodId = await getPaymentMethodFromBin(cardBin);
         
+        // Call mercadopago-checkout with payment_method: "credit_card"
         const { data: paymentResult, error: paymentError } = await supabase.functions.invoke(
-          'create-payment-intent',
+          'mercadopago-checkout',
           {
             body: {
-              reservationData,
-              paymentMethod: "credit_card",
+              reservation_id: resId,
               amount: totalPrice,
-              payerName: guestName,
-              payerEmail: guestEmail,
-              payerCpf: cardCpf,
-              cardToken: cardToken.id,
+              payer_name: guestName,
+              payer_email: guestEmail,
+              payer_cpf: cardCpf.replace(/\D/g, ''),
+              payment_method: "credit_card", // Explicitly credit_card
+              card_token: cardToken.id,
               installments: parseInt(installments),
-              paymentMethodId,
+              payment_method_id: paymentMethodId,
               description: `Reserva ${lodgeName} - Pousada Arara Azul`
             }
           }
@@ -519,6 +523,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           checkIn: checkIn?.toISOString().split('T')[0] || '',
           checkOut: checkOut?.toISOString().split('T')[0] || '',
           guests, total: totalPrice.toString(), email: guestEmail,
+          paymentMethod: paymentMethod // Pass the actual selected payment method
         });
         if (selectedPkg) params.append('package', selectedPkg.name);
         
