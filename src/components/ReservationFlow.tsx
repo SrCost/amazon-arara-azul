@@ -294,6 +294,12 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   };
 
   // Step validation and navigation
+  // Email validation helper
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleNext = () => {
     if (step === 2) {
       if (!checkIn || !checkOut) {
@@ -309,6 +315,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     if (step === 3) {
       if (!guestName || !guestEmail || !guestPhone) {
         toast.error("Preencha todos os campos obrigatórios");
+        return;
+      }
+      if (!isValidEmail(guestEmail)) {
+        toast.error("Digite um e-mail válido (ex: nome@email.com)");
         return;
       }
       if (isForeign) {
