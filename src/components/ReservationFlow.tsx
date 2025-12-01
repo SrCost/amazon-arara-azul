@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,6 +10,14 @@ import { useRoomAvailability } from "@/hooks/useRoomAvailability";
 import { validateCPF } from "@/lib/cpfValidator";
 import { validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 // Import step components
 import { StepProgress } from "@/components/reservation/StepProgress";
@@ -86,6 +94,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentVerified, setPaymentVerified] = useState(false);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pixTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Error handling state
+  const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [errorType, setErrorType] = useState<"order" | "pix_timeout" | "card_failed" | "general">("general");
+  const [canRetry, setCanRetry] = useState(false);
+  const [pixExpired, setPixExpired] = useState(false);
   
   // Mercado Pago hook
   const { mercadoPago, createCardToken, getPaymentMethodFromBin } = useMercadoPago();
@@ -131,11 +147,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
   }, [selectedPackage, checkIn, packages]);
 
-  // Cleanup polling on unmount
+  // Cleanup polling and timeout on unmount
   useEffect(() => {
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
+      }
+      if (pixTimeoutRef.current) {
+        clearTimeout(pixTimeoutRef.current);
       }
     };
   }, []);
@@ -246,7 +265,13 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       return;
     }
 
+    // Clear any previous PIX timeout
+    if (pixTimeoutRef.current) {
+      clearTimeout(pixTimeoutRef.current);
+    }
+
     setIsGeneratingPix(true);
+    setPixExpired(false);
 
     try {
       const payload = buildOrderPayload('pix');
@@ -259,7 +284,13 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       );
 
       if (orderError || !orderData?.success) {
-        throw new Error(orderData?.error || "Falha ao criar pedido PIX");
+        const errorMsg = orderData?.error || "Falha ao criar pedido PIX";
+        setErrorType("order");
+        setErrorMessage(errorMsg);
+        setCanRetry(true);
+        setErrorDialogOpen(true);
+        logErrorToAudit("pix_order_error", errorMsg);
+        return;
       }
 
       // Store reservation and payment IDs
@@ -274,14 +305,34 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         setPaymentCreated(true);
         toast.success("QR Code PIX gerado com sucesso!");
         
+        // Start payment polling
         if (orderData.payment_id && orderData.reservation_id) {
           startPaymentPolling(orderData.payment_id, orderData.reservation_id);
         }
+
+        // Set 10-minute PIX timeout
+        pixTimeoutRef.current = setTimeout(() => {
+          if (!paymentVerified && paymentStatus !== 'approved') {
+            setPixExpired(true);
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+              pollingIntervalRef.current = null;
+            }
+            setErrorType("pix_timeout");
+            setErrorMessage("O tempo para pagamento PIX expirou (10 minutos). Por favor, gere um novo QR Code para continuar.");
+            setCanRetry(true);
+            setErrorDialogOpen(true);
+            logErrorToAudit("pix_timeout", "PIX payment expired after 10 minutes");
+          }
+        }, 10 * 60 * 1000); // 10 minutes
+
       } else {
         throw new Error("QR Code não retornado pela API");
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Erro ao gerar QR Code PIX");
+      const errorMsg = error instanceof Error ? error.message : "Erro ao gerar QR Code PIX";
+      toast.error(errorMsg);
+      logErrorToAudit("pix_generation_error", errorMsg);
     } finally {
       setIsGeneratingPix(false);
     }
@@ -464,7 +515,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         );
 
         if (orderError || !orderResult?.success) {
-          throw new Error(orderResult?.error || "Erro ao processar pagamento");
+          const errorMsg = orderResult?.error || "Erro ao processar pagamento";
+          setErrorType("card_failed");
+          setErrorMessage(`Pagamento recusado: ${errorMsg}. Verifique os dados do cartão e tente novamente.`);
+          setCanRetry(true);
+          setErrorDialogOpen(true);
+          logErrorToAudit("card_payment_failed", errorMsg);
+          setIsSubmitting(false);
+          return;
         }
 
         // Store reservation ID
@@ -472,6 +530,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
         if (orderResult.status === 'approved') {
           toast.success("🎉 Pagamento aprovado!");
+        } else if (orderResult.status === 'rejected') {
+          setErrorType("card_failed");
+          setErrorMessage("Pagamento recusado pela operadora do cartão. Por favor, verifique os dados ou tente outro cartão.");
+          setCanRetry(true);
+          setErrorDialogOpen(true);
+          logErrorToAudit("card_rejected", "Payment rejected by card operator");
+          setIsSubmitting(false);
+          return;
         } else {
           toast.info("Pagamento em processamento");
         }
@@ -494,7 +560,19 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       }, 1500);
       
     } catch (error: any) {
-      toast.error(error?.message || "Erro ao completar reserva");
+      const errorMsg = error?.message || "Erro ao completar reserva";
+      
+      // Show error dialog with retry for card payments
+      if (paymentMethod === "credit_card") {
+        setErrorType("card_failed");
+        setErrorMessage(errorMsg);
+        setCanRetry(true);
+        setErrorDialogOpen(true);
+      } else {
+        toast.error(errorMsg);
+      }
+      
+      logErrorToAudit("payment_error", errorMsg);
       setIsSubmitting(false);
     }
   };
@@ -665,8 +743,81 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           </div>
         </CardContent>
       </Card>
+
+      {/* Error Dialog */}
+      <Dialog open={errorDialogOpen} onOpenChange={setErrorDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              {errorType === "pix_timeout" ? "PIX Expirado" : 
+               errorType === "card_failed" ? "Pagamento Recusado" :
+               errorType === "order" ? "Erro ao Criar Pedido" : "Erro no Pagamento"}
+            </DialogTitle>
+            <DialogDescription className="text-left pt-2">
+              {errorMessage}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setErrorDialogOpen(false)}>
+              Fechar
+            </Button>
+            {canRetry && (
+              <Button onClick={handleRetry} className="bg-gradient-forest">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Tentar Novamente
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
+
+  // Error handling functions
+  function handleRetry() {
+    setErrorDialogOpen(false);
+    
+    if (errorType === "pix_timeout") {
+      setPixQrCode("");
+      setPixQrCodeBase64("");
+      setPixTicketUrl("");
+      setShowPixCode(false);
+      setPaymentCreated(false);
+      setPixExpired(false);
+    } else if (errorType === "card_failed") {
+      setIsSubmitting(false);
+    }
+  }
+
+  function showError(type: "order" | "pix_timeout" | "card_failed" | "general", message: string, retry: boolean = false) {
+    setErrorType(type);
+    setErrorMessage(message);
+    setCanRetry(retry);
+    setErrorDialogOpen(true);
+    
+    // Log to audit
+    logErrorToAudit(`payment_error_${type}`, message);
+  }
+
+  async function logErrorToAudit(action: string, errorMsg: string) {
+    try {
+      await supabase.from('activity_log').insert({
+        user_email: guestEmail || 'guest',
+        action: action,
+        description: errorMsg,
+        entity_type: 'payment_error',
+        entity_id: reservationId || null,
+        metadata: {
+          timestamp: new Date().toISOString(),
+          payment_method: paymentMethod,
+          total_amount: calculateTotal()
+        }
+      });
+    } catch (e) {
+      console.error('Failed to log audit:', e);
+    }
+  }
 };
 
 export default ReservationFlow;
