@@ -32,6 +32,7 @@ interface PaymentStepProps {
   showPixCode: boolean;
   pixQrCode: string;
   pixQrCodeBase64: string;
+  pixTicketUrl?: string;
   isGeneratingPix: boolean;
   onGeneratePixQrCode: () => void;
   paymentVerified: boolean;
@@ -64,6 +65,7 @@ export const PaymentStep = ({
   showPixCode,
   pixQrCode,
   pixQrCodeBase64,
+  pixTicketUrl,
   isGeneratingPix,
   onGeneratePixQrCode,
   paymentVerified,
@@ -246,9 +248,9 @@ export const PaymentStep = ({
             <div className="bg-white p-6 rounded-lg text-center border-2 border-green-200">
               <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm mb-4">
                 <Check className="h-4 w-4" />
-                QR Code gerado com sucesso!
+                QR Code PIX gerado com sucesso!
               </div>
-              <h3 className="font-semibold mb-4">Escaneie o QR Code para pagar</h3>
+              <h3 className="font-semibold mb-4">Escaneie o QR Code para pagar via PIX</h3>
               <img 
                 src={`data:image/png;base64,${pixQrCodeBase64}`} 
                 alt="QR Code PIX" 
@@ -260,18 +262,31 @@ export const PaymentStep = ({
                   <div className="bg-muted p-2 rounded font-mono text-xs break-all max-h-20 overflow-y-auto">
                     {pixQrCode}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2"
-                    onClick={() => {
-                      navigator.clipboard.writeText(pixQrCode);
-                      toast.success('Código PIX copiado!');
-                    }}
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copiar código PIX
-                  </Button>
+                  <div className="flex flex-wrap justify-center gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        navigator.clipboard.writeText(pixQrCode);
+                        toast.success('Código PIX copiado!');
+                      }}
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copiar código PIX
+                    </Button>
+                    {pixTicketUrl && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        asChild
+                      >
+                        <a href={pixTicketUrl} target="_blank" rel="noopener noreferrer">
+                          <QrCode className="h-4 w-4 mr-2" />
+                          Abrir no app do banco
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
               
@@ -280,18 +295,18 @@ export const PaymentStep = ({
                 {paymentVerified || paymentStatus === 'approved' ? (
                   <div className="flex items-center justify-center gap-2 text-green-600">
                     <CheckCircle className="h-5 w-5" />
-                    <span className="font-semibold">Pagamento Confirmado!</span>
+                    <span className="font-semibold">Pagamento PIX Confirmado!</span>
                   </div>
                 ) : isCheckingPayment ? (
                   <div className="flex items-center justify-center gap-2 text-amber-600">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span>Verificando pagamento...</span>
+                    <span>Verificando pagamento PIX...</span>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex items-center gap-2 text-amber-600">
                       <RefreshCw className="h-5 w-5" />
-                      <span>Aguardando pagamento...</span>
+                      <span>Aguardando pagamento PIX...</span>
                     </div>
                     <Button
                       size="sm"
@@ -308,8 +323,8 @@ export const PaymentStep = ({
               
               <p className="text-sm text-green-700 mt-4 bg-green-50 p-3 rounded">
                 {paymentVerified 
-                  ? "✓ Pagamento confirmado! Clique em \"Próximo\" para finalizar sua reserva"
-                  : "✓ Após efetuar o pagamento, aguarde a confirmação ou clique em \"Verificar pagamento\""
+                  ? "✓ Pagamento PIX confirmado! Clique em \"Próximo\" para finalizar sua reserva"
+                  : "✓ Após efetuar o pagamento PIX, aguarde a confirmação ou clique em \"Verificar pagamento\""
                 }
               </p>
             </div>

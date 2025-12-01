@@ -76,6 +76,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [installments, setInstallments] = useState("1");
   const [pixQrCode, setPixQrCode] = useState("");
   const [pixQrCodeBase64, setPixQrCodeBase64] = useState("");
+  const [pixTicketUrl, setPixTicketUrl] = useState("");
   const [showPixCode, setShowPixCode] = useState(false);
   const [isGeneratingPix, setIsGeneratingPix] = useState(false);
   const [reservationId, setReservationId] = useState<string | null>(null);
@@ -297,6 +298,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       if (paymentData.pix) {
         setPixQrCode(paymentData.pix.qr_code || '');
         setPixQrCodeBase64(paymentData.pix.qr_code_base64 || '');
+        setPixTicketUrl(paymentData.pix.ticket_url || '');
         setShowPixCode(true);
         setPaymentCreated(true);
         toast.success("QR Code PIX gerado com sucesso!");
@@ -635,6 +637,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               showPixCode={showPixCode}
               pixQrCode={pixQrCode}
               pixQrCodeBase64={pixQrCodeBase64}
+              pixTicketUrl={pixTicketUrl}
               isGeneratingPix={isGeneratingPix}
               onGeneratePixQrCode={handleGeneratePixQrCode}
               paymentVerified={paymentVerified}
