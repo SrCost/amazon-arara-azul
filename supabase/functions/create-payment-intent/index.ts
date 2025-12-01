@@ -294,21 +294,26 @@ serve(async (req) => {
       console.error('Error updating reservation:', reservationError);
     }
 
-    // Update payment record with new fields
+    // Update payment record with new fields including transaction_id
     console.log('Updating payment record...');
+    console.log('Saving transaction_id:', mpPaymentId);
 
     const { error: paymentError } = await supabase
       .from('payments')
       .update({
         mercado_pago_payment_id: mpPaymentId,
-        mp_payment_id: mpPaymentId, // New field
+        transaction_id: mpPaymentId, // Save as transaction_id 
         status: mpStatus,
-        method: paymentMethod, // New field
-        payment_date: mpData.date_approved || null,
+        status_detail: mpData.status_detail || null,
+        payment_method: paymentMethod, // Correct field name
+        method: paymentMethod,
+        payment_date: mpData.date_approved || mpData.date_created || null,
         payer_name: payerName,
         payer_email: payerEmail,
         payer_cpf: payerCpf,
-        installments: mpData.installments || 1
+        installments: mpData.installments || 1,
+        total_amount: transactionAmount,
+        paid_amount: mpStatus === 'approved' ? transactionAmount : null
       })
       .eq('reservation_id', currentReservationId);
 
