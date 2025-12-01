@@ -33,6 +33,7 @@ serve(async (req) => {
       payment_method, // "credit_card" or "pix"
       card_token,
       installments = 1,
+      payment_method_id, // e.g., "master", "visa" - from card BIN
       description = 'Reserva - Pousada Arara Azul'
     } = body;
 
@@ -60,13 +61,20 @@ serve(async (req) => {
     }
 
     // Idempotency key
-    const idempotencyKey = `${reservation_id}-${Date.now()}`;
+    const idempotencyKey = crypto.randomUUID();
     const transactionAmount = parseFloat(amount);
+
+    console.log('=== DADOS DO PAGAMENTO ===');
+    console.log('Reservation ID:', reservation_id);
+    console.log('Amount:', transactionAmount);
+    console.log('Payment Method:', payment_method);
+    console.log('Payer Email:', payer_email);
+    console.log('Payer CPF:', cleanCpf);
 
     let mpResponse;
     let mpData;
 
-    // ========== CREDIT CARD - Use Orders API ==========
+    // ========== CREDIT CARD - Use Payments API (v1/payments) ==========
     if (payment_method === 'credit_card') {
       console.log('Processando pagamento via CARTÃO DE CRÉDITO...');
 
@@ -74,44 +82,39 @@ serve(async (req) => {
         throw new Error('card_token é obrigatório para pagamento com cartão');
       }
 
-      // Build Orders API payload
-      const orderPayload = {
-        type: "online",
-        processing_mode: "automatic",
-        total_amount: transactionAmount.toString(),
-        external_reference: reservation_id,
+      // Build Payments API payload for credit card
+      const cardPayload = {
+        transaction_amount: transactionAmount,
+        token: card_token,
+        description,
+        installments: parseInt(installments),
+        payment_method_id: payment_method_id || 'master',
         payer: {
-          email: payer_email
+          email: payer_email,
+          first_name: payer_name?.split(' ')[0] || 'Cliente',
+          last_name: payer_name?.split(' ').slice(1).join(' ') || '',
+          identification: {
+            type: 'CPF',
+            number: cleanCpf
+          }
         },
-        transactions: {
-          payments: [
-            {
-              amount: transactionAmount.toString(),
-              payment_method: {
-                id: "master", // This will be determined by MP based on card
-                type: "credit_card",
-                token: card_token,
-                installments: parseInt(installments)
-              }
-            }
-          ]
-        }
+        external_reference: reservation_id
       };
 
-      console.log('Orders API payload:', JSON.stringify(orderPayload, null, 2));
+      console.log('Payments API (Credit Card) payload:', JSON.stringify(cardPayload, null, 2));
 
-      mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+      mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mercadoPagoToken}`,
           'Content-Type': 'application/json',
           'X-Idempotency-Key': idempotencyKey
         },
-        body: JSON.stringify(orderPayload)
+        body: JSON.stringify(cardPayload)
       });
 
       mpData = await mpResponse.json();
-      console.log('Orders API response:', JSON.stringify(mpData, null, 2));
+      console.log('Payments API (Credit Card) response:', JSON.stringify(mpData, null, 2));
 
     } 
     // ========== PIX - Use Payments API ==========
@@ -168,52 +171,82 @@ serve(async (req) => {
       throw new Error(mpData?.message || mpData?.cause?.[0]?.description || 'Erro na API do Mercado Pago');
     }
 
-    // Extract payment info
-    const mpPaymentId = mpData?.id?.toString() || mpData?.transactions?.payments?.[0]?.id?.toString();
-    const mpStatus = mpData?.status || mpData?.transactions?.payments?.[0]?.status || 'pending';
-    const mpStatusDetail = mpData?.status_detail || mpData?.transactions?.payments?.[0]?.status_detail;
+    // Extract payment info - payment.id is the transaction_id
+    const mpPaymentId = mpData?.id?.toString();
+    const mpStatus = mpData?.status || 'pending';
+    const mpStatusDetail = mpData?.status_detail;
 
     console.log('=== PAGAMENTO PROCESSADO ===');
-    console.log('MP Payment ID:', mpPaymentId);
+    console.log('MP Payment ID (transaction_id):', mpPaymentId);
     console.log('Status:', mpStatus);
     console.log('Status Detail:', mpStatusDetail);
 
-    // Register payment in database IMMEDIATELY (before confirmation)
-    const { error: paymentInsertError } = await supabase.from('payments').upsert({
+    // Map MP status to English database statuses
+    // payments.status: pending, paid, failed, refunded
+    const mappedPaymentStatus = mpStatus === 'approved' ? 'paid' 
+      : ['rejected', 'cancelled'].includes(mpStatus) ? 'failed'
+      : mpStatus === 'refunded' ? 'refunded'
+      : 'pending';
+
+    // reservations.payment_status: pending, paid, refunded (DB constraint - no 'failed')
+    const mappedReservationStatus = mpStatus === 'approved' ? 'paid' 
+      : mpStatus === 'refunded' ? 'refunded'
+      : 'pending';
+
+    console.log('=== MAPEAMENTO DE STATUS ===');
+    console.log(`MP Status: "${mpStatus}" -> Payment Status: "${mappedPaymentStatus}"`);
+    console.log(`MP Status: "${mpStatus}" -> Reservation Status: "${mappedReservationStatus}"`);
+
+    // Upsert payment record with correct payment_method (credit_card or pix)
+    const paymentData = {
       reservation_id,
-      status: mpStatus === 'approved' ? 'aprovado' : mpStatus === 'rejected' ? 'rejeitado' : 'pendente',
-      status_detail: mpStatusDetail,
-      payment_method,
-      transaction_id: mpPaymentId,
-      payer_email,
+      amount: transactionAmount,
+      status: mappedPaymentStatus,
+      status_detail: mpStatusDetail || null,
+      payment_method: payment_method, // Always "credit_card" or "pix"
+      method: payment_method,
+      transaction_id: mpPaymentId, // This is the key field!
+      mercado_pago_payment_id: mpPaymentId,
+      payer_name: payer_name || null,
+      payer_email: payer_email,
       payer_cpf: cleanCpf,
       total_amount: transactionAmount,
       paid_amount: mpStatus === 'approved' ? transactionAmount : null,
-    }, {
-      onConflict: 'reservation_id'
-    });
+      installments: parseInt(installments),
+      payment_date: mpData?.date_approved || mpData?.date_created || new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    console.log('=== SALVANDO PAYMENT ===');
+    console.log('transaction_id:', mpPaymentId);
+    console.log('payment_method:', payment_method);
+
+    const { error: paymentInsertError } = await supabase
+      .from('payments')
+      .upsert(paymentData, { onConflict: 'reservation_id' });
 
     if (paymentInsertError) {
       console.error('Erro ao inserir/atualizar payment:', paymentInsertError);
+    } else {
+      console.log('✓ Payment salvo com sucesso');
     }
 
     // Update reservation payment status
-    const reservationPaymentStatus = mpStatus === 'approved' ? 'pago' 
-      : mpStatus === 'rejected' ? 'pagamento_rejeitado' 
-      : 'pendente';
-
     const { error: reservationUpdateError } = await supabase
       .from('reservations')
       .update({
-        payment_status: reservationPaymentStatus,
-        payment_method,
+        payment_status: mappedReservationStatus,
+        payment_method: payment_method, // Always "credit_card" or "pix"
         payment_reference: mpPaymentId,
+        status: mpStatus === 'approved' ? 'confirmed' : 'pending',
         updated_at: new Date().toISOString()
       })
       .eq('id', reservation_id);
 
     if (reservationUpdateError) {
       console.error('Erro ao atualizar reservation:', reservationUpdateError);
+    } else {
+      console.log('✓ Reservation atualizada com sucesso');
     }
 
     // Log success
@@ -230,9 +263,10 @@ serve(async (req) => {
       success: true,
       reservation_id,
       payment_id: mpPaymentId,
+      transaction_id: mpPaymentId,
       status: mpStatus,
       status_detail: mpStatusDetail,
-      payment_method
+      payment_method: payment_method // Return the correct payment method
     };
 
     // Add PIX-specific data
@@ -255,6 +289,8 @@ serve(async (req) => {
     }
 
     console.log('=== CHECKOUT CONCLUÍDO COM SUCESSO ===');
+    console.log('transaction_id salvo:', mpPaymentId);
+    console.log('payment_method salvo:', payment_method);
     console.log('Response:', JSON.stringify(response, null, 2));
 
     return new Response(JSON.stringify(response), {
