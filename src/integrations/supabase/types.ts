@@ -247,6 +247,7 @@ export type Database = {
           mercado_pago_payment_id: string | null
           method: string | null
           mp_order_id: string | null
+          mp_payment_id: string | null
           paid_amount: number | null
           payer_cpf: string | null
           payer_email: string | null
@@ -270,6 +271,7 @@ export type Database = {
           mercado_pago_payment_id?: string | null
           method?: string | null
           mp_order_id?: string | null
+          mp_payment_id?: string | null
           paid_amount?: number | null
           payer_cpf?: string | null
           payer_email?: string | null
@@ -293,6 +295,7 @@ export type Database = {
           mercado_pago_payment_id?: string | null
           method?: string | null
           mp_order_id?: string | null
+          mp_payment_id?: string | null
           paid_amount?: number | null
           payer_cpf?: string | null
           payer_email?: string | null
@@ -420,6 +423,8 @@ export type Database = {
           guests: number
           id: string
           is_foreign: boolean | null
+          mp_order_id: string | null
+          mp_transaction_id: string | null
           nationality: string | null
           next_destination: string | null
           package_id: string | null
@@ -460,6 +465,8 @@ export type Database = {
           guests: number
           id?: string
           is_foreign?: boolean | null
+          mp_order_id?: string | null
+          mp_transaction_id?: string | null
           nationality?: string | null
           next_destination?: string | null
           package_id?: string | null
@@ -500,6 +507,8 @@ export type Database = {
           guests?: number
           id?: string
           is_foreign?: boolean | null
+          mp_order_id?: string | null
+          mp_transaction_id?: string | null
           nationality?: string | null
           next_destination?: string | null
           package_id?: string | null

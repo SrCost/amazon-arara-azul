@@ -210,51 +210,31 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }, 600000);
   }, [checkPaymentStatus]);
 
-  // Create reservation first, then process payment
-  const createReservation = async (): Promise<string> => {
-    if (reservationId) return reservationId;
-
+  // Helper to build payload for create-order-mp
+  const buildOrderPayload = (paymentMethodType: string, cardToken?: string, cardBrand?: string) => {
     const totalPrice = calculateTotal();
-    const reservationData = {
-      room_id: roomId,
-      room_name: lodgeName,
-      package_id: selectedPackage || null,
-      user_id: user?.id || null,
-      guest_name: guestName,
-      guest_email: guestEmail,
-      guest_phone: guestPhone || null,
-      check_in: checkIn!.toISOString().split('T')[0],
-      check_out: checkOut!.toISOString().split('T')[0],
+    return {
+      bungalow_id: roomId,
+      checkin: checkIn!.toISOString().split('T')[0],
+      checkout: checkOut!.toISOString().split('T')[0],
       guests: parseInt(guests),
-      total_price: totalPrice,
-      special_requests: specialRequests || null,
+      full_name: guestName,
+      email: guestEmail,
+      phone: guestPhone || null,
+      cpf: !isForeign ? cpf : cardCpf, // Use cardCpf for payment if guest CPF not available
+      date_of_birth: birthDate || null,
       is_foreign: isForeign,
-      cpf: !isForeign ? cpf : null,
-      birth_date: birthDate || null,
-      country: isForeign ? country : null,
-      nationality: isForeign ? nationality : null,
-      passport: isForeign ? passport : null,
-      address: address || null,
-      next_destination: nextDestination || null,
-      dietary_restrictions: dietaryRestrictions || null,
-      emergency_contact: emergencyContact || null,
-      status: 'pending',
-      payment_status: 'pending',
+      foreign_passport: isForeign ? passport : null,
+      foreign_nationality: isForeign ? nationality : null,
+      payment_method: paymentMethodType,
+      total_amount: totalPrice,
+      card_token: cardToken || undefined,
+      card_brand: cardBrand || undefined,
+      installments: parseInt(installments)
     };
-
-    const { data, error } = await supabase
-      .from('reservations')
-      .insert(reservationData)
-      .select('id')
-      .single();
-
-    if (error) throw new Error('Erro ao criar reserva: ' + error.message);
-    
-    setReservationId(data.id);
-    return data.id;
   };
 
-  // Generate PIX QR Code - using mercadopago-checkout
+  // Generate PIX QR Code - using create-order-mp
   const handleGeneratePixQrCode = async () => {
     if (!cardCpf || !validateCPF(cardCpf)) {
       toast.error("Informe um CPF válido para gerar o PIX");
@@ -269,42 +249,33 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     setIsGeneratingPix(true);
 
     try {
-      // Create reservation first
-      const resId = await createReservation();
-      const totalPrice = calculateTotal();
+      const payload = buildOrderPayload('pix');
+      payload.cpf = cardCpf.replace(/\D/g, ''); // Use payment CPF
 
-      // Call mercadopago-checkout with payment_method: "pix"
-      const { data: paymentData, error: paymentError } = await supabase.functions.invoke(
-        'mercadopago-checkout',
-        {
-          body: {
-            reservation_id: resId,
-            amount: totalPrice,
-            payer_name: guestName,
-            payer_email: guestEmail,
-            payer_cpf: cardCpf.replace(/\D/g, ''),
-            payment_method: "pix", // Explicitly PIX
-            description: `Reserva ${lodgeName} - Pousada Arara Azul`
-          }
-        }
+      // Call create-order-mp for PIX
+      const { data: orderData, error: orderError } = await supabase.functions.invoke(
+        'create-order-mp',
+        { body: payload }
       );
 
-      if (paymentError || !paymentData?.success) {
-        throw new Error(paymentData?.error_message || "Falha ao gerar QR Code PIX");
+      if (orderError || !orderData?.success) {
+        throw new Error(orderData?.error || "Falha ao criar pedido PIX");
       }
 
-      if (paymentData.payment_id) setPaymentId(paymentData.payment_id);
+      // Store reservation and payment IDs
+      if (orderData.reservation_id) setReservationId(orderData.reservation_id);
+      if (orderData.payment_id) setPaymentId(orderData.payment_id);
 
-      if (paymentData.pix) {
-        setPixQrCode(paymentData.pix.qr_code || '');
-        setPixQrCodeBase64(paymentData.pix.qr_code_base64 || '');
-        setPixTicketUrl(paymentData.pix.ticket_url || '');
+      if (orderData.pix) {
+        setPixQrCode(orderData.pix.qr_code || '');
+        setPixQrCodeBase64(orderData.pix.qr_code_base64 || '');
+        setPixTicketUrl(orderData.pix.ticket_url || '');
         setShowPixCode(true);
         setPaymentCreated(true);
         toast.success("QR Code PIX gerado com sucesso!");
         
-        if (paymentData.payment_id && resId) {
-          startPaymentPolling(paymentData.payment_id, resId);
+        if (orderData.payment_id && orderData.reservation_id) {
+          startPaymentPolling(orderData.payment_id, orderData.reservation_id);
         }
       } else {
         throw new Error("QR Code não retornado pela API");
@@ -451,7 +422,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
 
-      // Credit card payment - create reservation first, then process payment
+      // Credit card payment - using create-order-mp
       if (paymentMethod === "credit_card") {
         if (!checkAvailability(checkIn, checkOut)) {
           toast.error("Desculpe, as datas já foram reservadas");
@@ -459,9 +430,6 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           setStep(2);
           return;
         }
-
-        // Create reservation first
-        const resId = await createReservation();
 
         if (!mercadoPago) {
           throw new Error('Sistema de pagamento não carregado');
@@ -484,32 +452,25 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
         // Get payment method from card BIN
         const cardBin = cardNumber.replace(/\D/g, '').substring(0, 6);
-        const paymentMethodId = await getPaymentMethodFromBin(cardBin);
+        const cardBrand = await getPaymentMethodFromBin(cardBin);
         
-        // Call mercadopago-checkout with payment_method: "credit_card"
-        const { data: paymentResult, error: paymentError } = await supabase.functions.invoke(
-          'mercadopago-checkout',
-          {
-            body: {
-              reservation_id: resId,
-              amount: totalPrice,
-              payer_name: guestName,
-              payer_email: guestEmail,
-              payer_cpf: cardCpf.replace(/\D/g, ''),
-              payment_method: "credit_card", // Explicitly credit_card
-              card_token: cardToken.id,
-              installments: parseInt(installments),
-              payment_method_id: paymentMethodId,
-              description: `Reserva ${lodgeName} - Pousada Arara Azul`
-            }
-          }
+        // Build payload and call create-order-mp
+        const payload = buildOrderPayload('credit_card', cardToken.id, cardBrand);
+        payload.cpf = cardCpf.replace(/\D/g, '');
+
+        const { data: orderResult, error: orderError } = await supabase.functions.invoke(
+          'create-order-mp',
+          { body: payload }
         );
 
-        if (paymentError || !paymentResult?.success) {
-          throw new Error(paymentResult?.error_message || "Erro ao processar pagamento");
+        if (orderError || !orderResult?.success) {
+          throw new Error(orderResult?.error || "Erro ao processar pagamento");
         }
 
-        if (paymentResult.status === 'approved') {
+        // Store reservation ID
+        if (orderResult.reservation_id) setReservationId(orderResult.reservation_id);
+
+        if (orderResult.status === 'approved') {
           toast.success("🎉 Pagamento aprovado!");
         } else {
           toast.info("Pagamento em processamento");
