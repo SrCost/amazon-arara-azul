@@ -18,7 +18,6 @@ import { DateSelection } from "@/components/reservation/DateSelection";
 import { GuestInfoForm } from "@/components/reservation/GuestInfoForm";
 import { PaymentStep } from "@/components/reservation/PaymentStep";
 import { ReviewStep } from "@/components/reservation/ReviewStep";
-import { ReservationSummary } from "@/components/reservation/ReservationSummary";
 
 interface ReservationFlowProps {
   lodgeName: string;
@@ -522,190 +521,171 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
   };
 
-  const selectedPkg = selectedPackage ? packages.find(p => p.id === selectedPackage) : null;
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-3xl mx-auto">
+      {/* Step Progress */}
       <StepProgress steps={steps} currentStep={step} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              {step === 1 && (
-                <PackageSelection
-                  packages={packages}
-                  selectedPackage={selectedPackage}
-                  onSelectPackage={setSelectedPackage}
-                />
-              )}
+      {/* Main Content - Clean Single Column */}
+      <Card className="mt-6">
+        <CardContent className="p-6">
+          {step === 1 && (
+            <PackageSelection
+              packages={packages}
+              selectedPackage={selectedPackage}
+              onSelectPackage={setSelectedPackage}
+            />
+          )}
 
-              {step === 2 && (
-                <DateSelection
-                  lodgeName={lodgeName}
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  onCheckInChange={(date) => {
-                    setCheckIn(date);
-                    if (selectedPackage && date) {
-                      const pkg = packages.find(p => p.id === selectedPackage);
-                      if (pkg) {
-                        const nights = pkg.duration.includes("4 noites") ? 4 : 6;
-                        const newCheckOut = new Date(date);
-                        newCheckOut.setDate(newCheckOut.getDate() + nights);
-                        setCheckOut(newCheckOut);
-                      }
-                    }
-                  }}
-                  onCheckOutChange={setCheckOut}
-                  guests={guests}
-                  onGuestsChange={setGuests}
-                  blockedDates={blockedDates}
-                  loadingAvailability={loadingAvailability}
-                  isDateAvailable={isDateAvailable}
-                  selectedPackage={selectedPackage}
-                  packages={packages}
-                  pricePerNight={pricePerNight}
-                  calculateTotal={calculateTotal}
-                />
-              )}
-
-              {step === 3 && (
-                <GuestInfoForm
-                  isForeign={isForeign}
-                  setIsForeign={setIsForeign}
-                  guestName={guestName}
-                  setGuestName={setGuestName}
-                  guestEmail={guestEmail}
-                  setGuestEmail={setGuestEmail}
-                  guestPhone={guestPhone}
-                  setGuestPhone={setGuestPhone}
-                  cpf={cpf}
-                  setCpf={setCpf}
-                  birthDate={birthDate}
-                  setBirthDate={setBirthDate}
-                  address={address}
-                  setAddress={setAddress}
-                  country={country}
-                  setCountry={setCountry}
-                  nationality={nationality}
-                  setNationality={setNationality}
-                  passport={passport}
-                  setPassport={setPassport}
-                  nextDestination={nextDestination}
-                  setNextDestination={setNextDestination}
-                  emergencyContact={emergencyContact}
-                  setEmergencyContact={setEmergencyContact}
-                  dietaryRestrictions={dietaryRestrictions}
-                  setDietaryRestrictions={setDietaryRestrictions}
-                  specialRequests={specialRequests}
-                  setSpecialRequests={setSpecialRequests}
-                />
-              )}
-
-              {step === 4 && (
-                <PaymentStep
-                  paymentMethod={paymentMethod}
-                  setPaymentMethod={setPaymentMethod}
-                  cardName={cardName}
-                  setCardName={setCardName}
-                  cardNumber={cardNumber}
-                  setCardNumber={setCardNumber}
-                  cardExpiry={cardExpiry}
-                  setCardExpiry={setCardExpiry}
-                  cardCvv={cardCvv}
-                  setCardCvv={setCardCvv}
-                  cardCpf={cardCpf}
-                  setCardCpf={setCardCpf}
-                  installments={installments}
-                  setInstallments={setInstallments}
-                  showPixCode={showPixCode}
-                  pixQrCode={pixQrCode}
-                  pixQrCodeBase64={pixQrCodeBase64}
-                  isGeneratingPix={isGeneratingPix}
-                  onGeneratePixQrCode={handleGeneratePixQrCode}
-                  paymentVerified={paymentVerified}
-                  paymentStatus={paymentStatus}
-                  isCheckingPayment={isCheckingPayment}
-                  onCheckPayment={() => paymentId && reservationId && checkPaymentStatus(paymentId, reservationId)}
-                  calculateTotal={calculateTotal}
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  pricePerNight={pricePerNight}
-                  selectedPackage={selectedPackage}
-                  packages={packages}
-                />
-              )}
-
-              {step === 5 && (
-                <ReviewStep
-                  lodgeName={lodgeName}
-                  guestName={guestName}
-                  guestEmail={guestEmail}
-                  guestPhone={guestPhone}
-                  guests={guests}
-                  checkIn={checkIn}
-                  checkOut={checkOut}
-                  paymentMethod={paymentMethod}
-                  selectedPackage={selectedPackage}
-                  packages={packages}
-                  calculateTotal={calculateTotal}
-                />
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="flex justify-between mt-8 pt-6 border-t">
-                {step > 1 ? (
-                  <Button variant="outline" onClick={() => setStep(step - 1)}>
-                    <ChevronLeft className="mr-2 h-4 w-4" />
-                    {t("common.previous")}
-                  </Button>
-                ) : (
-                  <div />
-                )}
-
-                {step < 5 ? (
-                  <Button onClick={handleNext} className="bg-gradient-forest">
-                    {t("common.next")}
-                    <ChevronRight className="ml-2 h-4 w-4" />
-                  </Button>
-                ) : (
-                  <Button 
-                    onClick={handleConfirm} 
-                    disabled={isSubmitting}
-                    className="bg-gradient-forest"
-                  >
-                    {isSubmitting ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        Processando...
-                      </span>
-                    ) : (
-                      t("reservation.confirmReservation")
-                    )}
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar Summary - visible from step 3 onwards */}
-        {step >= 3 && (
-          <div className="lg:col-span-1">
-            <ReservationSummary
+          {step === 2 && (
+            <DateSelection
               lodgeName={lodgeName}
               checkIn={checkIn}
               checkOut={checkOut}
+              onCheckInChange={(date) => {
+                setCheckIn(date);
+                if (selectedPackage && date) {
+                  const pkg = packages.find(p => p.id === selectedPackage);
+                  if (pkg) {
+                    const nights = pkg.duration.includes("4 noites") ? 4 : 6;
+                    const newCheckOut = new Date(date);
+                    newCheckOut.setDate(newCheckOut.getDate() + nights);
+                    setCheckOut(newCheckOut);
+                  }
+                }
+              }}
+              onCheckOutChange={setCheckOut}
               guests={guests}
-              selectedPackage={selectedPkg}
-              totalPrice={calculateTotal()}
+              onGuestsChange={setGuests}
+              blockedDates={blockedDates}
+              loadingAvailability={loadingAvailability}
+              isDateAvailable={isDateAvailable}
+              selectedPackage={selectedPackage}
+              packages={packages}
               pricePerNight={pricePerNight}
+              calculateTotal={calculateTotal}
             />
+          )}
+
+          {step === 3 && (
+            <GuestInfoForm
+              isForeign={isForeign}
+              setIsForeign={setIsForeign}
+              guestName={guestName}
+              setGuestName={setGuestName}
+              guestEmail={guestEmail}
+              setGuestEmail={setGuestEmail}
+              guestPhone={guestPhone}
+              setGuestPhone={setGuestPhone}
+              cpf={cpf}
+              setCpf={setCpf}
+              birthDate={birthDate}
+              setBirthDate={setBirthDate}
+              address={address}
+              setAddress={setAddress}
+              country={country}
+              setCountry={setCountry}
+              nationality={nationality}
+              setNationality={setNationality}
+              passport={passport}
+              setPassport={setPassport}
+              nextDestination={nextDestination}
+              setNextDestination={setNextDestination}
+              emergencyContact={emergencyContact}
+              setEmergencyContact={setEmergencyContact}
+              dietaryRestrictions={dietaryRestrictions}
+              setDietaryRestrictions={setDietaryRestrictions}
+              specialRequests={specialRequests}
+              setSpecialRequests={setSpecialRequests}
+            />
+          )}
+
+          {step === 4 && (
+            <PaymentStep
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              cardName={cardName}
+              setCardName={setCardName}
+              cardNumber={cardNumber}
+              setCardNumber={setCardNumber}
+              cardExpiry={cardExpiry}
+              setCardExpiry={setCardExpiry}
+              cardCvv={cardCvv}
+              setCardCvv={setCardCvv}
+              cardCpf={cardCpf}
+              setCardCpf={setCardCpf}
+              installments={installments}
+              setInstallments={setInstallments}
+              showPixCode={showPixCode}
+              pixQrCode={pixQrCode}
+              pixQrCodeBase64={pixQrCodeBase64}
+              isGeneratingPix={isGeneratingPix}
+              onGeneratePixQrCode={handleGeneratePixQrCode}
+              paymentVerified={paymentVerified}
+              paymentStatus={paymentStatus}
+              isCheckingPayment={isCheckingPayment}
+              onCheckPayment={() => paymentId && reservationId && checkPaymentStatus(paymentId, reservationId)}
+              calculateTotal={calculateTotal}
+              checkIn={checkIn}
+              checkOut={checkOut}
+              pricePerNight={pricePerNight}
+              selectedPackage={selectedPackage}
+              packages={packages}
+            />
+          )}
+
+          {step === 5 && (
+            <ReviewStep
+              lodgeName={lodgeName}
+              guestName={guestName}
+              guestEmail={guestEmail}
+              guestPhone={guestPhone}
+              guests={guests}
+              checkIn={checkIn}
+              checkOut={checkOut}
+              paymentMethod={paymentMethod}
+              selectedPackage={selectedPackage}
+              packages={packages}
+              calculateTotal={calculateTotal}
+            />
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-8 pt-6 border-t">
+            {step > 1 ? (
+              <Button variant="outline" onClick={() => setStep(step - 1)}>
+                <ChevronLeft className="mr-2 h-4 w-4" />
+                {t("common.previous")}
+              </Button>
+            ) : (
+              <div />
+            )}
+
+            {step < 5 ? (
+              <Button onClick={handleNext} className="bg-gradient-forest">
+                {t("common.next")}
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button 
+                onClick={handleConfirm} 
+                disabled={isSubmitting}
+                className="bg-gradient-forest"
+              >
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Processando...
+                  </span>
+                ) : (
+                  t("reservation.confirmReservation")
+                )}
+              </Button>
+            )}
           </div>
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
