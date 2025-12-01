@@ -14,14 +14,15 @@ function mapMpStatusToPaymentStatus(mpStatus: string): string {
     case 'pending':
     case 'in_process':
     case 'authorized':
-      return 'pendente';
+      return 'pending';
     case 'rejected':
     case 'cancelled':
-      return 'rejeitado';
+      return 'rejected';
     case 'refunded':
+    case 'charged_back':
       return 'refunded';
     default:
-      return 'pendente';
+      return 'pending';
   }
 }
 
@@ -29,18 +30,35 @@ function mapMpStatusToPaymentStatus(mpStatus: string): string {
 function mapToReservationPaymentStatus(mpStatus: string): string {
   switch (mpStatus) {
     case 'approved':
-      return 'pago';
+      return 'paid';
     case 'pending':
     case 'in_process':
     case 'authorized':
-      return 'pendente';
+      return 'pending';
     case 'rejected':
     case 'cancelled':
-      return 'pagamento_rejeitado';
+      return 'failed';
     case 'refunded':
+    case 'charged_back':
       return 'refunded';
     default:
-      return 'pendente';
+      return 'pending';
+  }
+}
+
+// Get action description for audit log
+function getActionDescription(action: string, mpStatus: string, reservationId: string): string {
+  switch (action) {
+    case 'payment.created':
+      return `Pagamento criado para reserva ${reservationId}`;
+    case 'payment.updated':
+      return `Pagamento atualizado para reserva ${reservationId} - Status: ${mpStatus}`;
+    case 'payment.approved':
+      return `Pagamento APROVADO para reserva ${reservationId}`;
+    case 'payment.refunded':
+      return `Pagamento REEMBOLSADO para reserva ${reservationId}`;
+    default:
+      return `Webhook recebido (${action}) para reserva ${reservationId} - Status: ${mpStatus}`;
   }
 }
 
@@ -80,11 +98,13 @@ serve(async (req) => {
     // Handle POST requests (webhook notifications from Mercado Pago)
     const body = await req.json();
     console.log('=== WEBHOOK MERCADO PAGO RECEBIDO ===');
-    console.log('Body completo:', JSON.stringify(body, null, 2));
+    console.log('Tipo:', body.type);
+    console.log('Action:', body.action);
+    console.log('Data ID:', body.data?.id);
 
     // Only process payment notifications
     if (body.type !== 'payment') {
-      console.log(`Tipo de notificação ${body.type} não processado, ignorando`);
+      console.log(`Tipo de notificação "${body.type}" não é payment, ignorando`);
       return new Response(JSON.stringify({ success: true, message: 'Notificação ignorada' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
@@ -93,6 +113,7 @@ serve(async (req) => {
 
     // Extract payment_id from body.data.id
     const paymentId = body.data?.id;
+    const webhookAction = body.action || 'payment.unknown';
 
     if (!paymentId) {
       console.log('ID de pagamento ausente no webhook');
@@ -102,71 +123,77 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Processando pagamento ID: ${paymentId}`);
+    console.log(`=== PROCESSANDO EVENTO: ${webhookAction} ===`);
+    console.log(`Payment ID: ${paymentId}`);
 
-    // Idempotency check - verify if we already processed this notification
-    const { data: existingLog } = await supabase
-      .from('payment_logs')
-      .select('id')
-      .eq('action', 'webhook_notification')
-      .eq('status', body.action)
-      .contains('response_payload', { data: { id: paymentId } })
-      .single();
-
-    if (existingLog) {
-      console.log(`Notificação duplicada para pagamento ${paymentId}, ignorando`);
-      return new Response(JSON.stringify({ success: true, message: 'Notificação já processada' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      });
-    }
-
-    // Fetch payment details from Mercado Pago API
-    console.log(`Buscando detalhes do pagamento ${paymentId} na API do MP`);
+    // ============================================
+    // FETCH REAL PAYMENT DATA FROM MERCADO PAGO
+    // GET /v1/payments/{PAYMENT_ID}
+    // ============================================
+    console.log(`Consultando GET /v1/payments/${paymentId}`);
+    
     const mpResponse = await fetch(
       `https://api.mercadopago.com/v1/payments/${paymentId}`,
       {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${mercadoPagoToken}`,
+          'Content-Type': 'application/json',
         },
       }
     );
 
     if (!mpResponse.ok) {
-      console.error(`Erro ao buscar pagamento: ${mpResponse.status} ${mpResponse.statusText}`);
-      // Log the error but still return 200 to avoid MP retry
+      const errorText = await mpResponse.text();
+      console.error(`Erro ao buscar pagamento: ${mpResponse.status} - ${errorText}`);
+      
       await supabase.from('payment_logs').insert({
-        action: 'webhook_error',
+        action: 'webhook_mp_api_error',
         status: 'error',
         error_code: mpResponse.status.toString(),
-        error_message: `Failed to fetch payment details: ${mpResponse.statusText}`,
-        response_payload: body
+        error_message: `Failed to fetch payment from MP API: ${errorText}`,
+        response_payload: { webhook_body: body, mp_error: errorText }
       });
-      return new Response(JSON.stringify({ success: true, message: 'Erro ao buscar pagamento' }), {
+      
+      return new Response(JSON.stringify({ success: true, message: 'Erro ao consultar MP API' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       });
     }
 
     const payment = await mpResponse.json();
-    console.log('=== DETALHES DO PAGAMENTO MP ===');
-    console.log('ID:', payment.id);
-    console.log('Status:', payment.status);
-    console.log('Status Detail:', payment.status_detail);
-    console.log('External Reference (reservation_id):', payment.external_reference);
-    console.log('Transaction Amount:', payment.transaction_amount);
-    console.log('Payer Email:', payment.payer?.email);
-    console.log('Payment Method:', payment.payment_method_id);
-
+    
+    // ============================================
+    // EXTRACT REQUIRED FIELDS FROM PAYMENT
+    // ============================================
+    const mpStatus = payment.status;
+    const mpStatusDetail = payment.status_detail;
+    const transactionAmount = payment.transaction_amount;
+    const paymentMethodId = payment.payment_method?.id || payment.payment_method_id;
+    const paymentMethodType = payment.payment_method?.type || payment.payment_type_id;
+    const payerEmail = payment.payer?.email;
     const reservationId = payment.external_reference;
+    const dateApproved = payment.date_approved;
+    const dateCreated = payment.date_created;
+
+    console.log('=== DADOS EXTRAÍDOS DO PAGAMENTO MP ===');
+    console.log('Payment ID:', payment.id);
+    console.log('Status:', mpStatus);
+    console.log('Status Detail:', mpStatusDetail);
+    console.log('Transaction Amount:', transactionAmount);
+    console.log('Payment Method ID:', paymentMethodId);
+    console.log('Payment Method Type:', paymentMethodType);
+    console.log('Payer Email:', payerEmail);
+    console.log('External Reference (Reservation ID):', reservationId);
+    console.log('Date Approved:', dateApproved);
 
     if (!reservationId) {
-      console.log('External reference (reservation_id) não encontrado no pagamento');
+      console.log('ATENÇÃO: external_reference (reservation_id) não encontrado');
       await supabase.from('payment_logs').insert({
-        action: 'webhook_notification',
-        status: payment.status,
-        error_message: 'No external_reference found',
-        response_payload: body
+        action: `webhook_${webhookAction}`,
+        status: mpStatus,
+        error_message: 'No external_reference (reservation_id) in payment',
+        response_payload: { payment_id: paymentId, status: mpStatus }
       });
       return new Response(JSON.stringify({ success: true, message: 'Sem referência de reserva' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -175,92 +202,175 @@ serve(async (req) => {
     }
 
     // Map statuses
-    const paymentStatus = mapMpStatusToPaymentStatus(payment.status);
-    const reservationPaymentStatus = mapToReservationPaymentStatus(payment.status);
+    const mappedPaymentStatus = mapMpStatusToPaymentStatus(mpStatus);
+    const mappedReservationStatus = mapToReservationPaymentStatus(mpStatus);
 
     console.log('=== MAPEAMENTO DE STATUS ===');
-    console.log(`MP Status: ${payment.status} -> Payment Status: ${paymentStatus}`);
-    console.log(`MP Status: ${payment.status} -> Reservation Payment Status: ${reservationPaymentStatus}`);
+    console.log(`MP Status: "${mpStatus}" -> Payment Status: "${mappedPaymentStatus}"`);
+    console.log(`MP Status: "${mpStatus}" -> Reservation Payment Status: "${mappedReservationStatus}"`);
 
-    // Update payments table
-    const { error: paymentUpdateError } = await supabase
+    // ============================================
+    // UPDATE PAYMENTS TABLE
+    // ============================================
+    console.log('=== ATUALIZANDO TABELA PAYMENTS ===');
+    
+    const paymentUpdateData = {
+      status: mappedPaymentStatus,
+      status_detail: mpStatusDetail,
+      paid_amount: mpStatus === 'approved' ? transactionAmount : null,
+      transaction_id: payment.id.toString(),
+      payment_method: paymentMethodId || paymentMethodType,
+      payer_email: payerEmail,
+      mercado_pago_payment_id: payment.id.toString(),
+      total_amount: transactionAmount,
+      payment_date: dateApproved || dateCreated,
+      updated_at: new Date().toISOString(),
+    };
+
+    console.log('Dados para atualização payments:', JSON.stringify(paymentUpdateData, null, 2));
+
+    const { data: paymentData, error: paymentUpdateError } = await supabase
       .from('payments')
-      .update({
-        status: paymentStatus,
-        mercado_pago_payment_id: payment.id.toString(),
-        payment_date: payment.date_approved || null,
-        amount: payment.transaction_amount,
-        payer_email: payment.payer?.email || null,
-        payment_method: payment.payment_method_id || payment.payment_type_id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('reservation_id', reservationId);
+      .update(paymentUpdateData)
+      .eq('reservation_id', reservationId)
+      .select();
 
     if (paymentUpdateError) {
       console.error('Erro ao atualizar payments:', paymentUpdateError);
     } else {
-      console.log(`Payments atualizado com sucesso para reservation_id: ${reservationId}`);
+      console.log(`✓ Payments atualizado com sucesso. Registros: ${paymentData?.length || 0}`);
     }
 
-    // Update reservations table
-    const reservationUpdateStatus = payment.status === 'approved' ? 'confirmed' : 
-                                   payment.status === 'rejected' ? 'cancelled' : 'pending';
+    // ============================================
+    // UPDATE RESERVATIONS TABLE
+    // ============================================
+    console.log('=== ATUALIZANDO TABELA RESERVATIONS ===');
+    
+    const reservationStatus = mpStatus === 'approved' ? 'confirmed' : 
+                             mpStatus === 'rejected' || mpStatus === 'cancelled' ? 'cancelled' : 
+                             mpStatus === 'refunded' ? 'refunded' : 'pending';
 
-    const { error: reservationUpdateError } = await supabase
+    const reservationUpdateData = {
+      payment_status: mappedReservationStatus,
+      status: reservationStatus,
+      payment_reference: payment.id.toString(),
+      payment_method: paymentMethodId || paymentMethodType,
+      updated_at: new Date().toISOString(),
+    };
+
+    console.log('Dados para atualização reservations:', JSON.stringify(reservationUpdateData, null, 2));
+
+    const { data: reservationData, error: reservationUpdateError } = await supabase
       .from('reservations')
-      .update({
-        status: reservationUpdateStatus,
-        payment_status: reservationPaymentStatus,
-        payment_reference: payment.id.toString(),
-        payment_method: payment.payment_method_id || payment.payment_type_id,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', reservationId);
+      .update(reservationUpdateData)
+      .eq('id', reservationId)
+      .select('id, guest_name, guest_email, room_name');
 
     if (reservationUpdateError) {
       console.error('Erro ao atualizar reservations:', reservationUpdateError);
     } else {
-      console.log(`Reservations atualizado com sucesso para id: ${reservationId}`);
+      console.log(`✓ Reservations atualizado com sucesso. Registros: ${reservationData?.length || 0}`);
     }
 
-    // Log the webhook processing
+    // ============================================
+    // LOG IN PAYMENT_LOGS TABLE
+    // ============================================
     await supabase.from('payment_logs').insert({
       reservation_id: reservationId,
-      action: 'webhook_notification',
-      status: payment.status,
+      action: `webhook_${webhookAction}`,
+      status: mpStatus,
       response_payload: {
-        ...body,
-        processed_payment: {
-          id: payment.id,
-          status: payment.status,
-          status_detail: payment.status_detail,
-          transaction_amount: payment.transaction_amount,
-          payer_email: payment.payer?.email,
-          mapped_payment_status: paymentStatus,
-          mapped_reservation_status: reservationPaymentStatus
-        }
+        webhook_action: webhookAction,
+        payment_id: payment.id,
+        status: mpStatus,
+        status_detail: mpStatusDetail,
+        transaction_amount: transactionAmount,
+        payment_method: paymentMethodId,
+        payer_email: payerEmail,
+        mapped_payment_status: mappedPaymentStatus,
+        mapped_reservation_status: mappedReservationStatus,
+        date_approved: dateApproved,
       }
     });
 
+    // ============================================
+    // LOG IN ACTIVITY_LOG (AUDIT) TABLE
+    // ============================================
+    console.log('=== REGISTRANDO AUDITORIA ===');
+    
+    const auditDescription = getActionDescription(webhookAction, mpStatus, reservationId);
+    const guestInfo = reservationData?.[0];
+
+    const { error: auditError } = await supabase.from('activity_log').insert({
+      user_id: null,
+      user_email: 'system_webhook',
+      action: webhookAction === 'payment.approved' ? 'payment_approved' : 
+              webhookAction === 'payment.refunded' ? 'payment_refunded' : 
+              webhookAction === 'payment.created' ? 'payment_created' : 'payment_updated',
+      description: auditDescription,
+      entity_type: 'payment',
+      entity_id: reservationId,
+      metadata: {
+        mp_payment_id: payment.id,
+        mp_status: mpStatus,
+        mp_status_detail: mpStatusDetail,
+        transaction_amount: transactionAmount,
+        payment_method: paymentMethodId,
+        payer_email: payerEmail,
+        guest_name: guestInfo?.guest_name || null,
+        room_name: guestInfo?.room_name || null,
+        webhook_action: webhookAction,
+        processed_at: new Date().toISOString(),
+      }
+    });
+
+    if (auditError) {
+      console.error('Erro ao registrar auditoria:', auditError);
+    } else {
+      console.log('✓ Auditoria registrada com sucesso');
+    }
+
     console.log('=== WEBHOOK PROCESSADO COM SUCESSO ===');
+    console.log(`Evento: ${webhookAction}`);
+    console.log(`Payment ID: ${paymentId}`);
+    console.log(`Reservation ID: ${reservationId}`);
+    console.log(`Status Final: ${mpStatus} -> ${mappedPaymentStatus}`);
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: 'Webhook processado',
+        message: 'Webhook processado com sucesso',
+        event: webhookAction,
         payment_id: paymentId,
         reservation_id: reservationId,
-        status: payment.status
+        mp_status: mpStatus,
+        mapped_status: mappedPaymentStatus,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
       }
     );
+
   } catch (error) {
-    console.error('=== ERRO NO WEBHOOK ===');
+    console.error('=== ERRO CRÍTICO NO WEBHOOK ===');
     console.error('Erro:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    
+    // Log error
+    try {
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL')!,
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      );
+      await supabase.from('payment_logs').insert({
+        action: 'webhook_critical_error',
+        status: 'error',
+        error_message: errorMessage,
+      });
+    } catch (logError) {
+      console.error('Erro ao logar erro:', logError);
+    }
     
     // Always return 200 to avoid MP retry storms
     return new Response(
