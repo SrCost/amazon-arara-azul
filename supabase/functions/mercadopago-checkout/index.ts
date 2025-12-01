@@ -79,59 +79,54 @@ serve(async (req) => {
     let mpStatus: string = 'pending';
     let mpStatusDetail: string | undefined;
 
-    // ========== CREDIT CARD - Use Orders API (POST /v1/orders) ==========
+    // ========== CREDIT CARD - Use Payments API (POST /v1/payments) ==========
     if (payment_method === 'credit_card') {
-      console.log('Processando pagamento via CARTÃO DE CRÉDITO (Orders API)...');
+      console.log('Processando pagamento via CARTÃO DE CRÉDITO (Payments API)...');
 
       if (!card_token) {
         throw new Error('card_token é obrigatório para pagamento com cartão');
       }
 
-      // Build Orders API payload
-      const orderPayload = {
-        type: "online",
-        processing_mode: "automatic",
-        total_amount: transactionAmount.toFixed(2),
-        external_reference: reservation_id,
+      // Build Payments API payload for credit card
+      const cardPayload = {
+        transaction_amount: transactionAmount,
+        token: card_token,
+        installments: parseInt(String(installments)),
+        payment_method_id: payment_method_id || "master",
         payer: {
-          email: payer_email
+          email: payer_email,
+          first_name: payer_name?.split(' ')[0] || 'Cliente',
+          last_name: payer_name?.split(' ').slice(1).join(' ') || 'Pousada',
+          identification: {
+            type: 'CPF',
+            number: cleanCpf
+          }
         },
-        transactions: {
-          payments: [
-            {
-              amount: transactionAmount.toFixed(2),
-              payment_method: {
-                id: payment_method_id || "master",
-                type: "credit_card",
-                token: card_token,
-                installments: parseInt(String(installments))
-              }
-            }
-          ]
-        }
+        external_reference: reservation_id,
+        description
       };
 
-      console.log('Orders API payload:', JSON.stringify(orderPayload, null, 2));
+      console.log('Payments API (Credit Card) payload:', JSON.stringify(cardPayload, null, 2));
 
-      mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+      mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${mercadoPagoToken}`,
           'Content-Type': 'application/json',
           'X-Idempotency-Key': idempotencyKey
         },
-        body: JSON.stringify(orderPayload)
+        body: JSON.stringify(cardPayload)
       });
 
       mpData = await mpResponse.json();
-      console.log('Orders API response:', JSON.stringify(mpData, null, 2));
+      console.log('Payments API (Credit Card) response:', JSON.stringify(mpData, null, 2));
 
-      // Extract payment info from Orders API response
-      mpPaymentId = mpData?.id?.toString() || mpData?.transactions?.payments?.[0]?.id?.toString();
-      mpStatus = mpData?.status || mpData?.transactions?.payments?.[0]?.status || 'pending';
-      mpStatusDetail = mpData?.status_detail || mpData?.transactions?.payments?.[0]?.status_detail;
+      // Extract payment info from Payments API response
+      mpPaymentId = mpData?.id?.toString();
+      mpStatus = mpData?.status || 'pending';
+      mpStatusDetail = mpData?.status_detail;
 
-    } 
+    }
     // ========== PIX - Use Payments API (POST /v1/payments) ==========
     else if (payment_method === 'pix') {
       console.log('Processando pagamento via PIX (Payments API)...');
