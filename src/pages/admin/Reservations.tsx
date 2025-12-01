@@ -57,8 +57,12 @@ interface Reservation {
   status: string;
   payment_status: string;
   payment_method: string;
+  payment_reference?: string;
+  mp_transaction_id?: string;
+  mp_order_id?: string;
   special_requests?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 const Reservations = () => {
@@ -340,6 +344,8 @@ const Reservations = () => {
                   <TableHead>Check-out</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Pagamento</TableHead>
+                  <TableHead>Método</TableHead>
+                  <TableHead>ID MP</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead className="text-right">{t("admin.actions")}</TableHead>
                 </TableRow>
@@ -356,6 +362,16 @@ const Reservations = () => {
                     <TableCell>{new Date(reservation.check_out).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(reservation.status)}</TableCell>
                     <TableCell>{getPaymentStatusBadge(reservation.payment_status)}</TableCell>
+                    <TableCell className="text-xs">
+                      {reservation.payment_method === 'pix' ? 'PIX' : 
+                       reservation.payment_method === 'credit_card' ? 'Cartão' : 
+                       reservation.payment_method || '-'}
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      {reservation.mp_transaction_id || reservation.payment_reference 
+                        ? (reservation.mp_transaction_id || reservation.payment_reference)?.slice(0, 10) + '...'
+                        : '-'}
+                    </TableCell>
                     <TableCell className="font-medium">R$ {reservation.total_price.toLocaleString()}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
@@ -430,13 +446,39 @@ const Reservations = () => {
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Método de Pagamento</Label>
-                  <p className="font-medium">{selectedReservation.payment_method}</p>
+                  <p className="font-medium">
+                    {selectedReservation.payment_method === 'pix' ? 'PIX' : 
+                     selectedReservation.payment_method === 'credit_card' ? 'Cartão de Crédito' : 
+                     selectedReservation.payment_method || 'N/A'}
+                  </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Valor Total</Label>
                   <p className="font-medium text-lg">R$ {selectedReservation.total_price.toLocaleString()}</p>
                 </div>
               </div>
+              
+              {/* Payment Transaction Info */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold text-muted-foreground mb-2">Dados da Transação</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">ID Transação (MP)</Label>
+                    <p className="font-mono text-sm">{selectedReservation.mp_transaction_id || selectedReservation.payment_reference || "N/A"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Data Criação</Label>
+                    <p className="font-medium text-sm">{new Date(selectedReservation.created_at).toLocaleString('pt-BR')}</p>
+                  </div>
+                  {selectedReservation.updated_at && (
+                    <div>
+                      <Label className="text-muted-foreground">Última Atualização</Label>
+                      <p className="font-medium text-sm">{new Date(selectedReservation.updated_at).toLocaleString('pt-BR')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {selectedReservation.special_requests && (
                 <div>
                   <Label className="text-muted-foreground">Solicitações Especiais</Label>
