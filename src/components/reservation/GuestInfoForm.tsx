@@ -1,8 +1,16 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AlertCircle } from "lucide-react";
+
+// Email validation helper
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
 interface GuestInfoFormProps {
   isForeign: boolean;
@@ -66,6 +74,9 @@ export const GuestInfoForm = ({
   setSpecialRequests,
 }: GuestInfoFormProps) => {
   const { t } = useTranslation();
+  const [emailTouched, setEmailTouched] = useState(false);
+  const emailIsValid = isValidEmail(guestEmail);
+  const showEmailError = emailTouched && guestEmail && !emailIsValid;
 
   return (
     <div className="space-y-6">
@@ -118,10 +129,17 @@ export const GuestInfoForm = ({
               type="email"
               value={guestEmail}
               onChange={(e) => setGuestEmail(e.target.value)}
+              onBlur={() => setEmailTouched(true)}
               placeholder="seu@email.com"
-              className="mt-1"
+              className={`mt-1 ${showEmailError ? 'border-destructive focus-visible:ring-destructive' : ''}`}
               required
             />
+            {showEmailError && (
+              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Digite um e-mail válido (ex: nome@email.com)
+              </p>
+            )}
           </div>
         </div>
 
