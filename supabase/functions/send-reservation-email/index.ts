@@ -203,7 +203,6 @@ const getReservationConfirmedEmail = (data: any) => `
         <h3>💳 Pagamento</h3>
         <div class="details-row"><span>Método:</span><strong>${data.paymentMethod === 'pix' ? 'PIX' : 'Cartão de Crédito'}</strong></div>
         <div class="details-row"><span>Status:</span><strong style="color: #22c55e;">Aprovado</strong></div>
-        <div class="details-row"><span>ID:</span><strong>${data.paymentId}</strong></div>
       </div>
 
       <div class="highlight">
@@ -295,7 +294,6 @@ const handler = async (req: Request): Promise<Response> => {
         guests: reservation.guests,
         totalPrice: reservation.total_price,
         paymentMethod: reservation.payment_method,
-        paymentId: reservation.payment_intent_id,
         specialRequests: reservation.special_requests,
       });
     }

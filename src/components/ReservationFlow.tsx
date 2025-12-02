@@ -560,26 +560,28 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         } else {
           toast.info("Pagamento em processamento");
         }
-      }
 
-      toast.success("🎉 Reserva confirmada com sucesso!");
-      
-      setTimeout(() => {
-        const selectedPkg = packages.find(p => p.id === selectedPackage);
-        const cardStatus = reservationId ? 'paid' : 'pending';
-        const params = new URLSearchParams({
-          reservationId: reservationId || '',
-          status: cardStatus,
-          name: guestName, lodge: lodgeName,
-          checkIn: checkIn?.toISOString().split('T')[0] || '',
-          checkOut: checkOut?.toISOString().split('T')[0] || '',
-          guests, total: totalPrice.toString(), email: guestEmail,
-          paymentMethod: paymentMethod
-        });
-        if (selectedPkg) params.append('package', selectedPkg.name);
+        // Redirect with orderResult data (credit card only)
+        toast.success("🎉 Reserva confirmada com sucesso!");
         
-        window.location.href = `/reserva-concluida?${params.toString()}`;
-      }, 1500);
+        setTimeout(() => {
+          const selectedPkg = packages.find(p => p.id === selectedPackage);
+          const cardReservationId = orderResult.reservation_id || reservationId;
+          const cardStatus = orderResult.status === 'approved' ? 'paid' : 'pending';
+          const params = new URLSearchParams({
+            reservationId: cardReservationId,
+            status: cardStatus,
+            name: guestName, lodge: lodgeName,
+            checkIn: checkIn?.toISOString().split('T')[0] || '',
+            checkOut: checkOut?.toISOString().split('T')[0] || '',
+            guests, total: totalPrice.toString(), email: guestEmail,
+            paymentMethod: paymentMethod
+          });
+          if (selectedPkg) params.append('package', selectedPkg.name);
+          
+          window.location.href = `/reserva-concluida?${params.toString()}`;
+        }, 1500);
+      }
       
     } catch (error: any) {
       const errorMsg = error?.message || "Erro ao completar reserva";
