@@ -456,6 +456,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         
         const selectedPkg = packages.find(p => p.id === selectedPackage);
         const params = new URLSearchParams({
+          reservationId: reservationId || '',
+          status: 'paid',
           name: guestName, lodge: lodgeName,
           checkIn: checkIn.toISOString().split('T')[0],
           checkOut: checkOut.toISOString().split('T')[0],
@@ -564,7 +566,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       
       setTimeout(() => {
         const selectedPkg = packages.find(p => p.id === selectedPackage);
+        const cardStatus = reservationId ? 'paid' : 'pending';
         const params = new URLSearchParams({
+          reservationId: reservationId || '',
+          status: cardStatus,
           name: guestName, lodge: lodgeName,
           checkIn: checkIn?.toISOString().split('T')[0] || '',
           checkOut: checkOut?.toISOString().split('T')[0] || '',
