@@ -38,7 +38,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Search, Eye, Edit, X, Mail, MessageCircle } from "lucide-react";
+import { Search, Eye, Edit, X, Mail, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -77,10 +77,13 @@ const Reservations = () => {
   const [editForm, setEditForm] = useState<Partial<Reservation>>({});
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
-    fetchReservations();
-
     // Setup realtime updates for reservations table
     const reservationsChannel = supabase
       .channel('reservations-changes')
@@ -96,7 +99,6 @@ const Reservations = () => {
       .subscribe();
 
     // Setup realtime updates for payments table
-    // When payment status changes, automatically update related reservation
     const paymentsChannel = supabase
       .channel('payments-changes-reservations')
       .on(
@@ -106,10 +108,7 @@ const Reservations = () => {
           schema: 'public',
           table: 'payments'
         },
-        () => {
-          // Refetch reservations when payment is updated to sync payment_status
-          fetchReservations();
-        }
+        () => fetchReservations()
       )
       .subscribe();
 
@@ -119,19 +118,30 @@ const Reservations = () => {
     };
   }, []);
 
+  // Fetch when page changes
+  useEffect(() => {
+    fetchReservations();
+  }, [currentPage]);
+
   const fetchReservations = async () => {
     try {
-      const { data, error } = await supabase
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      const { data, error, count } = await supabase
         .from("reservations")
         .select(`
           *,
           packages (
             name
           )
-        `)
-        .order("created_at", { ascending: false });
+        `, { count: 'exact' })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
+      
+      setTotalCount(count || 0);
       
       // Map the data to include package_name
       const mappedData = (data || []).map(reservation => ({
@@ -147,6 +157,10 @@ const Reservations = () => {
       setLoading(false);
     }
   };
+
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalCount);
 
   const handleView = (reservation: Reservation) => {
     setSelectedReservation(reservation);
@@ -299,12 +313,15 @@ const Reservations = () => {
     return <Badge className={variant.className}>{variant.label}</Badge>;
   };
 
-  const filteredReservations = reservations.filter(
-    (res) =>
-      res.guest_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.guest_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter only when searching (search is client-side for displayed page)
+  const filteredReservations = searchTerm
+    ? reservations.filter(
+        (res) =>
+          res.guest_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          res.guest_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          res.id.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : reservations;
 
   if (loading) {
     return <div className="p-8">Carregando...</div>;
@@ -396,6 +413,38 @@ const Reservations = () => {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalCount > 0 && (
+            <div className="flex items-center justify-between mt-4 px-2">
+              <span className="text-sm text-muted-foreground">
+                Mostrando {startItem}-{endItem} de {totalCount} reservas
+              </span>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <span className="text-sm px-3">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

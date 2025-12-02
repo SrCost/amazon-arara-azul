@@ -60,7 +60,18 @@ serve(async (req) => {
     const isTestMode = mercadoPagoToken?.startsWith('TEST-');
     console.log('Modo de teste:', isTestMode);
 
-    // 1. Verificar reserva existente
+    // 1. Buscar nome do bangalô
+    console.log('=== BUSCANDO NOME DO BANGALÔ ===');
+    const { data: roomData } = await supabase
+      .from('rooms')
+      .select('name_pt')
+      .eq('id', bungalow_id)
+      .single();
+    
+    const roomName = roomData?.name_pt || 'Bangalô';
+    console.log('Room name:', roomName);
+
+    // 2. Verificar reserva existente
     console.log('=== VERIFICANDO RESERVA EXISTENTE ===');
     const { data: existingReservation } = await supabase
       .from('reservations')
@@ -78,12 +89,13 @@ serve(async (req) => {
       console.log('Reserva existente encontrada:', existingReservation.id);
       reservationId = existingReservation.id;
     } else {
-      // 2. Criar pré-reserva
+      // 3. Criar pré-reserva
       console.log('=== CRIANDO PRÉ-RESERVA ===');
       const { data: reservation, error: reservationError } = await supabase
         .from('reservations')
         .insert({
           room_id: bungalow_id,
+          room_name: roomName,
           check_in: checkin,
           check_out: checkout,
           guests: guests || 1,
