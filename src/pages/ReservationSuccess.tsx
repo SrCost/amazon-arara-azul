@@ -1,12 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import { Check, Mail, MessageCircle, Calendar, Users, Home, CreditCard, QrCode, ArrowLeft } from "lucide-react";
+import { Check, Mail, MessageCircle, Calendar, Users, Home, CreditCard, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
+import { usePaymentRealtime } from "@/hooks/usePaymentRealtime";
 
 const ReservationSuccess = () => {
   const navigate = useNavigate();
@@ -22,7 +23,27 @@ const ReservationSuccess = () => {
   const total = searchParams.get("total") || "0";
   const email = searchParams.get("email") || "";
   const paymentMethod = searchParams.get("paymentMethod") || "pix";
-  const status = searchParams.get("status") || "pending";
+  const initialStatus = searchParams.get("status") || "pending";
+
+  // Realtime payment status
+  const { paymentStatus: realtimeStatus, isPaid } = usePaymentRealtime(reservationId || null);
+  const [currentStatus, setCurrentStatus] = useState(initialStatus);
+
+  // Update status from realtime
+  useEffect(() => {
+    if (realtimeStatus) {
+      setCurrentStatus(realtimeStatus);
+    }
+  }, [realtimeStatus]);
+
+  // Format reservation number as PAA-XXXXXX
+  const formatReservationNumber = (id: string): string => {
+    if (!id) return 'N/A';
+    // Extract only numbers from UUID and take last 6
+    const numbers = id.replace(/[^0-9]/g, '');
+    const suffix = numbers.slice(-6).padStart(6, '0');
+    return `PAA-${suffix}`;
+  };
 
   useEffect(() => {
     // If no params, redirect to home
@@ -32,7 +53,7 @@ const ReservationSuccess = () => {
   }, [checkIn, checkOut, navigate]);
 
   const getStatusBadge = () => {
-    switch (status) {
+    switch (currentStatus) {
       case 'approved':
       case 'paid':
       case 'pago':
@@ -44,13 +65,13 @@ const ReservationSuccess = () => {
       case 'failed':
         return <Badge className="bg-red-100 text-red-800">Pagamento Não Aprovado</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800">{status}</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800">{currentStatus}</Badge>;
     }
   };
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
-      `Olá! Acabei de fazer uma reserva na Pousada Arara Azul.\n\nNome: ${guestName}\nBangalô: ${lodgeName}\nCheck-in: ${checkIn}\nCheck-out: ${checkOut}`
+      `Olá! Acabei de fazer uma reserva na Pousada Arara Azul.\n\nNúmero: ${formatReservationNumber(reservationId)}\nNome: ${guestName}\nBangalô: ${lodgeName}\nCheck-in: ${checkIn}\nCheck-out: ${checkOut}`
     );
     window.open(`https://wa.me/559284829983?text=${message}`, '_blank');
   };
@@ -81,8 +102,8 @@ const ReservationSuccess = () => {
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Número da Reserva</p>
-                  <p className="font-mono text-sm font-medium">
-                    {reservationId ? reservationId.slice(0, 8).toUpperCase() : 'NOVA'}
+                  <p className="font-mono text-lg font-semibold text-primary">
+                    {formatReservationNumber(reservationId)}
                   </p>
                 </div>
                 {getStatusBadge()}
@@ -153,23 +174,6 @@ const ReservationSuccess = () => {
                 <p className="text-2xl font-bold text-primary">
                   R$ {parseFloat(total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* QR Code Card */}
-          <Card className="mb-6">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center">
-                  <QrCode className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <div>
-                  <h3 className="font-semibold mb-1">QR Code da Reserva</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Apresente este código no check-in para agilizar sua entrada.
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
