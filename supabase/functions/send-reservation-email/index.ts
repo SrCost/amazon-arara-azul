@@ -61,6 +61,14 @@ const formatDate = (dateStr: string) => {
   });
 };
 
+// Formatar número da reserva como PAA-XXXXXX
+const formatReservationNumber = (id: string): string => {
+  if (!id) return 'N/A';
+  const numbers = id.replace(/[^0-9]/g, '');
+  const suffix = numbers.slice(-6).padStart(6, '0');
+  return `PAA-${suffix}`;
+};
+
 const getPaymentSuccessEmail = (data: any) => `
 <!DOCTYPE html>
 <html>
@@ -182,7 +190,7 @@ const getReservationConfirmedEmail = (data: any) => `
       
       <div class="details">
         <h3>📋 Detalhes da Reserva</h3>
-        <div class="details-row"><span>Código da Reserva:</span><strong>${data.reservationId}</strong></div>
+        <div class="details-row"><span>Código da Reserva:</span><strong>${formatReservationNumber(data.reservationId)}</strong></div>
         <div class="details-row"><span>Bangalô:</span><strong>${data.roomName}</strong></div>
         ${data.packageName ? `<div class="details-row"><span>Pacote:</span><strong>${data.packageName}</strong></div>` : ''}
         <div class="details-row"><span>Check-in:</span><strong>${formatDate(data.checkIn)}</strong></div>

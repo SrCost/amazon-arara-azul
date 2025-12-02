@@ -244,7 +244,41 @@ serve(async (req) => {
       response_payload: mpData
     });
 
-    // 7. Resposta
+    // 7. Enviar email de confirmação se aprovado imediatamente
+    if (mpStatus === 'approved') {
+      console.log('=== ENVIANDO EMAIL DE CONFIRMAÇÃO (CARTÃO) ===');
+      try {
+        const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-reservation-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`
+          },
+          body: JSON.stringify({
+            type: 'reservation_confirmed',
+            reservationId: reservationId,
+            email: email,
+            name: full_name
+          })
+        });
+        const emailResult = await emailResponse.json();
+        console.log('Email de confirmação enviado:', emailResult);
+        
+        // Registrar envio de email no log
+        await supabase.from('activity_log').insert({
+          user_email: 'system',
+          action: 'email_confirmation_sent',
+          description: `Email de confirmação enviado para ${email}`,
+          entity_type: 'reservation',
+          entity_id: reservationId
+        });
+      } catch (emailError) {
+        console.error('Erro ao enviar email:', emailError);
+        // Não bloquear por erro de email
+      }
+    }
+
+    // 8. Resposta
     const response: Record<string, any> = {
       success: mpStatus !== 'rejected',
       reservation_id: reservationId,
