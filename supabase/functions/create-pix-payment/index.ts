@@ -56,6 +56,10 @@ serve(async (req) => {
       throw new Error('CPF é obrigatório para pagamento PIX');
     }
 
+    // Detectar modo de teste (token começa com TEST-)
+    const isTestMode = mercadoPagoToken?.startsWith('TEST-');
+    console.log('Modo de teste:', isTestMode);
+
     // 1. Verificar reserva existente
     console.log('=== VERIFICANDO RESERVA EXISTENTE ===');
     const { data: existingReservation } = await supabase
@@ -112,30 +116,42 @@ serve(async (req) => {
       console.log('Reserva criada:', reservationId);
     }
 
-    // 3. Criar pagamento PIX no Mercado Pago
-    console.log('=== CRIANDO PAGAMENTO PIX NO MERCADO PAGO ===');
+    // 3. Criar pagamento PIX no Mercado Pago usando API de Orders
+    console.log('=== CRIANDO PAGAMENTO PIX NO MERCADO PAGO (Orders API) ===');
     const idempotencyKey = crypto.randomUUID();
 
+    // Usar dados de teste quando em modo sandbox conforme documentação MP
+    // first_name: "APRO" é obrigatório para testes PIX funcionarem
+    const payerFirstName = isTestMode ? "APRO" : (full_name?.split(' ')[0] || 'Cliente');
+    const payerEmail = isTestMode ? "test@testuser.com" : email;
+
+    console.log('Payer first_name:', payerFirstName);
+    console.log('Payer email:', payerEmail);
+
     const mpPayload = {
-      transaction_amount: amount,
-      payment_method_id: 'pix',
+      type: "online",
       external_reference: reservationId,
-      description: `Reserva Pousada Arara Azul - ${full_name}`,
-      notification_url: webhookUrl,
+      total_amount: amount.toFixed(2),
       payer: {
-        email: email,
-        first_name: full_name?.split(' ')[0] || 'Cliente',
-        last_name: full_name?.split(' ').slice(1).join(' ') || 'Pousada',
-        identification: {
-          type: 'CPF',
-          number: cleanCpf
-        }
+        email: payerEmail,
+        first_name: payerFirstName
+      },
+      transactions: {
+        payments: [
+          {
+            amount: amount.toFixed(2),
+            payment_method: {
+              id: "pix",
+              type: "bank_transfer"
+            }
+          }
+        ]
       }
     };
 
-    console.log('MP PIX Payload:', JSON.stringify(mpPayload, null, 2));
+    console.log('MP Orders Payload:', JSON.stringify(mpPayload, null, 2));
 
-    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${mercadoPagoToken}`,
@@ -146,11 +162,11 @@ serve(async (req) => {
     });
 
     const mpData = await mpResponse.json();
-    console.log('MP PIX Response Status:', mpResponse.status);
-    console.log('MP PIX Response:', JSON.stringify(mpData, null, 2));
+    console.log('MP Orders Response Status:', mpResponse.status);
+    console.log('MP Orders Response:', JSON.stringify(mpData, null, 2));
 
     if (!mpResponse.ok) {
-      console.error('Erro Mercado Pago PIX:', mpData);
+      console.error('Erro Mercado Pago Orders:', mpData);
       
       await supabase
         .from('reservations')
@@ -171,10 +187,23 @@ serve(async (req) => {
       throw new Error(mpData?.message || mpData?.cause?.[0]?.description || 'Erro ao criar pagamento PIX');
     }
 
-    const mpPaymentId = mpData.id?.toString();
-    const pixData = mpData.point_of_interaction?.transaction_data;
+    // Extrair dados PIX da estrutura de Orders
+    const pixPayment = mpData.transactions?.payments?.[0];
+    const pixData = {
+      qr_code: pixPayment?.payment_method?.qr_code,
+      qr_code_base64: pixPayment?.payment_method?.qr_code_base64,
+      ticket_url: pixPayment?.payment_method?.ticket_url
+    };
+    
+    const mpOrderId = mpData.id;  // Order ID (ORD...)
+    const mpPaymentId = pixPayment?.id || mpOrderId;  // Payment ID (PAY...) ou Order ID
+
+    console.log('Order ID:', mpOrderId);
+    console.log('Payment ID:', mpPaymentId);
+    console.log('PIX Data:', JSON.stringify(pixData, null, 2));
 
     if (!pixData?.qr_code) {
+      console.error('QR Code não retornado. Response completo:', mpData);
       throw new Error('QR Code PIX não retornado pela API');
     }
 
@@ -186,12 +215,13 @@ serve(async (req) => {
         reservation_id: reservationId,
         mercado_pago_payment_id: mpPaymentId,
         mp_payment_id: mpPaymentId,
+        mp_order_id: mpOrderId,
         transaction_id: mpPaymentId,
         payment_method: 'pix',
         status: 'pending',
         amount: amount,
         total_amount: amount,
-        payer_email: email,
+        payer_email: email, // Email real do cliente
         payer_name: full_name,
         payer_cpf: cleanCpf
       })
@@ -207,9 +237,10 @@ serve(async (req) => {
       .from('reservations')
       .update({
         mp_transaction_id: mpPaymentId,
+        mp_order_id: mpOrderId,
         payment_reference: mpPaymentId,
         payment_qr_code: pixData.qr_code,
-        payment_qr_code_base64: pixData.qr_code_base64,
+        payment_qr_code_base64: pixData.qr_code_base64 || '',
         payment_ticket_url: pixData.ticket_url
       })
       .eq('id', reservationId);
@@ -230,13 +261,14 @@ serve(async (req) => {
       reservation_id: reservationId,
       payment_id: payment?.id || mpPaymentId,
       mp_payment_id: mpPaymentId,
+      mp_order_id: mpOrderId,
       status: mpData.status,
+      status_detail: mpData.status_detail,
       pix: {
         qr_code: pixData.qr_code,
-        qr_code_base64: pixData.qr_code_base64,
+        qr_code_base64: pixData.qr_code_base64 || '',
         ticket_url: pixData.ticket_url
-      },
-      expires_at: mpData.date_of_expiration
+      }
     };
 
     console.log('=== CREATE-PIX-PAYMENT CONCLUÍDO ===');
