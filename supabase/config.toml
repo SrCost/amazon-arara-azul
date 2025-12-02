@@ -35,3 +35,9 @@ verify_jwt = false
 
 [functions.mp-webhook]
 verify_jwt = false
+
+[functions.create-pix-payment]
+verify_jwt = false
+
+[functions.create-card-payment]
+verify_jwt = false

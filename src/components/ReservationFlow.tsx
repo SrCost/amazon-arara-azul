@@ -10,6 +10,7 @@ import { useRoomAvailability } from "@/hooks/useRoomAvailability";
 import { validateCPF } from "@/lib/cpfValidator";
 import { validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
+import { usePaymentRealtime } from "@/hooks/usePaymentRealtime";
 import {
   Dialog,
   DialogContent,
@@ -90,10 +91,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [paymentCreated, setPaymentCreated] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<string>("pending");
+  const [localPaymentStatus, setLocalPaymentStatus] = useState<string>("pending");
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentVerified, setPaymentVerified] = useState(false);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const pixTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Error handling state
@@ -105,6 +105,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   
   // Mercado Pago hook
   const { mercadoPago, createCardToken, getPaymentMethodFromBin } = useMercadoPago();
+  
+  // Realtime payment status hook
+  const { 
+    paymentStatus: realtimePaymentStatus, 
+    isPaid, 
+    isConnected: realtimeConnected,
+    checkPaymentStatus: checkRealtimeStatus 
+  } = usePaymentRealtime(reservationId);
+
+  // Sync realtime status with local state
+  const paymentStatus = realtimePaymentStatus || localPaymentStatus;
 
   const steps = [
     { number: 1, title: "Pacote" },
@@ -147,17 +158,29 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
   }, [selectedPackage, checkIn, packages]);
 
-  // Cleanup polling and timeout on unmount
+  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
       if (pixTimeoutRef.current) {
         clearTimeout(pixTimeoutRef.current);
       }
     };
   }, []);
+
+  // Realtime payment status update effect
+  useEffect(() => {
+    if (isPaid && !paymentVerified) {
+      setPaymentVerified(true);
+      setLocalPaymentStatus('paid');
+      toast.success('✓ Pagamento confirmado via Realtime!');
+      
+      // Clear PIX timeout
+      if (pixTimeoutRef.current) {
+        clearTimeout(pixTimeoutRef.current);
+        pixTimeoutRef.current = null;
+      }
+    }
+  }, [isPaid, paymentVerified]);
 
   const calculateTotal = useCallback(() => {
     if (!checkIn || !checkOut) return 0;
@@ -173,32 +196,34 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     return nights * pricePerNight;
   }, [checkIn, checkOut, selectedPackage, packages, pricePerNight]);
 
-  // Check payment status
+  // Manual check payment status (fallback)
   const checkPaymentStatus = useCallback(async (paymentIdToCheck: string, resId: string) => {
     try {
       setIsCheckingPayment(true);
       
+      // First try Realtime check
+      const realtimeStatus = await checkRealtimeStatus();
+      if (realtimeStatus === 'paid' || realtimeStatus === 'approved') {
+        setLocalPaymentStatus('paid');
+        setPaymentVerified(true);
+        toast.success('✓ Pagamento confirmado!');
+        return 'approved';
+      }
+      
+      // Fallback to Edge Function check
       const { data, error } = await supabase.functions.invoke('check-payment-status', {
         body: { paymentId: paymentIdToCheck, reservationId: resId }
       });
 
       if (error) return null;
       
-      if (data?.status === 'approved') {
-        setPaymentStatus('approved');
+      if (data?.status === 'approved' || data?.status === 'paid') {
+        setLocalPaymentStatus('paid');
         setPaymentVerified(true);
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
         toast.success('✓ Pagamento confirmado!');
         return 'approved';
       } else if (data?.status === 'rejected' || data?.status === 'cancelled') {
-        setPaymentStatus('failed');
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
+        setLocalPaymentStatus('failed');
         toast.error('Pagamento não aprovado');
         return 'failed';
       }
@@ -209,51 +234,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     } finally {
       setIsCheckingPayment(false);
     }
-  }, []);
-
-  // Start polling for PIX
-  const startPaymentPolling = useCallback((paymentIdToCheck: string, resId: string) => {
-    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-    
-    checkPaymentStatus(paymentIdToCheck, resId);
-    
-    pollingIntervalRef.current = setInterval(() => {
-      checkPaymentStatus(paymentIdToCheck, resId);
-    }, 5000);
-    
-    setTimeout(() => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-        pollingIntervalRef.current = null;
-      }
-    }, 600000);
-  }, [checkPaymentStatus]);
+  }, [checkRealtimeStatus]);
 
   // Helper to build payload for create-order-mp
-  const buildOrderPayload = (paymentMethodType: string, cardToken?: string, cardBrand?: string) => {
-    const totalPrice = calculateTotal();
-    return {
-      bungalow_id: roomId,
-      checkin: checkIn!.toISOString().split('T')[0],
-      checkout: checkOut!.toISOString().split('T')[0],
-      guests: parseInt(guests),
-      full_name: guestName,
-      email: guestEmail,
-      phone: guestPhone || null,
-      cpf: !isForeign ? cpf : cardCpf, // Use cardCpf for payment if guest CPF not available
-      date_of_birth: birthDate || null,
-      is_foreign: isForeign,
-      foreign_passport: isForeign ? passport : null,
-      foreign_nationality: isForeign ? nationality : null,
-      payment_method: paymentMethodType,
-      total_amount: totalPrice,
-      card_token: cardToken || undefined,
-      card_brand: cardBrand || undefined,
-      installments: parseInt(installments)
-    };
-  };
-
-  // Generate PIX QR Code - using create-order-mp
+  // Generate PIX QR Code - using dedicated Edge Function
   const handleGeneratePixQrCode = async () => {
     if (!cardCpf || !validateCPF(cardCpf)) {
       toast.error("Informe um CPF válido para gerar o PIX");
@@ -274,12 +258,27 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     setPixExpired(false);
 
     try {
-      const payload = buildOrderPayload('pix');
-      payload.cpf = cardCpf.replace(/\D/g, ''); // Use payment CPF
+      const totalPrice = calculateTotal();
+      const payload = {
+        bungalow_id: roomId,
+        checkin: checkIn!.toISOString().split('T')[0],
+        checkout: checkOut!.toISOString().split('T')[0],
+        guests: parseInt(guests),
+        full_name: guestName,
+        email: guestEmail,
+        phone: guestPhone || null,
+        cpf: cardCpf.replace(/\D/g, ''),
+        date_of_birth: birthDate || null,
+        is_foreign: isForeign,
+        foreign_passport: isForeign ? passport : null,
+        foreign_nationality: isForeign ? nationality : null,
+        total_amount: totalPrice,
+        package_id: selectedPackage || null
+      };
 
-      // Call create-order-mp for PIX
+      // Call dedicated PIX Edge Function
       const { data: orderData, error: orderError } = await supabase.functions.invoke(
-        'create-order-mp',
+        'create-pix-payment',
         { body: payload }
       );
 
@@ -293,7 +292,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
 
-      // Store reservation and payment IDs
+      // Store reservation and payment IDs (triggers Realtime subscription)
       if (orderData.reservation_id) setReservationId(orderData.reservation_id);
       if (orderData.payment_id) setPaymentId(orderData.payment_id);
 
@@ -303,21 +302,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         setPixTicketUrl(orderData.pix.ticket_url || '');
         setShowPixCode(true);
         setPaymentCreated(true);
-        toast.success("QR Code PIX gerado com sucesso!");
+        toast.success("QR Code PIX gerado! Aguardando pagamento...");
         
-        // Start payment polling
-        if (orderData.payment_id && orderData.reservation_id) {
-          startPaymentPolling(orderData.payment_id, orderData.reservation_id);
-        }
+        // Realtime will automatically detect payment status changes
+        console.log('=== REALTIME ATIVO PARA RESERVA ===');
+        console.log('Reservation ID:', orderData.reservation_id);
+        console.log('Realtime Connected:', realtimeConnected);
 
         // Set 10-minute PIX timeout
         pixTimeoutRef.current = setTimeout(() => {
-          if (!paymentVerified && paymentStatus !== 'approved') {
+          if (!paymentVerified && paymentStatus !== 'approved' && paymentStatus !== 'paid') {
             setPixExpired(true);
-            if (pollingIntervalRef.current) {
-              clearInterval(pollingIntervalRef.current);
-              pollingIntervalRef.current = null;
-            }
             setErrorType("pix_timeout");
             setErrorMessage("O tempo para pagamento PIX expirou (10 minutos). Por favor, gere um novo QR Code para continuar.");
             setCanRetry(true);
@@ -473,7 +468,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         return;
       }
 
-      // Credit card payment - using create-order-mp
+      // Credit card payment - using dedicated Edge Function
       if (paymentMethod === "credit_card") {
         if (!checkAvailability(checkIn, checkOut)) {
           toast.error("Desculpe, as datas já foram reservadas");
@@ -505,19 +500,36 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         const cardBin = cardNumber.replace(/\D/g, '').substring(0, 6);
         const cardBrand = await getPaymentMethodFromBin(cardBin);
         
-        // Build payload and call create-order-mp
-        const payload = buildOrderPayload('credit_card', cardToken.id, cardBrand);
-        payload.cpf = cardCpf.replace(/\D/g, '');
+        // Build payload for dedicated card Edge Function
+        const payload = {
+          bungalow_id: roomId,
+          checkin: checkIn!.toISOString().split('T')[0],
+          checkout: checkOut!.toISOString().split('T')[0],
+          guests: parseInt(guests),
+          full_name: guestName,
+          email: guestEmail,
+          phone: guestPhone || null,
+          cpf: cardCpf.replace(/\D/g, ''),
+          date_of_birth: birthDate || null,
+          is_foreign: isForeign,
+          foreign_passport: isForeign ? passport : null,
+          foreign_nationality: isForeign ? nationality : null,
+          total_amount: totalPrice,
+          card_token: cardToken.id,
+          card_brand: cardBrand,
+          installments: parseInt(installments),
+          package_id: selectedPackage || null
+        };
 
         const { data: orderResult, error: orderError } = await supabase.functions.invoke(
-          'create-order-mp',
+          'create-card-payment',
           { body: payload }
         );
 
         if (orderError || !orderResult?.success) {
-          const errorMsg = orderResult?.error || "Erro ao processar pagamento";
+          const errorMsg = orderResult?.error_message || orderResult?.error || "Erro ao processar pagamento";
           setErrorType("card_failed");
-          setErrorMessage(`Pagamento recusado: ${errorMsg}. Verifique os dados do cartão e tente novamente.`);
+          setErrorMessage(`Pagamento recusado: ${errorMsg}`);
           setCanRetry(true);
           setErrorDialogOpen(true);
           logErrorToAudit("card_payment_failed", errorMsg);
@@ -525,18 +537,23 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           return;
         }
 
-        // Store reservation ID
+        // Store reservation ID (triggers Realtime subscription)
         if (orderResult.reservation_id) setReservationId(orderResult.reservation_id);
 
         if (orderResult.status === 'approved') {
           toast.success("🎉 Pagamento aprovado!");
         } else if (orderResult.status === 'rejected') {
+          const errorMsg = orderResult.error_message || "Pagamento recusado pela operadora do cartão";
           setErrorType("card_failed");
-          setErrorMessage("Pagamento recusado pela operadora do cartão. Por favor, verifique os dados ou tente outro cartão.");
+          setErrorMessage(errorMsg);
           setCanRetry(true);
           setErrorDialogOpen(true);
-          logErrorToAudit("card_rejected", "Payment rejected by card operator");
+          logErrorToAudit("card_rejected", errorMsg);
           setIsSubmitting(false);
+          return;
+        } else if (orderResult.status === 'pending' || orderResult.status === 'in_process') {
+          toast.info("Pagamento em processamento. Aguarde...");
+          // Realtime will handle status updates
           return;
         } else {
           toast.info("Pagamento em processamento");
@@ -552,7 +569,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           checkIn: checkIn?.toISOString().split('T')[0] || '',
           checkOut: checkOut?.toISOString().split('T')[0] || '',
           guests, total: totalPrice.toString(), email: guestEmail,
-          paymentMethod: paymentMethod // Pass the actual selected payment method
+          paymentMethod: paymentMethod
         });
         if (selectedPkg) params.append('package', selectedPkg.name);
         
