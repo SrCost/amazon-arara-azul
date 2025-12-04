@@ -12,12 +12,10 @@ const HowToGetThere = () => {
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6">
-              Como Chegar
-            </h1>
+            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6">Como Chegar</h1>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              A jornada até nossas pousadas faz parte da experiência amazônica. Oferecemos
-              múltiplas opções de acesso a partir de Manaus e Belém.
+              A jornada até nossas pousadas faz parte da experiência amazônica. Oferecemos múltiplas opções de acesso a
+              partir de Manaus e Belém.
             </p>
           </div>
 
@@ -41,12 +39,11 @@ const HowToGetThere = () => {
                   </div>
                   <div className="flex-1">
                     <h2 className="text-2xl font-display font-semibold mb-3 text-foreground">
-                      De Avião + Barco
+                      De Avião + Carro + Canoa
                     </h2>
                     <p className="text-muted-foreground mb-4 leading-relaxed">
-                      Voe até o Aeroporto Internacional Eduardo Gomes em Manaus (MAO). De lá,
-                      nosso serviço de transfer fluvial exclusivo leva você até a pousada em
-                      confortáveis lanchas rápidas.
+                      Voe até o Aeroporto Internacional Eduardo Gomes em Manaus (MAO). De lá, nosso servico de transfer
+                      terrestre e fluvial leva voce ate a pousada.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
@@ -55,7 +52,7 @@ const HowToGetThere = () => {
                       </div>
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4 text-accent" />
-                        <span>Saída do Porto de Manaus</span>
+                        <span>Saída de Manaus</span>
                       </div>
                     </div>
                   </div>
@@ -72,13 +69,10 @@ const HowToGetThere = () => {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-display font-semibold mb-3 text-foreground">
-                      Cruzeiro Fluvial
-                    </h2>
+                    <h2 className="text-2xl font-display font-semibold mb-3 text-foreground">Cruzeiro</h2>
                     <p className="text-muted-foreground mb-4 leading-relaxed">
-                      Para uma experiência mais imersiva, oferecemos pacotes que incluem
-                      navegação em barcos regionais, permitindo apreciar a paisagem amazônica com
-                      calma e autenticidade.
+                      Para uma experiência mais imersiva, oferecemos pacotes que incluem navegação em barcos regionais,
+                      permitindo apreciar a paisagem amazônica com calma e autenticidade.
                     </p>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                       <div className="flex items-center space-x-2">
@@ -104,9 +98,9 @@ const HowToGetThere = () => {
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Transfer Incluído</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Todos os nossos pacotes incluem transfer do aeroporto/porto até a pousada e
-                    vice-versa. Nossa equipe entrará em contato após a confirmação da reserva
-                    para coordenar horários e detalhes logísticos.
+                    Todos os nossos pacotes incluem transfer do aeroporto/fluvial até a pousada e vice-versa. Nossa
+                    equipe entrará em contato após a confirmação da reserva para coordenar horários e detalhes
+                    logísticos.
                   </p>
                 </div>
               </div>
@@ -115,9 +109,7 @@ const HowToGetThere = () => {
 
           {/* Tips */}
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-6 text-center">
-              Dicas Importantes
-            </h2>
+            <h2 className="text-3xl font-display font-bold text-foreground mb-6 text-center">Dicas Importantes</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardContent className="p-6">
@@ -146,15 +138,13 @@ const HowToGetThere = () => {
 
           {/* Google Maps Location */}
           <div className="max-w-4xl mx-auto mt-16">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-6 text-center">
-              Nossa Localização
-            </h2>
+            <h2 className="text-3xl font-display font-bold text-foreground mb-6 text-center">Nossa Localização</h2>
             <div className="rounded-lg overflow-hidden shadow-strong">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63773.68135042783!2d-60.548989418755264!3d-3.093691099999988!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x926c63e4533d9e21%3A0xd159f0067b07177d!2sPousada%20Arara%20Azul!5e0!3m2!1spt-BR!2sbr!4v1732857788999"
                 width="100%"
                 height="350"
-                style={{ border: 0, borderRadius: '8px' }}
+                style={{ border: 0, borderRadius: "8px" }}
                 loading="lazy"
                 allowFullScreen
                 referrerPolicy="no-referrer-when-downgrade"
