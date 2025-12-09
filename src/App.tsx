@@ -117,7 +117,7 @@ const App = () => (
             <Route
               path="/admin/payments"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="super_admin">
                   <AdminLayout>
                     <Payments />
                   </AdminLayout>

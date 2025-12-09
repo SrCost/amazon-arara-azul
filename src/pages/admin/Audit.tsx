@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, History, Calendar, RefreshCw } from "lucide-react";
+import { Search, History, Calendar, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -35,16 +35,20 @@ interface ActivityLog {
   metadata: any;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 const Audit = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterAction, setFilterAction] = useState<string>("all");
   const [filterEntity, setFilterEntity] = useState<string>("all");
-  const [filterDateRange, setFilterDateRange] = useState<string>("7"); // Days
+  const [filterDateRange, setFilterDateRange] = useState<string>("7");
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     checkUserRole();
@@ -54,7 +58,6 @@ const Audit = () => {
     if (isSuperAdmin) {
       fetchLogs();
 
-      // Setup realtime updates
       const channel = supabase
         .channel('activity-log-changes')
         .on(
@@ -72,7 +75,7 @@ const Audit = () => {
         supabase.removeChannel(channel);
       };
     }
-  }, [isSuperAdmin, filterDateRange]);
+  }, [isSuperAdmin, filterDateRange, currentPage]);
 
   const checkUserRole = async () => {
     if (!user) return;
@@ -93,18 +96,19 @@ const Audit = () => {
       const dateThreshold = new Date();
       dateThreshold.setDate(dateThreshold.getDate() - daysAgo);
 
-      let query = supabase
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
+
+      const { data, error, count } = await supabase
         .from("activity_log")
-        .select("*")
+        .select("*", { count: 'exact' })
         .gte("created_at", dateThreshold.toISOString())
         .order("created_at", { ascending: false })
-        .limit(500);
-
-      const { data, error } = await query;
+        .range(from, to);
 
       if (error) throw error;
       setLogs(data || []);
-      console.log(`Loaded ${data?.length || 0} audit logs from last ${daysAgo} days`);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error("Error fetching activity logs:", error);
       toast.error("Erro ao carregar histórico de atividades");
@@ -132,6 +136,7 @@ const Audit = () => {
       'reservations': 'Reserva',
       'payments': 'Pagamento',
       'contact_messages': 'Mensagem',
+      'packages': 'Pacote',
     };
 
     const label = entityMap[entityType] || entityType;
@@ -141,6 +146,7 @@ const Audit = () => {
       'reservations': { className: "bg-amber-100 text-amber-800" },
       'payments': { className: "bg-emerald-100 text-emerald-800" },
       'contact_messages': { className: "bg-cyan-100 text-cyan-800" },
+      'packages': { className: "bg-orange-100 text-orange-800" },
     };
 
     const variant = variants[entityType] || { className: "bg-gray-100 text-gray-800" };
@@ -158,6 +164,20 @@ const Audit = () => {
 
     return matchesSearch && matchesAction && matchesEntity;
   });
+
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   if (!isSuperAdmin && !loading) {
     return (
@@ -206,7 +226,7 @@ const Audit = () => {
               />
             </div>
             
-            <Select value={filterDateRange} onValueChange={setFilterDateRange}>
+            <Select value={filterDateRange} onValueChange={(value) => { setFilterDateRange(value); setCurrentPage(1); }}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Período" />
               </SelectTrigger>
@@ -240,6 +260,7 @@ const Audit = () => {
                 <SelectItem value="reservations">Reservas</SelectItem>
                 <SelectItem value="payments">Pagamentos</SelectItem>
                 <SelectItem value="contact_messages">Mensagens</SelectItem>
+                <SelectItem value="packages">Pacotes</SelectItem>
               </SelectContent>
             </Select>
 
@@ -257,11 +278,11 @@ const Audit = () => {
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm text-muted-foreground">
-                <strong>Retenção:</strong> Registros são automaticamente excluídos após 15 dias (diariamente às 2h).
+                <strong>Retenção:</strong> Registros são automaticamente excluídos após 15 dias.
               </p>
             </div>
             <div className="text-sm font-medium">
-              {filteredLogs.length} de {logs.length} registros
+              {filteredLogs.length} registros (Total: {totalCount})
             </div>
           </div>
 
@@ -306,6 +327,35 @@ const Audit = () => {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Página {currentPage} de {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNextPage}
+                  disabled={currentPage >= totalPages}
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

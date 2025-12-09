@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
-import { Calendar, Users, CheckCircle, Sparkles } from "lucide-react";
+import { Calendar, Users, CheckCircle, Sparkles, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
+import { SOCIAL_LINKS } from "@/config/socialLinks";
 
 interface PackageCardProps {
   id: string;
@@ -13,6 +14,7 @@ interface PackageCardProps {
   inclusions: string[];
   total: string;
   highlight: string;
+  isCustomizable?: boolean;
 }
 
 const PackageCard = ({
@@ -24,15 +26,25 @@ const PackageCard = ({
   inclusions,
   total,
   highlight,
+  isCustomizable = false,
 }: PackageCardProps) => {
   const { t } = useTranslation();
 
+  const isCustom = isCustomizable || total === "Sob Consulta" || id === "gaviao-panema";
+
   return (
-    <Card className="overflow-hidden group hover:shadow-strong transition-all duration-300 flex flex-col h-full">
-      <CardHeader className="bg-gradient-to-br from-primary/10 to-accent/10 border-b border-border">
-        <CardTitle className="text-3xl font-display font-bold text-foreground mb-2">
-          {name}
-        </CardTitle>
+    <Card className={`overflow-hidden group hover:shadow-strong transition-all duration-300 flex flex-col h-full ${isCustom ? "border-amber-200 bg-gradient-to-br from-amber-50/30 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/20" : ""}`}>
+      <CardHeader className={`border-b border-border ${isCustom ? "bg-gradient-to-br from-amber-100/50 to-orange-100/50 dark:from-amber-900/30 dark:to-orange-900/30" : "bg-gradient-to-br from-primary/10 to-accent/10"}`}>
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-3xl font-display font-bold text-foreground mb-2">
+            {name}
+          </CardTitle>
+          {isCustom && (
+            <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-semibold">
+              Personalizado
+            </span>
+          )}
+        </div>
         <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2 text-accent" />
@@ -93,29 +105,56 @@ const PackageCard = ({
 
         {/* Price and CTA */}
         <div className="mt-auto">
-          <div className="mb-4 text-center">
-            <div className="text-sm text-muted-foreground mb-1">
-              A partir de 12x de
-            </div>
-            <div className="text-3xl font-bold text-primary">
-              {(parseFloat(total.replace("R$ ", "").replace(".", "").replace(",", ".")) / 12).toLocaleString("pt-BR", {
-                style: "currency",
-                currency: "BRL",
-              })}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              ou {total} à vista
-            </div>
-          </div>
-
-          <Button
-            asChild
-            className="w-full bg-gradient-forest hover:opacity-90 transition-opacity"
-          >
-            <Link to={`/bangalos?pacote=${id}`}>
-              {t("packages.bookButton")}
-            </Link>
-          </Button>
+          {isCustom ? (
+            <>
+              <div className="mb-4 text-center">
+                <div className="text-3xl font-bold text-amber-600">
+                  Sob Consulta
+                </div>
+                <div className="text-sm text-amber-600 mt-1">
+                  Fale com nosso consultor
+                </div>
+              </div>
+              <Button
+                asChild
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+              >
+                <a 
+                  href={SOCIAL_LINKS.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Consultar
+                </a>
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="mb-4 text-center">
+                <div className="text-sm text-muted-foreground mb-1">
+                  A partir de 12x de
+                </div>
+                <div className="text-3xl font-bold text-primary">
+                  {(parseFloat(total.replace("R$ ", "").replace(".", "").replace(",", ".")) / 12).toLocaleString("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  })}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  ou {total} à vista
+                </div>
+              </div>
+              <Button
+                asChild
+                className="w-full bg-gradient-forest hover:opacity-90 transition-opacity"
+              >
+                <Link to={`/bangalos?pacote=${id}`}>
+                  {t("packages.bookButton")}
+                </Link>
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>
