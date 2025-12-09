@@ -53,6 +53,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   // Package state
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
   const [packages, setPackages] = useState<any[]>([]);
+  const [wantsConsultorContact, setWantsConsultorContact] = useState(false);
   
   // Date state
   const [checkIn, setCheckIn] = useState<Date | undefined>();
@@ -182,6 +183,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
   }, [isPaid, paymentVerified]);
 
+  const isCustomizablePackage = useCallback((pkg: any) => {
+    return pkg?.price === 0 || pkg?.name?.toLowerCase().includes('gavião') || pkg?.name?.toLowerCase().includes('panema');
+  }, []);
+
   const calculateTotal = useCallback(() => {
     if (!checkIn || !checkOut) return 0;
     const nights = Math.ceil(
@@ -190,11 +195,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     
     if (selectedPackage) {
       const pkg = packages.find(p => p.id === selectedPackage);
+      // If customizable package (price 0), only charge for accommodation
+      if (pkg && isCustomizablePackage(pkg)) {
+        return nights * pricePerNight;
+      }
       if (pkg) return Number(pkg.price) || 0;
     }
     
     return nights * pricePerNight;
-  }, [checkIn, checkOut, selectedPackage, packages, pricePerNight]);
+  }, [checkIn, checkOut, selectedPackage, packages, pricePerNight, isCustomizablePackage]);
 
   // Manual check payment status (fallback)
   const checkPaymentStatus = useCallback(async (paymentIdToCheck: string, resId: string) => {
@@ -615,6 +624,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               packages={packages}
               selectedPackage={selectedPackage}
               onSelectPackage={setSelectedPackage}
+              wantsConsultorContact={wantsConsultorContact}
+              onWantsConsultorContactChange={setWantsConsultorContact}
             />
           )}
 

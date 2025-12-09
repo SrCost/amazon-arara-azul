@@ -18,9 +18,17 @@ interface GalleryImageEditorProps {
   onSave: () => void;
 }
 
+const BUNGALOW_OPTIONS = [
+  { value: "", label: "Nenhum" },
+  { value: "suite-peneira", label: "Suíte Peneira" },
+  { value: "suite-paneiro", label: "Suíte Paneiro" },
+  { value: "suite-tipiti", label: "Suíte Tipiti" },
+];
+
 const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditorProps) => {
   const [altText, setAltText] = useState(image.alt_text);
   const [category, setCategory] = useState<string>(image.category);
+  const [bungalowSlug, setBungalowSlug] = useState<string>(image.bungalow_slug || "");
   const [displayOrder, setDisplayOrder] = useState(image.display_order);
   const [isActive, setIsActive] = useState(image.is_active);
   const [isSaving, setIsSaving] = useState(false);
@@ -43,6 +51,7 @@ const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditor
       .update({
         alt_text: altText,
         category,
+        bungalow_slug: category === 'bungalows' ? (bungalowSlug || null) : null,
         display_order: displayOrder,
         is_active: isActive,
       })
@@ -113,6 +122,28 @@ const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditor
               </SelectContent>
             </Select>
           </div>
+
+          {/* Bungalow selection - only show when category is bungalows */}
+          {category === 'bungalows' && (
+            <div>
+              <Label htmlFor="bungalow">Bangalô</Label>
+              <Select value={bungalowSlug} onValueChange={setBungalowSlug}>
+                <SelectTrigger id="bungalow">
+                  <SelectValue placeholder="Selecione o bangalô" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BUNGALOW_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">
+                Associe esta imagem a um bangalô específico
+              </p>
+            </div>
+          )}
 
           <div>
             <Label htmlFor="order">Ordem de exibição</Label>

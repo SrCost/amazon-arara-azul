@@ -90,6 +90,27 @@ const Packages = () => {
       highlight:
         "O pacote mais completo e imersivo. Ideal para quem deseja mergulhar profundamente na natureza e cultura amazônica com conforto e exclusividade.",
     },
+    {
+      id: "gaviao-panema",
+      name: "Pacote Gavião Panema",
+      duration: "Personalizado",
+      people: 2,
+      experiences: [
+        "Roteiro totalmente personalizado",
+        "Atividades à sua escolha",
+        "Experiências exclusivas sob medida",
+      ],
+      inclusions: [
+        "Consultoria personalizada",
+        "Itinerário sob medida",
+        "Suporte dedicado",
+        "Experiências exclusivas",
+      ],
+      total: "Sob Consulta",
+      highlight:
+        "Pacote exclusivo e personalizável criado junto a um consultor especializado. Ideal para quem deseja uma experiência sob medida na Amazônia.",
+      isCustomizable: true,
+    },
   ];
 
   return (
@@ -109,7 +130,7 @@ const Packages = () => {
       {/* Packages Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 gap-8 mb-16">
             {packages.map((pkg) => (
               <PackageCard key={pkg.id} {...pkg} />
             ))}
