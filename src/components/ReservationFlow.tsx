@@ -10,6 +10,7 @@ import { useRoomAvailability } from "@/hooks/useRoomAvailability";
 import { validateCPF } from "@/lib/cpfValidator";
 import { validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
 import { useMercadoPago } from "@/hooks/useMercadoPago";
+import { getDailyRate, calculateNights } from "@/lib/pricing";
 import { usePaymentRealtime } from "@/hooks/usePaymentRealtime";
 import {
   Dialog,
@@ -189,21 +190,21 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
   const calculateTotal = useCallback(() => {
     if (!checkIn || !checkOut) return 0;
-    const nights = Math.ceil(
-      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const nights = calculateNights(checkIn, checkOut);
+    const guestsNum = parseInt(guests) || 2;
     
     if (selectedPackage) {
       const pkg = packages.find(p => p.id === selectedPackage);
-      // If customizable package (price 0), only charge for accommodation
+      // If customizable package (price 0), only charge for accommodation with dynamic pricing
       if (pkg && isCustomizablePackage(pkg)) {
-        return nights * pricePerNight;
+        return getDailyRate(guestsNum) * nights;
       }
       if (pkg) return Number(pkg.price) || 0;
     }
     
-    return nights * pricePerNight;
-  }, [checkIn, checkOut, selectedPackage, packages, pricePerNight, isCustomizablePackage]);
+    // Dynamic pricing based on number of guests
+    return getDailyRate(guestsNum) * nights;
+  }, [checkIn, checkOut, guests, selectedPackage, packages, isCustomizablePackage]);
 
   // Manual check payment status (fallback)
   const checkPaymentStatus = useCallback(async (paymentIdToCheck: string, resId: string) => {

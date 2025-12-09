@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CalendarX, Loader2 } from "lucide-react";
+import { getDailyRate, formatDailyRate, calculateNights } from "@/lib/pricing";
 
 interface DateSelectionProps {
   lodgeName: string;
@@ -141,13 +142,14 @@ export const DateSelection = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">1 pessoa</SelectItem>
-            <SelectItem value="2">2 pessoas</SelectItem>
-            <SelectItem value="3">3 pessoas</SelectItem>
+            <SelectItem value="1">1 pessoa - R$ {formatDailyRate(1)}/noite</SelectItem>
+            <SelectItem value="2">2 pessoas - R$ {formatDailyRate(2)}/noite</SelectItem>
+            <SelectItem value="3">3 pessoas - R$ {formatDailyRate(3)}/noite</SelectItem>
+            <SelectItem value="4">4 pessoas - R$ {formatDailyRate(4)}/noite</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground mt-1">
-          Máximo de 3 hóspedes por acomodação
+          Máximo de 4 hóspedes por acomodação (pensão completa + transfer incluso)
         </p>
       </div>
 
@@ -176,7 +178,7 @@ export const DateSelection = ({
           
           {!selectedPackage && (
             <p className="text-xs text-muted-foreground">
-              {nights} noites × R$ {pricePerNight.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              {nights} noites × R$ {formatDailyRate(parseInt(guests))}/noite ({guests} hóspede{parseInt(guests) > 1 ? 's' : ''})
             </p>
           )}
         </div>
