@@ -169,59 +169,6 @@ const Packages = () => {
             ))}
           </div>
 
-          {/* Pricing Table Info */}
-          <div className="max-w-4xl mx-auto mb-16">
-            <h2 className="text-2xl font-display font-bold text-foreground mb-6 text-center">
-              Valores por Quantidade de Pessoas
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-muted/50">
-                    <th className="border border-border px-4 py-3 text-left font-semibold">Pacote</th>
-                    <th className="border border-border px-4 py-3 text-center font-semibold">1 pessoa</th>
-                    <th className="border border-border px-4 py-3 text-center font-semibold">2 pessoas</th>
-                    <th className="border border-border px-4 py-3 text-center font-semibold">3 pessoas</th>
-                    <th className="border border-border px-4 py-3 text-center font-semibold">4 pessoas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {packages.map((pkg) => (
-                    <tr key={pkg.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="border border-border px-4 py-3 font-medium">
-                        {pkg.name}
-                        <span className="text-xs text-muted-foreground block">{pkg.duration}</span>
-                      </td>
-                      <td className="border border-border px-4 py-3 text-center text-sm">
-                        {pkg.pricing[1] || "—"}
-                      </td>
-                      <td className="border border-border px-4 py-3 text-center text-sm font-medium text-primary">
-                        {pkg.pricing[2] || "—"}
-                      </td>
-                      <td className="border border-border px-4 py-3 text-center text-sm">
-                        {pkg.pricing[3] || "—"}
-                      </td>
-                      <td className="border border-border px-4 py-3 text-center text-sm">
-                        {pkg.pricing[4] || "—"}
-                      </td>
-                    </tr>
-                  ))}
-                  <tr className="bg-amber-50/50 dark:bg-amber-950/30">
-                    <td className="border border-border px-4 py-3 font-medium">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-amber-600" />
-                        Pacote Gavião Panema
-                      </div>
-                      <span className="text-xs text-amber-600 block">Personalizado</span>
-                    </td>
-                    <td colSpan={4} className="border border-border px-4 py-3 text-center text-amber-700 dark:text-amber-300 font-medium">
-                      Sob Consulta — Valores personalizados conforme roteiro
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
 
           {/* Final Section */}
           <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 md:p-12 border border-border">
