@@ -10,11 +10,12 @@ const FindUsSection = () => {
             Nos Encontre Também
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Reserve através do Airbnb
+            Reserve através do Airbnb ou Booking.com
           </p>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex flex-wrap justify-center gap-6">
+          {/* Airbnb Card */}
           <a
             href={SOCIAL_LINKS.airbnb}
             target="_blank"
@@ -32,6 +33,28 @@ const FindUsSection = () => {
             </div>
             <div className="flex items-center gap-2 text-lg font-medium text-muted-foreground group-hover:text-primary transition-colors">
               <span>Airbnb</span>
+              <ExternalLink className="h-4 w-4" />
+            </div>
+          </a>
+
+          {/* Booking.com Card */}
+          <a
+            href={SOCIAL_LINKS.booking}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex flex-col items-center gap-4 p-8 rounded-xl border border-border hover:border-primary hover:shadow-medium transition-all bg-card"
+          >
+            <div className="w-20 h-20 flex items-center justify-center">
+              <svg 
+                viewBox="0 0 24 24" 
+                fill="currentColor" 
+                className="w-16 h-16 text-[#003580] group-hover:scale-110 transition-transform"
+              >
+                <path d="M2.273 6.545V4.364C2.273 3.545 2.818 3 3.636 3h6.546c.818 0 1.364.545 1.364 1.364v2.181c0 .818-.546 1.364-1.364 1.364H3.636c-.818 0-1.363-.546-1.363-1.364zm0 6.546V10.91c0-.818.545-1.364 1.363-1.364h6.546c.818 0 1.364.546 1.364 1.364v2.181c0 .818-.546 1.364-1.364 1.364H3.636c-.818 0-1.363-.546-1.363-1.364zm0 6.545v-2.181c0-.818.545-1.364 1.363-1.364h6.546c.818 0 1.364.546 1.364 1.364v2.181c0 .818-.546 1.364-1.364 1.364H3.636c-.818 0-1.363-.546-1.363-1.364zm10.909-13.09V4.363C13.182 3.545 13.727 3 14.545 3h6.546c.818 0 1.364.545 1.364 1.364v2.181c0 .818-.546 1.364-1.364 1.364h-6.546c-.818 0-1.363-.546-1.363-1.364zm0 6.545V10.91c0-.818.545-1.364 1.363-1.364h6.546c.818 0 1.364.546 1.364 1.364v2.181c0 .818-.546 1.364-1.364 1.364h-6.546c-.818 0-1.363-.546-1.363-1.364z"/>
+              </svg>
+            </div>
+            <div className="flex items-center gap-2 text-lg font-medium text-muted-foreground group-hover:text-primary transition-colors">
+              <span>Booking.com</span>
               <ExternalLink className="h-4 w-4" />
             </div>
           </a>
