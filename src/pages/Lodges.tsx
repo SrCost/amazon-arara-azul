@@ -88,7 +88,7 @@ const Lodges = () => {
             image: room.slug 
               ? (coverImageMap[room.slug] || fallbackCoverImages[room.slug]) 
               : undefined,
-            price: `R$ ${room.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            price: "A partir de R$ 1.499,90",
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
             amenities: room.amenities || ["wifi", "breakfast"],

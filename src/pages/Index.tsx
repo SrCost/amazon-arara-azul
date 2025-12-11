@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import FindUsSection from "@/components/FindUsSection";
 import HeroCarousel from "@/components/HeroCarousel";
-import { getMinimumPrice, formatDailyRate } from "@/lib/pricing";
 
 // Fallback cover images
 import tipitiExterior from "@/assets/tipiti-exterior.jpg";
@@ -65,7 +64,7 @@ const Index = () => {
             name: room[`name_${i18n.language}`] || room.name_pt,
             location: "MANACAPURU, AMAZONIA - AM",
             image: imageUrl,
-            price: `A partir de ${formatDailyRate(getMinimumPrice())}`,
+            price: "A partir de R$ 1.499,90",
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
             amenities: room.amenities || ["wifi", "breakfast"],
