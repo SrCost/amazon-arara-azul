@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Globe, User, Instagram } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
-import logoAraraAzul from "@/assets/logo-arara-azul.jpg";
+import logoAraraAzul from "@/assets/logo-arara-azul.png";
 import { Button } from "./ui/button";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
 import {
