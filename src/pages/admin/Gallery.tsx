@@ -203,9 +203,9 @@ const Gallery = () => {
   const getBungalowLabel = (slug: string | null) => {
     if (!slug) return null;
     const labels: Record<string, string> = {
-      'suite-peneira': 'Suíte Peneira',
-      'suite-paneiro': 'Suíte Paneiro',
-      'suite-tipiti': 'Suíte Tipiti',
+      'bangalo-peneira': 'Bangalô Peneira',
+      'bangalo-paneiro': 'Bangalô Paneiro',
+      'bangalo-tipiti': 'Bangalô Tipiti',
     };
     return labels[slug] || slug;
   };
@@ -225,36 +225,10 @@ const Gallery = () => {
               Faça upload e gerencie as fotos da galeria pública
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button 
-              onClick={handlePaneiroUpload} 
-              disabled={isUploadingPaneiro}
-              variant="outline"
-              size="sm"
-            >
-              {isUploadingPaneiro ? "Enviando..." : "📸 Paneiro"}
-            </Button>
-            <Button 
-              onClick={handlePeneiraUpload} 
-              disabled={isUploadingPeneira}
-              variant="outline"
-              size="sm"
-            >
-              {isUploadingPeneira ? "Enviando..." : "📸 Peneira"}
-            </Button>
-            <Button 
-              onClick={handleTipitiUpload} 
-              disabled={isUploadingTipiti}
-              variant="outline"
-              size="sm"
-            >
-              {isUploadingTipiti ? "Enviando..." : "📸 Tipiti"}
-            </Button>
-            <Button onClick={() => setUploadDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Upload de Fotos
-            </Button>
-          </div>
+          <Button onClick={() => setUploadDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Upload de Fotos
+          </Button>
         </div>
 
         {/* Filtros */}
@@ -285,9 +259,9 @@ const Gallery = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os Bangalôs</SelectItem>
-                  <SelectItem value="suite-peneira">Suíte Peneira</SelectItem>
-                  <SelectItem value="suite-paneiro">Suíte Paneiro</SelectItem>
-                  <SelectItem value="suite-tipiti">Suíte Tipiti</SelectItem>
+                  <SelectItem value="bangalo-peneira">Bangalô Peneira</SelectItem>
+                  <SelectItem value="bangalo-paneiro">Bangalô Paneiro</SelectItem>
+                  <SelectItem value="bangalo-tipiti">Bangalô Tipiti</SelectItem>
                 </SelectContent>
               </Select>
             </div>

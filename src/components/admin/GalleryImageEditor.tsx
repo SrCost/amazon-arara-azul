@@ -20,9 +20,9 @@ interface GalleryImageEditorProps {
 
 const BUNGALOW_OPTIONS = [
   { value: "", label: "Nenhum" },
-  { value: "suite-peneira", label: "Suíte Peneira" },
-  { value: "suite-paneiro", label: "Suíte Paneiro" },
-  { value: "suite-tipiti", label: "Suíte Tipiti" },
+  { value: "bangalo-peneira", label: "Bangalô Peneira" },
+  { value: "bangalo-paneiro", label: "Bangalô Paneiro" },
+  { value: "bangalo-tipiti", label: "Bangalô Tipiti" },
 ];
 
 const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditorProps) => {

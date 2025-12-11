@@ -64,7 +64,7 @@ const Index = () => {
             name: room[`name_${i18n.language}`] || room.name_pt,
             location: "MANACAPURU, AMAZONIA - AM",
             image: imageUrl,
-            price: "A partir de R$ 1.499,90",
+            price: `A partir de R$ ${room.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
             amenities: room.amenities || ["wifi", "breakfast"],
