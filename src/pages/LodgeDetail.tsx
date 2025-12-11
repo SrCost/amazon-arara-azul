@@ -13,7 +13,7 @@ import ReservationFlow from "@/components/ReservationFlow";
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
 import Lightbox from "@/components/Lightbox";
-import { getMinimumPriceFormatted } from "@/lib/pricing";
+
 import lodge1 from "@/assets/lodge-1.jpg";
 import lodge2 from "@/assets/lodge-2.jpg";
 import lodge3 from "@/assets/lodge-3.jpg";
@@ -328,8 +328,8 @@ const LodgeDetail = () => {
                 <CardContent className="p-6">
                   <div className="mb-6">
                     <div className="text-sm text-muted-foreground mb-1">A partir de</div>
-                    <div className="text-3xl font-bold text-primary mb-1">R$ {getMinimumPriceFormatted()}</div>
-                    <div className="text-sm text-muted-foreground">{t("common.perNight")} (1 pessoa)</div>
+                    <div className="text-3xl font-bold text-primary mb-1">{lodge.price}</div>
+                    <div className="text-sm text-muted-foreground">{t("common.perNight")}</div>
                   </div>
 
                   <div className="space-y-4 mb-6">
