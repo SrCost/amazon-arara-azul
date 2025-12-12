@@ -7,9 +7,12 @@ interface PaymentRealtimeState {
   lastUpdate: Date | null;
 }
 
-export const usePaymentRealtime = (reservationId: string | null) => {
+export const usePaymentRealtime = (
+  reservationId: string | null,
+  initialStatus: string = 'pending'
+) => {
   const [state, setState] = useState<PaymentRealtimeState>({
-    status: 'pending',
+    status: initialStatus,
     isConnected: false,
     lastUpdate: null
   });
