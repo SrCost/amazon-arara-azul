@@ -19,7 +19,7 @@ interface GalleryImageEditorProps {
 }
 
 const BUNGALOW_OPTIONS = [
-  { value: "", label: "Nenhum" },
+  { value: "none", label: "Nenhum" },
   { value: "bangalo-peneira", label: "Bangalô Peneira" },
   { value: "bangalo-paneiro", label: "Bangalô Paneiro" },
   { value: "bangalo-tipiti", label: "Bangalô Tipiti" },
@@ -28,7 +28,7 @@ const BUNGALOW_OPTIONS = [
 const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditorProps) => {
   const [altText, setAltText] = useState(image.alt_text);
   const [category, setCategory] = useState<string>(image.category);
-  const [bungalowSlug, setBungalowSlug] = useState<string>(image.bungalow_slug || "");
+  const [bungalowSlug, setBungalowSlug] = useState<string>(image.bungalow_slug || "none");
   const [displayOrder, setDisplayOrder] = useState(image.display_order);
   const [isActive, setIsActive] = useState(image.is_active);
   const [isSaving, setIsSaving] = useState(false);
@@ -51,7 +51,7 @@ const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditor
       .update({
         alt_text: altText,
         category,
-        bungalow_slug: category === 'bungalows' ? (bungalowSlug || null) : null,
+        bungalow_slug: category === 'bungalows' && bungalowSlug !== 'none' ? bungalowSlug : null,
         display_order: displayOrder,
         is_active: isActive,
       })
