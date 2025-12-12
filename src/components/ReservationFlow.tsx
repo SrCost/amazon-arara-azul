@@ -197,14 +197,14 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       const pkg = packages.find(p => p.id === selectedPackage);
       // If customizable package (price 0), only charge for accommodation with dynamic pricing
       if (pkg && isCustomizablePackage(pkg)) {
-        return getDailyRate(guestsNum) * nights;
+        return getDailyRate(guestsNum, pricePerNight) * nights;
       }
       if (pkg) return Number(pkg.price) || 0;
     }
     
-    // Dynamic pricing based on number of guests
-    return getDailyRate(guestsNum) * nights;
-  }, [checkIn, checkOut, guests, selectedPackage, packages, isCustomizablePackage]);
+    // Dynamic pricing based on number of guests, using database pricePerNight
+    return getDailyRate(guestsNum, pricePerNight) * nights;
+  }, [checkIn, checkOut, guests, selectedPackage, packages, isCustomizablePackage, pricePerNight]);
 
   // Manual check payment status (fallback)
   const checkPaymentStatus = useCallback(async (paymentIdToCheck: string, resId: string) => {
