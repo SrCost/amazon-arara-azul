@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { Check, Mail, MessageCircle, Calendar, Users, Home, CreditCard, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,16 +25,11 @@ const ReservationSuccess = () => {
   const paymentMethod = searchParams.get("paymentMethod") || "pix";
   const initialStatus = searchParams.get("status") || "pending";
 
-  // Realtime payment status
-  const { paymentStatus: realtimeStatus, isPaid } = usePaymentRealtime(reservationId || null);
-  const [currentStatus, setCurrentStatus] = useState(initialStatus);
-
-  // Update status from realtime
-  useEffect(() => {
-    if (realtimeStatus) {
-      setCurrentStatus(realtimeStatus);
-    }
-  }, [realtimeStatus]);
+  // Realtime payment status - passa o status inicial da URL
+  const { paymentStatus: currentStatus, isPaid } = usePaymentRealtime(
+    reservationId || null,
+    initialStatus
+  );
 
   // Format reservation number as PAA-XXXXXX
   const formatReservationNumber = (id: string): string => {
