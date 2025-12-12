@@ -1,26 +1,35 @@
 /**
- * Tabela de preços dinâmicos por quantidade de hóspedes
- * Diária com pensão completa + transfer incluso
+ * Multiplicadores de preço por quantidade de hóspedes
+ * Baseados na proporção relativa entre os valores originais
  */
-export const PRICING_TABLE: Record<number, number> = {
-  1: 1500.00,
-  2: 2394.00,
-  3: 3112.20,
-  4: 4045.86,
+export const GUEST_MULTIPLIERS: Record<number, number> = {
+  1: 1.0,      // Base price
+  2: 1.596,   // 2394 / 1500
+  3: 2.0748,  // 3112.20 / 1500
+  4: 2.6972,  // 4045.86 / 1500
 };
 
 /**
- * Obtém o valor da diária baseado na quantidade de hóspedes
+ * Preço base padrão (fallback quando não há preço do banco)
  */
-export const getDailyRate = (guests: number): number => {
-  return PRICING_TABLE[guests] || PRICING_TABLE[2]; // Default: 2 pessoas
+export const DEFAULT_BASE_PRICE = 1500.00;
+
+/**
+ * Obtém o valor da diária baseado na quantidade de hóspedes
+ * @param guests - Número de hóspedes
+ * @param basePrice - Preço base do banco de dados (opcional)
+ */
+export const getDailyRate = (guests: number, basePrice?: number): number => {
+  const base = basePrice || DEFAULT_BASE_PRICE;
+  const multiplier = GUEST_MULTIPLIERS[guests] || GUEST_MULTIPLIERS[2];
+  return base * multiplier;
 };
 
 /**
  * Formata o preço da diária para exibição
  */
-export const formatDailyRate = (guests: number): string => {
-  const rate = getDailyRate(guests);
+export const formatDailyRate = (guests: number, basePrice?: number): string => {
+  const rate = getDailyRate(guests, basePrice);
   return rate.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
@@ -42,7 +51,8 @@ export const calculateReservationTotal = (
   guests: number,
   checkIn: Date,
   checkOut: Date,
-  packagePrice?: number
+  packagePrice?: number,
+  basePrice?: number
 ): number => {
   // Se tem pacote com preço definido, retorna preço do pacote
   if (packagePrice && packagePrice > 0) {
@@ -51,20 +61,20 @@ export const calculateReservationTotal = (
   
   // Cálculo dinâmico: diária por hóspedes × noites
   const nights = calculateNights(checkIn, checkOut);
-  const dailyRate = getDailyRate(guests);
+  const dailyRate = getDailyRate(guests, basePrice);
   return dailyRate * nights;
 };
 
 /**
  * Retorna o preço mínimo (1 pessoa) para exibição
  */
-export const getMinimumPrice = (): number => {
-  return PRICING_TABLE[1];
+export const getMinimumPrice = (basePrice?: number): number => {
+  return basePrice || DEFAULT_BASE_PRICE;
 };
 
 /**
  * Retorna o preço mínimo formatado
  */
-export const getMinimumPriceFormatted = (): string => {
-  return getMinimumPrice().toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const getMinimumPriceFormatted = (basePrice?: number): string => {
+  return getMinimumPrice(basePrice).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
