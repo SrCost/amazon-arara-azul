@@ -59,6 +59,7 @@ serve(async (req) => {
     // Detectar modo de teste (token começa com TEST-)
     const isTestMode = mercadoPagoToken?.startsWith('TEST-');
     console.log('Modo de teste:', isTestMode);
+    console.log('Usando API de Payments (produção)');
 
     // 1. Buscar nome do bangalô
     console.log('=== BUSCANDO NOME DO BANGALÔ ===');
@@ -128,42 +129,41 @@ serve(async (req) => {
       console.log('Reserva criada:', reservationId);
     }
 
-    // 3. Criar pagamento PIX no Mercado Pago usando API de Orders
-    console.log('=== CRIANDO PAGAMENTO PIX NO MERCADO PAGO (Orders API) ===');
+    // 3. Criar pagamento PIX no Mercado Pago usando API de Payments (mais estável)
+    console.log('=== CRIANDO PAGAMENTO PIX NO MERCADO PAGO (Payments API) ===');
     const idempotencyKey = crypto.randomUUID();
 
-    // Usar dados de teste quando em modo sandbox conforme documentação MP
-    // first_name: "APRO" é obrigatório para testes PIX funcionarem
-    const payerFirstName = isTestMode ? "APRO" : (full_name?.split(' ')[0] || 'Cliente');
-    const payerEmail = isTestMode ? "test@testuser.com" : email;
+    // Extrair primeiro e último nome
+    const nameParts = (full_name || 'Cliente').trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : firstName;
 
-    console.log('Payer first_name:', payerFirstName);
-    console.log('Payer email:', payerEmail);
-
-    const mpPayload = {
-      type: "online",
-      external_reference: reservationId,
-      total_amount: amount.toFixed(2),
-      payer: {
-        email: payerEmail,
-        first_name: payerFirstName
-      },
-      transactions: {
-        payments: [
-          {
-            amount: amount.toFixed(2),
-            payment_method: {
-              id: "pix",
-              type: "bank_transfer"
-            }
-          }
-        ]
+    // Em produção, usar dados reais do cliente
+    const payerData = {
+      email: email,
+      first_name: firstName,
+      last_name: lastName,
+      identification: {
+        type: "CPF",
+        number: cleanCpf
       }
     };
 
-    console.log('MP Orders Payload:', JSON.stringify(mpPayload, null, 2));
+    console.log('Payer data:', JSON.stringify(payerData, null, 2));
 
-    const mpResponse = await fetch('https://api.mercadopago.com/v1/orders', {
+    // Payload para API de Payments (formato oficial do Mercado Pago)
+    const mpPayload = {
+      transaction_amount: amount,
+      description: `Reserva ${roomName} - Pousada Arara Azul`,
+      payment_method_id: "pix",
+      payer: payerData,
+      external_reference: reservationId,
+      notification_url: webhookUrl
+    };
+
+    console.log('MP Payments Payload:', JSON.stringify(mpPayload, null, 2));
+
+    const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${mercadoPagoToken}`,
@@ -174,11 +174,11 @@ serve(async (req) => {
     });
 
     const mpData = await mpResponse.json();
-    console.log('MP Orders Response Status:', mpResponse.status);
-    console.log('MP Orders Response:', JSON.stringify(mpData, null, 2));
+    console.log('MP Payments Response Status:', mpResponse.status);
+    console.log('MP Payments Response:', JSON.stringify(mpData, null, 2));
 
-    if (!mpResponse.ok) {
-      console.error('Erro Mercado Pago Orders:', mpData);
+    if (!mpResponse.ok || mpData.error) {
+      console.error('Erro Mercado Pago Payments:', mpData);
       
       await supabase
         .from('reservations')
@@ -199,19 +199,17 @@ serve(async (req) => {
       throw new Error(mpData?.message || mpData?.cause?.[0]?.description || 'Erro ao criar pagamento PIX');
     }
 
-    // Extrair dados PIX da estrutura de Orders
-    const pixPayment = mpData.transactions?.payments?.[0];
+    // Extrair dados PIX da resposta da API de Payments
     const pixData = {
-      qr_code: pixPayment?.payment_method?.qr_code,
-      qr_code_base64: pixPayment?.payment_method?.qr_code_base64,
-      ticket_url: pixPayment?.payment_method?.ticket_url
+      qr_code: mpData.point_of_interaction?.transaction_data?.qr_code,
+      qr_code_base64: mpData.point_of_interaction?.transaction_data?.qr_code_base64,
+      ticket_url: mpData.point_of_interaction?.transaction_data?.ticket_url
     };
     
-    const mpOrderId = mpData.id;  // Order ID (ORD...)
-    const mpPaymentId = pixPayment?.id || mpOrderId;  // Payment ID (PAY...) ou Order ID
+    const mpPaymentId = mpData.id?.toString();
 
-    console.log('Order ID:', mpOrderId);
     console.log('Payment ID:', mpPaymentId);
+    console.log('Status:', mpData.status);
     console.log('PIX Data:', JSON.stringify(pixData, null, 2));
 
     if (!pixData?.qr_code) {
@@ -227,13 +225,13 @@ serve(async (req) => {
         reservation_id: reservationId,
         mercado_pago_payment_id: mpPaymentId,
         mp_payment_id: mpPaymentId,
-        mp_order_id: mpOrderId,
         transaction_id: mpPaymentId,
         payment_method: 'pix',
-        status: 'pending',
+        status: mpData.status || 'pending',
+        status_detail: mpData.status_detail,
         amount: amount,
         total_amount: amount,
-        payer_email: email, // Email real do cliente
+        payer_email: email,
         payer_name: full_name,
         payer_cpf: cleanCpf
       })
@@ -249,7 +247,6 @@ serve(async (req) => {
       .from('reservations')
       .update({
         mp_transaction_id: mpPaymentId,
-        mp_order_id: mpOrderId,
         payment_reference: mpPaymentId,
         payment_qr_code: pixData.qr_code,
         payment_qr_code_base64: pixData.qr_code_base64 || '',
@@ -273,7 +270,6 @@ serve(async (req) => {
       reservation_id: reservationId,
       payment_id: payment?.id || mpPaymentId,
       mp_payment_id: mpPaymentId,
-      mp_order_id: mpOrderId,
       status: mpData.status,
       status_detail: mpData.status_detail,
       pix: {
