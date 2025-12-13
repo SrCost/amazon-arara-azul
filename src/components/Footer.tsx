@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
-import { Facebook, Instagram, Mail, Phone, Shield, LogIn, MessageCircle } from "lucide-react";
+import { Facebook, Instagram, Mail, Shield, LogIn, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
 
@@ -101,10 +101,6 @@ const Footer = () => {
                 <MessageCircle className="h-4 w-4" />
                 <span>{SOCIAL_LINKS.whatsappNumber}</span>
               </a>
-              <div className="flex items-center space-x-2 opacity-90">
-                <Phone className="h-4 w-4" />
-                <span>{SOCIAL_LINKS.phone}</span>
-              </div>
               <div className="flex items-center space-x-2 opacity-90">
                 <Mail className="h-4 w-4" />
                 <span>{SOCIAL_LINKS.email}</span>

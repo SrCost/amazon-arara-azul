@@ -39,12 +39,13 @@ const Index = () => {
 
         if (error) throw error;
 
-        // Fetch gallery images for each room
+        // Fetch gallery images with display_order = 1 (cover images)
         const { data: galleryImages } = await supabase
           .from("gallery_images")
           .select("*")
+          .eq("category", "bungalows")
           .eq("is_active", true)
-          .order("display_order", { ascending: true });
+          .eq("display_order", 1);
 
         // Map rooms to lodge format with localized content
         const mappedLodges = rooms?.map((room) => {
