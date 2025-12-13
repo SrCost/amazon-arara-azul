@@ -216,24 +216,24 @@ const Gallery = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6 lg:p-8">
       <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-display font-bold">Gerenciar Galeria</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-2xl sm:text-3xl font-display font-bold">Gerenciar Galeria</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
               Faça upload e gerencie as fotos da galeria pública
             </p>
           </div>
-          <Button onClick={() => setUploadDialogOpen(true)}>
+          <Button onClick={() => setUploadDialogOpen(true)} className="w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Upload de Fotos
           </Button>
         </div>
 
         {/* Filtros */}
-        <div className="flex gap-4 items-end">
-          <div className="flex-1 max-w-xs">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-end">
+          <div className="flex-1 sm:max-w-xs">
             <label className="text-sm font-medium mb-2 block">Categoria</label>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger>
@@ -251,7 +251,7 @@ const Gallery = () => {
           </div>
 
           {categoryFilter === 'bungalows' && (
-            <div className="flex-1 max-w-xs">
+            <div className="flex-1 sm:max-w-xs">
               <label className="text-sm font-medium mb-2 block">Bangalô</label>
               <Select value={bungalowFilter} onValueChange={setBungalowFilter}>
                 <SelectTrigger>
@@ -274,15 +274,15 @@ const Gallery = () => {
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {[...Array(8)].map((_, i) => (
             <Skeleton key={i} className="aspect-square rounded-lg" />
           ))}
         </div>
       ) : images.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-muted-foreground mb-4">Nenhuma imagem na galeria</p>
+          <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12">
+            <p className="text-muted-foreground mb-4 text-sm sm:text-base">Nenhuma imagem na galeria</p>
             <Button onClick={() => setUploadDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Adicionar primeira foto
@@ -290,7 +290,7 @@ const Gallery = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {images.map((image, index) => (
             <Card key={image.id} className={!image.is_active ? 'opacity-60' : ''}>
               <CardContent className="p-0">
@@ -355,7 +355,7 @@ const Gallery = () => {
 
       {/* Upload Dialog */}
       <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Upload de Fotos</DialogTitle>
           </DialogHeader>

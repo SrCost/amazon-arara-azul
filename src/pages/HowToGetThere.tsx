@@ -9,49 +9,49 @@ const HowToGetThere = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <section className="pt-32 pb-16">
+      <section className="pt-24 sm:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-6">Como Chegar</h1>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">Como Chegar</h1>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
               A jornada até nossas pousadas faz parte da experiência amazônica. Oferecemos múltiplas opções de acesso a
               partir de Manaus e Belém.
             </p>
           </div>
 
-          <div className="max-w-5xl mx-auto mb-16">
+          <div className="max-w-5xl mx-auto mb-10 sm:mb-16">
             <img
               src={riverAerial}
               alt="Vista aérea do Rio Amazonas"
-              className="w-full h-[400px] object-cover rounded-lg shadow-strong"
+              className="w-full h-[200px] sm:h-[300px] md:h-[400px] object-cover rounded-lg shadow-strong"
             />
           </div>
 
           {/* Routes */}
-          <div className="max-w-4xl mx-auto space-y-8 mb-16">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 mb-10 sm:mb-16">
             <Card>
-              <CardContent className="p-8">
-                <div className="flex items-start space-x-4">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-gradient-forest flex items-center justify-center">
-                      <Plane className="h-6 w-6 text-white" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-forest flex items-center justify-center">
+                      <Plane className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-display font-semibold mb-3 text-foreground">
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-semibold mb-2 sm:mb-3 text-foreground">
                       De Avião + Carro + Canoa
                     </h2>
-                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                    <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
                       Voe até o Aeroporto Internacional Eduardo Gomes em Manaus (MAO). De lá, nosso servico de transfer
                       terrestre e fluvial leva voce ate a pousada.
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-accent" />
+                        <Clock className="h-4 w-4 text-accent flex-shrink-0" />
                         <span>Duração total: 3-4 horas</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-accent" />
+                        <MapPin className="h-4 w-4 text-accent flex-shrink-0" />
                         <span>Saída de Manaus</span>
                       </div>
                     </div>
@@ -61,26 +61,26 @@ const HowToGetThere = () => {
             </Card>
 
             <Card>
-              <CardContent className="p-8">
-                <div className="flex items-start space-x-4">
+              <CardContent className="p-4 sm:p-6 lg:p-8">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-full bg-gradient-water flex items-center justify-center">
-                      <Ship className="h-6 w-6 text-white" />
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-water flex items-center justify-center">
+                      <Ship className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-2xl font-display font-semibold mb-3 text-foreground">Cruzeiro</h2>
-                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-semibold mb-2 sm:mb-3 text-foreground">Cruzeiro</h2>
+                    <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
                       Para uma experiência mais imersiva, oferecemos pacotes que incluem navegação em barcos regionais,
                       permitindo apreciar a paisagem amazônica com calma e autenticidade.
                     </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex items-center space-x-2">
-                        <Clock className="h-4 w-4 text-accent" />
+                        <Clock className="h-4 w-4 text-accent flex-shrink-0" />
                         <span>Duração: 1-2 dias</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-accent" />
+                        <MapPin className="h-4 w-4 text-accent flex-shrink-0" />
                         <span>Saídas semanais de Manaus</span>
                       </div>
                     </div>
@@ -109,12 +109,12 @@ const HowToGetThere = () => {
 
           {/* Tips */}
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-6 text-center">Dicas Importantes</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-4 sm:mb-6 text-center">Dicas Importantes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-3">Documentação</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
+                <CardContent className="p-4 sm:p-6">
+                  <h3 className="font-semibold text-foreground mb-2 sm:mb-3">Documentação</h3>
+                  <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
                     <li>• Documento de identificação com foto</li>
                     <li>• Comprovante de vacinação (febre amarela recomendada)</li>
                     <li>• Seguro viagem (opcional, mas recomendado)</li>
@@ -123,9 +123,9 @@ const HowToGetThere = () => {
               </Card>
 
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-foreground mb-3">O que Levar</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
+                <CardContent className="p-4 sm:p-6">
+                  <h3 className="font-semibold text-foreground mb-2 sm:mb-3">O que Levar</h3>
+                  <ul className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-muted-foreground">
                     <li>• Roupas leves e confortáveis</li>
                     <li>• Repelente de insetos e protetor solar</li>
                     <li>• Calçados para trilhas e chinelos</li>

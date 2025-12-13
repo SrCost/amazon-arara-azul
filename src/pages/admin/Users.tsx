@@ -327,28 +327,28 @@ const Users = () => {
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+          <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">
             {t("admin.users")}
           </h1>
-          <p className="text-muted-foreground">Gerencie usuários e permissões</p>
+          <p className="text-muted-foreground text-sm sm:text-base">Gerencie usuários e permissões</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-forest">
+            <Button className="bg-gradient-forest w-full sm:w-auto">
               <UserPlus className="h-4 w-4 mr-2" />
               {t("admin.addUser")}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-[95vw] sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{t("admin.addUser")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>{t("contact.name")}</Label>
+                <Label className="text-sm">{t("contact.name")}</Label>
                 <Input 
                   placeholder="Nome completo" 
                   value={newUser.full_name}
@@ -356,7 +356,7 @@ const Users = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t("contact.email")}</Label>
+                <Label className="text-sm">{t("contact.email")}</Label>
                 <Input 
                   type="email" 
                   placeholder="email@exemplo.com" 
@@ -365,7 +365,7 @@ const Users = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>{t("admin.role")}</Label>
+                <Label className="text-sm">{t("admin.role")}</Label>
                 <Select 
                   value={newUser.role}
                   onValueChange={(value: any) => setNewUser({...newUser, role: value})}
@@ -381,7 +381,7 @@ const Users = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>{t("auth.password")}</Label>
+                <Label className="text-sm">{t("auth.password")}</Label>
                 <Input 
                   type="password" 
                   placeholder="••••••••" 
@@ -390,17 +390,17 @@ const Users = () => {
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleCreateUser} className="bg-gradient-forest">Criar Usuário</Button>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
+              <Button onClick={handleCreateUser} className="bg-gradient-forest w-full sm:w-auto">Criar Usuário</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2 mb-6">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center space-x-2 mb-4 sm:mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -412,28 +412,28 @@ const Users = () => {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("contact.name")}</TableHead>
-                  <TableHead>{t("contact.email")}</TableHead>
-                  <TableHead>{t("admin.role")}</TableHead>
-                  <TableHead>Data de Cadastro</TableHead>
-                  <TableHead className="text-right">{t("admin.actions")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t("contact.name")}</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">{t("contact.email")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t("admin.role")}</TableHead>
+                  <TableHead className="whitespace-nowrap hidden md:table-cell">Data de Cadastro</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">{t("admin.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.full_name || "N/A"}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{user.full_name || "N/A"}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{user.email}</TableCell>
                     <TableCell>
                       <Select 
                         value={user.role}
                         onValueChange={(value: any) => handleUpdateRole(user.id, value)}
                       >
-                        <SelectTrigger className="w-40">
+                        <SelectTrigger className="w-28 sm:w-40 text-xs sm:text-sm">
                           <SelectValue>{getRoleBadge(user.role)}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -443,9 +443,9 @@ const Users = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden md:table-cell">{new Date(user.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
+                      <div className="flex justify-end">
                         <Button 
                           size="sm" 
                           variant="ghost"

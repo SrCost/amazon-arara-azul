@@ -1,8 +1,13 @@
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -15,6 +20,7 @@ import {
   Package,
   Images,
   Building2,
+  Menu,
 } from "lucide-react";
 import logoArara from "@/assets/logo-arara-azul.jpg";
 
@@ -27,6 +33,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, isAdmin, isSuperAdmin, user, loading } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Allow access to all authenticated users (user, admin, super_admin)
   if (!loading && !user) {
@@ -110,66 +117,99 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     navigate("/");
   };
 
-  return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 bg-card border-r border-border">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <img 
-              src={logoArara} 
-              alt="Pousada Arara Azul" 
-              className="w-12 h-12 rounded-full object-cover"
-            />
-            <div>
-              <h1 className="text-xl font-display font-bold text-foreground">
-                Admin Panel
-              </h1>
-              <p className="text-xs text-muted-foreground">Pousada Arara Azul</p>
-            </div>
+  const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => (
+    <>
+      <div className="p-4 lg:p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <img 
+            src={logoArara} 
+            alt="Pousada Arara Azul" 
+            className="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover"
+          />
+          <div>
+            <h1 className="text-lg lg:text-xl font-display font-bold text-foreground">
+              Admin Panel
+            </h1>
+            <p className="text-xs text-muted-foreground">Pousada Arara Azul</p>
           </div>
         </div>
+      </div>
 
-        <nav className="px-4 space-y-2">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location.pathname === item.path;
+      <nav className="px-2 lg:px-4 space-y-1 lg:space-y-2">
+        {menuItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
 
-            return (
-              <Link key={item.path} to={item.path}>
-                <Button
-                  variant={isActive ? "secondary" : "ghost"}
-                  className="w-full justify-start"
-                >
-                  <Icon className="h-5 w-5 mr-3" />
-                  {item.label}
-                </Button>
-              </Link>
-            );
-          })}
-
-          <div className="pt-4 border-t border-border mt-4">
-            <Link to="/">
-              <Button variant="ghost" className="w-full justify-start">
-                <Home className="h-5 w-5 mr-3" />
-                {t("nav.home")}
+          return (
+            <Link key={item.path} to={item.path} onClick={onItemClick}>
+              <Button
+                variant={isActive ? "secondary" : "ghost"}
+                className="w-full justify-start text-sm lg:text-base"
+              >
+                <Icon className="h-4 w-4 lg:h-5 lg:w-5 mr-2 lg:mr-3" />
+                {item.label}
               </Button>
             </Link>
+          );
+        })}
 
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-5 w-5 mr-3" />
-              {t("nav.logout")}
+        <div className="pt-4 border-t border-border mt-4">
+          <Link to="/" onClick={onItemClick}>
+            <Button variant="ghost" className="w-full justify-start text-sm lg:text-base">
+              <Home className="h-4 w-4 lg:h-5 lg:w-5 mr-2 lg:mr-3" />
+              {t("nav.home")}
             </Button>
-          </div>
-        </nav>
+          </Link>
+
+          <Button
+            variant="ghost"
+            className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 text-sm lg:text-base"
+            onClick={() => {
+              onItemClick?.();
+              handleSignOut();
+            }}
+          >
+            <LogOut className="h-4 w-4 lg:h-5 lg:w-5 mr-2 lg:mr-3" />
+            {t("nav.logout")}
+          </Button>
+        </div>
+      </nav>
+    </>
+  );
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <img 
+            src={logoArara} 
+            alt="Pousada Arara Azul" 
+            className="w-8 h-8 rounded-full object-cover"
+          />
+          <span className="font-display font-bold text-foreground">Admin</span>
+        </div>
+        <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-64 p-0">
+            <SidebarContent onItemClick={() => setMobileMenuOpen(false)} />
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop Sidebar */}
+      <aside className="hidden lg:block w-64 bg-card border-r border-border fixed h-full">
+        <SidebarContent />
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">{children}</main>
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0 lg:ml-64">
+        {children}
+      </main>
     </div>
   );
 };
