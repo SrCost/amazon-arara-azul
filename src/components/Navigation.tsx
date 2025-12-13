@@ -140,28 +140,35 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-4 border-t border-border">
-            <div className="flex flex-col space-y-3">
+          <div className="md:hidden py-3 border-t border-border max-h-[80vh] overflow-y-auto">
+            {/* Navegação Principal */}
+            <div className="px-2 pb-3 space-y-1">
               {menuItems.map((item) => (
                 <Link
                   key={item.href}
                   to={item.href}
                   onClick={() => setIsOpen(false)}
-                  className={`px-3 py-2 rounded-md text-base font-medium ${
+                  className={`block px-3 py-2.5 rounded-lg text-sm font-medium ${
                     location.pathname === item.href
-                      ? "text-primary bg-muted"
+                      ? "text-primary bg-primary/10"
                       : "text-foreground hover:bg-muted"
                   } transition-colors`}
                 >
                   {item.label}
                 </Link>
               ))}
+            </div>
 
-              {/* Language Selector Mobile */}
-              <div className="border-t border-border pt-3 space-y-2">
-                <p className="px-3 text-sm font-semibold text-muted-foreground">
-                  {t("nav.language") || "Idioma"}
-                </p>
+            {/* Separador */}
+            <div className="border-t border-border mx-3 my-2" />
+
+            {/* Idiomas - Grid compacto 2x2 */}
+            <div className="px-3 py-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" />
+                {t("nav.language")}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
                 {languages.map((lang) => (
                   <button
                     key={lang.code}
@@ -169,25 +176,29 @@ const Navigation = () => {
                       changeLanguage(lang.code);
                       setIsOpen(false);
                     }}
-                    className={`block w-full text-left px-3 py-2 rounded-md text-base font-medium ${
+                    className={`px-3 py-2 rounded-lg text-sm font-medium text-center ${
                       i18n.language === lang.code
-                        ? "bg-muted text-primary"
-                        : "text-foreground hover:bg-muted"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground hover:bg-muted/80"
                     } transition-colors`}
                   >
                     {lang.label}
                   </button>
                 ))}
               </div>
+            </div>
 
-              {/* User Menu Mobile - Only for authenticated admins */}
-              {user && isAdmin && (
-                <div className="border-t border-border pt-3">
+            {/* Admin se aplicável */}
+            {user && isAdmin && (
+              <>
+                <div className="border-t border-border mx-3 my-2" />
+                <div className="px-2 py-2 space-y-1">
                   <Link
                     to="/admin"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-muted transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
+                    <User className="h-4 w-4" />
                     {t("nav.admin")}
                   </Link>
                   <button
@@ -195,20 +206,26 @@ const Navigation = () => {
                       signOut();
                       setIsOpen(false);
                     }}
-                    className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-foreground hover:bg-muted transition-colors"
+                    className="flex items-center gap-2 w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                   >
                     {t("nav.logout")}
                   </button>
                 </div>
-              )}
+              </>
+            )}
 
+            {/* Separador */}
+            <div className="border-t border-border mx-3 my-2" />
+
+            {/* Botão CTA */}
+            <div className="px-3 pt-2 pb-1">
               <Button
                 variant="default"
                 size="lg"
                 asChild
-                className="w-full mt-4"
+                className="w-full"
               >
-                <Link to="/pousadas" onClick={() => setIsOpen(false)}>
+                <Link to="/bangalos" onClick={() => setIsOpen(false)}>
                   {t("hero.bookNow")}
                 </Link>
               </Button>
