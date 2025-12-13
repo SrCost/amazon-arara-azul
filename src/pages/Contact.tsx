@@ -85,7 +85,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-foreground mb-1 sm:mb-2">E-mail</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground break-all sm:break-normal">administrativo@pousadararazul.com</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground break-all sm:break-normal">adm@pousadararazul.com</p>
                       <p className="text-xs sm:text-sm text-muted-foreground break-all sm:break-normal">reservas@pousadararazul.com</p>
                     </div>
                   </div>
