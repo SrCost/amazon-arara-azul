@@ -364,13 +364,13 @@ const LodgeDetail = () => {
       {/* Reservation Dialog */}
       <Dialog open={showReservation} onOpenChange={setShowReservation}>
         <DialogContent 
-          className="max-w-4xl h-[85vh] flex flex-col overflow-hidden p-0"
+          className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl h-[95vh] sm:h-[90vh] md:h-[85vh] flex flex-col overflow-hidden p-0"
           aria-describedby={undefined}
         >
           <DialogTitle className="sr-only">
             Reservar {lodge.name}
           </DialogTitle>
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
             <ReservationFlow
               lodgeName={lodge.name}
               pricePerNight={lodge.pricePerNight || parseInt(lodge.price.replace(/[^\d]/g, ""))}

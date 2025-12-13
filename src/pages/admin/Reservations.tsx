@@ -328,17 +328,17 @@ const Reservations = () => {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">
           {t("admin.reservations")}
         </h1>
-        <p className="text-muted-foreground">Gerencie todas as reservas da plataforma</p>
+        <p className="text-muted-foreground text-sm sm:text-base">Gerencie todas as reservas da plataforma</p>
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2 mb-6">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center space-x-2 mb-4 sm:mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -350,48 +350,48 @@ const Reservations = () => {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Pousada</TableHead>
-                  <TableHead>Pacote</TableHead>
-                  <TableHead>Hóspede</TableHead>
-                  <TableHead>Check-in</TableHead>
-                  <TableHead>Check-out</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Pagamento</TableHead>
-                  <TableHead>Método</TableHead>
-                  <TableHead>ID MP</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead className="text-right">{t("admin.actions")}</TableHead>
+                  <TableHead className="whitespace-nowrap">Pousada</TableHead>
+                  <TableHead className="whitespace-nowrap hidden md:table-cell">Pacote</TableHead>
+                  <TableHead className="whitespace-nowrap">Hóspede</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">Check-in</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">Check-out</TableHead>
+                  <TableHead className="whitespace-nowrap">Status</TableHead>
+                  <TableHead className="whitespace-nowrap hidden lg:table-cell">Pagamento</TableHead>
+                  <TableHead className="whitespace-nowrap hidden xl:table-cell">Método</TableHead>
+                  <TableHead className="whitespace-nowrap hidden xl:table-cell">ID MP</TableHead>
+                  <TableHead className="whitespace-nowrap">Valor</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">{t("admin.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredReservations.map((reservation) => (
                   <TableRow key={reservation.id}>
-                    <TableCell className="font-medium">{reservation.room_name || "N/A"}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
+                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">{reservation.room_name || "N/A"}</TableCell>
+                    <TableCell className="text-xs sm:text-sm text-muted-foreground hidden md:table-cell">
                       {reservation.package_name || "-"}
                     </TableCell>
-                    <TableCell className="font-medium">{reservation.guest_name}</TableCell>
-                    <TableCell>{new Date(reservation.check_in).toLocaleDateString()}</TableCell>
-                    <TableCell>{new Date(reservation.check_out).toLocaleDateString()}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{reservation.guest_name}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{new Date(reservation.check_in).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{new Date(reservation.check_out).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(reservation.status)}</TableCell>
-                    <TableCell>{getPaymentStatusBadge(reservation.payment_status)}</TableCell>
-                    <TableCell className="text-xs">
+                    <TableCell className="hidden lg:table-cell">{getPaymentStatusBadge(reservation.payment_status)}</TableCell>
+                    <TableCell className="text-xs hidden xl:table-cell">
                       {reservation.payment_method === 'pix' ? 'PIX' : 
                        reservation.payment_method === 'credit_card' ? 'Cartão' : 
                        reservation.payment_method || '-'}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs hidden xl:table-cell">
                       {reservation.mp_transaction_id || reservation.payment_reference 
                         ? (reservation.mp_transaction_id || reservation.payment_reference)?.slice(0, 10) + '...'
                         : '-'}
                     </TableCell>
-                    <TableCell className="font-medium">R$ {reservation.total_price.toLocaleString()}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">R$ {reservation.total_price.toLocaleString()}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
+                      <div className="flex justify-end space-x-1 sm:space-x-2">
                         <Button size="sm" variant="ghost" onClick={() => handleView(reservation)} title="Visualizar">
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -450,13 +450,13 @@ const Reservations = () => {
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Detalhes da Reserva</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Detalhes da Reserva</DialogTitle>
           </DialogHeader>
           {selectedReservation && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3 sm:space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label className="text-muted-foreground">Pousada</Label>
                   <p className="font-medium">{selectedReservation.room_name || "N/A"}</p>

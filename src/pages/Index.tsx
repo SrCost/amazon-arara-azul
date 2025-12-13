@@ -108,37 +108,37 @@ const Index = () => {
 
       {/* Hero Section with Carousel */}
       <section className="relative">
-        <div className="relative w-full h-[600px] md:h-[700px] overflow-hidden">
+        <div className="relative w-full h-[500px] sm:h-[550px] md:h-[650px] lg:h-[700px] overflow-hidden">
           <HeroCarousel />
           
           {/* Content Overlay */}
           <div className="absolute inset-0 z-10">
             <div className="flex items-center justify-center h-full">
-              <div className="text-center px-4 max-w-4xl mx-auto">
-                <h1 className="text-4xl md:text-6xl lg:text-7xl font-display font-bold text-white mb-6 text-balance animate-fade-in drop-shadow-lg">
+              <div className="text-center px-4 max-w-4xl mx-auto pt-8 sm:pt-0">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in drop-shadow-lg">
                   {t("home.heroTitle")}
                 </h1>
-                <p className="text-lg md:text-xl text-white/95 mb-8 max-w-2xl mx-auto text-balance drop-shadow-md">
+                <p className="text-base sm:text-lg md:text-xl text-white/95 mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md px-2">
                   {t("home.heroSubtitle")}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-lg h-14 px-8" asChild>
-                  <Link to="/bangalos">
-                    Explorar Bangalôs
-                    <ArrowRight className="ml-2" />
-                  </Link>
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 lg:mb-12 px-4">
+                  <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8" asChild>
+                    <Link to="/bangalos">
+                      Explorar Bangalôs
+                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    </Link>
+                  </Button>
                   <Button
                     size="lg"
                     variant="outline"
-                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-lg h-14 px-8"
+                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8"
                     asChild>
                     <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
                   </Button>
                 </div>
 
-                <div className="flex justify-center -mb-20">
+                <div className="flex justify-center mb-0 sm:-mb-10 lg:-mb-20 px-2">
                   <SearchBar />
                 </div>
               </div>
@@ -148,21 +148,21 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-muted/30">
+      <section className="py-12 sm:py-16 lg:py-24 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-card p-8 rounded-lg shadow-soft hover:shadow-medium transition-shadow text-center"
+                className="bg-card p-5 sm:p-6 lg:p-8 rounded-lg shadow-soft hover:shadow-medium transition-shadow text-center"
               >
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-forest mb-4">
-                  <feature.icon className="h-8 w-8 text-white" />
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full bg-gradient-forest mb-3 sm:mb-4">
+                  <feature.icon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" />
                 </div>
-                <h3 className="text-2xl font-display font-bold mb-3 text-foreground tracking-tight">
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-display font-bold mb-2 sm:mb-3 text-foreground tracking-tight">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
             ))}
           </div>
@@ -170,27 +170,27 @@ const Index = () => {
       </section>
 
       {/* Lodges Section */}
-      <section className="py-24">
+      <section className="py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4">
               Nossos Bangalôs
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
               Conheça nossos bangalôs exclusivos em meio à floresta amazônica
             </p>
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Carregando bangalôs...</p>
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-base sm:text-lg text-muted-foreground">Carregando bangalôs...</p>
             </div>
           ) : lodges.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Nenhum bangalô disponível no momento.</p>
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-base sm:text-lg text-muted-foreground">Nenhum bangalô disponível no momento.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
               {lodges.map((lodge) => (
                 <LodgeCard key={lodge.id} {...lodge} />
               ))}
@@ -201,7 +201,7 @@ const Index = () => {
             <Button size="lg" variant="outline" asChild>
               <Link to="/bangalos">
                 Ver Todos os Bangalôs
-                <ArrowRight className="ml-2" />
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
@@ -212,17 +212,17 @@ const Index = () => {
       <FindUsSection />
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-forest text-white">
+      <section className="py-12 sm:py-16 lg:py-24 bg-gradient-forest text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl md:text-5xl font-display font-bold mb-6">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold mb-4 sm:mb-6">
             {t("home.readyForAdventure")}
           </h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto opacity-90">
+          <p className="text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto opacity-90">
             {t("home.bookNowDescription")}
           </p>
           <Button
             size="lg"
-            className="bg-white text-primary hover:bg-white/90 text-lg h-14 px-8"
+            className="bg-white text-primary hover:bg-white/90 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8"
             asChild
           >
             <Link to="/contato">{t("home.getInTouch")}</Link>

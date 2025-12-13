@@ -225,57 +225,57 @@ const Payments = () => {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">
           Pagamentos
         </h1>
-        <p className="text-muted-foreground">Gerencie transações e pagamentos</p>
+        <p className="text-muted-foreground text-sm sm:text-base">Gerencie transações e pagamentos</p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Recebido</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Recebido</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">
                   R$ {totalCompleted.toLocaleString()}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <CreditCard className="h-6 w-6 text-green-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">{t("admin.pendingPayments")}</p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">{t("admin.pendingPayments")}</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">
                   R$ {totalPending.toLocaleString()}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
-                <CreditCard className="h-6 w-6 text-yellow-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
+        <Card className="sm:col-span-2 lg:col-span-1">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Total de Transações</p>
-                <p className="text-2xl font-bold text-foreground">{payments.length}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total de Transações</p>
+                <p className="text-xl sm:text-2xl font-bold text-foreground">{payments.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <CreditCard className="h-6 w-6 text-blue-600" />
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <CreditCard className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
@@ -283,9 +283,9 @@ const Payments = () => {
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="relative flex-1 max-w-md">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="relative flex-1 sm:max-w-md">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar por hóspede ou ID..."
@@ -294,35 +294,35 @@ const Payments = () => {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline">
+            <Button variant="outline" className="w-full sm:w-auto">
               <Download className="h-4 w-4 mr-2" />
               Exportar
             </Button>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Hóspede</TableHead>
-                  <TableHead>Bangalô</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>{t("reservation.paymentMethod")}</TableHead>
-                  <TableHead>{t("admin.status")}</TableHead>
-                  <TableHead>ID Transação</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="text-right">{t("admin.actions")}</TableHead>
+                  <TableHead className="whitespace-nowrap">Hóspede</TableHead>
+                  <TableHead className="whitespace-nowrap hidden md:table-cell">Bangalô</TableHead>
+                  <TableHead className="whitespace-nowrap">Valor</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">{t("reservation.paymentMethod")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t("admin.status")}</TableHead>
+                  <TableHead className="whitespace-nowrap hidden lg:table-cell">ID Transação</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">Data</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">{t("admin.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPayments.map((payment) => (
                   <TableRow key={payment.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-xs sm:text-sm">
                       {payment.reservations?.guest_name || "N/A"}
                     </TableCell>
-                    <TableCell>{payment.reservations?.room_name || "N/A"}</TableCell>
-                    <TableCell className="font-medium">R$ {Number(payment.amount || payment.total_amount || 0).toLocaleString()}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden md:table-cell">{payment.reservations?.room_name || "N/A"}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">R$ {Number(payment.amount || payment.total_amount || 0).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs hidden sm:table-cell">
                       {payment.payment_method === 'pix' ? 'PIX' : 
                        payment.payment_method === 'credit_card' ? 'Cartão' : 
                        payment.payment_method || 'N/A'}
@@ -332,7 +332,7 @@ const Payments = () => {
                         value={payment.status}
                         onValueChange={(value) => handleUpdateStatus(payment.id, value)}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
                           <SelectValue>{getStatusBadge(payment.status)}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -344,14 +344,14 @@ const Payments = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
+                    <TableCell className="font-mono text-xs hidden lg:table-cell">
                       {payment.transaction_id || payment.mercado_pago_payment_id 
                         ? (payment.transaction_id || payment.mercado_pago_payment_id)?.slice(0, 10) + '...'
                         : 'N/A'}
                     </TableCell>
-                    <TableCell>{new Date(payment.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{new Date(payment.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
+                      <div className="flex justify-end space-x-1 sm:space-x-2">
                         <Button 
                           size="sm" 
                           variant="ghost"

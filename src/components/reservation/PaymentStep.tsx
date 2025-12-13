@@ -91,32 +91,32 @@ export const PaymentStep = ({
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h2 className="text-2xl font-display font-bold mb-4">
+        <h2 className="text-xl sm:text-2xl font-display font-bold mb-2 sm:mb-4">
           {t("reservation.step4")}
         </h2>
-        <p className="text-muted-foreground mb-6">
+        <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
           Escolha a forma de pagamento
         </p>
       </div>
 
       {/* Payment Method Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
         {paymentMethods.map((method) => (
           <button
             key={method.value}
             onClick={() => setPaymentMethod(method.value)}
-            className={`p-4 border-2 rounded-lg text-left transition-all ${
+            className={`p-3 sm:p-4 border-2 rounded-lg text-left transition-all ${
               paymentMethod === method.value
                 ? "border-primary bg-primary/5"
                 : "border-border hover:border-primary/50"
             }`}
           >
             <div className="flex items-center justify-between">
-              <span className="font-medium">{method.label}</span>
+              <span className="font-medium text-sm sm:text-base">{method.label}</span>
               {paymentMethod === method.value && (
-                <Check className="h-5 w-5 text-primary" />
+                <Check className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
               )}
             </div>
           </button>
@@ -125,37 +125,40 @@ export const PaymentStep = ({
 
       {/* Credit Card Form */}
       {paymentMethod === "credit_card" && (
-        <div className="space-y-4 border-t pt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-3 sm:space-y-4 border-t pt-3 sm:pt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <Label htmlFor="cardName">Nome no Cartão *</Label>
+              <Label htmlFor="cardName" className="text-sm">Nome no Cartão *</Label>
               <Input
                 id="cardName"
                 value={cardName}
                 onChange={(e) => setCardName(e.target.value)}
                 placeholder="Nome completo como no cartão"
+                className="text-sm sm:text-base"
               />
             </div>
             <div>
-              <Label htmlFor="cardCpf">CPF do Titular *</Label>
+              <Label htmlFor="cardCpf" className="text-sm">CPF do Titular *</Label>
               <Input
                 id="cardCpf"
                 value={cardCpf}
                 onChange={(e) => setCardCpf(maskCPF(e.target.value))}
                 placeholder="000.000.000-00"
                 maxLength={14}
+                className="text-sm sm:text-base"
               />
             </div>
           </div>
           
           <div>
-            <Label htmlFor="cardNumber">Número do Cartão *</Label>
+            <Label htmlFor="cardNumber" className="text-sm">Número do Cartão *</Label>
             <Input
               id="cardNumber"
               value={cardNumber}
               onChange={(e) => setCardNumber(maskCardNumber(e.target.value))}
               placeholder="0000 0000 0000 0000"
               maxLength={19}
+              className="text-sm sm:text-base"
             />
             {cardNumber && detectCardBrand(cardNumber) !== 'unknown' && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -164,19 +167,20 @@ export const PaymentStep = ({
             )}
           </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             <div>
-              <Label htmlFor="cardExpiry">Validade *</Label>
+              <Label htmlFor="cardExpiry" className="text-sm">Validade *</Label>
               <Input
                 id="cardExpiry"
                 value={cardExpiry}
                 onChange={(e) => setCardExpiry(maskExpiryDate(e.target.value))}
                 placeholder="MM/AA"
                 maxLength={5}
+                className="text-sm sm:text-base"
               />
             </div>
             <div>
-              <Label htmlFor="cardCvv">CVV *</Label>
+              <Label htmlFor="cardCvv" className="text-sm">CVV *</Label>
               <Input
                 id="cardCvv"
                 value={cardCvv}
@@ -184,12 +188,13 @@ export const PaymentStep = ({
                 placeholder="123"
                 maxLength={4}
                 type="password"
+                className="text-sm sm:text-base"
               />
             </div>
-            <div>
-              <Label htmlFor="installments">Parcelas</Label>
+            <div className="col-span-2 sm:col-span-1">
+              <Label htmlFor="installments" className="text-sm">Parcelas</Label>
               <Select value={installments} onValueChange={setInstallments}>
-                <SelectTrigger id="installments">
+                <SelectTrigger id="installments" className="text-sm sm:text-base">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -245,24 +250,24 @@ export const PaymentStep = ({
           )}
 
           {showPixCode && pixQrCodeBase64 && (
-            <div className="bg-white p-6 rounded-lg text-center border-2 border-green-200">
-              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm mb-4">
-                <Check className="h-4 w-4" />
-                QR Code PIX gerado com sucesso!
+            <div className="bg-white p-4 sm:p-6 rounded-lg text-center border-2 border-green-200">
+              <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm mb-3 sm:mb-4">
+                <Check className="h-3 w-3 sm:h-4 sm:w-4" />
+                QR Code PIX gerado!
               </div>
-              <h3 className="font-semibold mb-4">Escaneie o QR Code para pagar via PIX</h3>
+              <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Escaneie o QR Code para pagar via PIX</h3>
               <img 
                 src={`data:image/png;base64,${pixQrCodeBase64}`} 
                 alt="QR Code PIX" 
-                className="w-64 h-64 mx-auto mb-4 border rounded-lg"
+                className="w-48 h-48 sm:w-64 sm:h-64 mx-auto mb-3 sm:mb-4 border rounded-lg"
               />
               {pixQrCode && (
-                <div className="mt-4">
+                <div className="mt-3 sm:mt-4">
                   <p className="text-xs text-muted-foreground mb-2">Ou copie o código PIX:</p>
-                  <div className="bg-muted p-2 rounded font-mono text-xs break-all max-h-20 overflow-y-auto">
+                  <div className="bg-muted p-2 rounded font-mono text-[10px] sm:text-xs break-all max-h-16 sm:max-h-20 overflow-y-auto">
                     {pixQrCode}
                   </div>
-                  <div className="flex flex-wrap justify-center gap-2 mt-2">
+                  <div className="flex flex-col sm:flex-row justify-center gap-2 mt-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -270,19 +275,21 @@ export const PaymentStep = ({
                         navigator.clipboard.writeText(pixQrCode);
                         toast.success('Código PIX copiado!');
                       }}
+                      className="text-xs sm:text-sm"
                     >
-                      <Copy className="h-4 w-4 mr-2" />
-                      Copiar código PIX
+                      <Copy className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      Copiar código
                     </Button>
                     {pixTicketUrl && (
                       <Button
                         size="sm"
                         variant="outline"
                         asChild
+                        className="text-xs sm:text-sm"
                       >
                         <a href={pixTicketUrl} target="_blank" rel="noopener noreferrer">
-                          <QrCode className="h-4 w-4 mr-2" />
-                          Abrir no app do banco
+                          <QrCode className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                          Abrir no app
                         </a>
                       </Button>
                     )}
@@ -333,20 +340,20 @@ export const PaymentStep = ({
       )}
 
       {/* Total Summary */}
-      <div className="bg-muted p-4 rounded-lg">
-        <div className="flex justify-between items-center">
-          <span className="font-semibold">{t("reservation.total")}</span>
-          <span className="text-2xl font-bold text-primary">
+      <div className="bg-muted p-3 sm:p-4 rounded-lg">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
+          <span className="font-semibold text-sm sm:text-base">{t("reservation.total")}</span>
+          <span className="text-xl sm:text-2xl font-bold text-primary">
             R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </span>
         </div>
         {checkIn && checkOut && !selectedPackage && (
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
             {nights} noites × R$ {pricePerNight.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
         )}
         {selectedPackage && (
-          <p className="text-xs text-green-600 mt-2">
+          <p className="text-[10px] sm:text-xs text-green-600 mt-1 sm:mt-2">
             ✓ Pacote com hospedagem incluída
           </p>
         )}

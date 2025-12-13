@@ -53,13 +53,13 @@ const FAQ = () => {
       <Navigation />
 
       {/* Header */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-muted/50 to-background">
+      <section className="pt-24 sm:pt-32 pb-10 sm:pb-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4 max-w-4xl">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-3 sm:mb-4">
               {t("faq.title")}
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base sm:text-lg text-muted-foreground">
               {t("faq.subtitle")}
             </p>
           </div>
@@ -67,21 +67,21 @@ const FAQ = () => {
       </section>
 
       {/* FAQ Content */}
-      <section className="py-16">
+      <section className="py-10 sm:py-16">
         <div className="container mx-auto px-4 max-w-4xl">
-          <Accordion type="single" collapsible className="space-y-4">
+          <Accordion type="single" collapsible className="space-y-3 sm:space-y-4">
             {faqItems.map((item, index) => (
               <AccordionItem
                 key={index}
                 value={`item-${index}`}
-                className="bg-card border border-border rounded-lg px-6"
+                className="bg-card border border-border rounded-lg px-4 sm:px-6"
               >
-                <AccordionTrigger className="text-left hover:no-underline py-4">
-                  <span className="font-semibold text-foreground">
+                <AccordionTrigger className="text-left hover:no-underline py-3 sm:py-4">
+                  <span className="font-semibold text-foreground text-sm sm:text-base">
                     {item.question}
                   </span>
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4">
+                <AccordionContent className="text-muted-foreground pb-3 sm:pb-4 text-sm sm:text-base">
                   {item.answer}
                 </AccordionContent>
               </AccordionItem>
@@ -89,11 +89,11 @@ const FAQ = () => {
           </Accordion>
 
           {/* Contact CTA */}
-          <div className="mt-16 text-center bg-muted/30 rounded-lg p-8">
-            <h3 className="text-2xl font-display font-bold text-foreground mb-4">
+          <div className="mt-10 sm:mt-16 text-center bg-muted/30 rounded-lg p-5 sm:p-8">
+            <h3 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-3 sm:mb-4">
               {t("faq.stillHaveQuestions")}
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
               {t("faq.contactUs")}
             </p>
             <Button
@@ -106,7 +106,7 @@ const FAQ = () => {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <MessageCircle className="mr-2 h-5 w-5" />
+                <MessageCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 {t("faq.whatsappButton")}
               </a>
             </Button>

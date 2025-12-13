@@ -161,17 +161,17 @@ const Messages = () => {
   }
 
   return (
-    <div className="p-8 space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-3xl font-display font-bold text-foreground mb-2">
+        <h1 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-2">
           {t("admin.messages")}
         </h1>
-        <p className="text-muted-foreground">Gerencie todas as mensagens de contato</p>
+        <p className="text-muted-foreground text-sm sm:text-base">Gerencie todas as mensagens de contato</p>
       </div>
 
       <Card>
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2 mb-6">
+        <CardContent className="p-4 sm:p-6">
+          <div className="flex items-center space-x-2 mb-4 sm:mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -183,32 +183,32 @@ const Messages = () => {
             </div>
           </div>
 
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{t("contact.name")}</TableHead>
-                  <TableHead>{t("contact.email")}</TableHead>
-                  <TableHead>{t("contact.phone")}</TableHead>
-                  <TableHead>{t("contact.message")}</TableHead>
-                  <TableHead>{t("admin.status")}</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead className="text-right">{t("admin.actions")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t("contact.name")}</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">{t("contact.email")}</TableHead>
+                  <TableHead className="whitespace-nowrap hidden md:table-cell">{t("contact.phone")}</TableHead>
+                  <TableHead className="whitespace-nowrap hidden lg:table-cell">{t("contact.message")}</TableHead>
+                  <TableHead className="whitespace-nowrap">{t("admin.status")}</TableHead>
+                  <TableHead className="whitespace-nowrap hidden sm:table-cell">Data</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">{t("admin.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMessages.map((message) => (
                   <TableRow key={message.id}>
-                    <TableCell className="font-medium">{message.name}</TableCell>
-                    <TableCell>{message.email}</TableCell>
-                    <TableCell>{message.phone || "N/A"}</TableCell>
-                    <TableCell className="max-w-xs truncate">{message.message}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">{message.name}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{message.email}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden md:table-cell">{message.phone || "N/A"}</TableCell>
+                    <TableCell className="max-w-[150px] truncate text-xs sm:text-sm hidden lg:table-cell">{message.message}</TableCell>
                     <TableCell>
                       <Select 
                         value={message.status} 
                         onValueChange={(value) => handleUpdateStatus(message.id, value)}
                       >
-                        <SelectTrigger className="w-32">
+                        <SelectTrigger className="w-24 sm:w-32 text-xs sm:text-sm">
                           <SelectValue>{getStatusBadge(message.status)}</SelectValue>
                         </SelectTrigger>
                         <SelectContent>
@@ -218,9 +218,9 @@ const Messages = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell>{new Date(message.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{new Date(message.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
+                      <div className="flex justify-end space-x-1 sm:space-x-2">
                         <Button 
                           size="sm" 
                           variant="ghost" 
@@ -234,6 +234,7 @@ const Messages = () => {
                           variant="ghost"
                           onClick={() => handleContactEmail(message.email)}
                           title="Responder por e-mail"
+                          className="hidden sm:flex"
                         >
                           <Mail className="h-4 w-4" />
                         </Button>
@@ -243,6 +244,7 @@ const Messages = () => {
                             variant="ghost"
                             onClick={() => handleContactWhatsApp(message.phone!, message.name)}
                             title="Responder por WhatsApp"
+                            className="hidden sm:flex"
                           >
                             <MessageCircle className="h-4 w-4" />
                           </Button>
