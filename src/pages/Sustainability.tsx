@@ -1,7 +1,7 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Leaf, Sun, Droplet, Users, Heart, Recycle } from "lucide-react";
-import sustainabilityImg from "@/assets/sustainability.jpg";
+import sustainabilityImg from "@/assets/sustainability-new.jpg";
 
 const Sustainability = () => {
   const initiatives = [
