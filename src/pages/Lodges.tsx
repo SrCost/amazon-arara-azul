@@ -111,11 +111,11 @@ const Lodges = () => {
       <Navigation />
 
       {/* Header */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-muted/50 to-background">
+      <section className="pt-24 sm:pt-32 pb-12 sm:pb-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">Nossos Bangalôs</h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4">Nossos Bangalôs</h1>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
               Escolha sua experiência perfeita em meio à floresta amazônica
             </p>
           </div>
@@ -127,19 +127,19 @@ const Lodges = () => {
       </section>
 
       {/* Lodges Grid */}
-      <section className="py-16">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4">
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground">Buscando bangalôs disponíveis...</p>
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-base sm:text-lg text-muted-foreground">Buscando bangalôs disponíveis...</p>
             </div>
           ) : lodges.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-lg text-muted-foreground mb-4">Nenhum bangalô disponível para o período informado.</p>
+            <div className="text-center py-8 sm:py-12">
+              <p className="text-base sm:text-lg text-muted-foreground mb-4">Nenhum bangalô disponível para o período informado.</p>
               <p className="text-sm text-muted-foreground">Tente outras datas ou reduza o número de hóspedes.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {lodges.map((lodge) => (
                 <LodgeCard key={lodge.id} {...lodge} />
               ))}

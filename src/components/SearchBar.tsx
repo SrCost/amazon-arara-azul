@@ -93,14 +93,14 @@ const SearchBar = () => {
       setIsSearching(false);
     }
   };
-  return <div className="bg-card shadow-medium rounded-lg p-6 w-full max-w-5xl">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+  return <div className="bg-card shadow-medium rounded-lg p-4 sm:p-6 w-full max-w-5xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className="flex flex-col space-y-2">
           <label className="text-sm font-medium text-foreground flex items-center">
             <Calendar className="h-4 w-4 mr-2 text-primary" />
             Check-in
           </label>
-          <Input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full" />
+          <Input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full min-w-0" />
         </div>
 
         <div className="flex flex-col space-y-2">
@@ -108,7 +108,7 @@ const SearchBar = () => {
             <Calendar className="h-4 w-4 mr-2 text-primary" />
             Check-out
           </label>
-          <Input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} className="w-full" />
+          <Input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} className="w-full min-w-0" />
         </div>
 
         <div className="flex flex-col space-y-2">
@@ -147,7 +147,7 @@ const SearchBar = () => {
           </Select>
         </div>
 
-        <div className="flex items-end">
+        <div className="flex items-end sm:col-span-2 lg:col-span-1">
           <Button onClick={handleSearch} disabled={isSearching} className="w-full h-10 bg-gradient-forest hover:opacity-90 transition-opacity">
             {isSearching ? "Buscando..." : "Buscar"}
           </Button>

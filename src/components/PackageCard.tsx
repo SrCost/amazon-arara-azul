@@ -34,18 +34,18 @@ const PackageCard = ({
 
   return (
     <Card className={`overflow-hidden group hover:shadow-strong transition-all duration-300 flex flex-col h-full ${isCustom ? "border-amber-200 bg-gradient-to-br from-amber-50/30 to-orange-50/30 dark:from-amber-950/20 dark:to-orange-950/20" : ""}`}>
-      <CardHeader className={`border-b border-border ${isCustom ? "bg-gradient-to-br from-amber-100/50 to-orange-100/50 dark:from-amber-900/30 dark:to-orange-900/30" : "bg-gradient-to-br from-primary/10 to-accent/10"}`}>
-        <div className="flex items-start justify-between">
-          <CardTitle className="text-3xl font-display font-bold text-foreground mb-2">
+      <CardHeader className={`p-4 sm:p-6 border-b border-border ${isCustom ? "bg-gradient-to-br from-amber-100/50 to-orange-100/50 dark:from-amber-900/30 dark:to-orange-900/30" : "bg-gradient-to-br from-primary/10 to-accent/10"}`}>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+          <CardTitle className="text-2xl sm:text-3xl font-display font-bold text-foreground">
             {name}
           </CardTitle>
           {isCustom && (
-            <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-semibold">
+            <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-semibold self-start">
               Personalizado
             </span>
           )}
         </div>
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+        <div className="flex flex-wrap gap-3 sm:gap-4 text-sm text-muted-foreground mt-2">
           <div className="flex items-center">
             <Calendar className="h-4 w-4 mr-2 text-accent" />
             {duration}
@@ -57,7 +57,7 @@ const PackageCard = ({
         </div>
       </CardHeader>
 
-      <CardContent className="p-6 flex-1 flex flex-col">
+      <CardContent className="p-4 sm:p-6 flex-1 flex flex-col">
         {/* Inclusions */}
         <div className="mb-6">
           <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center">
@@ -108,7 +108,7 @@ const PackageCard = ({
           {isCustom ? (
             <>
               <div className="mb-4 text-center">
-                <div className="text-3xl font-bold text-amber-600">
+                <div className="text-2xl sm:text-3xl font-bold text-amber-600">
                   Sob Consulta
                 </div>
                 <div className="text-sm text-amber-600 mt-1">
@@ -135,7 +135,7 @@ const PackageCard = ({
                 <div className="text-sm text-muted-foreground mb-1">
                   A partir de 12x de
                 </div>
-                <div className="text-3xl font-bold text-primary">
+                <div className="text-2xl sm:text-3xl font-bold text-primary">
                   {(parseFloat(total.replace("R$ ", "").replace(".", "").replace(",", ".")) / 12).toLocaleString("pt-BR", {
                     style: "currency",
                     currency: "BRL",

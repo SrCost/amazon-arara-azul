@@ -33,7 +33,7 @@ const LodgeCard = ({
 
   return (
     <Card className="overflow-hidden group hover:shadow-strong transition-all duration-300">
-      <div className="relative h-64 overflow-hidden bg-muted">
+      <div className="relative h-48 sm:h-64 overflow-hidden bg-muted">
         {image ? (
           <img
             src={image}
@@ -48,19 +48,19 @@ const LodgeCard = ({
         <div className="absolute inset-0 bg-gradient-hero opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
       
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <h3 className="text-2xl font-display font-semibold text-foreground mb-2">
+      <CardContent className="p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
+          <div className="min-w-0">
+            <h3 className="text-xl sm:text-2xl font-display font-semibold text-foreground mb-2 truncate">
               {name}
             </h3>
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4 mr-1 text-accent" />
-              {location}
+            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-accent flex-shrink-0" />
+              <span className="truncate">{location}</span>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-primary">{price}</div>
+          <div className="text-left sm:text-right flex-shrink-0">
+            <div className="text-lg sm:text-2xl font-bold text-primary">{price}</div>
             <div className="text-xs text-muted-foreground">por noite</div>
           </div>
         </div>
@@ -69,7 +69,7 @@ const LodgeCard = ({
           {description}
         </p>
 
-        <div className="flex items-center space-x-4 mb-4 text-sm text-muted-foreground">
+        <div className="flex items-center flex-wrap gap-3 sm:gap-4 mb-4 text-sm text-muted-foreground">
           <div className="flex items-center">
             <Users className="h-4 w-4 mr-1 text-accent" />
             {guests} pessoas
