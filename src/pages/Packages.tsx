@@ -119,17 +119,17 @@ const Packages = () => {
       <Navigation />
 
       {/* Header */}
-      <section className="pt-32 pb-16 bg-gradient-to-b from-muted/50 to-background">
+      <section className="pt-24 sm:pt-32 pb-12 sm:pb-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-display font-bold text-foreground mb-4">{t("packages.title")}</h1>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">{t("packages.subtitle")}</p>
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4">{t("packages.title")}</h1>
+            <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed px-2">{t("packages.subtitle")}</p>
           </div>
         </div>
       </section>
 
       {/* Gavião Panema - Minimalist Card */}
-      <section className="py-8">
+      <section className="py-6 sm:py-8">
         <div className="container mx-auto px-4">
           <a
             href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
@@ -138,21 +138,21 @@ const Packages = () => {
             className="block max-w-3xl mx-auto"
           >
             <Card className="border-dashed border-2 border-amber-300 bg-gradient-to-r from-amber-50/50 to-orange-50/50 dark:from-amber-950/30 dark:to-orange-950/30 hover:from-amber-50 hover:to-orange-50 dark:hover:from-amber-950/50 dark:hover:to-orange-950/50 transition-all duration-300 cursor-pointer group">
-              <CardContent className="py-5 px-6 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="text-3xl">✨</span>
+              <CardContent className="py-4 px-4 sm:py-5 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <span className="text-2xl sm:text-3xl">✨</span>
                   <div>
-                    <h3 className="font-display font-bold text-amber-800 dark:text-amber-200 text-xl">
+                    <h3 className="font-display font-bold text-amber-800 dark:text-amber-200 text-lg sm:text-xl">
                       Pacote Gavião Panema
                     </h3>
-                    <p className="text-sm text-amber-600 dark:text-amber-400">
-                      Pacote 100% personalizável • Roteiro sob medida • Experiências exclusivas
+                    <p className="text-xs sm:text-sm text-amber-600 dark:text-amber-400">
+                      Pacote 100% personalizável • Roteiro sob medida
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 px-4 py-2 rounded-full group-hover:bg-amber-200 dark:group-hover:bg-amber-800/50 transition-colors">
-                  <MessageCircle className="h-5 w-5" />
-                  <span className="font-semibold">Falar com Consultor</span>
+                <div className="flex items-center justify-center gap-2 text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 px-4 py-2 rounded-full group-hover:bg-amber-200 dark:group-hover:bg-amber-800/50 transition-colors w-full sm:w-auto">
+                  <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="font-semibold text-sm sm:text-base">Falar com Consultor</span>
                 </div>
               </CardContent>
             </Card>
@@ -161,9 +161,9 @@ const Packages = () => {
       </section>
 
       {/* Packages Grid */}
-      <section className="py-16">
+      <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
             {packages.map((pkg) => (
               <PackageCard key={pkg.id} {...pkg} />
             ))}
@@ -171,9 +171,9 @@ const Packages = () => {
 
 
           {/* Final Section */}
-          <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-8 md:p-12 border border-border">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-4">{t("packages.qualityTitle")}</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed">{t("packages.qualityDescription")}</p>
+          <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl p-6 sm:p-8 md:p-12 border border-border">
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-4">{t("packages.qualityTitle")}</h2>
+            <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">{t("packages.qualityDescription")}</p>
           </div>
         </div>
       </section>
