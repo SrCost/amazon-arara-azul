@@ -9,7 +9,8 @@
     "login": "Login",
     "logout": "Logout",
     "admin": "Admin Panel",
-    "myReservations": "My Reservations"
+    "myReservations": "My Reservations",
+    "language": "Language"
   },
   "hero": {
     "title": "Discover Authentic Amazonia",

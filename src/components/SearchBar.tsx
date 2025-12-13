@@ -93,31 +93,47 @@ const SearchBar = () => {
       setIsSearching(false);
     }
   };
-  return <div className="bg-card shadow-medium rounded-lg p-4 sm:p-6 w-full max-w-5xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-foreground flex items-center">
-            <Calendar className="h-4 w-4 mr-2 text-primary" />
-            Check-in
+  return (
+    <div className="bg-card shadow-medium rounded-lg p-3 sm:p-4 md:p-6 w-full max-w-5xl mx-auto">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
+        {/* Check-in */}
+        <div className="flex flex-col space-y-1.5">
+          <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
+            <span>Check-in</span>
           </label>
-          <Input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full min-w-0" />
+          <Input 
+            type="date" 
+            value={checkIn} 
+            onChange={e => setCheckIn(e.target.value)} 
+            min={new Date().toISOString().split('T')[0]} 
+            className="w-full min-w-0 text-sm h-9 sm:h-10" 
+          />
         </div>
 
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-foreground flex items-center">
-            <Calendar className="h-4 w-4 mr-2 text-primary" />
-            Check-out
+        {/* Check-out */}
+        <div className="flex flex-col space-y-1.5">
+          <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
+            <span>Check-out</span>
           </label>
-          <Input type="date" value={checkOut} onChange={e => setCheckOut(e.target.value)} min={checkIn || new Date().toISOString().split('T')[0]} className="w-full min-w-0" />
+          <Input 
+            type="date" 
+            value={checkOut} 
+            onChange={e => setCheckOut(e.target.value)} 
+            min={checkIn || new Date().toISOString().split('T')[0]} 
+            className="w-full min-w-0 text-sm h-9 sm:h-10" 
+          />
         </div>
 
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-foreground flex items-center">
-            <Users className="h-4 w-4 mr-2 text-primary" />
-            Hóspedes
+        {/* Hóspedes */}
+        <div className="flex flex-col space-y-1.5">
+          <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
+            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
+            <span>Hóspedes</span>
           </label>
           <Select value={guests} onValueChange={setGuests}>
-            <SelectTrigger>
+            <SelectTrigger className="h-9 sm:h-10 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -129,13 +145,14 @@ const SearchBar = () => {
           </Select>
         </div>
 
-        <div className="flex flex-col space-y-2">
-          <label className="text-sm font-medium text-foreground flex items-center">
-            <Home className="h-4 w-4 mr-2 text-primary" />
-            Bangalôs
+        {/* Bangalôs */}
+        <div className="flex flex-col space-y-1.5">
+          <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
+            <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
+            <span>Bangalôs</span>
           </label>
           <Select value={lodgeType} onValueChange={setLodgeType}>
-            <SelectTrigger>
+            <SelectTrigger className="h-9 sm:h-10 text-sm">
               <SelectValue placeholder="Todos" />
             </SelectTrigger>
             <SelectContent>
@@ -147,12 +164,18 @@ const SearchBar = () => {
           </Select>
         </div>
 
-        <div className="flex items-end sm:col-span-2 lg:col-span-1">
-          <Button onClick={handleSearch} disabled={isSearching} className="w-full h-10 bg-gradient-forest hover:opacity-90 transition-opacity">
+        {/* Botão Buscar - ocupa 2 colunas em mobile */}
+        <div className="col-span-2 lg:col-span-1 flex items-end mt-1 sm:mt-0">
+          <Button 
+            onClick={handleSearch} 
+            disabled={isSearching} 
+            className="w-full h-9 sm:h-10 bg-gradient-forest hover:opacity-90 transition-opacity text-sm sm:text-base"
+          >
             {isSearching ? "Buscando..." : "Buscar"}
           </Button>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
 export default SearchBar;
