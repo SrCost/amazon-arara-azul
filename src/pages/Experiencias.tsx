@@ -105,7 +105,7 @@ const Experiencias = () => {
             </p>
           </div>
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="aspect-video rounded-lg" />
               ))}
@@ -117,11 +117,11 @@ const Experiencias = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {galleryImages.map((image, index) => (
                 <div
                   key={index}
-                  className="aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-105 cursor-pointer group"
+                  className="aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] sm:hover:scale-105 cursor-pointer group"
                   onClick={() => openLightbox(index)}
                 >
                   <img

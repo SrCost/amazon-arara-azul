@@ -183,12 +183,13 @@ const Contact = () => {
                         value={formData.message}
                         onChange={handleChange}
                         placeholder="Como podemos ajudá-lo?"
-                        rows={6}
+                        rows={5}
+                        className="min-h-[120px] sm:min-h-[150px]"
                       />
                     </div>
 
-                    <Button type="submit" className="w-full bg-gradient-forest hover:opacity-90 h-12 text-lg">
-                      <Send className="mr-2 h-5 w-5" />
+                    <Button type="submit" className="w-full bg-gradient-forest hover:opacity-90 h-11 sm:h-12 text-base sm:text-lg">
+                      <Send className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                       Enviar Mensagem
                     </Button>
                   </form>
