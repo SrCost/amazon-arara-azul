@@ -25,7 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Eye, Download, CreditCard } from "lucide-react";
+import { Search, Eye, Download, CreditCard, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -63,6 +63,9 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchPayments();
@@ -84,11 +87,14 @@ const Payments = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [currentPage]);
 
   const fetchPayments = async () => {
     try {
-      const { data, error } = await supabase
+      const from = (currentPage - 1) * itemsPerPage;
+      const to = from + itemsPerPage - 1;
+
+      const { data, error, count } = await supabase
         .from("payments")
         .select(`
           *,
@@ -99,11 +105,13 @@ const Payments = () => {
             check_in,
             check_out
           )
-        `)
-        .order("created_at", { ascending: false });
+        `, { count: 'exact' })
+        .order("created_at", { ascending: false })
+        .range(from, to);
 
       if (error) throw error;
       setPayments(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Erro ao carregar pagamentos");
