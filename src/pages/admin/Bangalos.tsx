@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon, Eye } from "lucide-react";
+import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon, Eye, Power } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Dialog,
@@ -229,6 +229,22 @@ const AdminBangalos = () => {
     setDeleteDialogOpen(true);
   };
 
+  const handleActivate = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("rooms")
+        .update({ is_active: true })
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Bangalô ativado com sucesso!");
+      fetchBangalos();
+    } catch (error: any) {
+      console.error("Error activating bangalo:", error);
+      toast.error("Erro ao ativar bangalô");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -317,13 +333,24 @@ const AdminBangalos = () => {
                     <Eye className="h-4 w-4" />
                   </Link>
                 </Button>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => openDeleteDialog(bangalo.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {!bangalo.is_active ? (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => handleActivate(bangalo.id)}
+                  >
+                    <Power className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => openDeleteDialog(bangalo.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>
