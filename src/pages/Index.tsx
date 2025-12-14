@@ -108,7 +108,7 @@ const Index = () => {
 
       {/* Hero Section with Carousel */}
       <section className="relative">
-        <div className="relative w-full h-[500px] sm:h-[550px] md:h-[650px] lg:h-[700px] overflow-hidden">
+        <div className="relative w-full h-[400px] sm:h-[550px] md:h-[650px] lg:h-[700px] overflow-hidden">
           <HeroCarousel />
           
           {/* Content Overlay */}
@@ -122,7 +122,7 @@ const Index = () => {
                   {t("home.heroSubtitle")}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 sm:mb-8 lg:mb-12 px-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 px-4">
                   <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8" asChild>
                     <Link to="/bangalos">
                       Explorar Bangalôs
@@ -138,7 +138,8 @@ const Index = () => {
                   </Button>
                 </div>
 
-                <div className="flex justify-center mb-0 sm:-mb-10 lg:-mb-20 px-2">
+                {/* SearchBar - Desktop only */}
+                <div className="hidden sm:flex justify-center sm:-mb-10 lg:-mb-20 px-2">
                   <SearchBar />
                 </div>
               </div>
@@ -146,6 +147,11 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* SearchBar Mobile - Outside hero */}
+      <div className="sm:hidden px-4 -mt-6 relative z-20">
+        <SearchBar />
+      </div>
 
       {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-24 bg-muted/30">
