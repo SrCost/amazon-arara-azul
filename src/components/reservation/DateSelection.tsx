@@ -142,10 +142,10 @@ export const DateSelection = ({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">1 pessoa - R$ {formatDailyRate(1)}/noite</SelectItem>
-            <SelectItem value="2">2 pessoas - R$ {formatDailyRate(2)}/noite</SelectItem>
-            <SelectItem value="3">3 pessoas - R$ {formatDailyRate(3)}/noite</SelectItem>
-            <SelectItem value="4">4 pessoas - R$ {formatDailyRate(4)}/noite</SelectItem>
+            <SelectItem value="1">1 pessoa</SelectItem>
+            <SelectItem value="2">2 pessoas</SelectItem>
+            <SelectItem value="3">3 pessoas</SelectItem>
+            <SelectItem value="4">4 pessoas</SelectItem>
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground mt-1">
