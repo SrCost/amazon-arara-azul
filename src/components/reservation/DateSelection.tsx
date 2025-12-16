@@ -178,7 +178,7 @@ export const DateSelection = ({
           
           {!selectedPackage && (
             <p className="text-xs text-muted-foreground">
-              {nights} noites × R$ {formatDailyRate(parseInt(guests))}/noite ({guests} hóspede{parseInt(guests) > 1 ? 's' : ''})
+              {nights} noites × R$ {formatDailyRate(parseInt(guests), pricePerNight)}/noite ({guests} hóspede{parseInt(guests) > 1 ? 's' : ''})
             </p>
           )}
         </div>
