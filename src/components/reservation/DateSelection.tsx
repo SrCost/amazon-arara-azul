@@ -162,7 +162,7 @@ export const DateSelection = ({
               <div className="flex justify-between text-sm">
                 <span>Pacote turístico (inclui hospedagem):</span>
                 <span className="font-medium">
-                  R$ {Number(packages.find(p => p.id === selectedPackage)?.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                  R$ {Number(packages.find(p => p.id === selectedPackage)?.price || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               <div className="border-t pt-2" />
@@ -172,7 +172,7 @@ export const DateSelection = ({
           <div className="flex justify-between items-center">
             <p className="font-semibold">{t("reservation.total")}</p>
             <p className="text-2xl font-bold text-primary">
-              R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
           </div>
           

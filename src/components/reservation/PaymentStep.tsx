@@ -200,7 +200,7 @@ export const PaymentStep = ({
                 <SelectContent>
                   {[1, 2, 3, 6, 10, 12].map((n) => (
                     <SelectItem key={n} value={n.toString()}>
-                      {n}x {n === 1 ? "à vista" : `de R$ ${(calculateTotal() / n).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                      {n}x {n === 1 ? "à vista" : `de R$ ${(calculateTotal() / n).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -344,12 +344,12 @@ export const PaymentStep = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1 sm:gap-0">
           <span className="font-semibold text-sm sm:text-base">{t("reservation.total")}</span>
           <span className="text-xl sm:text-2xl font-bold text-primary">
-            R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
         {checkIn && checkOut && !selectedPackage && (
           <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 sm:mt-2">
-            {nights} noites × R$ {pricePerNight.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            {nights} noites × R$ {pricePerNight.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </p>
         )}
         {selectedPackage && (

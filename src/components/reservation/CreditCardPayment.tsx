@@ -75,8 +75,8 @@ export const CreditCardPayment = ({
     for (let i = 1; i <= 12; i++) {
       const value = totalAmount / i;
       const label = i === 1 
-        ? `À vista - R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
-        : `${i}x de R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} sem juros`;
+        ? `À vista - R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+        : `${i}x de R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sem juros`;
       options.push({ value: i.toString(), label });
     }
     return options;
