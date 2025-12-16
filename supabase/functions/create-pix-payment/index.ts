@@ -46,10 +46,12 @@ serve(async (req) => {
       throw new Error('Campos obrigatórios: bungalow_id, checkin, checkout, email');
     }
 
-    const amount = parseFloat(total_amount);
-    if (isNaN(amount) || amount <= 0) {
+    const rawAmount = parseFloat(total_amount);
+    if (isNaN(rawAmount) || rawAmount <= 0) {
       throw new Error('total_amount deve ser um número válido maior que zero');
     }
+    // Arredondar para 2 casas decimais (Mercado Pago requer precisão exata)
+    const amount = Math.round(rawAmount * 100) / 100;
 
     const cleanCpf = cpf?.replace(/\D/g, '') || '';
     if (!cleanCpf || cleanCpf.length !== 11) {
