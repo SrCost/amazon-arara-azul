@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.create-card-payment]
 verify_jwt = false
+
+[functions.mp-public-config]
+verify_jwt = false
