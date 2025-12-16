@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
@@ -39,6 +40,7 @@ interface ReservationFlowProps {
 const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: ReservationFlowProps) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const {
     loading: loadingAvailability,
     blockedDates,
@@ -490,10 +492,12 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
       // PIX payment already created - verify and confirm
       if (paymentMethod === "pix" && reservationId && paymentCreated) {
-        if (!paymentVerified && paymentStatus !== 'approved') {
+        console.log('=== CONFIRMANDO PIX ===', { reservationId, paymentCreated, paymentVerified, paymentStatus });
+        
+        if (!paymentVerified && paymentStatus !== 'approved' && paymentStatus !== 'paid') {
           if (paymentId) {
             const finalStatus = await checkPaymentStatus(paymentId, reservationId);
-            if (finalStatus !== 'approved') {
+            if (finalStatus !== 'approved' && finalStatus !== 'paid') {
               toast.error("Aguardando confirmação do pagamento PIX");
               setIsSubmitting(false);
               return;
@@ -505,10 +509,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           }
         }
         
-        await supabase
+        const { error: updateError } = await supabase
           .from("reservations")
           .update({ status: "confirmed", payment_status: "paid" })
           .eq('id', reservationId);
+
+        if (updateError) {
+          console.error('Erro ao atualizar reserva:', updateError);
+          toast.error("Erro ao confirmar reserva. Tente novamente.");
+          setIsSubmitting(false);
+          return;
+        }
 
         toast.success("🎉 Reserva confirmada com sucesso!");
         
@@ -524,7 +535,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         });
         if (selectedPkg) params.append('package', selectedPkg.name);
         
-        window.location.href = `/reserva-concluida?${params.toString()}`;
+        // Fechar dialog e navegar usando React Router
+        onClose();
+        navigate(`/reserva-concluida?${params.toString()}`);
+        return;
+      }
+      
+      // Fallback: PIX selecionado mas dados incompletos
+      if (paymentMethod === "pix" && (!reservationId || !paymentCreated)) {
+        console.error('PIX incompleto:', { reservationId, paymentCreated });
+        toast.error("Erro: dados de pagamento incompletos. Por favor, gere um novo QR Code.");
+        setIsSubmitting(false);
         return;
       }
 
@@ -637,7 +658,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           });
           if (selectedPkg) params.append('package', selectedPkg.name);
           
-          window.location.href = `/reserva-concluida?${params.toString()}`;
+          // Fechar dialog e navegar usando React Router
+          onClose();
+          navigate(`/reserva-concluida?${params.toString()}`);
         }, 1500);
       }
       
