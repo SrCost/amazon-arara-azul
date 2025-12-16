@@ -47,6 +47,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     isDateAvailable,
     checkAvailability,
     getNextAvailableDates,
+    refreshAvailability,
   } = useRoomAvailability(roomId);
   
   // Step state
@@ -338,6 +339,16 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       );
 
       if (orderError || !orderData?.success) {
+        // Verificar se é erro de conflito de datas (409)
+        if (orderData?.error === 'dates_unavailable') {
+          toast.error("❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas.");
+          await refreshAvailability();
+          setStep(2); // Voltar para seleção de datas
+          setCheckIn(undefined);
+          setCheckOut(undefined);
+          return;
+        }
+        
         const errorMsg = orderData?.error || "Falha ao criar pedido PIX";
         setErrorType("order");
         setErrorMessage(errorMsg);
@@ -608,6 +619,17 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         );
 
         if (orderError || !orderResult?.success) {
+          // Verificar se é erro de conflito de datas (409)
+          if (orderResult?.error === 'dates_unavailable') {
+            toast.error("❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas.");
+            await refreshAvailability();
+            setStep(2); // Voltar para seleção de datas
+            setCheckIn(undefined);
+            setCheckOut(undefined);
+            setIsSubmitting(false);
+            return;
+          }
+          
           const errorMsg = orderResult?.error_message || orderResult?.error || "Erro ao processar pagamento";
           setErrorType("card_failed");
           setErrorMessage(`Pagamento recusado: ${errorMsg}`);

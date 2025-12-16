@@ -76,7 +76,38 @@ serve(async (req) => {
     const roomName = roomData?.name_pt || 'Bangalô';
     console.log('Room name:', roomName);
 
-    // 2. Verificar reserva existente
+    // 2. VALIDAR DISPONIBILIDADE DAS DATAS (verificar conflitos)
+    console.log('=== VERIFICANDO DISPONIBILIDADE DAS DATAS ===');
+    const { data: conflictingReservations, error: conflictError } = await supabase
+      .from('reservations')
+      .select('id, check_in, check_out, guest_name, status')
+      .eq('room_id', bungalow_id)
+      .in('status', ['pending', 'confirmed'])
+      .neq('guest_email', email) // Ignorar reserva do mesmo email (retry)
+      .or(`and(check_in.lte.${checkin},check_out.gt.${checkin}),and(check_in.lt.${checkout},check_out.gte.${checkout}),and(check_in.gte.${checkin},check_out.lte.${checkout})`);
+
+    if (conflictError) {
+      console.error('Erro ao verificar conflitos:', conflictError);
+    }
+
+    if (conflictingReservations && conflictingReservations.length > 0) {
+      console.error('Datas conflitantes encontradas:', conflictingReservations);
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'dates_unavailable',
+        message: 'As datas selecionadas já estão reservadas. Por favor, escolha outras datas.',
+        conflicting_dates: conflictingReservations.map(r => ({
+          check_in: r.check_in,
+          check_out: r.check_out
+        }))
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 409
+      });
+    }
+    console.log('Datas disponíveis - nenhum conflito encontrado');
+
+    // 3. Verificar reserva existente
     console.log('=== VERIFICANDO RESERVA EXISTENTE ===');
     const { data: existingReservation } = await supabase
       .from('reservations')
