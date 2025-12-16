@@ -116,7 +116,7 @@ export const ReviewStep = ({
         <div className="flex justify-between pt-3 border-t mt-3">
           <span className="font-semibold text-lg">Total:</span>
           <span className="text-2xl font-bold text-primary">
-            R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            R$ {calculateTotal().toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </div>
         
