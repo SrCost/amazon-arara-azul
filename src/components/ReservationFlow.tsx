@@ -184,6 +184,49 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
   }, [isPaid, paymentVerified]);
 
+  // Polling para verificar status PIX (fallback quando Realtime não funciona)
+  useEffect(() => {
+    if (!showPixCode || paymentVerified || paymentMethod !== 'pix' || !reservationId) {
+      return;
+    }
+
+    const pollInterval = setInterval(async () => {
+      console.log('=== POLLING STATUS PIX ===');
+      try {
+        const { data, error } = await supabase.functions.invoke('check-payment-status', {
+          body: { reservationId }
+        });
+        
+        console.log('Poll result:', data);
+        
+        if (data?.status === 'approved' || data?.status === 'paid' || data?.mapped_status === 'completed') {
+          setPaymentVerified(true);
+          setLocalPaymentStatus('paid');
+          toast.success('✓ Pagamento PIX confirmado!');
+          clearInterval(pollInterval);
+          
+          // Clear PIX timeout
+          if (pixTimeoutRef.current) {
+            clearTimeout(pixTimeoutRef.current);
+            pixTimeoutRef.current = null;
+          }
+        }
+      } catch (err) {
+        console.error('Polling error:', err);
+      }
+    }, 5000); // Polling a cada 5 segundos
+
+    return () => clearInterval(pollInterval);
+  }, [showPixCode, paymentVerified, paymentMethod, reservationId]);
+
+  // Auto-avanço quando pagamento PIX confirmado
+  useEffect(() => {
+    if (step === 4 && paymentMethod === "pix" && paymentVerified && showPixCode) {
+      toast.success('✓ Pagamento confirmado! Avançando para confirmação...');
+      setTimeout(() => setStep(5), 1500);
+    }
+  }, [paymentVerified, step, paymentMethod, showPixCode]);
+
   const isCustomizablePackage = useCallback((pkg: any) => {
     return pkg?.price === 0 || pkg?.name?.toLowerCase().includes('gavião') || pkg?.name?.toLowerCase().includes('panema');
   }, []);
@@ -419,6 +462,11 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         }
         if (!showPixCode) {
           toast.error("Por favor, gere o QR Code PIX antes de continuar");
+          return;
+        }
+        // Bloquear avanço até pagamento PIX confirmado
+        if (!paymentVerified && paymentStatus !== 'paid' && paymentStatus !== 'approved') {
+          toast.error("Aguarde a confirmação do pagamento PIX para continuar");
           return;
         }
       }
@@ -756,9 +804,28 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             )}
 
             {step < 5 ? (
-              <Button onClick={handleNext} className="bg-gradient-forest">
-                {t("common.next")}
-                <ChevronRight className="ml-2 h-4 w-4" />
+              <Button 
+                onClick={handleNext} 
+                className="bg-gradient-forest"
+                disabled={
+                  step === 4 && 
+                  paymentMethod === "pix" && 
+                  showPixCode && 
+                  !paymentVerified && 
+                  paymentStatus !== 'paid'
+                }
+              >
+                {step === 4 && paymentMethod === "pix" && showPixCode && !paymentVerified ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Aguardando PIX...
+                  </>
+                ) : (
+                  <>
+                    {t("common.next")}
+                    <ChevronRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
               </Button>
             ) : (
               <Button 

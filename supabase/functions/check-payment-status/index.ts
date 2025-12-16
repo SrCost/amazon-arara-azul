@@ -25,8 +25,55 @@ serve(async (req) => {
 
     console.log('Checking payment status:', { paymentId, reservationId });
 
-    if (!paymentId) {
-      throw new Error('ID do pagamento é obrigatório');
+    // Se apenas reservationId fornecido, buscar pagamento no banco primeiro
+    if (!paymentId && reservationId) {
+      console.log('Buscando pagamento por reservation_id:', reservationId);
+      
+      const { data: paymentData, error: paymentError } = await supabase
+        .from('payments')
+        .select('mp_payment_id, status')
+        .eq('reservation_id', reservationId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (paymentError || !paymentData) {
+        console.log('Nenhum pagamento encontrado para reserva:', reservationId);
+        return new Response(JSON.stringify({
+          success: true,
+          status: 'pending',
+          message: 'Pagamento não encontrado'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Se já temos o status no banco e está approved/paid, retornar direto
+      if (paymentData.status === 'paid' || paymentData.status === 'approved' || paymentData.status === 'completed') {
+        console.log('Pagamento já confirmado no banco:', paymentData.status);
+        return new Response(JSON.stringify({
+          success: true,
+          status: paymentData.status,
+          mapped_status: 'completed',
+          reservation_status: 'confirmed'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Se temos mp_payment_id, verificar no Mercado Pago
+      if (!paymentData.mp_payment_id) {
+        return new Response(JSON.stringify({
+          success: true,
+          status: paymentData.status || 'pending'
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    if (!paymentId && !reservationId) {
+      throw new Error('ID do pagamento ou da reserva é obrigatório');
     }
 
     // Get payment status from Mercado Pago
