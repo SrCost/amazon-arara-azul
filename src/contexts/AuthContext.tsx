@@ -158,13 +158,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Primeiro tenta logout global
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      
+      if (error) {
+        // Se falhar (ex: "Auth session missing"), faz logout local
+        console.warn('Logout global falhou, usando local:', error.message);
+        await supabase.auth.signOut({ scope: 'local' });
+      }
+      
       toast.success('Logout realizado com sucesso!');
-      navigate('/');
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao fazer logout');
-      throw error;
+      console.error('Erro no logout:', error);
+      // Fallback: limpar manualmente com scope local
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (e) {
+        // Ignorar erro do fallback
+      }
+      toast.success('Logout realizado!');
+    } finally {
+      // SEMPRE limpar estado local e redirecionar
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+      setIsSuperAdmin(false);
+      navigate('/');
     }
   };
 
