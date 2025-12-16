@@ -684,7 +684,23 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto relative">
+      {/* Loading Overlay during confirmation */}
+      {isSubmitting && step === 5 && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-card p-8 rounded-xl shadow-2xl flex flex-col items-center gap-4 border">
+            <div className="relative">
+              <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+              <Loader2 className="h-8 w-8 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 animate-pulse" />
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-foreground">Confirmando sua reserva...</h3>
+              <p className="text-sm text-muted-foreground mt-1">Por favor, aguarde enquanto processamos</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Step Progress */}
       <StepProgress steps={steps} currentStep={step} />
 
