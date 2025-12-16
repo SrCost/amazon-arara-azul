@@ -51,7 +51,14 @@ serve(async (req) => {
       throw new Error('total_amount deve ser um número válido maior que zero');
     }
     // Arredondar para 2 casas decimais (Mercado Pago requer precisão exata)
-    const amount = Math.round(rawAmount * 100) / 100;
+    let amount = Math.round(rawAmount * 100) / 100;
+    
+    // Mercado Pago exige valor mínimo de R$ 0.50 para PIX
+    const MIN_AMOUNT = 0.50;
+    if (amount < MIN_AMOUNT) {
+      console.log(`Valor ${amount} abaixo do mínimo. Ajustando para ${MIN_AMOUNT}`);
+      amount = MIN_AMOUNT;
+    }
 
     const cleanCpf = cpf?.replace(/\D/g, '') || '';
     if (!cleanCpf || cleanCpf.length !== 11) {
