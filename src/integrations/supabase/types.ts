@@ -887,6 +887,14 @@ export type Database = {
           total_price: number
         }[]
       }
+      get_room_availability: {
+        Args: { p_room_id: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

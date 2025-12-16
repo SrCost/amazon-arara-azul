@@ -22,16 +22,9 @@ export const useRoomAvailability = (roomId: string) => {
 
   const fetchReservations = async () => {
     try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
+      // Usa função RPC com SECURITY DEFINER para permitir acesso anônimo
       const { data, error } = await supabase
-        .from("reservations")
-        .select("check_in, check_out, status")
-        .eq("room_id", roomId)
-        .in("status", ["pending", "confirmed"])
-        .gte("check_out", today.toISOString().split('T')[0])
-        .order("check_in", { ascending: true });
+        .rpc('get_room_availability', { p_room_id: roomId });
 
       if (error) throw error;
 
