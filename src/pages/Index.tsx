@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowRight, Leaf, Shield, Heart } from "lucide-react";
+import { ArrowRight, Leaf, Shield, Heart, Calendar } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
+import CTASection from "@/components/CTASection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import FindUsSection from "@/components/FindUsSection";
@@ -123,16 +124,20 @@ const Index = () => {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 px-4">
-                  <Button size="lg" className="bg-gradient-forest hover:opacity-90 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8" asChild>
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white text-base sm:text-lg h-14 sm:h-16 px-8 sm:px-10 font-semibold shadow-lg hover:shadow-xl transition-all animate-pulse" 
+                    asChild
+                  >
                     <Link to="/bangalos">
-                      Explorar Bangalôs
-                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                      <Calendar className="mr-2 h-5 w-5" />
+                      Reservar Agora
                     </Link>
                   </Button>
                   <Button
                     size="lg"
                     variant="outline"
-                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8"
+                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-base sm:text-lg h-14 sm:h-16 px-6 sm:px-8"
                     asChild>
                     <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
                   </Button>
@@ -175,6 +180,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* CTA after Features */}
+      <CTASection variant="secondary" buttonText="Ver Bangalôs Disponíveis" buttonLink="/bangalos" />
+
       {/* Lodges Section */}
       <section className="py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4">
@@ -204,15 +212,22 @@ const Index = () => {
           )}
 
           <div className="text-center">
-            <Button size="lg" variant="outline" asChild>
+            <Button 
+              size="lg" 
+              className="bg-gradient-forest hover:opacity-90 min-h-[52px] px-8"
+              asChild
+            >
               <Link to="/bangalos">
-                Ver Todos os Bangalôs
+                Consultar Disponibilidade
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
           </div>
         </div>
       </section>
+
+      {/* WhatsApp CTA */}
+      <CTASection variant="whatsapp" description="Prefere falar diretamente com nossa equipe?" />
 
       {/* Find Us Section */}
       <FindUsSection />
@@ -228,10 +243,13 @@ const Index = () => {
           </p>
           <Button
             size="lg"
-            className="bg-white text-primary hover:bg-white/90 text-base sm:text-lg h-12 sm:h-14 px-6 sm:px-8"
+            className="bg-white text-primary hover:bg-white/90 text-base sm:text-lg h-14 sm:h-16 px-8 sm:px-10 font-semibold shadow-lg"
             asChild
           >
-            <Link to="/contato">{t("home.getInTouch")}</Link>
+            <Link to="/bangalos">
+              <Calendar className="mr-2 h-5 w-5" />
+              Faça Sua Reserva
+            </Link>
           </Button>
         </div>
       </section>

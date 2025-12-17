@@ -124,8 +124,12 @@ const Navigation = () => {
               </DropdownMenu>
             )}
 
-            <Button variant="default" size="lg" asChild>
-              <Link to="/pousadas">{t("hero.bookNow")}</Link>
+            <Button 
+              size="lg" 
+              className="bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white min-h-[44px] px-6 font-semibold"
+              asChild
+            >
+              <Link to="/bangalos">Reservar Agora</Link>
             </Button>
           </div>
 
@@ -230,13 +234,12 @@ const Navigation = () => {
             {/* Botão CTA */}
             <div className="px-3 pt-2 pb-1">
               <Button
-                variant="default"
                 size="lg"
                 asChild
-                className="w-full"
+                className="w-full bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white min-h-[52px] font-semibold"
               >
                 <Link to="/bangalos" onClick={() => setIsOpen(false)}>
-                  {t("hero.bookNow")}
+                  Reservar Agora
                 </Link>
               </Button>
             </div>
