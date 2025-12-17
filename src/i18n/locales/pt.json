@@ -52,7 +52,7 @@
     "upTo": "Até",
     "notChargedYet": "Você não será cobrado ainda",
     "cancellationPolicy": "Política de Cancelamento",
-    "cancellationText": "Cancelamento gratuito até 7 dias antes do check-in. Reembolso de 50% até 3 dias antes."
+    "cancellationText": "Para informações sobre cancelamento e reembolso, consulte nossa Política de Cancelamento no site."
   },
   "footer": {
     "about": "Sobre Nós",
@@ -235,7 +235,7 @@
     },
     "cancellation": {
       "question": "Qual a política de cancelamento?",
-      "answer": "Cancelamento gratuito até 7 dias antes do check-in. Entre 3-7 dias: reembolso de 50%. Menos de 3 dias: não há reembolso."
+      "answer": "Todas as condições relacionadas a cancelamento, prazos e possíveis reembolsos estão descritas em nossa Política de Cancelamento, disponível nos Termos e Condições do site."
     },
     "payment": {
       "question": "Quais formas de pagamento vocês aceitam?",
@@ -251,7 +251,7 @@
     },
     "contact": {
       "question": "Como posso entrar em contato?",
-      "answer": "Entre em contato via WhatsApp: +55 92 8482-9983, telefone: +55 92 3232-5050 ou e-mail: contato@pousadasamazonia.com"
+      "answer": "Entre em contato via WhatsApp: +55 92 9 8412-5475 ou e-mail: reservas@pousadararazul.com"
     },
     "stillHaveQuestions": "Ainda tem dúvidas?",
     "contactUs": "Entre em contato conosco pelo WhatsApp e teremos prazer em ajudar!",
