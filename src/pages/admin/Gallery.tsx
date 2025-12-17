@@ -298,6 +298,10 @@ const Gallery = () => {
                   <img
                     src={image.url}
                     alt={image.alt_text}
+                    width={300}
+                    height={300}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full aspect-square object-cover rounded-t-lg cursor-pointer"
                     onClick={() => openLightbox(index)}
                   />

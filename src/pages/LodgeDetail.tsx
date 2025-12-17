@@ -212,6 +212,10 @@ const LodgeDetail = () => {
                 <img
                   src={allImages[0]?.src}
                   alt={allImages[0]?.alt}
+                  width={800}
+                  height={600}
+                  loading="eager"
+                  decoding="async"
                   className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
@@ -231,6 +235,10 @@ const LodgeDetail = () => {
                   <img
                     src={image.src}
                     alt={image.alt}
+                    width={400}
+                    height={300}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300" />
@@ -246,6 +254,10 @@ const LodgeDetail = () => {
                   <img
                     src={allImages[5]?.src}
                     alt={allImages[5]?.alt}
+                    width={400}
+                    height={300}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover object-center transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-black/60 group-hover:bg-black/70 transition-all duration-300 flex items-center justify-center">

@@ -89,6 +89,10 @@ const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditor
             <img 
               src={image.url} 
               alt={image.alt_text} 
+              width={500}
+              height={192}
+              loading="lazy"
+              decoding="async"
               className="w-full h-48 object-cover"
             />
           </div>

@@ -267,6 +267,8 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
                     <img 
                       src={upload.preview} 
                       alt="Preview" 
+                      width={96}
+                      height={96}
                       className="w-24 h-24 object-cover rounded"
                     />
                     <div className="flex-1 space-y-3">

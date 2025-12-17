@@ -259,6 +259,8 @@ export const PaymentStep = ({
               <img 
                 src={`data:image/png;base64,${pixQrCodeBase64}`} 
                 alt="QR Code PIX" 
+                width={256}
+                height={256}
                 className="w-48 h-48 sm:w-64 sm:h-64 mx-auto mb-3 sm:mb-4 border rounded-lg"
               />
               {pixQrCode && (
