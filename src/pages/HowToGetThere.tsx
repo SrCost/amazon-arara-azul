@@ -44,8 +44,8 @@ const HowToGetThere = () => {
                       De Avião + Carro + Canoa
                     </h2>
                     <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
-                      Voe até o Aeroporto Internacional Eduardo Gomes em Manaus (MAO). De lá, nosso servico de transfer
-                      terrestre e fluvial leva voce ate a pousada.
+                      Voe até o Aeroporto Internacional Eduardo Gomes em Manaus (MAO). De lá, nosso serviço de transfer
+                      terrestre e fluvial leva voce ate os bangalôs.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex items-center space-x-2">
