@@ -867,6 +867,29 @@ export type Database = {
         Returns: string
       }
       get_current_user_email: { Args: never; Returns: string }
+      get_public_reservation_summary: {
+        Args: { p_room_id?: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          room_id: string
+          status: string
+        }[]
+      }
+      get_reservation_safe_with_token: {
+        Args: { _reservation_id: string; _token: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          created_at: string
+          guests: number
+          id: string
+          payment_status: string
+          room_name: string
+          status: string
+          total_price: number
+        }[]
+      }
       get_reservation_with_token: {
         Args: { _reservation_id: string; _token: string }
         Returns: {
