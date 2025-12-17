@@ -6,6 +6,74 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Função para criar hash HMAC-SHA256
+async function createHmacSha256(key: string, data: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(key);
+  const dataToSign = encoder.encode(data);
+  
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, dataToSign);
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// Validar assinatura do Mercado Pago
+async function validateMercadoPagoSignature(
+  xSignature: string | null,
+  xRequestId: string | null,
+  dataId: string,
+  secretKey: string
+): Promise<boolean> {
+  if (!xSignature || !secretKey) {
+    console.log('Assinatura ou chave secreta não fornecida');
+    return false;
+  }
+
+  try {
+    // Parse x-signature header (format: "ts=...,v1=...")
+    const parts: Record<string, string> = {};
+    xSignature.split(',').forEach(part => {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        parts[key.trim()] = value.trim();
+      }
+    });
+
+    const ts = parts['ts'];
+    const v1 = parts['v1'];
+
+    if (!ts || !v1) {
+      console.log('Formato de assinatura inválido');
+      return false;
+    }
+
+    // Construir manifest conforme documentação MP
+    // Template: id:[data.id];request-id:[x-request-id];ts:[ts];
+    const manifest = `id:${dataId};request-id:${xRequestId || ''};ts:${ts};`;
+    
+    // Gerar HMAC-SHA256
+    const expectedSignature = await createHmacSha256(secretKey, manifest);
+    
+    // Comparar assinaturas
+    const isValid = v1 === expectedSignature;
+    console.log('Validação de assinatura:', isValid ? 'VÁLIDA' : 'INVÁLIDA');
+    
+    return isValid;
+  } catch (error) {
+    console.error('Erro ao validar assinatura:', error);
+    return false;
+  }
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -15,13 +83,20 @@ serve(async (req) => {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const mercadoPagoToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
+  const mercadoPagoWebhookSecret = Deno.env.get('MERCADO_PAGO_WEBHOOK_SECRET');
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
+    // Extrair headers de segurança do Mercado Pago
+    const xSignature = req.headers.get('x-signature');
+    const xRequestId = req.headers.get('x-request-id');
+
     const body = await req.json();
     console.log('=== MP-WEBHOOK RECEBIDO ===');
     console.log('Timestamp:', new Date().toISOString());
+    console.log('X-Request-Id:', xRequestId);
+    console.log('X-Signature presente:', !!xSignature);
     console.log('Body:', JSON.stringify(body, null, 2));
 
     // Verificar se é um evento de pagamento
@@ -33,10 +108,56 @@ serve(async (req) => {
     const paymentId = body.data.id;
     const action = body.action || body.type;
 
+    // === VALIDAÇÃO DE ASSINATURA (se webhook secret configurado) ===
+    if (mercadoPagoWebhookSecret) {
+      const isValidSignature = await validateMercadoPagoSignature(
+        xSignature,
+        xRequestId,
+        paymentId.toString(),
+        mercadoPagoWebhookSecret
+      );
+
+      if (!isValidSignature) {
+        console.error('=== ASSINATURA INVÁLIDA - POSSÍVEL FRAUDE ===');
+        // Registrar tentativa suspeita
+        await supabase.from('activity_log').insert({
+          user_email: 'system',
+          action: 'webhook_invalid_signature',
+          description: `Tentativa de webhook com assinatura inválida - Payment ID: ${paymentId}`,
+          entity_type: 'security',
+          metadata: {
+            payment_id: paymentId,
+            x_request_id: xRequestId,
+            action: action,
+            ip: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip')
+          }
+        });
+        // Retornar 200 para não revelar que detectamos a fraude
+        return new Response('OK', { status: 200, headers: corsHeaders });
+      }
+    } else {
+      console.log('AVISO: MERCADO_PAGO_WEBHOOK_SECRET não configurado - validação de assinatura desabilitada');
+    }
+
+    // === VERIFICAÇÃO DE IDEMPOTÊNCIA ===
+    if (xRequestId) {
+      const { data: existingLog } = await supabase
+        .from('payment_logs')
+        .select('id')
+        .eq('action', 'webhook_processed')
+        .contains('response_payload', { x_request_id: xRequestId })
+        .single();
+
+      if (existingLog) {
+        console.log('Webhook já processado (idempotência) - x-request-id:', xRequestId);
+        return new Response('OK', { status: 200, headers: corsHeaders });
+      }
+    }
+
     console.log('Payment ID:', paymentId);
     console.log('Action:', action);
 
-    // Buscar detalhes do pagamento na API do MP
+    // === VALIDAR PAYMENT ID NA API DO MP (segunda camada de segurança) ===
     console.log('=== CONSULTANDO PAGAMENTO NO MP ===');
     const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       headers: {
@@ -45,7 +166,18 @@ serve(async (req) => {
     });
 
     if (!mpResponse.ok) {
-      console.error('Erro ao consultar pagamento:', mpResponse.status);
+      console.error('Erro ao consultar pagamento ou payment ID inválido:', mpResponse.status);
+      // Registrar tentativa com payment ID inválido
+      await supabase.from('activity_log').insert({
+        user_email: 'system',
+        action: 'webhook_invalid_payment_id',
+        description: `Webhook com payment ID não encontrado na API MP: ${paymentId}`,
+        entity_type: 'security',
+        metadata: {
+          payment_id: paymentId,
+          mp_response_status: mpResponse.status
+        }
+      });
       return new Response('OK', { status: 200, headers: corsHeaders });
     }
 
@@ -153,6 +285,18 @@ serve(async (req) => {
     } else {
       console.log('Reservations atualizado:', reservationUpdate?.length || 0, 'registros');
     }
+
+    // Registrar log de processamento (para idempotência)
+    await supabase.from('payment_logs').insert({
+      reservation_id: reservationId,
+      action: 'webhook_processed',
+      status: mpStatus,
+      response_payload: {
+        x_request_id: xRequestId,
+        payment_id: paymentId,
+        mp_status: mpStatus
+      }
+    });
 
     // Registrar log de auditoria
     await supabase.from('activity_log').insert({

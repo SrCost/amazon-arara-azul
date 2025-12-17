@@ -6,6 +6,82 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// === FUNÇÕES DE VALIDAÇÃO ===
+
+// Validar e sanitizar string
+function sanitizeString(value: unknown, maxLength: number = 255): string {
+  if (typeof value !== 'string') return '';
+  return value
+    .trim()
+    .slice(0, maxLength)
+    .replace(/[<>'"`;]/g, '');
+}
+
+// Validar email
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email) && email.length <= 255;
+}
+
+// Validar CPF
+function isValidCpf(cpf: string): boolean {
+  const cleanCpf = cpf.replace(/\D/g, '');
+  if (cleanCpf.length !== 11) return false;
+  if (/^(\d)\1+$/.test(cleanCpf)) return false;
+  
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += parseInt(cleanCpf[i]) * (10 - i);
+  }
+  let remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCpf[9])) return false;
+  
+  sum = 0;
+  for (let i = 0; i < 10; i++) {
+    sum += parseInt(cleanCpf[i]) * (11 - i);
+  }
+  remainder = (sum * 10) % 11;
+  if (remainder === 10 || remainder === 11) remainder = 0;
+  if (remainder !== parseInt(cleanCpf[10])) return false;
+  
+  return true;
+}
+
+// Validar UUID
+function isValidUuid(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
+// Validar data
+function isValidDate(dateStr: string): boolean {
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(dateStr)) return false;
+  const date = new Date(dateStr);
+  return !isNaN(date.getTime());
+}
+
+// Verificar se data não está no passado
+function isNotPastDate(dateStr: string): boolean {
+  const date = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return date >= today;
+}
+
+// Sanitizar telefone
+function sanitizePhone(phone: string): string {
+  if (!phone) return '';
+  return phone.replace(/\D/g, '').slice(0, 15);
+}
+
+// Validar bandeira de cartão
+function isValidCardBrand(brand: string): boolean {
+  const validBrands = ['visa', 'master', 'mastercard', 'amex', 'elo', 'hipercard', 'diners'];
+  return validBrands.includes(brand?.toLowerCase());
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -22,8 +98,8 @@ serve(async (req) => {
     const body = await req.json();
     console.log('=== CREATE-CARD-PAYMENT INICIADO ===');
     console.log('Timestamp:', new Date().toISOString());
-    console.log('Request body:', JSON.stringify(body, null, 2));
 
+    // === VALIDAÇÃO DE ENTRADA ===
     const {
       bungalow_id,
       checkin,
@@ -44,53 +120,105 @@ serve(async (req) => {
       package_id
     } = body;
 
-    // Validações
-    if (!bungalow_id || !checkin || !checkout || !email) {
-      throw new Error('Campos obrigatórios: bungalow_id, checkin, checkout, email');
+    // Validar campos obrigatórios
+    if (!bungalow_id || !isValidUuid(bungalow_id)) {
+      throw new Error('bungalow_id inválido ou não fornecido');
     }
 
-    if (!card_token) {
-      throw new Error('card_token é obrigatório para pagamento com cartão');
+    if (!checkin || !isValidDate(checkin)) {
+      throw new Error('Data de check-in inválida');
     }
 
+    if (!checkout || !isValidDate(checkout)) {
+      throw new Error('Data de check-out inválida');
+    }
+
+    if (!isNotPastDate(checkin)) {
+      throw new Error('Data de check-in não pode ser no passado');
+    }
+
+    if (new Date(checkout) <= new Date(checkin)) {
+      throw new Error('Data de check-out deve ser posterior ao check-in');
+    }
+
+    if (!email || !isValidEmail(email)) {
+      throw new Error('Email inválido');
+    }
+
+    if (!card_token || typeof card_token !== 'string' || card_token.length < 10) {
+      throw new Error('Token do cartão inválido');
+    }
+
+    // Sanitizar strings
+    const sanitizedName = sanitizeString(full_name, 200);
+    if (!sanitizedName || sanitizedName.length < 2) {
+      throw new Error('Nome completo inválido');
+    }
+
+    const sanitizedPhone = sanitizePhone(phone);
+
+    // Validar CPF
+    const cleanCpf = cpf?.replace(/\D/g, '') || '';
+    if (!cleanCpf || !isValidCpf(cleanCpf)) {
+      throw new Error('CPF inválido');
+    }
+
+    // Validar guests
+    const validGuests = Math.min(Math.max(parseInt(String(guests)) || 1, 1), 10);
+
+    // Validar amount
     const rawAmount = parseFloat(total_amount);
-    if (isNaN(rawAmount) || rawAmount <= 0) {
-      throw new Error('total_amount deve ser um número válido maior que zero');
+    if (isNaN(rawAmount) || rawAmount <= 0 || rawAmount > 1000000) {
+      throw new Error('Valor total inválido');
     }
-    // Arredondar para 2 casas decimais (Mercado Pago requer precisão exata)
     let amount = Math.round(rawAmount * 100) / 100;
     
-    // Mercado Pago exige valor mínimo de R$ 0.50 para cartão de crédito
     const MIN_AMOUNT = 0.50;
     if (amount < MIN_AMOUNT) {
       console.log(`Valor ${amount} abaixo do mínimo. Ajustando para ${MIN_AMOUNT}`);
       amount = MIN_AMOUNT;
     }
 
-    const cleanCpf = cpf?.replace(/\D/g, '') || '';
-    if (!cleanCpf || cleanCpf.length !== 11) {
-      throw new Error('CPF é obrigatório para pagamento com cartão');
+    // Validar installments
+    const validInstallments = Math.min(Math.max(parseInt(String(installments)) || 1, 1), 12);
+
+    // Validar card_brand
+    const validCardBrand = card_brand && isValidCardBrand(card_brand) ? card_brand.toLowerCase() : 'master';
+
+    // Validar package_id se fornecido
+    if (package_id && !isValidUuid(package_id)) {
+      throw new Error('package_id inválido');
     }
+
+    // Sanitizar campos opcionais
+    const sanitizedPassport = sanitizeString(foreign_passport, 50);
+    const sanitizedNationality = sanitizeString(foreign_nationality, 100);
+
+    console.log('Validação de entrada concluída com sucesso');
 
     // 1. Buscar nome do bangalô
     console.log('=== BUSCANDO NOME DO BANGALÔ ===');
-    const { data: roomData } = await supabase
+    const { data: roomData, error: roomError } = await supabase
       .from('rooms')
       .select('name_pt')
       .eq('id', bungalow_id)
       .single();
     
-    const roomName = roomData?.name_pt || 'Bangalô';
+    if (roomError || !roomData) {
+      throw new Error('Bangalô não encontrado');
+    }
+    
+    const roomName = roomData.name_pt;
     console.log('Room name:', roomName);
 
-    // 2. VALIDAR DISPONIBILIDADE DAS DATAS (verificar conflitos)
+    // 2. VALIDAR DISPONIBILIDADE DAS DATAS
     console.log('=== VERIFICANDO DISPONIBILIDADE DAS DATAS ===');
     const { data: conflictingReservations, error: conflictError } = await supabase
       .from('reservations')
       .select('id, check_in, check_out, guest_name, status')
       .eq('room_id', bungalow_id)
       .in('status', ['pending', 'confirmed'])
-      .neq('guest_email', email) // Ignorar reserva do mesmo email (retry)
+      .neq('guest_email', email)
       .or(`and(check_in.lte.${checkin},check_out.gt.${checkin}),and(check_in.lt.${checkout},check_out.gte.${checkout}),and(check_in.gte.${checkin},check_out.lte.${checkout})`);
 
     if (conflictError) {
@@ -141,18 +269,18 @@ serve(async (req) => {
           room_name: roomName,
           check_in: checkin,
           check_out: checkout,
-          guests: guests || 1,
-          guest_name: full_name,
+          guests: validGuests,
+          guest_name: sanitizedName,
           guest_email: email,
-          guest_phone: phone,
+          guest_phone: sanitizedPhone,
           cpf: cleanCpf,
           payer_cpf: cleanCpf,
           payer_email: email,
-          payer_name: full_name,
-          birth_date: date_of_birth || null,
+          payer_name: sanitizedName,
+          birth_date: date_of_birth && isValidDate(date_of_birth) ? date_of_birth : null,
           is_foreign: is_foreign || false,
-          passport: foreign_passport || null,
-          nationality: foreign_nationality || null,
+          passport: sanitizedPassport || null,
+          nationality: sanitizedNationality || null,
           payment_method: 'credit_card',
           total_price: amount,
           status: 'pending',
@@ -171,22 +299,26 @@ serve(async (req) => {
       console.log('Reserva criada:', reservationId);
     }
 
-    // 3. Criar pagamento com cartão no Mercado Pago
+    // 4. Criar pagamento com cartão no Mercado Pago
     console.log('=== CRIANDO PAGAMENTO CARTÃO NO MERCADO PAGO ===');
     const idempotencyKey = crypto.randomUUID();
+
+    const nameParts = sanitizedName.trim().split(' ');
+    const firstName = nameParts[0].slice(0, 100);
+    const lastName = (nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Pousada').slice(0, 100);
 
     const mpPayload = {
       transaction_amount: amount,
       token: card_token,
-      installments: parseInt(String(installments)),
-      payment_method_id: card_brand || 'master',
+      installments: validInstallments,
+      payment_method_id: validCardBrand,
       external_reference: reservationId,
-      description: `Reserva Pousada Arara Azul - ${full_name}`,
+      description: `Reserva Pousada Arara Azul - ${sanitizedName}`.slice(0, 200),
       notification_url: webhookUrl,
       payer: {
         email: email,
-        first_name: full_name?.split(' ')[0] || 'Cliente',
-        last_name: full_name?.split(' ').slice(1).join(' ') || 'Pousada',
+        first_name: firstName,
+        last_name: lastName,
         identification: {
           type: 'CPF',
           number: cleanCpf
@@ -194,7 +326,11 @@ serve(async (req) => {
       }
     };
 
-    console.log('MP Card Payload:', JSON.stringify(mpPayload, null, 2));
+    console.log('MP Card Payload (sem dados sensíveis):', {
+      transaction_amount: mpPayload.transaction_amount,
+      installments: mpPayload.installments,
+      external_reference: mpPayload.external_reference
+    });
 
     const mpResponse = await fetch('https://api.mercadopago.com/v1/payments', {
       method: 'POST',
@@ -208,7 +344,6 @@ serve(async (req) => {
 
     const mpData = await mpResponse.json();
     console.log('MP Card Response Status:', mpResponse.status);
-    console.log('MP Card Response:', JSON.stringify(mpData, null, 2));
 
     if (!mpResponse.ok) {
       console.error('Erro Mercado Pago Card:', mpData);
@@ -218,14 +353,13 @@ serve(async (req) => {
         .update({ status: 'failed', payment_status: 'failed' })
         .eq('id', reservationId);
 
-      // Log de erro
       await supabase.from('payment_logs').insert({
         reservation_id: reservationId,
         action: 'card_payment_failed',
         status: 'error',
         error_code: mpData?.error || 'MP_ERROR',
         error_message: mpData?.message || mpData?.cause?.[0]?.description || 'Erro na API do Mercado Pago',
-        request_payload: { ...mpPayload, token: '[REDACTED]' },
+        request_payload: { amount, installments: validInstallments, external_reference: reservationId },
         response_payload: mpData
       });
 
@@ -248,7 +382,7 @@ serve(async (req) => {
       reservationStatus = 'cancelled';
     }
 
-    // 4. Registrar pagamento na tabela payments
+    // 5. Registrar pagamento
     console.log('=== REGISTRANDO PAGAMENTO CARTÃO ===');
     const { data: payment, error: paymentError } = await supabase
       .from('payments')
@@ -264,9 +398,9 @@ serve(async (req) => {
         total_amount: amount,
         paid_amount: mpStatus === 'approved' ? amount : null,
         payer_email: email,
-        payer_name: full_name,
+        payer_name: sanitizedName,
         payer_cpf: cleanCpf,
-        installments: parseInt(String(installments))
+        installments: validInstallments
       })
       .select()
       .single();
@@ -275,7 +409,7 @@ serve(async (req) => {
       console.error('Erro ao registrar pagamento:', paymentError);
     }
 
-    // 5. Atualizar reserva com dados do pagamento
+    // 6. Atualizar reserva
     await supabase
       .from('reservations')
       .update({
@@ -286,17 +420,17 @@ serve(async (req) => {
       })
       .eq('id', reservationId);
 
-    // 6. Log de sucesso/resultado
+    // 7. Log de resultado
     await supabase.from('payment_logs').insert({
       reservation_id: reservationId,
       payment_id: payment?.id,
       action: `card_payment_${mpStatus}`,
       status: mpStatus,
-      request_payload: { ...mpPayload, token: '[REDACTED]' },
-      response_payload: mpData
+      request_payload: { amount, installments: validInstallments, external_reference: reservationId },
+      response_payload: { payment_id: mpPaymentId, status: mpStatus }
     });
 
-    // 7. Enviar email de confirmação se aprovado imediatamente
+    // 8. Enviar email de confirmação se aprovado imediatamente
     if (mpStatus === 'approved') {
       console.log('=== ENVIANDO EMAIL DE CONFIRMAÇÃO (CARTÃO) ===');
       try {
@@ -310,13 +444,12 @@ serve(async (req) => {
             type: 'reservation_confirmed',
             reservationId: reservationId,
             email: email,
-            name: full_name
+            name: sanitizedName
           })
         });
         const emailResult = await emailResponse.json();
         console.log('Email de confirmação enviado:', emailResult);
         
-        // Registrar envio de email no log
         await supabase.from('activity_log').insert({
           user_email: 'system',
           action: 'email_confirmation_sent',
@@ -326,11 +459,10 @@ serve(async (req) => {
         });
       } catch (emailError) {
         console.error('Erro ao enviar email:', emailError);
-        // Não bloquear por erro de email
       }
     }
 
-    // 8. Resposta
+    // 9. Resposta
     const response: Record<string, any> = {
       success: mpStatus !== 'rejected',
       reservation_id: reservationId,
@@ -346,14 +478,12 @@ serve(async (req) => {
       }
     };
 
-    // Mensagens de erro para status rejected
     if (mpStatus === 'rejected') {
       response.success = false;
       response.error_message = getCardErrorMessage(mpStatusDetail);
     }
 
     console.log('=== CREATE-CARD-PAYMENT CONCLUÍDO ===');
-    console.log('Response:', JSON.stringify(response, null, 2));
 
     return new Response(JSON.stringify(response), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

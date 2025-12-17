@@ -52,12 +52,12 @@ const Footer = () => {
       </div>
 
       {/* Main Footer */}
-      <div className="container mx-auto px-4 py-10 sm:py-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 py-8 sm:py-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {/* Brand */}
           <div>
-            <h3 className="text-xl font-display font-bold mb-4">Pousada Arara Azul</h3>
-            <p className="text-sm opacity-90 mb-4">
+            <h3 className="text-lg font-display font-bold mb-3">Pousada Arara Azul</h3>
+            <p className="text-sm opacity-90 mb-3 leading-relaxed">
               {t("home.heroSubtitle")}
             </p>
             <div className="flex items-start gap-2 text-sm opacity-90">
@@ -68,30 +68,30 @@ const Footer = () => {
 
           {/* Navigation */}
           <div>
-            <h4 className="font-semibold mb-4">{t("nav.home")}</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="font-semibold mb-3">{t("nav.home")}</h4>
+            <ul className="space-y-1 text-sm">
               <li>
-                <Link to="/" className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center">
+                <Link to="/" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
                   {t("nav.home")}
                 </Link>
               </li>
               <li>
-                <Link to="/bangalos" className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center">
+                <Link to="/bangalos" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
                   {t("nav.lodges")}
                 </Link>
               </li>
               <li>
-                <Link to="/pacotes" className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center">
+                <Link to="/pacotes" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
                   Pacotes
                 </Link>
               </li>
               <li>
-                <Link to="/sustentabilidade" className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center">
+                <Link to="/sustentabilidade" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
                   {t("nav.sustainability")}
                 </Link>
               </li>
               <li>
-                <Link to="/como-chegar" className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center">
+                <Link to="/como-chegar" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
                   {t("nav.howToGetThere")}
                 </Link>
               </li>
@@ -100,15 +100,15 @@ const Footer = () => {
 
           {/* About */}
           <div>
-            <h4 className="font-semibold mb-4">{t("footer.about")}</h4>
-            <ul className="space-y-2 text-sm">
+            <h4 className="font-semibold mb-3">{t("footer.about")}</h4>
+            <ul className="space-y-1 text-sm">
               <li>
-                <Link to="/contato" className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center">
+                <Link to="/contato" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
                   {t("footer.contact")}
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center">
+                <Link to="/faq" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
                   {t("footer.faq")}
                 </Link>
               </li>
@@ -116,7 +116,7 @@ const Footer = () => {
                 <a 
                   href="/docs/politica-privacidade.pdf" 
                   download="Politica_de_Privacidade_AraraAzul.pdf"
-                  className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center"
+                  className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1"
                 >
                   {t("footer.privacyPolicy")}
                 </a>
@@ -125,7 +125,7 @@ const Footer = () => {
                 <a 
                   href="/docs/termos-de-uso.pdf" 
                   download="Termos_de_Uso_AraraAzul.pdf"
-                  className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center"
+                  className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1"
                 >
                   {t("footer.termsOfUse")}
                 </a>
@@ -134,7 +134,7 @@ const Footer = () => {
                 <a 
                   href="/docs/politica-cancelamento.pdf" 
                   download="Politica_de_Cancelamento_AraraAzul.pdf"
-                  className="opacity-90 hover:opacity-100 transition-opacity min-h-[44px] inline-flex items-center"
+                  className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1"
                 >
                   {t("footer.cancellationPolicy")}
                 </a>
@@ -144,22 +144,22 @@ const Footer = () => {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold mb-4">{t("footer.contact")}</h4>
-            <div className="space-y-3 text-sm">
+            <h4 className="font-semibold mb-3">{t("footer.contact")}</h4>
+            <div className="space-y-2 text-sm">
               <a 
                 href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center space-x-2 opacity-90 hover:opacity-100 transition-opacity min-h-[44px]"
+                className="flex items-center space-x-2 opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 py-1"
               >
                 <MessageCircle className="h-4 w-4" />
                 <span>{SOCIAL_LINKS.whatsappNumber}</span>
               </a>
-              <div className="flex items-center space-x-2 opacity-90">
+              <div className="flex items-center space-x-2 opacity-90 py-1">
                 <Mail className="h-4 w-4" />
                 <span>{SOCIAL_LINKS.email}</span>
               </div>
-              <div className="flex space-x-4 mt-4">
+              <div className="flex space-x-3 pt-2">
                 <a 
                   href={SOCIAL_LINKS.instagram}
                   target="_blank" 
@@ -184,8 +184,8 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="border-t border-primary-foreground/20 mt-8 pt-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
+        <div className="border-t border-primary-foreground/20 mt-6 pt-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-3 text-sm">
             <div className="text-center md:text-left opacity-80">
               <p>&copy; {new Date().getFullYear()} Pousada Arara Azul Ltda. {t("footer.allRightsReserved")}</p>
               <p className="text-xs mt-1 opacity-70">CNPJ: 63.136.300/0001-12</p>
@@ -197,7 +197,7 @@ const Footer = () => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="text-primary-foreground/70 hover:text-primary-foreground/100 text-xs min-h-[44px]"
+                  className="text-primary-foreground/70 hover:text-primary-foreground/100 text-xs h-9"
                 >
                   <Shield className="h-3 w-3 mr-1" />
                   Painel Admin
@@ -208,7 +208,7 @@ const Footer = () => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  className="text-primary-foreground/50 hover:text-primary-foreground/80 text-xs min-h-[44px]"
+                  className="text-primary-foreground/50 hover:text-primary-foreground/80 text-xs h-9"
                 >
                   <LogIn className="h-3 w-3 mr-1" />
                   Acesso Administrativo
