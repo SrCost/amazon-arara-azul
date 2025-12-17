@@ -2,7 +2,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Plane, Ship, MapPin, Clock, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import riverAerial from "@/assets/river-aerial.jpg";
+import rioNegroEncontro from "@/assets/rio-negro-encontro.webp";
 
 const HowToGetThere = () => {
   return (
@@ -23,8 +23,8 @@ const HowToGetThere = () => {
 
           <div className="max-w-5xl mx-auto mb-10 sm:mb-16">
             <img
-              src={riverAerial}
-              alt="Vista aérea do Rio Amazonas"
+              src={rioNegroEncontro}
+              alt="Encontro das Águas - Rio Negro e Rio Solimões"
               className="w-full h-[200px] sm:h-[300px] md:h-[400px] object-cover rounded-lg shadow-strong"
             />
           </div>
