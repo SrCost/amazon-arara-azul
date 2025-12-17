@@ -105,6 +105,8 @@ export const PixPayment = ({
                   <img 
                     src={`data:image/png;base64,${pixQrCodeBase64}`} 
                     alt="QR Code PIX" 
+                    width={256}
+                    height={256}
                     className="w-64 h-64"
                   />
                 ) : (

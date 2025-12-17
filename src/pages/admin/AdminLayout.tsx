@@ -124,6 +124,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <img 
             src={logoArara} 
             alt="Pousada Arara Azul" 
+            width={48}
+            height={48}
+            loading="eager"
             className="w-10 h-10 lg:w-12 lg:h-12 rounded-full object-cover"
           />
           <div>
@@ -185,6 +188,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <img 
             src={logoArara} 
             alt="Pousada Arara Azul" 
+            width={32}
+            height={32}
+            loading="eager"
             className="w-8 h-8 rounded-full object-cover"
           />
           <span className="font-display font-bold text-foreground">Admin</span>

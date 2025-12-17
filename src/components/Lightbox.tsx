@@ -71,6 +71,9 @@ const Lightbox = ({ images, currentIndex, onClose, onNavigate }: LightboxProps) 
         <img
           src={images[currentIndex].src}
           alt={images[currentIndex].alt}
+          width={1200}
+          height={800}
+          decoding="async"
           className="max-h-[90vh] max-w-[90vw] object-contain animate-scale-in"
         />
       </div>
