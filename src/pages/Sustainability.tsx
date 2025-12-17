@@ -7,9 +7,9 @@ const Sustainability = () => {
   const initiatives = [
     {
       icon: Sun,
-      title: "Energia 100% Solar",
+      title: "Compromisso com a Sustentabilidade",
       description:
-        "Todas as nossas pousadas são alimentadas por energia solar, reduzindo a zero nossa pegada de carbono energética.",
+        "A luz do sol e o uso consciente dos recursos naturais fazem parte do nosso compromisso com a sustentabilidade.",
     },
     {
       icon: Droplet,
@@ -32,14 +32,12 @@ const Sustainability = () => {
     {
       icon: Heart,
       title: "Apoio às Comunidades",
-      description:
-        "Parte da receita financia educação, saúde e projetos de geração de renda nas aldeias locais.",
+      description: "Parte da receita financia educação, saúde e projetos de geração de renda nas aldeias locais.",
     },
     {
       icon: Leaf,
       title: "Conservação Florestal",
-      description:
-        "Protegemos 5.000 hectares de floresta primária e apoiamos pesquisas de biodiversidade.",
+      description: "Protegemos grandes areas de floresta primária e apoiamos pesquisas de biodiversidade.",
     },
   ];
 
@@ -55,8 +53,8 @@ const Sustainability = () => {
               Sustentabilidade e Responsabilidade
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
-              Nosso compromisso vai além da hospitalidade: protegemos a Amazônia, valorizamos as
-              comunidades locais e promovemos um turismo que regenera, não destrói.
+              Nosso compromisso vai além da hospitalidade: protegemos a Amazônia, valorizamos as comunidades locais e
+              promovemos um turismo que regenera, não destrói.
             </p>
           </div>
 
@@ -71,10 +69,7 @@ const Sustainability = () => {
           {/* Initiatives Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
             {initiatives.map((initiative, idx) => (
-              <div
-                key={idx}
-                className="bg-card p-5 sm:p-8 rounded-lg shadow-soft hover:shadow-medium transition-all"
-              >
+              <div key={idx} className="bg-card p-5 sm:p-8 rounded-lg shadow-soft hover:shadow-medium transition-all">
                 <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-forest mb-3 sm:mb-4">
                   <initiative.icon className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
                 </div>
@@ -113,17 +108,15 @@ const Sustainability = () => {
 
           {/* Mission Statement */}
           <div className="mt-12 sm:mt-16 max-w-4xl mx-auto text-center">
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-4 sm:mb-6">
-              Nossa Missão
-            </h2>
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-4 sm:mb-6">Nossa Missão</h2>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-3 sm:mb-4">
-              Acreditamos que o turismo pode ser uma força positiva para a conservação ambiental e
-              o desenvolvimento social. Cada hóspede que recebemos contribui diretamente para a
-              proteção da floresta amazônica e para o bem-estar das comunidades tradicionais.
+              Acreditamos que o turismo pode ser uma força positiva para a conservação ambiental e o desenvolvimento
+              social. Cada hóspede que recebemos contribui diretamente para a proteção da floresta amazônica e para o
+              bem-estar das comunidades tradicionais.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Ao escolher nossas pousadas, você não está apenas vivendo uma experiência
-              inesquecível — está investindo no futuro da Amazônia e de seu povo.
+              Ao escolher nossas pousadas, você não está apenas vivendo uma experiência inesquecível — está investindo
+              no futuro da Amazônia e de seu povo.
             </p>
           </div>
         </div>
