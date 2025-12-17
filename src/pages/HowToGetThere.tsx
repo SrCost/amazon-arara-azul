@@ -12,10 +12,12 @@ const HowToGetThere = () => {
       <section className="pt-24 sm:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">Como Chegar</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">
+              Como Chegar
+            </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
               A jornada até nossas pousadas faz parte da experiência amazônica. Oferecemos múltiplas opções de acesso a
-              partir de Manaus e Belém.
+              partir de Manaus.
             </p>
           </div>
 
@@ -69,7 +71,9 @@ const HowToGetThere = () => {
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-semibold mb-2 sm:mb-3 text-foreground">Cruzeiro</h2>
+                    <h2 className="text-lg sm:text-xl lg:text-2xl font-display font-semibold mb-2 sm:mb-3 text-foreground">
+                      Cruzeiro
+                    </h2>
                     <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
                       Para uma experiência mais imersiva, oferecemos pacotes que incluem navegação em barcos regionais,
                       permitindo apreciar a paisagem amazônica com calma e autenticidade.
@@ -109,7 +113,9 @@ const HowToGetThere = () => {
 
           {/* Tips */}
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-4 sm:mb-6 text-center">Dicas Importantes</h2>
+            <h2 className="text-2xl sm:text-3xl font-display font-bold text-foreground mb-4 sm:mb-6 text-center">
+              Dicas Importantes
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               <Card>
                 <CardContent className="p-4 sm:p-6">
