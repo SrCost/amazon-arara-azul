@@ -188,7 +188,7 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
             <div className="text-center md:text-left opacity-80">
               <p>&copy; {new Date().getFullYear()} Pousada Arara Azul Ltda. {t("footer.allRightsReserved")}</p>
-              <p className="text-xs mt-1 opacity-70">CNPJ: 00.000.000/0001-00</p>
+              <p className="text-xs mt-1 opacity-70">CNPJ: 63.136.300/0001-12</p>
             </div>
             
             {/* Admin Login Button */}

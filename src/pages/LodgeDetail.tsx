@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { MapPin, Users, Wifi, Coffee, Tv, Wind, ArrowLeft, Star, Check } from "lucide-react";
+import { MapPin, Users, Wifi, Coffee, Tv, Wind, ArrowLeft, Check } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -141,8 +141,6 @@ const LodgeDetail = () => {
           "Passeios de canoa",
           "Visita a comunidades locais",
         ],
-        rating: 4.9,
-        reviews: 127,
       };
 
       setLodge(lodgeData);
@@ -269,16 +267,7 @@ const LodgeDetail = () => {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground">{lodge.name}</h1>
-                  <div className="flex items-center space-x-2">
-                    <Star className="h-5 w-5 fill-golden text-golden" />
-                    <span className="font-semibold">{lodge.rating}</span>
-                    <span className="text-muted-foreground">
-                      ({lodge.reviews} {t("lodge.reviews")})
-                    </span>
-                  </div>
-                </div>
+                <h1 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-4">{lodge.name}</h1>
 
                 <div className="flex items-center text-muted-foreground mb-6">
                   <MapPin className="h-5 w-5 mr-2 text-accent" />
