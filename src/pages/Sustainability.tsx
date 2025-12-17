@@ -115,7 +115,7 @@ const Sustainability = () => {
               bem-estar das comunidades tradicionais.
             </p>
             <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-              Ao escolher nossas pousadas, você não está apenas vivendo uma experiência inesquecível — está investindo
+              Ao escolher nossos bangalôs, você não está apenas vivendo uma experiência inesquecível — está investindo
               no futuro da Amazônia e de seu povo.
             </p>
           </div>

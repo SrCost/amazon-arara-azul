@@ -16,7 +16,7 @@ const HowToGetThere = () => {
               Como Chegar
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
-              A jornada até nossas pousadas faz parte da experiência amazônica. Oferecemos múltiplas opções de acesso a
+              A jornada até nossos bangalôs faz parte da experiência amazônica. Oferecemos múltiplas opções de acesso a
               partir de Manaus.
             </p>
           </div>
@@ -102,7 +102,7 @@ const HowToGetThere = () => {
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Transfer Incluído</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Todos os nossos pacotes incluem transfer do aeroporto/fluvial até a pousada e vice-versa. Nossa
+                    Todos os nossos pacotes incluem transfer do aeroporto/fluvial até o bangalô e vice-versa. Nossa
                     equipe entrará em contato após a confirmação da reserva para coordenar horários e detalhes
                     logísticos.
                   </p>

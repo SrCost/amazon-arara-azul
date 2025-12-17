@@ -8,7 +8,7 @@ import Lightbox from "@/components/Lightbox";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
 
 const Experiencias = () => {
-  const { data: galleryImages = [], isLoading } = useGalleryImages('experiences');
+  const { data: galleryImages = [], isLoading } = useGalleryImages("experiences");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
@@ -21,7 +21,8 @@ const Experiencias = () => {
     {
       icon: Compass,
       title: "Trilhas Guiadas",
-      description: "Explore a floresta amazônica com guias especializados que compartilham o conhecimento ancestral da região.",
+      description:
+        "Explore a floresta amazônica com guias especializados que compartilham o conhecimento ancestral da região.",
     },
     {
       icon: Bird,
@@ -50,7 +51,6 @@ const Experiencias = () => {
     },
   ];
 
-
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -63,8 +63,8 @@ const Experiencias = () => {
               Experiências Amazônicas
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Conecte-se com a natureza através de experiências autênticas e inesquecíveis
-              na maior floresta tropical do mundo.
+              Conecte-se com a natureza através de experiências autênticas e inesquecíveis na maior floresta tropical do
+              mundo.
             </p>
           </div>
         </div>
@@ -83,9 +83,7 @@ const Experiencias = () => {
                   <h3 className="text-lg sm:text-xl font-display font-semibold mb-2 sm:mb-3 text-foreground">
                     {experience.title}
                   </h3>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                    {experience.description}
-                  </p>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{experience.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -101,7 +99,7 @@ const Experiencias = () => {
               Galeria de Momentos
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground">
-              Registros autênticos das experiências vividas em nossa pousada
+              Registros autênticos das experiências vividas em nosso bangalô
             </p>
           </div>
           {isLoading ? (
@@ -112,9 +110,7 @@ const Experiencias = () => {
             </div>
           ) : galleryImages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">
-                Nenhuma foto disponível no momento
-              </p>
+              <p className="text-muted-foreground">Nenhuma foto disponível no momento</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
