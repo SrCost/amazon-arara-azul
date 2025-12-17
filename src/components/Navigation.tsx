@@ -50,13 +50,13 @@ const Navigation = () => {
               alt="Pousada Arara Azul"
               className="h-12 md:h-16 w-auto"
             />
-            <h1 className="text-xl md:text-2xl font-display font-bold text-primary">
+            <h1 className="hidden lg:block text-2xl font-display font-bold text-primary">
               Pousada Arara Azul
             </h1>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden lg:flex items-center space-x-6">
             {menuItems.map((item) => (
               <Link
                 key={item.href}
@@ -130,7 +130,7 @@ const Navigation = () => {
           </div>
 
           {/* Mobile Instagram + Menu button */}
-          <div className="flex items-center gap-1 md:hidden">
+          <div className="flex items-center gap-1 lg:hidden">
             <a
               href={SOCIAL_LINKS.instagram}
               target="_blank"
@@ -150,7 +150,7 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden py-3 border-t border-border max-h-[80vh] overflow-y-auto">
+          <div className="lg:hidden py-3 border-t border-border max-h-[80vh] overflow-y-auto">
             {/* Navegação Principal */}
             <div className="px-2 pb-3 space-y-1">
               {menuItems.map((item) => (
