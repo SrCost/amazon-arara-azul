@@ -2,7 +2,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Plane, Ship, MapPin, Clock, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import rioNegroFoto from "@/assets/rio-negro-encontro.png";
+import rioNegroFoto from "@/assets/rio-negro-encontro.jpg";
 
 const HowToGetThere = () => {
   return (
