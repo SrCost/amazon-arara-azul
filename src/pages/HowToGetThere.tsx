@@ -2,7 +2,7 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Plane, Ship, MapPin, Clock, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import rioNegroFoto from "@/assets/rio-negro-encontro.jpg";
+import riverAerial from "@/assets/river-aerial.jpg";
 
 const HowToGetThere = () => {
   return (
@@ -16,15 +16,15 @@ const HowToGetThere = () => {
               Como Chegar
             </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
-              A jornada até nossos bangalôs faz parte da experiência amazônica. Oferecemos múltiplas opções de acesso a
+              A jornada até nossas pousadas faz parte da experiência amazônica. Oferecemos múltiplas opções de acesso a
               partir de Manaus.
             </p>
           </div>
 
           <div className="max-w-5xl mx-auto mb-10 sm:mb-16">
             <img
-              src={rioNegroFoto}
-              alt="Encontro das águas do Rio Negro"
+              src={riverAerial}
+              alt="Vista aérea do Rio Amazonas"
               className="w-full h-[200px] sm:h-[300px] md:h-[400px] object-cover rounded-lg shadow-strong"
             />
           </div>
@@ -45,7 +45,7 @@ const HowToGetThere = () => {
                     </h2>
                     <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 leading-relaxed">
                       Voe até o Aeroporto Internacional Eduardo Gomes em Manaus (MAO). De lá, nosso serviço de transfer
-                      terrestre e fluvial leva voce ate os bangalôs.
+                      terrestre e fluvial leva você até os bangalôs.
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex items-center space-x-2">
@@ -102,7 +102,7 @@ const HowToGetThere = () => {
                 <div>
                   <h3 className="font-semibold text-foreground mb-2">Transfer Incluído</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Todos os nossos pacotes incluem transfer do aeroporto/fluvial até o bangalô e vice-versa. Nossa
+                    Todos os nossos pacotes incluem transfer do aeroporto/fluvial até a pousada e vice-versa. Nossa
                     equipe entrará em contato após a confirmação da reserva para coordenar horários e detalhes
                     logísticos.
                   </p>
