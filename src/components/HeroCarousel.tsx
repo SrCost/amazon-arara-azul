@@ -38,6 +38,11 @@ const HeroCarousel = () => {
           <img
             src={image}
             alt={`Pousada Arara Azul - Bangalô ${index + 1}`}
+            width={1920}
+            height={1080}
+            loading={index === 0 ? "eager" : "lazy"}
+            decoding={index === 0 ? "sync" : "async"}
+            fetchPriority={index === 0 ? "high" : "auto"}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/20" />
@@ -47,15 +52,15 @@ const HeroCarousel = () => {
       {/* Navigation Arrows */}
       <button
         onClick={goToPrevious}
-        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full p-1.5 sm:p-2 transition-all"
-        aria-label="Previous image"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full p-2 sm:p-3 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+        aria-label="Imagem anterior"
       >
         <ChevronLeft className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
       </button>
       <button
         onClick={goToNext}
-        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full p-1.5 sm:p-2 transition-all"
-        aria-label="Next image"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full p-2 sm:p-3 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+        aria-label="Próxima imagem"
       >
         <ChevronRight className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
       </button>
@@ -66,12 +71,12 @@ const HeroCarousel = () => {
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-2 h-2 rounded-full transition-all ${
+            className={`w-3 h-3 sm:w-2 sm:h-2 rounded-full transition-all min-w-[12px] min-h-[12px] ${
               index === currentIndex
-                ? "bg-white w-6 sm:w-8"
+                ? "bg-white w-8 sm:w-8"
                 : "bg-white/50 hover:bg-white/75"
             }`}
-            aria-label={`Go to image ${index + 1}`}
+            aria-label={`Ir para imagem ${index + 1}`}
           />
         ))}
       </div>

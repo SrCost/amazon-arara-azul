@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { MapPin, Users, Wifi, Coffee } from "lucide-react";
+import { MapPin, Users, Wifi, Coffee, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -33,11 +33,15 @@ const LodgeCard = ({
 
   return (
     <Card className="overflow-hidden group hover:shadow-strong transition-all duration-300">
-      <div className="relative h-48 sm:h-64 overflow-hidden bg-muted">
+      <div className="relative aspect-[16/9] overflow-hidden bg-muted">
         {image ? (
           <img
             src={image}
             alt={name}
+            loading="lazy"
+            decoding="async"
+            width={640}
+            height={360}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
         ) : (
@@ -80,8 +84,11 @@ const LodgeCard = ({
           })}
         </div>
 
-        <Button asChild className="w-full bg-gradient-forest hover:opacity-90">
-          <Link to={`/bangalos/${slug || id}`}>Ver Detalhes</Link>
+        <Button asChild className="w-full bg-gradient-to-r from-secondary to-accent hover:opacity-90 min-h-[48px] font-semibold">
+          <Link to={`/bangalos/${slug || id}`}>
+            <Calendar className="mr-2 h-4 w-4" />
+            Consultar Disponibilidade
+          </Link>
         </Button>
       </CardContent>
     </Card>

@@ -1,3 +1,21 @@
+# Pousada Arara Azul - robots.txt
+
+User-agent: *
+Allow: /
+
+# Block admin and auth pages
+Disallow: /admin
+Disallow: /admin/
+Disallow: /auth
+Disallow: /auth/
+
+# Block API endpoints if any
+Disallow: /api/
+
+# Crawl delay to be friendly
+Crawl-delay: 1
+
+# Specific bot permissions
 User-agent: Googlebot
 Allow: /
 
@@ -10,5 +28,5 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+# Sitemap location
+Sitemap: https://pousadaararaazul.com/sitemap.xml
