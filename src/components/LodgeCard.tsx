@@ -49,20 +49,16 @@ const LodgeCard = ({
       </div>
       
       <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-3">
-          <div className="min-w-0">
-            <h3 className="text-xl sm:text-2xl font-display font-semibold text-foreground mb-2 truncate">
-              {name}
-            </h3>
-            <div className="flex items-center text-xs sm:text-sm text-muted-foreground">
-              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-accent flex-shrink-0" />
-              <span className="truncate">{location}</span>
-            </div>
-          </div>
-          <div className="text-left sm:text-right flex-shrink-0">
-            <div className="text-lg sm:text-2xl font-bold text-primary">{price}</div>
-            <div className="text-xs text-muted-foreground">por noite</div>
-          </div>
+        <h3 className="text-lg sm:text-xl font-display font-semibold text-foreground mb-2">
+          {name}
+        </h3>
+        <div className="flex items-center text-xs sm:text-sm text-muted-foreground mb-2">
+          <MapPin className="h-3 w-3 sm:h-4 sm:w-4 mr-1 text-accent flex-shrink-0" />
+          <span className="truncate">{location}</span>
+        </div>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-xl sm:text-2xl font-bold text-primary">{price}</span>
+          <span className="text-xs text-muted-foreground">por noite</span>
         </div>
 
         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">

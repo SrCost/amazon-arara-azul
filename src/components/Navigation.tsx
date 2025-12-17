@@ -50,7 +50,7 @@ const Navigation = () => {
               alt="Pousada Arara Azul"
               className="h-12 md:h-16 w-auto"
             />
-            <h1 className="hidden lg:block text-2xl font-display font-bold text-primary">
+            <h1 className="hidden md:block text-xl lg:text-2xl font-display font-bold text-primary">
               Pousada Arara Azul
             </h1>
           </Link>
