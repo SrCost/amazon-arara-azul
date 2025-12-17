@@ -3,8 +3,13 @@ import Footer from "@/components/Footer";
 import { Plane, Ship, MapPin, Clock, AlertCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import rioNegroEncontro from "@/assets/rio-negro-encontro.webp";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const HowToGetThere = () => {
+  usePageMeta({
+    title: 'Como Chegar | Pousada Arara Azul – Manacapuru, AM',
+    description: 'Saiba como chegar à Pousada Arara Azul. Transfer do aeroporto de Manaus, transporte fluvial e terrestre até nossos bangalôs em Manacapuru.',
+  });
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -24,8 +29,12 @@ const HowToGetThere = () => {
           <div className="max-w-5xl mx-auto mb-10 sm:mb-16">
             <img
               src={rioNegroEncontro}
-              alt="Encontro das Águas - Rio Negro e Rio Solimões"
+              alt="Encontro das Águas - Rio Negro e Rio Solimões em Manaus"
+              width={1200}
+              height={400}
               className="w-full h-[200px] sm:h-[300px] md:h-[400px] object-cover rounded-lg shadow-strong"
+              loading="lazy"
+              decoding="async"
             />
           </div>
 

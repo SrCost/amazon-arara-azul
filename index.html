@@ -13,6 +13,13 @@
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://pousadaararaazul.com" />
 
+    <!-- Hreflang for Multilanguage SEO -->
+    <link rel="alternate" hreflang="pt-BR" href="https://pousadaararaazul.com/" />
+    <link rel="alternate" hreflang="en" href="https://pousadaararaazul.com/?lang=en" />
+    <link rel="alternate" hreflang="es" href="https://pousadaararaazul.com/?lang=es" />
+    <link rel="alternate" hreflang="fr" href="https://pousadaararaazul.com/?lang=fr" />
+    <link rel="alternate" hreflang="x-default" href="https://pousadaararaazul.com/" />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://pousadaararaazul.com" />
@@ -39,9 +46,12 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <!-- Preload Critical Fonts -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" as="style">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Preload Hero Image for LCP -->
+    <link rel="preload" as="image" href="/src/assets/hero-bungalow-1.jpg" type="image/jpeg">
+    
+    <!-- Optimized Font Loading -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
 
     <!-- Schema.org JSON-LD for Local Business -->
     <script type="application/ld+json">

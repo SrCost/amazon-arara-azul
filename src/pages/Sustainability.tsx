@@ -2,8 +2,13 @@ import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Leaf, Sun, Droplet, Users, Heart, Recycle } from "lucide-react";
 import sustainabilityImg from "@/assets/sustainability-new.jpg";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const Sustainability = () => {
+  usePageMeta({
+    title: 'Sustentabilidade | Pousada Arara Azul – Manacapuru, AM',
+    description: 'Turismo sustentável na Amazônia. Energia renovável, emprego local, conservação florestal e apoio às comunidades ribeirinhas em Manacapuru.',
+  });
   const initiatives = [
     {
       icon: Sun,
@@ -61,8 +66,12 @@ const Sustainability = () => {
           <div className="max-w-5xl mx-auto rounded-lg overflow-hidden shadow-strong mb-12 sm:mb-16">
             <img
               src={sustainabilityImg}
-              alt="Sustentabilidade na Amazônia"
+              alt="Sustentabilidade na Amazônia - Pousada Arara Azul"
+              width={1200}
+              height={400}
               className="w-full h-[250px] sm:h-[350px] md:h-[400px] object-cover"
+              loading="lazy"
+              decoding="async"
             />
           </div>
 

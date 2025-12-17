@@ -1,51 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <!-- Homepage -->
   <url>
     <loc>https://pousadaararaazul.com/</loc>
-    <lastmod>2025-01-01</lastmod>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://pousadaararaazul.com/"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://pousadaararaazul.com/?lang=en"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://pousadaararaazul.com/?lang=es"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://pousadaararaazul.com/?lang=fr"/>
   </url>
+  
+  <!-- Bangalôs (Lodges) -->
   <url>
     <loc>https://pousadaararaazul.com/bangalos</loc>
-    <lastmod>2025-01-01</lastmod>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  
+  <!-- Pacotes (Packages) -->
   <url>
     <loc>https://pousadaararaazul.com/pacotes</loc>
-    <lastmod>2025-01-01</lastmod>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
+  
+  <!-- Experiências -->
   <url>
     <loc>https://pousadaararaazul.com/experiencias</loc>
-    <lastmod>2025-01-01</lastmod>
+    <lastmod>2025-12-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Sustentabilidade -->
+  <url>
+    <loc>https://pousadaararaazul.com/sustentabilidade</loc>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
-  <url>
-    <loc>https://pousadaararaazul.com/sustentabilidade</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
+  
+  <!-- Como Chegar -->
   <url>
     <loc>https://pousadaararaazul.com/como-chegar</loc>
-    <lastmod>2025-01-01</lastmod>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
+    <priority>0.7</priority>
   </url>
+  
+  <!-- Contato -->
   <url>
     <loc>https://pousadaararaazul.com/contato</loc>
-    <lastmod>2025-01-01</lastmod>
+    <lastmod>2025-12-17</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  
+  <!-- FAQ -->
+  <url>
+    <loc>https://pousadaararaazul.com/faq</loc>
+    <lastmod>2025-12-17</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-  <url>
-    <loc>https://pousadaararaazul.com/faq</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
+  
 </urlset>

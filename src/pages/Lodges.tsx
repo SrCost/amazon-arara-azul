@@ -6,6 +6,7 @@ import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useTranslation } from "react-i18next";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // Fallback images for bungalows
 import tipitiExterior from "@/assets/tipiti-exterior.jpg";
@@ -20,6 +21,11 @@ const fallbackCoverImages: Record<string, string> = {
 };
 
 const Lodges = () => {
+  usePageMeta({
+    title: 'Bangalôs Exclusivos | Pousada Arara Azul – Manacapuru, AM',
+    description: 'Conheça nossos bangalôs sustentáveis em meio à floresta amazônica. Hospedagem com conforto, natureza e experiências únicas em Manacapuru, Amazonas.',
+  });
+
   const { i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [lodges, setLodges] = useState<any[]>([]);
@@ -139,7 +145,7 @@ const Lodges = () => {
               <p className="text-sm text-muted-foreground">Tente outras datas ou reduza o número de hóspedes.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {lodges.map((lodge) => (
                 <LodgeCard key={lodge.id} {...lodge} />
               ))}

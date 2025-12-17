@@ -5,8 +5,14 @@ import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageCircle, Sparkles } from "lucide-react";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const Packages = () => {
+  usePageMeta({
+    title: 'Pacotes Amazônicos | Pousada Arara Azul – Manacapuru, AM',
+    description: 'Pacotes completos com hospedagem, alimentação, transporte e experiências na Amazônia. Japiim, Uirapuru e Araraúna: escolha sua aventura.',
+  });
+
   const { t } = useTranslation();
 
   const packages = [
@@ -163,7 +169,7 @@ const Packages = () => {
       {/* Packages Grid */}
       <section className="py-12 sm:py-16">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
             {packages.map((pkg) => (
               <PackageCard key={pkg.id} {...pkg} />
             ))}
