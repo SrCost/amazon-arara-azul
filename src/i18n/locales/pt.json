@@ -52,7 +52,7 @@
     "upTo": "Até",
     "notChargedYet": "Você não será cobrado ainda",
     "cancellationPolicy": "Política de Cancelamento",
-    "cancellationText": "Para informações sobre cancelamento e reembolso, consulte nossa Política de Cancelamento no site."
+    "cancellationText": "Cancelamento gratuito até 7 dias antes do check-in. Reembolso de 50% até 3 dias antes."
   },
   "footer": {
     "about": "Sobre Nós",
@@ -231,7 +231,7 @@
     },
     "transfer": {
       "question": "Vocês oferecem serviço de transfer?",
-      "answer": "Sim! Oferecemos transfer do aeroporto de Manaus até a pousada. O serviço deve ser agendado com antecedência e tem custo adicional."
+      "answer": "Sim! Oferecemos transfer do aeroporto de Manaus até a pousada. O serviço deve ser agendado com antecedência e não tem custo adicional."
     },
     "cancellation": {
       "question": "Qual a política de cancelamento?",
