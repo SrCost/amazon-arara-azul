@@ -48,6 +48,8 @@ const Navigation = () => {
             <img
               src={logoAraraAzul}
               alt="Pousada Arara Azul"
+              width={64}
+              height={64}
               className="h-12 md:h-16 w-auto"
             />
             <h1 className="hidden md:block text-xl lg:text-2xl font-display font-bold text-primary">

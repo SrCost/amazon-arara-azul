@@ -4,8 +4,14 @@ import Footer from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const FAQ = () => {
+  usePageMeta({
+    title: 'Perguntas Frequentes | Pousada Arara Azul – Manacapuru, AM',
+    description: 'Dúvidas sobre reservas, check-in, transfer, pagamento e atividades na Pousada Arara Azul. Respostas para planejar sua viagem à Amazônia.',
+  });
+
   const { t } = useTranslation();
 
   const faqItems = [

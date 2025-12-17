@@ -6,8 +6,14 @@ import { Compass, Bird, Droplets, Users, Sunset, Camera } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Lightbox from "@/components/Lightbox";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const Experiencias = () => {
+  usePageMeta({
+    title: 'Experiências na Amazônia | Pousada Arara Azul – Manacapuru, AM',
+    description: 'Descubra trilhas guiadas, observação de aves, passeios de canoa e pôr do sol no Rio Negro. Experiências autênticas na floresta amazônica.',
+  });
+
   const { data: galleryImages = [], isLoading } = useGalleryImages("experiences");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
@@ -103,7 +109,7 @@ const Experiencias = () => {
             </p>
           </div>
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="aspect-video rounded-lg" />
               ))}
@@ -113,7 +119,7 @@ const Experiencias = () => {
               <p className="text-muted-foreground">Nenhuma foto disponível no momento</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {galleryImages.map((image, index) => (
                 <div
                   key={index}
@@ -123,6 +129,9 @@ const Experiencias = () => {
                   <img
                     src={image.src}
                     alt={image.alt}
+                    width={640}
+                    height={360}
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:brightness-110 transition-all"
                     loading="lazy"
                   />
