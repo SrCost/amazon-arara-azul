@@ -1,12 +1,7 @@
 import { useTranslation } from "react-i18next";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -59,9 +54,7 @@ const FAQ = () => {
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-display font-bold text-foreground mb-3 sm:mb-4">
               {t("faq.title")}
             </h1>
-            <p className="text-base sm:text-lg text-muted-foreground">
-              {t("faq.subtitle")}
-            </p>
+            <p className="text-base sm:text-lg text-muted-foreground">{t("faq.subtitle")}</p>
           </div>
         </div>
       </section>
@@ -77,9 +70,7 @@ const FAQ = () => {
                 className="bg-card border border-border rounded-lg px-4 sm:px-6"
               >
                 <AccordionTrigger className="text-left hover:no-underline py-3 sm:py-4">
-                  <span className="font-semibold text-foreground text-sm sm:text-base">
-                    {item.question}
-                  </span>
+                  <span className="font-semibold text-foreground text-sm sm:text-base">{item.question}</span>
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground pb-3 sm:pb-4 text-sm sm:text-base">
                   {item.answer}
@@ -93,19 +84,9 @@ const FAQ = () => {
             <h3 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-3 sm:mb-4">
               {t("faq.stillHaveQuestions")}
             </h3>
-            <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">
-              {t("faq.contactUs")}
-            </p>
-            <Button
-              size="lg"
-              className="bg-gradient-forest hover:opacity-90"
-              asChild
-            >
-              <a
-                href="https://wa.me/559284829983"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
+            <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">{t("faq.contactUs")}</p>
+            <Button size="lg" className="bg-gradient-forest hover:opacity-90" asChild>
+              <a href="https://wa.me/message/G5O3HIKODARQB1" target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 {t("faq.whatsappButton")}
               </a>
