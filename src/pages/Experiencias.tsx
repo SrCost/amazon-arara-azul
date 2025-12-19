@@ -2,11 +2,12 @@ import { useState } from "react";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Compass, Bird, Droplets, Users, Sunset, Camera } from "lucide-react";
+import { Compass, Bird, Droplets, Users, Sunset, Camera, ChevronDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import Lightbox from "@/components/Lightbox";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { Button } from "@/components/ui/button";
 
 const Experiencias = () => {
   usePageMeta({
@@ -21,6 +22,10 @@ const Experiencias = () => {
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
     setLightboxOpen(true);
+  };
+
+  const scrollToGallery = () => {
+    document.getElementById('gallery-full')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const experiences = [
@@ -57,6 +62,9 @@ const Experiencias = () => {
     },
   ];
 
+  // Preview images for mobile (first 4 images)
+  const previewImages = galleryImages.slice(0, 4);
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -73,6 +81,62 @@ const Experiencias = () => {
               mundo.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* Gallery Preview - Mobile First */}
+      <section className="py-6 sm:py-8 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-4">
+            <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-2">
+              📸 Galeria de Momentos
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Veja registros autênticos das experiências
+            </p>
+          </div>
+          
+          {isLoading ? (
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="aspect-video rounded-lg" />
+              ))}
+            </div>
+          ) : previewImages.length > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                {previewImages.map((image, index) => (
+                  <div
+                    key={index}
+                    className="aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                    onClick={() => openLightbox(index)}
+                  >
+                    <img
+                      src={image.src}
+                      alt={image.alt}
+                      width={400}
+                      height={225}
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+              {galleryImages.length > 4 && (
+                <div className="text-center mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={scrollToGallery}
+                    className="gap-2"
+                  >
+                    <span>Ver todas as {galleryImages.length} fotos</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+            </>
+          ) : null}
         </div>
       </section>
 
@@ -97,12 +161,12 @@ const Experiencias = () => {
         </div>
       </section>
 
-      {/* Gallery Placeholder */}
-      <section className="py-12 sm:py-16 bg-muted/30">
+      {/* Full Gallery */}
+      <section id="gallery-full" className="py-12 sm:py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3 sm:mb-4">
-              Galeria de Momentos
+              Galeria Completa
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground">
               Registros autênticos das experiências vividas em nosso bangalô

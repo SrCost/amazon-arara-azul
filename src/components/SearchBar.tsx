@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Calendar, Users, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,24 +7,34 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+
 const SearchBar = () => {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState("2");
-  const [lodgeType, setLodgeType] = useState("");
+  const [lodgeType, setLodgeType] = useState("all");
   const [isSearching, setIsSearching] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const checkOutRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   const navigate = useNavigate();
-  const {
-    t
-  } = useTranslation();
+  const { t } = useTranslation();
+
+  const handleCheckInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCheckIn(e.target.value);
+    // Auto-focus checkout after selecting check-in
+    if (e.target.value) {
+      setTimeout(() => {
+        checkOutRef.current?.focus();
+        checkOutRef.current?.showPicker?.();
+      }, 100);
+    }
+  };
+
   const handleSearch = async () => {
     if (!checkIn || !checkOut || !guests || !lodgeType) {
       toast({
         title: t("common.error"),
-        description: "Preencha todos os campos para buscar",
+        description: t("search.fillAllFields", "Preencha todos os campos para buscar"),
         variant: "destructive"
       });
       return;
@@ -32,7 +42,7 @@ const SearchBar = () => {
     if (new Date(checkIn) >= new Date(checkOut)) {
       toast({
         title: t("common.error"),
-        description: "A data de check-out deve ser após o check-in",
+        description: t("search.checkoutAfterCheckin", "A data de check-out deve ser após o check-in"),
         variant: "destructive"
       });
       return;
@@ -41,7 +51,7 @@ const SearchBar = () => {
     if (guestsNum > 4) {
       toast({
         title: t("common.error"),
-        description: "Máx. 4 hóspedes por acomodação",
+        description: t("search.maxGuests", "Máx. 4 hóspedes por acomodação"),
         variant: "destructive"
       });
       return;
@@ -72,13 +82,13 @@ const SearchBar = () => {
         // Navigate to bangalos page with search params
         navigate(`/bangalos?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&type=${lodgeType}`);
         toast({
-          title: "Busca realizada!",
-          description: `${rooms.length} acomodação(ões) disponível(is) para suas datas.`
+          title: t("search.searchComplete", "Busca realizada!"),
+          description: t("search.availableRooms", { count: rooms.length, defaultValue: `${rooms.length} acomodação(ões) disponível(is) para suas datas.` })
         });
       } else {
         toast({
-          title: "Indisponível",
-          description: "Nenhuma acomodação disponível para as datas selecionadas. Escolha outras datas ou reduza o número de hóspedes.",
+          title: t("search.unavailable", "Indisponível"),
+          description: t("search.noRoomsAvailable", "Nenhuma acomodação disponível para as datas selecionadas. Escolha outras datas ou reduza o número de hóspedes."),
           variant: "destructive"
         });
       }
@@ -86,13 +96,14 @@ const SearchBar = () => {
       console.error("Search error:", error);
       toast({
         title: t("common.error"),
-        description: "Erro ao buscar acomodações. Tente novamente.",
+        description: t("search.searchError", "Erro ao buscar acomodações. Tente novamente."),
         variant: "destructive"
       });
     } finally {
       setIsSearching(false);
     }
   };
+
   return (
     <div className="bg-card shadow-medium rounded-lg p-3 sm:p-4 md:p-6 w-full max-w-5xl mx-auto">
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
@@ -100,12 +111,12 @@ const SearchBar = () => {
         <div className="flex flex-col space-y-1.5">
           <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
             <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
-            <span>Check-in</span>
+            <span>{t("search.checkIn", "Check-in")}</span>
           </label>
           <Input 
             type="date" 
             value={checkIn} 
-            onChange={e => setCheckIn(e.target.value)} 
+            onChange={handleCheckInChange} 
             min={new Date().toISOString().split('T')[0]} 
             className="w-full min-w-0 text-sm h-9 sm:h-10" 
           />
@@ -115,9 +126,10 @@ const SearchBar = () => {
         <div className="flex flex-col space-y-1.5">
           <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
             <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
-            <span>Check-out</span>
+            <span>{t("search.checkOut", "Check-out")}</span>
           </label>
           <Input 
+            ref={checkOutRef}
             type="date" 
             value={checkOut} 
             onChange={e => setCheckOut(e.target.value)} 
@@ -130,17 +142,17 @@ const SearchBar = () => {
         <div className="flex flex-col space-y-1.5">
           <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
             <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
-            <span>Hóspedes</span>
+            <span>{t("search.guests", "Hóspedes")}</span>
           </label>
           <Select value={guests} onValueChange={setGuests}>
             <SelectTrigger className="h-9 sm:h-10 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">1 pessoa</SelectItem>
-              <SelectItem value="2">2 pessoas</SelectItem>
-              <SelectItem value="3">3 pessoas</SelectItem>
-              <SelectItem value="4">4 pessoas</SelectItem>
+              <SelectItem value="1">1 {t("search.person", "pessoa")}</SelectItem>
+              <SelectItem value="2">2 {t("search.people", "pessoas")}</SelectItem>
+              <SelectItem value="3">3 {t("search.people", "pessoas")}</SelectItem>
+              <SelectItem value="4">4 {t("search.people", "pessoas")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -149,14 +161,14 @@ const SearchBar = () => {
         <div className="flex flex-col space-y-1.5">
           <label className="text-xs sm:text-sm font-medium text-foreground flex items-center">
             <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 text-primary flex-shrink-0" />
-            <span>Bangalôs</span>
+            <span>{t("search.lodges", "Bangalôs")}</span>
           </label>
           <Select value={lodgeType} onValueChange={setLodgeType}>
             <SelectTrigger className="h-9 sm:h-10 text-sm">
-              <SelectValue placeholder="Todos" />
+              <SelectValue placeholder={t("search.all", "Todos")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="all">{t("search.all", "Todos")}</SelectItem>
               <SelectItem value="bangalo-peneira">Bangalô Peneira</SelectItem>
               <SelectItem value="bangalo-paneiro">Bangalô Paneiro</SelectItem>
               <SelectItem value="bangalo-tipiti">Bangalô Tipiti</SelectItem>
@@ -171,7 +183,7 @@ const SearchBar = () => {
             disabled={isSearching} 
             className="w-full h-9 sm:h-10 bg-gradient-forest hover:opacity-90 transition-opacity text-sm sm:text-base"
           >
-            {isSearching ? "Buscando..." : "Buscar"}
+            {isSearching ? t("search.searching", "Buscando...") : t("search.search", "Buscar")}
           </Button>
         </div>
       </div>

@@ -41,7 +41,7 @@ const PackageCard = ({
           </CardTitle>
           {isCustom && (
             <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded-full font-semibold self-start">
-              Personalizado
+              {t("packages.customized")}
             </span>
           )}
         </div>
@@ -109,10 +109,10 @@ const PackageCard = ({
             <>
               <div className="mb-4 text-center">
                 <div className="text-2xl sm:text-3xl font-bold text-amber-600">
-                  Sob Consulta
+                  {t("packages.onRequest")}
                 </div>
                 <div className="text-sm text-amber-600 mt-1">
-                  Fale com nosso consultor
+                  {t("packages.talkToConsultant")}
                 </div>
               </div>
               <Button
@@ -125,7 +125,7 @@ const PackageCard = ({
                   rel="noopener noreferrer"
                 >
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  Consultar
+                  {t("packages.consult")}
                 </a>
               </Button>
             </>
@@ -133,7 +133,7 @@ const PackageCard = ({
             <>
               <div className="mb-4 text-center">
                 <div className="text-sm text-muted-foreground mb-1">
-                  A partir de 12x de
+                  {t("packages.from12x")}
                 </div>
                 <div className="text-2xl sm:text-3xl font-bold text-primary">
                   {(parseFloat(total.replace("R$ ", "").replace(".", "").replace(",", ".")) / 12).toLocaleString("pt-BR", {
@@ -142,7 +142,7 @@ const PackageCard = ({
                   })}
                 </div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  ou {total} à vista
+                  {t("packages.orCash", { total })}
                 </div>
               </div>
               <Button
