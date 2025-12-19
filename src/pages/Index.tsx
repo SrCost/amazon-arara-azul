@@ -115,8 +115,8 @@ const Index = () => {
           {/* Content Overlay */}
           <div className="absolute inset-0 z-10">
             <div className="flex items-center justify-center h-full">
-            <div className="text-center px-4 sm:px-6 max-w-4xl mx-auto pt-16 sm:pt-8 md:pt-0">
-                <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in drop-shadow-lg leading-tight">
+            <div className="text-center px-6 sm:px-6 max-w-4xl mx-auto pt-20 sm:pt-8 md:pt-0">
+                <h1 className="text-lg xs:text-xl sm:text-3xl md:text-5xl lg:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in drop-shadow-lg leading-snug">
                   {t("home.heroTitle")}
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/95 mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md px-2">

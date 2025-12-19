@@ -70,9 +70,9 @@ const Experiencias = () => {
       <Navigation />
 
       {/* Hero Section */}
-      <section className="pt-24 sm:pt-32 pb-12 sm:pb-16 bg-gradient-to-b from-muted/50 to-background">
+      <section className="pt-24 sm:pt-32 pb-4 sm:pb-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-8 sm:mb-12">
+          <div className="text-center mb-4 sm:mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">
               Experiências Amazônicas
             </h1>
@@ -85,7 +85,7 @@ const Experiencias = () => {
       </section>
 
       {/* Gallery Preview - Mobile First */}
-      <section className="py-6 sm:py-8 bg-muted/20">
+      <section className="py-3 sm:py-8 bg-muted/20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-4">
             <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-2">
