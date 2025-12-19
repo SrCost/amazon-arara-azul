@@ -1,16 +1,19 @@
+import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
 
 const FindUsSection = () => {
+  const { t } = useTranslation();
+
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-            Nos Encontre Também
+            {t("home.findUsTitle")}
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Reserve através do Airbnb ou Booking.com
+            {t("home.findUsSubtitle")}
           </p>
         </div>
 

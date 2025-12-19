@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { MapPin, Users, Wifi, Coffee, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +27,7 @@ const LodgeCard = ({
   description,
   amenities,
 }: LodgeCardProps) => {
+  const { t } = useTranslation();
   const amenityIcons: { [key: string]: any } = {
     wifi: Wifi,
     breakfast: Coffee,
@@ -62,7 +64,7 @@ const LodgeCard = ({
         </div>
         <div className="flex items-center gap-2 mb-3">
           <span className="text-xl sm:text-2xl font-bold text-primary">{price}</span>
-          <span className="text-xs text-muted-foreground">por noite</span>
+          <span className="text-xs text-muted-foreground">{t("common.perNight")}</span>
         </div>
 
         <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
@@ -72,7 +74,7 @@ const LodgeCard = ({
         <div className="flex items-center flex-wrap gap-3 sm:gap-4 mb-4 text-sm text-muted-foreground">
           <div className="flex items-center">
             <Users className="h-4 w-4 mr-1 text-accent" />
-            {guests} pessoas
+            {guests} {t("common.people")}
           </div>
           {amenities.slice(0, 2).map((amenity) => {
             const Icon = amenityIcons[amenity];
@@ -87,7 +89,7 @@ const LodgeCard = ({
         <Button asChild className="w-full bg-gradient-to-r from-secondary to-accent hover:opacity-90 min-h-[48px] font-semibold">
           <Link to={`/bangalos/${slug || id}`}>
             <Calendar className="mr-2 h-4 w-4" />
-            Consultar Disponibilidade
+            {t("home.checkAvailability")}
           </Link>
         </Button>
       </CardContent>

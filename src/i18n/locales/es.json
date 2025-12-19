@@ -10,7 +10,9 @@
     "logout": "Cerrar Sesión",
     "admin": "Panel Admin",
     "myReservations": "Mis Reservas",
-    "language": "Idioma"
+    "language": "Idioma",
+    "experiences": "Experiencias",
+    "bookNow": "Reservar Ahora"
   },
   "hero": {
     "title": "Descubre la Amazonía Auténtica",
@@ -27,6 +29,7 @@
   "common": {
     "perNight": "por noche",
     "guests": "huéspedes",
+    "people": "personas",
     "viewDetails": "Ver Detalles",
     "bookNow": "Reservar Ahora",
     "loading": "Cargando...",
@@ -97,7 +100,9 @@
     "title": "¿Cómo podemos ayudarte?",
     "whatsapp": "WhatsApp",
     "faq": "Preguntas Frecuentes",
-    "social": "Redes Sociales"
+    "social": "Redes Sociales",
+    "talkOnWhatsApp": "Chatear en WhatsApp",
+    "whatsappMessage": "Hola, me gustaría consultar disponibilidad en Pousada Arara Azul."
   },
   "reservation": {
     "title": "Reservar",
@@ -148,13 +153,19 @@
     "adminAccess": "Acceso Administrativo"
   },
   "home": {
-    "heroTitle": "Descubre la Amazonía Auténtica",
-    "heroSubtitle": "Alojamiento sostenible en la selva tropical más diversa del mundo",
+    "heroTitle": "Vive la Amazonía con Responsabilidad",
+    "heroSubtitle": "Alojamiento ecológico en el corazón de la selva tropical más grande del mundo. Una inmersión única que combina confort, naturaleza y sostenibilidad.",
     "exploreLodges": "Explorar Posadas",
     "ourMission": "Nuestra Misión",
     "ourLodges": "Nuestras Posadas",
-    "lodgesDescription": "Cada posada ofrece una experiencia auténtica, integrada con la naturaleza y la cultura local",
+    "lodgesDescription": "Descubre nuestras posadas exclusivas en el corazón de la selva amazónica",
     "viewAllLodges": "Ver Todas las Posadas",
+    "viewAvailableLodges": "Ver Posadas Disponibles",
+    "checkAvailability": "Consultar Disponibilidad",
+    "loadingLodges": "Cargando posadas...",
+    "noLodgesAvailable": "No hay posadas disponibles en este momento.",
+    "preferDirectContact": "¿Prefiere hablar directamente con nuestro equipo?",
+    "makeReservation": "Haga Su Reserva",
     "readyForAdventure": "¿Listo para Tu Aventura Amazónica?",
     "bookNowDescription": "Reserva ahora y garantiza tu experiencia inolvidable en una de las regiones más biodiversas del mundo",
     "getInTouch": "Contáctenos",
@@ -163,11 +174,16 @@
     "conservation": "Conservación Activa",
     "conservationDesc": "Parte de los ingresos destinados a la protección del bosque y la biodiversidad local",
     "localCommunity": "Comunidad Local",
-    "localCommunityDesc": "Apoyo directo a familias ribereñas y valorización de la cultura amazónica"
+    "localCommunityDesc": "Apoyo directo a familias ribereñas y valorización de la cultura amazónica",
+    "findUsTitle": "Encuéntrenos También",
+    "findUsSubtitle": "Reserve a través de Airbnb o Booking.com"
   },
   "lodges": {
     "title": "Nuestras Posadas",
     "subtitle": "Elige tu experiencia perfecta en la selva amazónica",
+    "loading": "Buscando posadas disponibles...",
+    "noResults": "No hay posadas disponibles para el período indicado.",
+    "noResultsHint": "Pruebe otras fechas o reduzca el número de huéspedes.",
     "lodgeTypes": {
       "all": "Todas",
       "riverside": "Junto al Río",
@@ -175,6 +191,28 @@
       "floating": "Flotante",
       "canopy": "En el Dosel"
     }
+  },
+  "experiences": {
+    "title": "Experiencias Amazónicas",
+    "subtitle": "Conéctate con la naturaleza a través de experiencias auténticas e inolvidables en la selva tropical más grande del mundo.",
+    "galleryTitle": "Galería de Momentos",
+    "gallerySubtitle": "Vea registros auténticos de las experiencias",
+    "viewAllPhotos": "Ver todas las {{count}} fotos",
+    "fullGalleryTitle": "Galería Completa",
+    "fullGallerySubtitle": "Registros auténticos de experiencias vividas en nuestra posada",
+    "noPhotos": "No hay fotos disponibles en este momento",
+    "guidedTrails": "Senderos Guiados",
+    "guidedTrailsDesc": "Explore la selva amazónica con guías especializados que comparten el conocimiento ancestral de la región.",
+    "birdWatching": "Observación de Aves",
+    "birdWatchingDesc": "Descubra la increíble biodiversidad de aves tropicales en su hábitat natural al amanecer.",
+    "canoeTrips": "Paseos en Canoa",
+    "canoeTripsDesc": "Navegue por arroyos y ríos en canoas tradicionales, experimentando la paz de las aguas amazónicas.",
+    "communityVisits": "Visitas a Comunidades",
+    "communityVisitsDesc": "Conozca la cultura local y las tradiciones de las comunidades ribereñas de la Amazonía.",
+    "riverSunset": "Atardecer en el Río",
+    "riverSunsetDesc": "Admire espectáculos naturales únicos con el atardecer reflejándose en las aguas del Río Negro.",
+    "naturePhotography": "Fotografía de Naturaleza",
+    "naturePhotographyDesc": "Capture momentos inolvidables de la fauna y flora amazónica en escenarios paradisíacos."
   },
   "sustainability": {
     "title": "Sostenibilidad y Responsabilidad",

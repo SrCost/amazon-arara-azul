@@ -10,7 +10,9 @@
     "logout": "Sair",
     "admin": "Painel Admin",
     "myReservations": "Minhas Reservas",
-    "language": "Idioma"
+    "language": "Idioma",
+    "experiences": "Experiências",
+    "bookNow": "Reservar Agora"
   },
   "hero": {
     "title": "Descubra a Amazônia Autêntica",
@@ -27,6 +29,7 @@
   "common": {
     "perNight": "por noite",
     "guests": "hóspedes",
+    "people": "pessoas",
     "viewDetails": "Ver Detalhes",
     "bookNow": "Reservar Agora",
     "loading": "Carregando...",
@@ -97,7 +100,9 @@
     "title": "Como podemos ajudar?",
     "whatsapp": "WhatsApp",
     "faq": "Perguntas Frequentes",
-    "social": "Redes Sociais"
+    "social": "Redes Sociais",
+    "talkOnWhatsApp": "Falar no WhatsApp",
+    "whatsappMessage": "Olá, gostaria de consultar disponibilidade na Pousada Arara Azul."
   },
   "reservation": {
     "loginRequired": "Você precisa estar logado para fazer uma reserva",
@@ -154,8 +159,14 @@
     "exploreLodges": "Explorar Bangalôs",
     "ourMission": "Nossa Missão",
     "ourLodges": "Nossos Bangalôs",
-    "lodgesDescription": "Cada bangalô oferece uma experiência autêntica, integrada à natureza e à cultura local",
+    "lodgesDescription": "Conheça nossos bangalôs exclusivos em meio à floresta amazônica",
     "viewAllLodges": "Ver Todos os Bangalôs",
+    "viewAvailableLodges": "Ver Bangalôs Disponíveis",
+    "checkAvailability": "Consultar Disponibilidade",
+    "loadingLodges": "Carregando bangalôs...",
+    "noLodgesAvailable": "Nenhum bangalô disponível no momento.",
+    "preferDirectContact": "Prefere falar diretamente com nossa equipe?",
+    "makeReservation": "Faça Sua Reserva",
     "readyForAdventure": "Pronto para Sua Aventura Amazônica?",
     "bookNowDescription": "Reserve agora e garanta sua experiência inesquecível em uma das regiões mais biodiversas do mundo",
     "getInTouch": "Entre em Contato",
@@ -164,11 +175,16 @@
     "conservation": "Conservação Ativa",
     "conservationDesc": "Parte da receita destinada à proteção da floresta e biodiversidade local",
     "localCommunity": "Comunidade Local",
-    "localCommunityDesc": "Apoio direto às famílias ribeirinhas e valorização da cultura amazônica"
+    "localCommunityDesc": "Apoio direto às famílias ribeirinhas e valorização da cultura amazônica",
+    "findUsTitle": "Nos Encontre Também",
+    "findUsSubtitle": "Reserve através do Airbnb ou Booking.com"
   },
   "lodges": {
     "title": "Nossos Bangalôs",
     "subtitle": "Escolha sua experiência perfeita em meio à floresta amazônica",
+    "loading": "Buscando bangalôs disponíveis...",
+    "noResults": "Nenhum bangalô disponível para o período informado.",
+    "noResultsHint": "Tente outras datas ou reduza o número de hóspedes.",
     "lodgeTypes": {
       "all": "Todas",
       "riverside": "Beira-Rio",
@@ -176,6 +192,28 @@
       "floating": "Flutuante",
       "canopy": "No Dossel"
     }
+  },
+  "experiences": {
+    "title": "Experiências Amazônicas",
+    "subtitle": "Conecte-se com a natureza através de experiências autênticas e inesquecíveis na maior floresta tropical do mundo.",
+    "galleryTitle": "Galeria de Momentos",
+    "gallerySubtitle": "Veja registros autênticos das experiências",
+    "viewAllPhotos": "Ver todas as {{count}} fotos",
+    "fullGalleryTitle": "Galeria Completa",
+    "fullGallerySubtitle": "Registros autênticos das experiências vividas em nosso bangalô",
+    "noPhotos": "Nenhuma foto disponível no momento",
+    "guidedTrails": "Trilhas Guiadas",
+    "guidedTrailsDesc": "Explore a floresta amazônica com guias especializados que compartilham o conhecimento ancestral da região.",
+    "birdWatching": "Observação de Aves",
+    "birdWatchingDesc": "Descubra a incrível biodiversidade de aves tropicais em seu habitat natural ao amanhecer.",
+    "canoeTrips": "Passeios de Canoa",
+    "canoeTripsDesc": "Navegue pelos igarapés e rios em canoas tradicionais, vivenciando a paz das águas amazônicas.",
+    "communityVisits": "Visitas às Comunidades",
+    "communityVisitsDesc": "Conheça a cultura local e as tradições das comunidades ribeirinhas da Amazônia.",
+    "riverSunset": "Pôr do Sol no Rio",
+    "riverSunsetDesc": "Admire espetáculos naturais únicos com o pôr do sol refletindo nas águas do Rio Negro.",
+    "naturePhotography": "Fotografia de Natureza",
+    "naturePhotographyDesc": "Capture momentos inesquecíveis da fauna e flora amazônica em cenários paradisíacos."
   },
   "sustainability": {
     "title": "Sustentabilidade e Responsabilidade",

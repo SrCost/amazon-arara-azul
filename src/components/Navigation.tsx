@@ -21,9 +21,9 @@ const Navigation = () => {
 
   const menuItems = [
     { label: t("nav.home"), href: "/" },
-    { label: "Bangalôs", href: "/bangalos" },
+    { label: t("nav.lodges"), href: "/bangalos" },
     { label: t("nav.packages"), href: "/pacotes" },
-    { label: "Experiências", href: "/experiencias" },
+    { label: t("nav.experiences"), href: "/experiencias" },
     { label: t("nav.sustainability"), href: "/sustentabilidade" },
     { label: t("nav.howToGetThere"), href: "/como-chegar" },
     { label: t("nav.contact"), href: "/contato" },
@@ -131,7 +131,7 @@ const Navigation = () => {
               className="bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white min-h-[44px] px-6 font-semibold"
               asChild
             >
-              <Link to="/bangalos">Reservar Agora</Link>
+              <Link to="/bangalos">{t("nav.bookNow")}</Link>
             </Button>
           </div>
 
@@ -241,7 +241,7 @@ const Navigation = () => {
                 className="w-full bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white min-h-[52px] font-semibold"
               >
                 <Link to="/bangalos" onClick={() => setIsOpen(false)}>
-                  Reservar Agora
+                  {t("nav.bookNow")}
                 </Link>
               </Button>
             </div>

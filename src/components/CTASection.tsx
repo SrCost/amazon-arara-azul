@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MessageCircle } from "lucide-react";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
@@ -16,17 +17,19 @@ const CTASection = ({
   variant = "primary",
   title,
   description,
-  buttonText = "Reservar Agora",
+  buttonText,
   buttonLink = "/bangalos",
   className = "",
 }: CTASectionProps) => {
-  const whatsappMessage = encodeURIComponent("Olá, gostaria de consultar disponibilidade na Pousada Arara Azul.");
+  const { t } = useTranslation();
+  const whatsappMessage = encodeURIComponent(t("support.whatsappMessage"));
+  const defaultButtonText = buttonText || t("nav.bookNow");
 
   if (variant === "whatsapp") {
     return (
       <div className={`text-center py-8 sm:py-12 ${className}`}>
         <p className="text-muted-foreground mb-4">
-          {description || "Prefere falar diretamente conosco?"}
+          {description || t("home.preferDirectContact")}
         </p>
         <a
           href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
@@ -38,7 +41,7 @@ const CTASection = ({
             className="bg-[#25D366] hover:bg-[#20BD5A] text-white min-h-[48px] px-6 sm:px-8"
           >
             <MessageCircle className="mr-2 h-5 w-5" />
-            Falar no WhatsApp
+            {t("support.talkOnWhatsApp")}
           </Button>
         </a>
       </div>
@@ -55,7 +58,7 @@ const CTASection = ({
           asChild
         >
           <Link to={buttonLink}>
-            {buttonText}
+            {defaultButtonText}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
@@ -82,7 +85,7 @@ const CTASection = ({
           asChild
         >
           <Link to={buttonLink}>
-            {buttonText}
+            {defaultButtonText}
             <ArrowRight className="ml-2 h-5 w-5" />
           </Link>
         </Button>

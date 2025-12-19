@@ -10,7 +10,9 @@
     "logout": "Logout",
     "admin": "Admin Panel",
     "myReservations": "My Reservations",
-    "language": "Language"
+    "language": "Language",
+    "experiences": "Experiences",
+    "bookNow": "Book Now"
   },
   "hero": {
     "title": "Discover Authentic Amazonia",
@@ -27,6 +29,7 @@
   "common": {
     "perNight": "per night",
     "guests": "guests",
+    "people": "people",
     "viewDetails": "View Details",
     "bookNow": "Book Now",
     "loading": "Loading...",
@@ -97,7 +100,9 @@
     "title": "How can we help?",
     "whatsapp": "WhatsApp",
     "faq": "FAQ",
-    "social": "Social Media"
+    "social": "Social Media",
+    "talkOnWhatsApp": "Chat on WhatsApp",
+    "whatsappMessage": "Hello, I would like to check availability at Pousada Arara Azul."
   },
   "reservation": {
     "title": "Book",
@@ -148,13 +153,19 @@
     "adminAccess": "Admin Access"
   },
   "home": {
-    "heroTitle": "Discover Authentic Amazonia",
-    "heroSubtitle": "Sustainable accommodation in the world's most diverse rainforest",
+    "heroTitle": "Experience the Amazon Responsibly",
+    "heroSubtitle": "Eco-friendly accommodation in the heart of the world's largest tropical forest. A unique immersion combining comfort, nature and sustainability.",
     "exploreLodges": "Explore Lodges",
     "ourMission": "Our Mission",
     "ourLodges": "Our Lodges",
-    "lodgesDescription": "Each lodge offers an authentic experience, integrated with nature and local culture",
+    "lodgesDescription": "Discover our exclusive lodges in the heart of the Amazon rainforest",
     "viewAllLodges": "View All Lodges",
+    "viewAvailableLodges": "View Available Lodges",
+    "checkAvailability": "Check Availability",
+    "loadingLodges": "Loading lodges...",
+    "noLodgesAvailable": "No lodges available at the moment.",
+    "preferDirectContact": "Prefer to speak directly with our team?",
+    "makeReservation": "Make Your Reservation",
     "readyForAdventure": "Ready for Your Amazon Adventure?",
     "bookNowDescription": "Book now and guarantee your unforgettable experience in one of the world's most biodiverse regions",
     "getInTouch": "Get in Touch",
@@ -163,11 +174,16 @@
     "conservation": "Active Conservation",
     "conservationDesc": "Part of revenue dedicated to forest protection and local biodiversity",
     "localCommunity": "Local Community",
-    "localCommunityDesc": "Direct support to riverside families and appreciation of Amazonian culture"
+    "localCommunityDesc": "Direct support to riverside families and appreciation of Amazonian culture",
+    "findUsTitle": "Find Us Also",
+    "findUsSubtitle": "Book through Airbnb or Booking.com"
   },
   "lodges": {
     "title": "Our Lodges",
     "subtitle": "Choose your perfect experience in the Amazon rainforest",
+    "loading": "Searching for available lodges...",
+    "noResults": "No lodges available for the selected period.",
+    "noResultsHint": "Try different dates or reduce the number of guests.",
     "lodgeTypes": {
       "all": "All",
       "riverside": "Riverside",
@@ -175,6 +191,28 @@
       "floating": "Floating",
       "canopy": "Canopy"
     }
+  },
+  "experiences": {
+    "title": "Amazon Experiences",
+    "subtitle": "Connect with nature through authentic and unforgettable experiences in the world's largest tropical forest.",
+    "galleryTitle": "Gallery of Moments",
+    "gallerySubtitle": "See authentic records of the experiences",
+    "viewAllPhotos": "View all {{count}} photos",
+    "fullGalleryTitle": "Complete Gallery",
+    "fullGallerySubtitle": "Authentic records of experiences lived in our lodge",
+    "noPhotos": "No photos available at the moment",
+    "guidedTrails": "Guided Trails",
+    "guidedTrailsDesc": "Explore the Amazon rainforest with specialized guides who share the ancestral knowledge of the region.",
+    "birdWatching": "Bird Watching",
+    "birdWatchingDesc": "Discover the incredible biodiversity of tropical birds in their natural habitat at dawn.",
+    "canoeTrips": "Canoe Trips",
+    "canoeTripsDesc": "Navigate through streams and rivers in traditional canoes, experiencing the peace of Amazonian waters.",
+    "communityVisits": "Community Visits",
+    "communityVisitsDesc": "Learn about local culture and traditions of the riverside communities of the Amazon.",
+    "riverSunset": "River Sunset",
+    "riverSunsetDesc": "Admire unique natural spectacles with the sunset reflecting on the waters of the Rio Negro.",
+    "naturePhotography": "Nature Photography",
+    "naturePhotographyDesc": "Capture unforgettable moments of Amazonian fauna and flora in paradisiacal settings."
   },
   "sustainability": {
     "title": "Sustainability and Responsibility",

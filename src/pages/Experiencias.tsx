@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +11,8 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { Button } from "@/components/ui/button";
 
 const Experiencias = () => {
+  const { t } = useTranslation();
+  
   usePageMeta({
     title: 'Experiências na Amazônia | Pousada Arara Azul – Manacapuru, AM',
     description: 'Descubra trilhas guiadas, observação de aves, passeios de canoa e pôr do sol no Rio Negro. Experiências autênticas na floresta amazônica.',
@@ -31,34 +34,33 @@ const Experiencias = () => {
   const experiences = [
     {
       icon: Compass,
-      title: "Trilhas Guiadas",
-      description:
-        "Explore a floresta amazônica com guias especializados que compartilham o conhecimento ancestral da região.",
+      title: t("experiences.guidedTrails"),
+      description: t("experiences.guidedTrailsDesc"),
     },
     {
       icon: Bird,
-      title: "Observação de Aves",
-      description: "Descubra a incrível biodiversidade de aves tropicais em seu habitat natural ao amanhecer.",
+      title: t("experiences.birdWatching"),
+      description: t("experiences.birdWatchingDesc"),
     },
     {
       icon: Droplets,
-      title: "Passeios de Canoa",
-      description: "Navegue pelos igarapés e rios em canoas tradicionais, vivenciando a paz das águas amazônicas.",
+      title: t("experiences.canoeTrips"),
+      description: t("experiences.canoeTripsDesc"),
     },
     {
       icon: Users,
-      title: "Visitas às Comunidades",
-      description: "Conheça a cultura local e as tradições das comunidades ribeirinhas da Amazônia.",
+      title: t("experiences.communityVisits"),
+      description: t("experiences.communityVisitsDesc"),
     },
     {
       icon: Sunset,
-      title: "Pôr do Sol no Rio",
-      description: "Admire espetáculos naturais únicos com o pôr do sol refletindo nas águas do Rio Negro.",
+      title: t("experiences.riverSunset"),
+      description: t("experiences.riverSunsetDesc"),
     },
     {
       icon: Camera,
-      title: "Fotografia de Natureza",
-      description: "Capture momentos inesquecíveis da fauna e flora amazônica em cenários paradisíacos.",
+      title: t("experiences.naturePhotography"),
+      description: t("experiences.naturePhotographyDesc"),
     },
   ];
 
@@ -74,11 +76,10 @@ const Experiencias = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-4 sm:mb-12">
             <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">
-              Experiências Amazônicas
+              {t("experiences.title")}
             </h1>
             <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Conecte-se com a natureza através de experiências autênticas e inesquecíveis na maior floresta tropical do
-              mundo.
+              {t("experiences.subtitle")}
             </p>
           </div>
         </div>
@@ -89,10 +90,10 @@ const Experiencias = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-4">
             <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-2">
-              📸 Galeria de Momentos
+              📸 {t("experiences.galleryTitle")}
             </h2>
             <p className="text-sm text-muted-foreground">
-              Veja registros autênticos das experiências
+              {t("experiences.gallerySubtitle")}
             </p>
           </div>
           
@@ -130,7 +131,7 @@ const Experiencias = () => {
                     onClick={scrollToGallery}
                     className="gap-2"
                   >
-                    <span>Ver todas as {galleryImages.length} fotos</span>
+                    <span>{t("experiences.viewAllPhotos", { count: galleryImages.length })}</span>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </div>
@@ -166,10 +167,10 @@ const Experiencias = () => {
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3 sm:mb-4">
-              Galeria Completa
+              {t("experiences.fullGalleryTitle")}
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground">
-              Registros autênticos das experiências vividas em nosso bangalô
+              {t("experiences.fullGallerySubtitle")}
             </p>
           </div>
           {isLoading ? (
@@ -180,7 +181,7 @@ const Experiencias = () => {
             </div>
           ) : galleryImages.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-muted-foreground">Nenhuma foto disponível no momento</p>
+              <p className="text-muted-foreground">{t("experiences.noPhotos")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
