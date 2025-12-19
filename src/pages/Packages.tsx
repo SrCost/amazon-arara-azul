@@ -3,7 +3,7 @@ import Footer from "@/components/Footer";
 import PackageCard from "@/components/PackageCard";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
@@ -18,25 +18,25 @@ const Packages = () => {
   const packages = [
     {
       id: "japiim",
-      name: "Pacote Japiim",
-      duration: "5 dias e 4 noites",
+      nameKey: "packages.japiimName",
+      durationKey: "packages.5days4nights",
       people: 2,
-      experiences: [
-        "Interação com botos",
-        "Visita à aldeia local",
-        "Caminhada na selva",
-        "Focagem noturna de jacarés",
-        "Nascer do sol",
-        "Pôr do sol",
-        "Macacos do Ariaú",
-        "Passeio na praia de água doce",
-        "Samaúma gigante",
+      experienceKeys: [
+        "packages.exp_dolphins",
+        "packages.exp_village",
+        "packages.exp_jungle",
+        "packages.exp_caiman",
+        "packages.exp_sunrise",
+        "packages.exp_sunset",
+        "packages.exp_monkeys",
+        "packages.exp_beach",
+        "packages.exp_samauma",
       ],
-      inclusions: [
-        "Alimentação: pensão completa",
-        "Transporte terrestre e fluvial (ida e volta)",
-        "Recepção amazônica de boas-vindas",
-        "Welcome drink cortesia no Sunset Jungle Bar",
+      inclusionKeys: [
+        "packages.inc_fullBoard",
+        "packages.inc_transport",
+        "packages.inc_welcome",
+        "packages.inc_drink",
       ],
       pricing: {
         1: "R$ 8.732,50",
@@ -45,64 +45,62 @@ const Packages = () => {
         4: "R$ 29.648,00",
       },
       total: "R$ 17.465,00",
-      highlight:
-        "Conforto, autenticidade e sabor regional. Viva a essência da floresta com acolhimento e comida caseira amazônica.",
+      highlightKey: "packages.highlight_japiim",
     },
     {
       id: "uirapuru",
-      name: "Pacote Uirapuru",
-      duration: "5 dias e 4 noites",
+      nameKey: "packages.uirapuruName",
+      durationKey: "packages.5days4nights",
       people: 2,
-      experiences: [
-        "Interação com botos",
-        "Visita à aldeia local",
-        "Caminhada na selva",
-        "Focagem noturna de jacarés",
-        "Pescaria de piranhas",
-        "Pôr do sol no Jungle Bar",
-        "Nascer do sol",
-        "Doce amazônico artesanal",
-        "Casa de farinha tradicional",
+      experienceKeys: [
+        "packages.exp_dolphins",
+        "packages.exp_village",
+        "packages.exp_jungle",
+        "packages.exp_caiman",
+        "packages.exp_piranha",
+        "packages.exp_sunsetBar",
+        "packages.exp_sunrise",
+        "packages.exp_artisanal",
+        "packages.exp_flourHouse",
       ],
-      inclusions: [
-        "Alimentação: pensão completa",
-        "Transporte terrestre e fluvial (ida e volta)",
-        "Recepção amazônica de boas-vindas",
-        "Welcome drink cortesia no Sunset Jungle Bar",
-        "Jantar amazônico sob o Chapéu de Sol",
+      inclusionKeys: [
+        "packages.inc_fullBoard",
+        "packages.inc_transport",
+        "packages.inc_welcome",
+        "packages.inc_drink",
+        "packages.inc_dinner",
       ],
       pricing: {
         2: "R$ 16.410,00",
       },
       total: "R$ 16.410,00",
-      highlight:
-        "Um convite à serenidade e à cultura amazônica, com experiências únicas e gastronomia local inesquecível.",
+      highlightKey: "packages.highlight_uirapuru",
     },
     {
       id: "ararauna",
-      name: "Pacote Araraúna",
-      duration: "7 dias e 6 noites",
+      nameKey: "packages.araunaName",
+      durationKey: "packages.7days6nights",
       people: 2,
-      experiences: [
-        "Interação com botos",
-        "Visita à aldeia local",
-        "Caminhada na selva",
-        "Focagem noturna de jacarés",
-        "Pescaria de piranhas",
-        "Nascer do sol",
-        "Pôr do sol no Jungle Bar",
-        "Macacos do Ariaú",
-        "Doce amazônico artesanal",
-        "Casa de farinha tradicional",
-        "Passeio na cachoeira (em época de seca)",
-        "Passeio na praia de água doce",
-        "Samaúma gigante",
+      experienceKeys: [
+        "packages.exp_dolphins",
+        "packages.exp_village",
+        "packages.exp_jungle",
+        "packages.exp_caiman",
+        "packages.exp_piranha",
+        "packages.exp_sunrise",
+        "packages.exp_sunsetBar",
+        "packages.exp_monkeys",
+        "packages.exp_artisanal",
+        "packages.exp_flourHouse",
+        "packages.exp_waterfall",
+        "packages.exp_beach",
+        "packages.exp_samauma",
       ],
-      inclusions: [
-        "Alimentação: pensão completa",
-        "Transporte terrestre e fluvial (ida e volta)",
-        "Recepção amazônica de boas-vindas",
-        "Welcome drink cortesia no Sunset Jungle Bar",
+      inclusionKeys: [
+        "packages.inc_fullBoard",
+        "packages.inc_transport",
+        "packages.inc_welcome",
+        "packages.inc_drink",
       ],
       pricing: {
         1: "R$ 12.667,50",
@@ -111,8 +109,7 @@ const Packages = () => {
         4: "R$ 42.750,00",
       },
       total: "R$ 25.335,00",
-      highlight:
-        "O pacote mais completo e imersivo. Ideal para quem deseja mergulhar profundamente na natureza e cultura amazônica com conforto e exclusividade.",
+      highlightKey: "packages.highlight_arauna",
     },
   ];
 
@@ -149,16 +146,16 @@ const Packages = () => {
                   <span className="text-2xl sm:text-3xl">✨</span>
                   <div>
                     <h3 className="font-display font-bold text-amber-800 dark:text-amber-200 text-lg sm:text-xl">
-                      Pacote Gavião Panema
+                      {t("packages.gaviaoName")}
                     </h3>
                     <p className="text-xs sm:text-sm text-amber-600 dark:text-amber-400">
-                      Pacote 100% personalizável • Roteiro sob medida
+                      {t("packages.customPackage")}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center justify-center gap-2 text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/50 px-4 py-2 rounded-full group-hover:bg-amber-200 dark:group-hover:bg-amber-800/50 transition-colors w-full sm:w-auto">
                   <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <span className="font-semibold text-sm sm:text-base">Falar com Consultor</span>
+                  <span className="font-semibold text-sm sm:text-base">{t("packages.talkWithConsultant")}</span>
                 </div>
               </CardContent>
             </Card>
@@ -171,7 +168,17 @@ const Packages = () => {
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
             {packages.map((pkg) => (
-              <PackageCard key={pkg.id} {...pkg} />
+              <PackageCard 
+                key={pkg.id} 
+                id={pkg.id}
+                name={t(pkg.nameKey)}
+                duration={t(pkg.durationKey)}
+                people={pkg.people}
+                experiences={pkg.experienceKeys.map(key => t(key))}
+                inclusions={pkg.inclusionKeys.map(key => t(key))}
+                total={pkg.total}
+                highlight={t(pkg.highlightKey)}
+              />
             ))}
           </div>
 
