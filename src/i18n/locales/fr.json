@@ -10,7 +10,9 @@
     "logout": "Déconnexion",
     "admin": "Panneau Admin",
     "myReservations": "Mes Réservations",
-    "language": "Langue"
+    "language": "Langue",
+    "experiences": "Expériences",
+    "bookNow": "Réserver Maintenant"
   },
   "hero": {
     "title": "Découvrez l'Amazonie Authentique",
@@ -27,6 +29,7 @@
   "common": {
     "perNight": "par nuit",
     "guests": "invités",
+    "people": "personnes",
     "viewDetails": "Voir les Détails",
     "bookNow": "Réserver Maintenant",
     "loading": "Chargement...",
@@ -97,7 +100,9 @@
     "title": "Comment pouvons-nous vous aider?",
     "whatsapp": "WhatsApp",
     "faq": "FAQ",
-    "social": "Réseaux Sociaux"
+    "social": "Réseaux Sociaux",
+    "talkOnWhatsApp": "Discuter sur WhatsApp",
+    "whatsappMessage": "Bonjour, je voudrais vérifier la disponibilité à Pousada Arara Azul."
   },
   "reservation": {
     "title": "Réserver",
@@ -148,13 +153,19 @@
     "adminAccess": "Accès Administratif"
   },
   "home": {
-    "heroTitle": "Découvrez l'Amazonie Authentique",
-    "heroSubtitle": "Hébergement durable dans la forêt tropicale la plus diversifiée du monde",
+    "heroTitle": "Vivez l'Amazonie avec Responsabilité",
+    "heroSubtitle": "Hébergement écologique au cœur de la plus grande forêt tropicale du monde. Une immersion unique alliant confort, nature et durabilité.",
     "exploreLodges": "Explorer les Lodges",
     "ourMission": "Notre Mission",
     "ourLodges": "Nos Lodges",
-    "lodgesDescription": "Chaque lodge offre une expérience authentique, intégrée à la nature et à la culture locale",
+    "lodgesDescription": "Découvrez nos lodges exclusifs au cœur de la forêt amazonienne",
     "viewAllLodges": "Voir Tous les Lodges",
+    "viewAvailableLodges": "Voir les Lodges Disponibles",
+    "checkAvailability": "Vérifier la Disponibilité",
+    "loadingLodges": "Chargement des lodges...",
+    "noLodgesAvailable": "Aucun lodge disponible pour le moment.",
+    "preferDirectContact": "Préférez-vous parler directement avec notre équipe?",
+    "makeReservation": "Faites Votre Réservation",
     "readyForAdventure": "Prêt pour Votre Aventure Amazonienne?",
     "bookNowDescription": "Réservez maintenant et garantissez votre expérience inoubliable dans l'une des régions les plus biodiversifiées du monde",
     "getInTouch": "Contactez-nous",
@@ -163,11 +174,16 @@
     "conservation": "Conservation Active",
     "conservationDesc": "Une partie des revenus est consacrée à la protection de la forêt et de la biodiversité locale",
     "localCommunity": "Communauté Locale",
-    "localCommunityDesc": "Soutien direct aux familles riveraines et valorisation de la culture amazonienne"
+    "localCommunityDesc": "Soutien direct aux familles riveraines et valorisation de la culture amazonienne",
+    "findUsTitle": "Retrouvez-nous Aussi",
+    "findUsSubtitle": "Réservez via Airbnb ou Booking.com"
   },
   "lodges": {
     "title": "Nos Lodges",
     "subtitle": "Choisissez votre expérience parfaite dans la forêt amazonienne",
+    "loading": "Recherche des lodges disponibles...",
+    "noResults": "Aucun lodge disponible pour la période sélectionnée.",
+    "noResultsHint": "Essayez d'autres dates ou réduisez le nombre d'invités.",
     "lodgeTypes": {
       "all": "Tous",
       "riverside": "Au Bord de la Rivière",
@@ -175,6 +191,28 @@
       "floating": "Flottant",
       "canopy": "Dans la Canopée"
     }
+  },
+  "experiences": {
+    "title": "Expériences Amazoniennes",
+    "subtitle": "Connectez-vous avec la nature à travers des expériences authentiques et inoubliables dans la plus grande forêt tropicale du monde.",
+    "galleryTitle": "Galerie de Moments",
+    "gallerySubtitle": "Voir les enregistrements authentiques des expériences",
+    "viewAllPhotos": "Voir toutes les {{count}} photos",
+    "fullGalleryTitle": "Galerie Complète",
+    "fullGallerySubtitle": "Enregistrements authentiques des expériences vécues dans notre lodge",
+    "noPhotos": "Aucune photo disponible pour le moment",
+    "guidedTrails": "Sentiers Guidés",
+    "guidedTrailsDesc": "Explorez la forêt amazonienne avec des guides spécialisés qui partagent les connaissances ancestrales de la région.",
+    "birdWatching": "Observation des Oiseaux",
+    "birdWatchingDesc": "Découvrez l'incroyable biodiversité des oiseaux tropicaux dans leur habitat naturel à l'aube.",
+    "canoeTrips": "Balades en Canoë",
+    "canoeTripsDesc": "Naviguez à travers les ruisseaux et rivières en canoës traditionnels, vivant la paix des eaux amazoniennes.",
+    "communityVisits": "Visites des Communautés",
+    "communityVisitsDesc": "Découvrez la culture locale et les traditions des communautés riveraines de l'Amazonie.",
+    "riverSunset": "Coucher de Soleil sur la Rivière",
+    "riverSunsetDesc": "Admirez des spectacles naturels uniques avec le coucher de soleil se reflétant sur les eaux du Rio Negro.",
+    "naturePhotography": "Photographie de Nature",
+    "naturePhotographyDesc": "Capturez des moments inoubliables de la faune et flore amazoniennes dans des décors paradisiaques."
   },
   "sustainability": {
     "title": "Durabilité et Responsabilité",

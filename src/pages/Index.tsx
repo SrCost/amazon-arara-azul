@@ -115,8 +115,8 @@ const Index = () => {
           {/* Content Overlay */}
           <div className="absolute inset-0 z-10">
             <div className="flex items-center justify-center h-full">
-            <div className="text-center px-6 sm:px-6 max-w-4xl mx-auto pt-20 sm:pt-8 md:pt-0">
-                <h1 className="text-lg xs:text-xl sm:text-3xl md:text-5xl lg:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in drop-shadow-lg leading-snug">
+            <div className="text-center px-6 max-w-4xl mx-auto pt-20 sm:pt-16 md:pt-8 lg:pt-0">
+                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-4xl lg:text-6xl xl:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in drop-shadow-lg leading-snug">
                   {t("home.heroTitle")}
                 </h1>
                 <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/95 mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md px-2">
@@ -131,7 +131,7 @@ const Index = () => {
                   >
                     <Link to="/bangalos">
                       <Calendar className="mr-2 h-5 w-5" />
-                      {t("hero.bookNow", "Reservar Agora")}
+                      {t("nav.bookNow")}
                     </Link>
                   </Button>
                   <Button
@@ -181,27 +181,27 @@ const Index = () => {
       </section>
 
       {/* CTA after Features */}
-      <CTASection variant="secondary" buttonText="Ver Bangalôs Disponíveis" buttonLink="/bangalos" />
+      <CTASection variant="secondary" buttonText={t("home.viewAvailableLodges")} buttonLink="/bangalos" />
 
       {/* Lodges Section */}
       <section className="py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4">
-              Nossos Bangalôs
+              {t("home.ourLodges")}
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-              Conheça nossos bangalôs exclusivos em meio à floresta amazônica
+              {t("home.lodgesDescription")}
             </p>
           </div>
 
           {loading ? (
             <div className="text-center py-8 sm:py-12">
-              <p className="text-base sm:text-lg text-muted-foreground">Carregando bangalôs...</p>
+              <p className="text-base sm:text-lg text-muted-foreground">{t("home.loadingLodges")}</p>
             </div>
           ) : lodges.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
-              <p className="text-base sm:text-lg text-muted-foreground">Nenhum bangalô disponível no momento.</p>
+              <p className="text-base sm:text-lg text-muted-foreground">{t("home.noLodgesAvailable")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
@@ -218,7 +218,7 @@ const Index = () => {
               asChild
             >
               <Link to="/bangalos">
-                Consultar Disponibilidade
+                {t("home.checkAvailability")}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -227,7 +227,7 @@ const Index = () => {
       </section>
 
       {/* WhatsApp CTA */}
-      <CTASection variant="whatsapp" description="Prefere falar diretamente com nossa equipe?" />
+      <CTASection variant="whatsapp" description={t("home.preferDirectContact")} />
 
       {/* Find Us Section */}
       <FindUsSection />
@@ -248,7 +248,7 @@ const Index = () => {
           >
             <Link to="/bangalos">
               <Calendar className="mr-2 h-5 w-5" />
-              Faça Sua Reserva
+              {t("home.makeReservation")}
             </Link>
           </Button>
         </div>

@@ -26,7 +26,7 @@ const Lodges = () => {
     description: 'Conheça nossos bangalôs sustentáveis em meio à floresta amazônica. Hospedagem com conforto, natureza e experiências únicas em Manacapuru, Amazonas.',
   });
 
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const [lodges, setLodges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -120,9 +120,9 @@ const Lodges = () => {
       <section className="pt-24 sm:pt-32 pb-12 sm:pb-16 bg-gradient-to-b from-muted/50 to-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4">Nossos Bangalôs</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4">{t("lodges.title")}</h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-2">
-              Escolha sua experiência perfeita em meio à floresta amazônica
+              {t("lodges.subtitle")}
             </p>
           </div>
 
@@ -137,12 +137,12 @@ const Lodges = () => {
         <div className="container mx-auto px-4">
           {loading ? (
             <div className="text-center py-8 sm:py-12">
-              <p className="text-base sm:text-lg text-muted-foreground">Buscando bangalôs disponíveis...</p>
+              <p className="text-base sm:text-lg text-muted-foreground">{t("lodges.loading")}</p>
             </div>
           ) : lodges.length === 0 ? (
             <div className="text-center py-8 sm:py-12">
-              <p className="text-base sm:text-lg text-muted-foreground mb-4">Nenhum bangalô disponível para o período informado.</p>
-              <p className="text-sm text-muted-foreground">Tente outras datas ou reduza o número de hóspedes.</p>
+              <p className="text-base sm:text-lg text-muted-foreground mb-4">{t("lodges.noResults")}</p>
+              <p className="text-sm text-muted-foreground">{t("lodges.noResultsHint")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
