@@ -104,6 +104,14 @@
     "talkOnWhatsApp": "Discuter sur WhatsApp",
     "whatsappMessage": "Bonjour, je voudrais vérifier la disponibilité à Pousada Arara Azul."
   },
+  "whatsapp": {
+    "generalInquiry": "Bonjour! Je voudrais plus d'informations sur Pousada Arara Azul.",
+    "availabilityInquiry": "Bonjour! Je voudrais vérifier la disponibilité à Pousada Arara Azul.",
+    "packageCustomInquiry": "Bonjour! Je voudrais en savoir plus sur le Forfait Gavião Panema personnalisé.",
+    "packageInterest": "Bonjour! Je suis intéressé par le forfait {{packageName}} et je voudrais plus d'informations.",
+    "faqQuestion": "Bonjour! J'ai une question sur Pousada Arara Azul.",
+    "reservationContact": "Bonjour! Je viens de faire une réservation à Pousada Arara Azul."
+  },
   "reservation": {
     "title": "Réserver",
     "step1": "Choisir la Chambre",

@@ -1,16 +1,18 @@
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
-import { SOCIAL_LINKS } from '@/config/socialLinks';
+import { createWhatsAppLink } from '@/lib/whatsapp';
 
 const FloatingSupportButton = () => {
-  const whatsappMessage = encodeURIComponent('Olá, gostaria de consultar disponibilidade na Pousada Arara Azul.');
+  const { t } = useTranslation();
+  const whatsappUrl = createWhatsAppLink(t('whatsapp.generalInquiry'));
 
   return (
     <a
-      href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
+      href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50"
-      aria-label="Falar no WhatsApp"
+      aria-label={t('support.talkOnWhatsApp')}
     >
       <Button
         className="h-16 w-16 sm:h-16 sm:w-16 md:h-[68px] md:w-[68px] rounded-full bg-[#25D366] hover:bg-[#20BD5A] shadow-[0_4px_20px_rgba(37,211,102,0.4)] hover:shadow-[0_6px_30px_rgba(37,211,102,0.6)] hover:scale-110 transition-all"

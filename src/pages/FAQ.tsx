@@ -5,6 +5,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 
 const FAQ = () => {
   usePageMeta({
@@ -49,6 +50,8 @@ const FAQ = () => {
     },
   ];
 
+  const whatsappUrl = createWhatsAppLink(t('whatsapp.faqQuestion'));
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -92,7 +95,7 @@ const FAQ = () => {
             </h3>
             <p className="text-muted-foreground mb-4 sm:mb-6 text-sm sm:text-base">{t("faq.contactUs")}</p>
             <Button size="lg" className="bg-gradient-forest hover:opacity-90" asChild>
-              <a href="https://wa.me/message/G5O3HIKODARQB1" target="_blank" rel="noopener noreferrer">
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                 {t("faq.whatsappButton")}
               </a>
