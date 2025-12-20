@@ -4,12 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Facebook, Instagram, Mail, Shield, LogIn, MessageCircle, MapPin, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 
 const Footer = () => {
   const { t } = useTranslation();
   const { isAdmin, isSuperAdmin } = useAuth();
   
-  const whatsappMessage = encodeURIComponent("Olá, gostaria de consultar disponibilidade na Pousada Arara Azul.");
+  const whatsappUrl = createWhatsAppLink(t('whatsapp.availabilityInquiry'));
 
   return (
     <footer className="bg-primary text-primary-foreground">
@@ -17,10 +18,10 @@ const Footer = () => {
       <div className="bg-gradient-to-r from-secondary to-accent py-8 sm:py-10">
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white mb-3">
-            Pronto para viver a Amazônia?
+            {t('home.readyForAdventure')}
           </h3>
           <p className="text-white/90 mb-5 max-w-lg mx-auto text-sm sm:text-base">
-            Reserve agora e garanta sua experiência única na floresta amazônica
+            {t('home.bookNowDescription')}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button
@@ -29,12 +30,12 @@ const Footer = () => {
               asChild
             >
               <Link to="/bangalos">
-                Reservar Agora
+                {t('common.bookNow')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
             <a
-              href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
+              href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -82,7 +83,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/pacotes" className="opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 inline-flex items-center py-1">
-                  Pacotes
+                  {t("nav.packages")}
                 </Link>
               </li>
               <li>
@@ -147,7 +148,7 @@ const Footer = () => {
             <h4 className="font-semibold mb-3">{t("footer.contact")}</h4>
             <div className="space-y-2 text-sm">
               <a 
-                href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
+                href={whatsappUrl}
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center space-x-2 opacity-90 hover:opacity-100 transition-opacity min-h-[40px] sm:min-h-0 py-1"
@@ -200,7 +201,7 @@ const Footer = () => {
                   className="text-primary-foreground/70 hover:text-primary-foreground/100 text-xs h-9"
                 >
                   <Shield className="h-3 w-3 mr-1" />
-                  Painel Admin
+                  {t("nav.admin")}
                 </Button>
               </Link>
             ) : (
@@ -211,7 +212,7 @@ const Footer = () => {
                   className="text-primary-foreground/50 hover:text-primary-foreground/80 text-xs h-9"
                 >
                   <LogIn className="h-3 w-3 mr-1" />
-                  Acesso Administrativo
+                  {t("admin.adminAccess")}
                 </Button>
               </Link>
             )}

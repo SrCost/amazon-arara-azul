@@ -4,8 +4,8 @@ import PackageCard from "@/components/PackageCard";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageCircle } from "lucide-react";
-import { SOCIAL_LINKS } from "@/config/socialLinks";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 
 const Packages = () => {
   usePageMeta({
@@ -113,9 +113,7 @@ const Packages = () => {
     },
   ];
 
-  const whatsappMessage = encodeURIComponent(
-    "Olá! Gostaria de saber mais sobre o Pacote Gavião Panema personalizado."
-  );
+  const whatsappUrl = createWhatsAppLink(t('whatsapp.packageCustomInquiry'));
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,7 +133,7 @@ const Packages = () => {
       <section className="py-6 sm:py-8">
         <div className="container mx-auto px-4">
           <a
-            href={`${SOCIAL_LINKS.whatsapp}?text=${whatsappMessage}`}
+            href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="block max-w-3xl mx-auto"

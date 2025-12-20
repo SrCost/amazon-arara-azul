@@ -1,6 +1,7 @@
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageCircle } from "lucide-react";
-import { SOCIAL_LINKS } from "@/config/socialLinks";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 
 interface Package {
   id: string;
@@ -23,17 +24,17 @@ export const PackageSelection = ({
   packages,
   selectedPackage,
   onSelectPackage,
-  wantsConsultorContact = false,
-  onWantsConsultorContactChange,
 }: PackageSelectionProps) => {
+  const { t } = useTranslation();
+
   const getShortDescription = (pkg: Package) => {
     const isUirapuru = pkg.name?.toLowerCase().includes('uirapuru');
     const isGaviao = pkg.name?.toLowerCase().includes('gavião') || pkg.name?.toLowerCase().includes('panema');
     
-    if (isGaviao) return '✨ Pacote exclusivo e personalizável com consultor especializado.';
-    if (isUirapuru) return '💑 Exclusivo para casais. Jantar romântico + vivências amazônicas.';
-    if (pkg.name?.toLowerCase().includes('japiim')) return '🦜 Experiência completa de 5 dias com passeios e vivências.';
-    if (pkg.name?.toLowerCase().includes('araraúna')) return '🦜 Pacote mais completo: 7 dias de imersão total na Amazônia.';
+    if (isGaviao) return t('packages.customPackage');
+    if (isUirapuru) return '💑 ' + t('packages.highlight_uirapuru').substring(0, 60) + '...';
+    if (pkg.name?.toLowerCase().includes('japiim')) return '🦜 ' + t('packages.highlight_japiim').substring(0, 60) + '...';
+    if (pkg.name?.toLowerCase().includes('araraúna')) return '🦜 ' + t('packages.highlight_arauna').substring(0, 60) + '...';
     return pkg.description;
   };
 
@@ -41,17 +42,16 @@ export const PackageSelection = ({
     return pkg.price === 0 || pkg.name?.toLowerCase().includes('gavião') || pkg.name?.toLowerCase().includes('panema');
   };
 
-  const selectedPkg = packages.find(p => p.id === selectedPackage);
-  const isCustomizableSelected = selectedPkg && isCustomizablePackage(selectedPkg);
+  const whatsappUrl = createWhatsAppLink(t('whatsapp.packageCustomInquiry'));
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-display font-bold mb-4">
-          Escolher Pacote (Opcional)
+          {t('reservation.step1')} ({t('common.cancel').toLowerCase()})
         </h2>
         <p className="text-muted-foreground mb-6">
-          Selecione um de nossos pacotes exclusivos ou prossiga sem pacote
+          {t('packages.subtitle')}
         </p>
       </div>
 
@@ -59,7 +59,7 @@ export const PackageSelection = ({
       {packages.filter(pkg => isCustomizablePackage(pkg)).map((pkg) => (
         <a
           key={pkg.id}
-          href={`${SOCIAL_LINKS.whatsapp}&text=${encodeURIComponent('Olá! Gostaria de saber mais sobre o Pacote Gavião Panema personalizado.')}`}
+          href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="block"
@@ -73,13 +73,13 @@ export const PackageSelection = ({
                     {pkg.name}
                   </h4>
                   <p className="text-xs text-amber-600 dark:text-amber-400">
-                    Pacote 100% personalizável com consultor
+                    {t('packages.customPackage')}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
                 <MessageCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">Conversar</span>
+                <span className="text-sm font-medium">{t('packages.consult')}</span>
               </div>
             </CardContent>
           </Card>
@@ -96,9 +96,9 @@ export const PackageSelection = ({
           onClick={() => onSelectPackage(null)}
         >
           <CardContent className="p-4">
-            <h3 className="font-semibold mb-2">Sem Pacote</h3>
+            <h3 className="font-semibold mb-2">{t('common.cancel')}</h3>
             <p className="text-sm text-muted-foreground">
-              Reservar apenas a hospedagem
+              {t('reservation.step1')}
             </p>
           </CardContent>
         </Card>
@@ -121,12 +121,12 @@ export const PackageSelection = ({
                   <h3 className="font-semibold">{pkg.name}</h3>
                   {isUirapuru && (
                     <span className="text-xs bg-pink-100 text-pink-800 px-2 py-0.5 rounded-full font-semibold">
-                      Casal
+                      {t('common.people')}
                     </span>
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-2">
-                  {pkg.duration} • {pkg.people} {pkg.people === 1 ? 'pessoa' : 'pessoas'}
+                  {pkg.duration} • {pkg.people} {t('common.people')}
                 </p>
                 <p className="text-xs text-muted-foreground mb-3">
                   {getShortDescription(pkg)}
@@ -135,7 +135,7 @@ export const PackageSelection = ({
                   R$ {Number(pkg.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
                 <p className="text-xs text-green-600 font-medium mt-1">
-                  ✓ Estadia já inclusa no valor
+                  ✓ {t('packages.inc_fullBoard')}
                 </p>
               </CardContent>
             </Card>

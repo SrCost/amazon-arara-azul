@@ -237,7 +237,7 @@ const getReservationConfirmedEmailPremium = (data: {
                 Em caso de dúvidas, entre em contato:
               </p>
               <p style="color: ${COLORS.textoSecundario}; font-size: 14px; margin: 10px 0;">
-                📱 <a href="https://wa.me/559284829983" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">WhatsApp: (92) 98482-9983</a><br/>
+                📱 <a href="https://wa.me/5592984125475" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">WhatsApp: (92) 98412-5475</a><br/>
                 📧 <a href="mailto:reservas@pousadararazul.com" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">reservas@pousadararazul.com</a>
               </p>
 
