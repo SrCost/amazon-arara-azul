@@ -8,87 +8,96 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Arara Azul color palette - inspired by the logo */
-    --background: 200 25% 97%;
-    --foreground: 210 100% 15%;
+    /* Amazonian Green color palette */
+    --background: 120 15% 97%;
+    --foreground: 150 40% 12%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 100% 15%;
+    --card-foreground: 150 40% 12%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 100% 15%;
+    --popover-foreground: 150 40% 12%;
 
-    /* Deep navy blue - primary brand color from logo */
-    --primary: 210 100% 20%;
+    /* Verde Bandeira - primary brand color */
+    --primary: 145 63% 28%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 210 80% 35%;
+    --primary-light: 145 55% 40%;
 
-    /* Bright cyan/turquoise - accent color from logo */
-    --secondary: 190 100% 45%;
-    --secondary-foreground: 210 100% 15%;
+    /* Verde Esmeralda - secondary */
+    --secondary: 152 69% 38%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Neutral tones */
-    --muted: 200 20% 92%;
-    --muted-foreground: 210 15% 45%;
+    /* Neutral tones with green undertone */
+    --muted: 140 15% 92%;
+    --muted-foreground: 150 15% 45%;
 
-    --accent: 190 90% 50%;
-    --accent-foreground: 210 100% 15%;
+    /* Verde vibrante accent */
+    --accent: 142 76% 45%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Bright yellow from logo */
+    /* Golden and earth tones */
     --golden: 48 100% 50%;
-    --earth: 210 50% 25%;
+    --earth: 150 35% 22%;
 
     --destructive: 0 70% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 200 20% 85%;
-    --input: 200 20% 90%;
-    --ring: 210 100% 20%;
+    --border: 140 18% 85%;
+    --input: 140 18% 90%;
+    --ring: 145 63% 28%;
 
     --radius: 0.75rem;
 
-    /* Gradients using Arara Azul colors */
-    --gradient-forest: linear-gradient(135deg, hsl(210 100% 20%) 0%, hsl(190 100% 45%) 100%);
-    --gradient-water: linear-gradient(135deg, hsl(190 100% 45%) 0%, hsl(190 90% 60%) 100%);
-    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(210 100% 15% / 0.6) 100%);
+    /* Gradients using Amazonian green colors */
+    --gradient-forest: linear-gradient(135deg, hsl(145 63% 28%) 0%, hsl(152 69% 38%) 100%);
+    --gradient-water: linear-gradient(135deg, hsl(152 69% 38%) 0%, hsl(142 76% 45%) 100%);
+    --gradient-hero: linear-gradient(180deg, transparent 0%, hsl(145 63% 20% / 0.7) 100%);
     
-    /* Shadows with navy blue tint */
-    --shadow-soft: 0 4px 20px -2px hsl(210 100% 20% / 0.1);
-    --shadow-medium: 0 8px 30px -4px hsl(210 100% 20% / 0.15);
-    --shadow-strong: 0 12px 40px -6px hsl(210 100% 20% / 0.25);
+    /* Shadows with green tint */
+    --shadow-soft: 0 4px 20px -2px hsl(145 63% 28% / 0.1);
+    --shadow-medium: 0 8px 30px -4px hsl(145 63% 28% / 0.15);
+    --shadow-strong: 0 12px 40px -6px hsl(145 63% 28% / 0.25);
+    
+    /* Glow effects */
+    --glow-primary: 0 0 20px hsl(145 63% 40% / 0.5);
+    --glow-accent: 0 0 25px hsl(142 76% 45% / 0.6);
 
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 210 35% 8%;
-    --foreground: 200 25% 95%;
+    --background: 150 25% 8%;
+    --foreground: 140 20% 95%;
 
-    --card: 210 30% 12%;
-    --card-foreground: 200 25% 95%;
+    --card: 150 22% 12%;
+    --card-foreground: 140 20% 95%;
 
-    --popover: 210 30% 12%;
-    --popover-foreground: 200 25% 95%;
+    --popover: 150 22% 12%;
+    --popover-foreground: 140 20% 95%;
 
-    --primary: 190 100% 45%;
-    --primary-foreground: 210 100% 10%;
+    --primary: 142 76% 45%;
+    --primary-foreground: 150 40% 8%;
 
-    --secondary: 190 80% 40%;
+    --secondary: 152 65% 40%;
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 20% 18%;
-    --muted-foreground: 200 15% 65%;
+    --muted: 150 18% 18%;
+    --muted-foreground: 140 15% 65%;
 
-    --accent: 190 90% 35%;
-    --accent-foreground: 200 25% 95%;
+    --accent: 145 70% 38%;
+    --accent-foreground: 140 20% 95%;
 
     --destructive: 0 65% 45%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 20% 22%;
-    --input: 210 20% 22%;
-    --ring: 190 100% 45%;
+    --border: 150 18% 22%;
+    --input: 150 18% 22%;
+    --ring: 142 76% 45%;
+    
+    /* Dark mode glow effects */
+    --glow-primary: 0 0 25px hsl(142 76% 45% / 0.4);
+    --glow-accent: 0 0 30px hsl(145 70% 50% / 0.5);
   }
 }
 
