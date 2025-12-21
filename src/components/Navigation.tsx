@@ -58,9 +58,9 @@ const Navigation = () => {
               <Link
                 key={item.href}
                 to={item.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
+                className={`nav-link text-sm font-medium transition-colors hover:text-accent ${
                   location.pathname === item.href
-                    ? "text-primary"
+                    ? "text-accent active font-semibold"
                     : "text-muted-foreground"
                 }`}
               >
