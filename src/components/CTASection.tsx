@@ -81,7 +81,7 @@ const CTASection = ({
         )}
         <Button
           size="lg"
-          className="bg-white text-primary hover:bg-white/90 min-h-[52px] px-8 sm:px-10 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all animate-pulse"
+          className="bg-white text-primary hover:bg-white/95 min-h-[52px] px-8 sm:px-10 text-base sm:text-lg font-semibold shadow-lg hover:shadow-[0_0_30px_rgba(255,255,255,0.6)] hover:scale-[1.03] transition-all"
           asChild
         >
           <Link to={buttonLink}>

@@ -44,17 +44,12 @@ const Navigation = () => {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-soft">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center space-x-3">
+          <Link to="/" className="flex items-center">
             <img
               src={logoAraraAzul}
               alt="Pousada Arara Azul"
-              width={64}
-              height={64}
-              className="h-12 md:h-16 w-auto"
+              className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto transition-transform hover:scale-105"
             />
-            <h1 className="hidden md:block text-xl lg:text-2xl font-display font-bold text-primary">
-              Pousada Arara Azul
-            </h1>
           </Link>
 
           {/* Desktop Navigation */}
@@ -128,7 +123,8 @@ const Navigation = () => {
 
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white min-h-[44px] px-6 font-semibold"
+              variant="glow"
+              className="min-h-[44px] px-6 font-semibold"
               asChild
             >
               <Link to="/bangalos">{t("nav.bookNow")}</Link>
@@ -237,8 +233,9 @@ const Navigation = () => {
             <div className="px-3 pt-2 pb-1">
               <Button
                 size="lg"
+                variant="glow"
                 asChild
-                className="w-full bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white min-h-[52px] font-semibold"
+                className="w-full min-h-[52px] font-semibold"
               >
                 <Link to="/bangalos" onClick={() => setIsOpen(false)}>
                   {t("nav.bookNow")}
