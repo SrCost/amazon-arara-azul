@@ -116,17 +116,17 @@ const Index = () => {
           <div className="absolute inset-0 z-10">
             <div className="flex items-center justify-center h-full">
             <div className="text-center px-6 max-w-4xl mx-auto pt-20 sm:pt-16 md:pt-8 lg:pt-0">
-                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-4xl lg:text-6xl xl:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in drop-shadow-lg leading-snug">
+                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-4xl lg:text-6xl xl:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in-up drop-shadow-lg leading-snug">
                   {t("home.heroTitle")}
                 </h1>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/95 mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md px-2">
+                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/95 mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md px-2 opacity-0 animate-fade-in-up [animation-delay:100ms]">
                   {t("home.heroSubtitle")}
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 px-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 px-4 opacity-0 animate-fade-in-up [animation-delay:200ms]">
                   <Button 
                     size="lg" 
-                    className="bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white text-base sm:text-lg h-14 sm:h-16 px-8 sm:px-10 font-semibold shadow-lg hover:shadow-xl transition-all animate-pulse" 
+                    className="bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white text-base sm:text-lg h-14 sm:h-16 px-8 sm:px-10 font-semibold shadow-lg hover:shadow-xl transition-all animate-glow-pulse" 
                     asChild
                   >
                     <Link to="/bangalos">
@@ -165,7 +165,8 @@ const Index = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="bg-card p-5 sm:p-6 lg:p-8 rounded-lg shadow-soft hover:shadow-medium transition-shadow text-center"
+                className="bg-card p-5 sm:p-6 lg:p-8 rounded-lg shadow-soft hover:shadow-medium transition-shadow text-center opacity-0 animate-fade-in-up"
+                style={{ animationDelay: `${index * 100 + 100}ms` }}
               >
                 <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full bg-gradient-forest mb-3 sm:mb-4">
                   <feature.icon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white" />
@@ -187,10 +188,10 @@ const Index = () => {
       <section className="py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4 opacity-0 animate-fade-in-up">
               {t("home.ourLodges")}
             </h2>
-            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto opacity-0 animate-fade-in-up [animation-delay:100ms]">
               {t("home.lodgesDescription")}
             </p>
           </div>

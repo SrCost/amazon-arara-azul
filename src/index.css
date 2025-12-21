@@ -115,6 +115,27 @@ All colors MUST be HSL.
   }
 }
 
+/* Nav link with animated underline */
+@layer components {
+  .nav-link {
+    @apply relative;
+  }
+  
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-[-2px] left-0 w-full h-0.5 bg-gradient-to-r from-primary to-accent;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease;
+  }
+  
+  .nav-link:hover::after,
+  .nav-link.active::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
 @layer utilities {
   .font-display {
     font-family: 'Playfair Display', serif;
