@@ -43,14 +43,40 @@ const Navigation = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-b border-border shadow-soft">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-20">
-          <Link to="/" className="flex items-center">
+        <div className="flex items-center justify-between h-20 relative">
+          {/* Mobile: Menu hamburger à esquerda */}
+          <div className="lg:hidden flex items-center">
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 text-foreground"
+            >
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+
+          {/* Logo - Centralizado no mobile, esquerda no desktop */}
+          <Link 
+            to="/" 
+            className="flex items-center absolute left-1/2 -translate-x-1/2 lg:relative lg:left-0 lg:translate-x-0"
+          >
             <img
               src={logoAraraAzul}
               alt="Pousada Arara Azul"
-              className="h-12 sm:h-14 md:h-16 lg:h-20 w-auto transition-transform hover:scale-105"
+              className="h-14 sm:h-16 md:h-16 lg:h-20 w-auto transition-transform hover:scale-105"
             />
           </Link>
+
+          {/* Mobile: Instagram à direita */}
+          <div className="flex items-center lg:hidden">
+            <a
+              href={SOCIAL_LINKS.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 text-primary hover:text-primary/80 transition-colors"
+            >
+              <Instagram className="h-5 w-5" />
+            </a>
+          </div>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6">
@@ -129,24 +155,6 @@ const Navigation = () => {
             >
               <Link to="/bangalos">{t("nav.bookNow")}</Link>
             </Button>
-          </div>
-
-          {/* Mobile Instagram + Menu button */}
-          <div className="flex items-center gap-1 lg:hidden">
-            <a
-              href={SOCIAL_LINKS.instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 text-primary hover:text-primary/80 transition-colors"
-            >
-              <Instagram className="h-5 w-5" />
-            </a>
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="p-2 text-foreground"
-            >
-              {isOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
           </div>
         </div>
 
