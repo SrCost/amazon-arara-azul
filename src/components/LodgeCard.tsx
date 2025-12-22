@@ -34,7 +34,7 @@ const LodgeCard = ({
   };
 
   return (
-    <Card className="overflow-hidden group hover:shadow-strong transition-all duration-300">
+    <Card className="overflow-hidden group hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] hover:border-primary/30 transition-all duration-300">
       <div className="relative aspect-[16/9] overflow-hidden bg-muted">
         {image ? (
           <img

@@ -160,7 +160,7 @@ const Navigation = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="lg:hidden py-3 border-t border-border max-h-[80vh] overflow-y-auto">
+          <div className="lg:hidden py-3 border-t border-border max-h-[80vh] overflow-y-auto animate-slide-in-down">
             {/* Navegação Principal */}
             <div className="px-2 pb-3 space-y-1">
               {menuItems.map((item) => (
