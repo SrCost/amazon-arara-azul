@@ -136,6 +136,7 @@ const Reservations = () => {
             name
           )
         `, { count: 'exact' })
+        .or("is_test.is.null,is_test.eq.false")
         .order("created_at", { ascending: false })
         .range(from, to);
 

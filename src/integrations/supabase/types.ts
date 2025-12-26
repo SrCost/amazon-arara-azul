@@ -465,6 +465,8 @@ export type Database = {
       }
       reservations: {
         Row: {
+          accepted_at: string | null
+          accepted_terms: boolean | null
           address: string | null
           birth_date: string | null
           check_in: string
@@ -480,6 +482,7 @@ export type Database = {
           guests: number
           id: string
           is_foreign: boolean | null
+          is_test: boolean | null
           mp_order_id: string | null
           mp_transaction_id: string | null
           nationality: string | null
@@ -507,6 +510,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          accepted_at?: string | null
+          accepted_terms?: boolean | null
           address?: string | null
           birth_date?: string | null
           check_in: string
@@ -522,6 +527,7 @@ export type Database = {
           guests: number
           id?: string
           is_foreign?: boolean | null
+          is_test?: boolean | null
           mp_order_id?: string | null
           mp_transaction_id?: string | null
           nationality?: string | null
@@ -549,6 +555,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          accepted_at?: string | null
+          accepted_terms?: boolean | null
           address?: string | null
           birth_date?: string | null
           check_in?: string
@@ -564,6 +572,7 @@ export type Database = {
           guests?: number
           id?: string
           is_foreign?: boolean | null
+          is_test?: boolean | null
           mp_order_id?: string | null
           mp_transaction_id?: string | null
           nationality?: string | null

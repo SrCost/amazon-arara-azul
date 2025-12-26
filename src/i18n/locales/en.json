@@ -55,7 +55,8 @@
     "upTo": "Up to",
     "notChargedYet": "You won't be charged yet",
     "cancellationPolicy": "Cancellation Policy",
-    "cancellationText": "Free cancellation up to 7 days before check-in. 50% refund up to 3 days before."
+    "cancellationText": "Cancellations made up to 30 days in advance qualify for partial refund according to current policy. Cancellations less than 7 days before check-in or no-shows are not eligible for refunds. Administrative and banking fees may apply.",
+    "cancellationLink": "See Terms and Cancellation Policy for full details."
   },
   "footer": {
     "about": "About Us",

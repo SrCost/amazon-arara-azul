@@ -41,6 +41,8 @@ interface GuestInfoFormProps {
   setDietaryRestrictions: (value: string) => void;
   specialRequests: string;
   setSpecialRequests: (value: string) => void;
+  acceptedTerms: boolean;
+  setAcceptedTerms: (value: boolean) => void;
 }
 
 export const GuestInfoForm = ({
@@ -72,6 +74,8 @@ export const GuestInfoForm = ({
   setDietaryRestrictions,
   specialRequests,
   setSpecialRequests,
+  acceptedTerms,
+  setAcceptedTerms,
 }: GuestInfoFormProps) => {
   const { t } = useTranslation();
   const [emailTouched, setEmailTouched] = useState(false);
@@ -353,6 +357,47 @@ export const GuestInfoForm = ({
             rows={4}
             className="mt-1"
           />
+        </div>
+
+        {/* Terms Acceptance Checkbox */}
+        <div className="flex items-start space-x-3 p-4 border rounded-lg bg-muted/30 mt-6">
+          <Checkbox 
+            id="acceptTerms" 
+            checked={acceptedTerms}
+            onCheckedChange={(checked) => setAcceptedTerms(checked as boolean)}
+            className="mt-1"
+          />
+          <Label htmlFor="acceptTerms" className="text-sm leading-relaxed cursor-pointer">
+            Li e concordo com os{" "}
+            <a 
+              href="/docs/termos-de-uso.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary underline hover:text-primary/80"
+            >
+              Termos de Uso
+            </a>
+            ,{" "}
+            <a 
+              href="/docs/politica-cancelamento.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary underline hover:text-primary/80"
+            >
+              Política de Cancelamento
+            </a>
+            {" "}e{" "}
+            <a 
+              href="/docs/politica-privacidade.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary underline hover:text-primary/80"
+            >
+              Política de Privacidade
+            </a>
+            {" "}da Pousada Arara Azul.
+            <span className="text-destructive ml-1">*</span>
+          </Label>
         </div>
       </div>
     </div>

@@ -55,7 +55,8 @@
     "upTo": "Até",
     "notChargedYet": "Você não será cobrado ainda",
     "cancellationPolicy": "Política de Cancelamento",
-    "cancellationText": "Cancelamento gratuito até 7 dias antes do check-in. Reembolso de 50% até 3 dias antes."
+    "cancellationText": "Cancelamentos com até 30 dias de antecedência garantem reembolso parcial conforme política vigente. Cancelamentos com menos de 7 dias do check-in ou não comparecimento não geram reembolso. Taxas administrativas e bancárias podem ser aplicadas.",
+    "cancellationLink": "Consulte os Termos e Política de Cancelamento para detalhes completos."
   },
   "footer": {
     "about": "Sobre Nós",

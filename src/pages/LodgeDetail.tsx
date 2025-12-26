@@ -351,7 +351,15 @@ const LodgeDetail = () => {
 
                   <div className="border-t border-border mt-6 pt-6">
                     <h3 className="font-semibold mb-3">{t("lodge.cancellationPolicy")}</h3>
-                    <p className="text-sm text-muted-foreground">{t("lodge.cancellationText")}</p>
+                    <p className="text-sm text-muted-foreground mb-2">{t("lodge.cancellationText")}</p>
+                    <a 
+                      href="/docs/politica-cancelamento.pdf" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm text-primary hover:underline"
+                    >
+                      {t("lodge.cancellationLink")}
+                    </a>
                   </div>
                 </CardContent>
               </Card>

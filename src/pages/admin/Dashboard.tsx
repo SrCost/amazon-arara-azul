@@ -51,16 +51,18 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Get total reservations (all status)
+      // Get total reservations (exclude test reservations)
       const { count: reservationsCount } = await supabase
         .from("reservations")
-        .select("*", { count: "exact", head: true });
+        .select("*", { count: "exact", head: true })
+        .or("is_test.is.null,is_test.eq.false");
 
-      // Get confirmed reservations for occupancy
+      // Get confirmed reservations for occupancy (exclude test)
       const { count: confirmedReservationsCount } = await supabase
         .from("reservations")
         .select("*", { count: "exact", head: true })
-        .eq("status", "confirmed");
+        .eq("status", "confirmed")
+        .or("is_test.is.null,is_test.eq.false");
 
       // Get total rooms for occupancy calculation
       const { count: roomsCount } = await supabase
@@ -68,7 +70,7 @@ const Dashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("is_active", true);
 
-      // Get pending payments
+      // Get pending payments (exclude test reservations via join)
       const { count: pendingPaymentsCount } = await supabase
         .from("payments")
         .select("*", { count: "exact", head: true })
@@ -80,10 +82,11 @@ const Dashboard = () => {
         .select("*", { count: "exact", head: true })
         .eq("status", "new");
 
-      // Get recent reservations for activity (últimas 5 ações)
+      // Get recent reservations for activity (exclude test, últimas 5 ações)
       const { data: recentReservations } = await supabase
         .from("reservations")
         .select("*")
+        .or("is_test.is.null,is_test.eq.false")
         .order("created_at", { ascending: false })
         .limit(5);
 

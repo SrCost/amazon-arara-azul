@@ -55,7 +55,8 @@
     "upTo": "Jusqu'à",
     "notChargedYet": "Vous ne serez pas encore facturé",
     "cancellationPolicy": "Politique d'Annulation",
-    "cancellationText": "Annulation gratuite jusqu'à 7 jours avant l'arrivée. Remboursement de 50% jusqu'à 3 jours avant."
+    "cancellationText": "Les annulations effectuées jusqu'à 30 jours à l'avance donnent droit à un remboursement partiel selon la politique en vigueur. Les annulations moins de 7 jours avant l'arrivée ou les non-présentations ne donnent pas droit à remboursement. Des frais administratifs et bancaires peuvent s'appliquer.",
+    "cancellationLink": "Consultez les Conditions et la Politique d'Annulation pour tous les détails."
   },
   "footer": {
     "about": "À Propos",

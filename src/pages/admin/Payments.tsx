@@ -29,6 +29,7 @@ import { Search, Eye, Download, CreditCard, ChevronLeft, ChevronRight } from "lu
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { jsPDF } from "jspdf";
 
 interface Payment {
   id: string;
@@ -98,19 +99,27 @@ const Payments = () => {
         .from("payments")
         .select(`
           *,
-          reservations (
+          reservations!inner (
             guest_name,
             guest_email,
             room_name,
             check_in,
-            check_out
+            check_out,
+            is_test
           )
         `, { count: 'exact' })
+        .or("reservations.is_test.is.null,reservations.is_test.eq.false")
         .order("created_at", { ascending: false })
         .range(from, to);
 
       if (error) throw error;
-      setPayments(data || []);
+      
+      // Filter out test reservations client-side as fallback
+      const filteredPayments = (data || []).filter(
+        (p: any) => !p.reservations?.is_test
+      );
+      
+      setPayments(filteredPayments);
       setTotalCount(count || 0);
     } catch (error) {
       console.error("Error fetching payments:", error);
@@ -166,19 +175,110 @@ const Payments = () => {
   };
 
   const handleDownloadReceipt = (payment: Payment) => {
-    // FUTURE IMPLEMENTATION: Generate PDF receipt
-    // This will require a PDF generation library like jsPDF or pdfmake
-    // Example implementation:
-    // import jsPDF from 'jspdf';
-    // const doc = new jsPDF();
-    // doc.text(`Comprovante de Pagamento - Pousada Arara Azul`, 20, 20);
-    // doc.text(`Reserva: ${payment.reservations?.guest_name}`, 20, 30);
-    // doc.text(`Valor: R$ ${payment.amount}`, 20, 40);
-    // doc.text(`Data: ${new Date(payment.created_at).toLocaleString()}`, 20, 50);
-    // doc.save(`comprovante-${payment.id}.pdf`);
-    
-    toast.info("Funcionalidade de download em desenvolvimento");
-    console.log("Receipt download requested for payment:", payment.id);
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("POUSADA ARARA AZUL", pageWidth / 2, 25, { align: "center" });
+      
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("MANACAPURU – AMAZONAS – BRASIL", pageWidth / 2, 32, { align: "center" });
+      
+      // Title
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("COMPROVANTE DE PAGAMENTO", pageWidth / 2, 50, { align: "center" });
+      
+      // Separator
+      doc.setLineWidth(0.5);
+      doc.line(20, 55, pageWidth - 20, 55);
+      
+      // Payment details
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+      let yPos = 70;
+      
+      const addLine = (label: string, value: string) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(label + ":", 25, yPos);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, 80, yPos);
+        yPos += 8;
+      };
+      
+      // Transaction details section
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("DADOS DO PAGAMENTO", 25, yPos);
+      yPos += 10;
+      doc.setFontSize(11);
+      
+      addLine("ID Transação", payment.transaction_id || payment.mercado_pago_payment_id || payment.id.slice(0, 8));
+      
+      const statusMap: { [key: string]: string } = {
+        completed: "APROVADO ✓",
+        approved: "APROVADO ✓",
+        paid: "PAGO ✓",
+        pending: "PENDENTE",
+        failed: "FALHOU",
+        refunded: "REEMBOLSADO"
+      };
+      addLine("Status", statusMap[payment.status] || payment.status.toUpperCase());
+      
+      const methodMap: { [key: string]: string } = {
+        pix: "PIX",
+        credit_card: "Cartão de Crédito",
+        debit_card: "Cartão de Débito"
+      };
+      addLine("Método", methodMap[payment.payment_method] || payment.payment_method);
+      
+      addLine("Valor Pago", `R$ ${Number(payment.amount || payment.total_amount || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+      addLine("Data/Hora", new Date(payment.created_at).toLocaleString('pt-BR'));
+      
+      // Separator
+      yPos += 5;
+      doc.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 15;
+      
+      // Reservation details section
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("DADOS DA RESERVA", 25, yPos);
+      yPos += 10;
+      doc.setFontSize(11);
+      
+      addLine("Hóspede", payment.reservations?.guest_name || "N/A");
+      addLine("Bangalô", payment.reservations?.room_name || "N/A");
+      
+      if (payment.reservations?.check_in && payment.reservations?.check_out) {
+        addLine("Check-in", new Date(payment.reservations.check_in).toLocaleDateString('pt-BR'));
+        addLine("Check-out", new Date(payment.reservations.check_out).toLocaleDateString('pt-BR'));
+      }
+      
+      addLine("Código", payment.reservation_id.slice(0, 8).toUpperCase());
+      
+      // Footer
+      yPos += 15;
+      doc.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 10;
+      
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      doc.text("Documento gerado automaticamente pela plataforma Pousada Arara Azul.", pageWidth / 2, yPos, { align: "center" });
+      yPos += 5;
+      doc.text("Válido como comprovante de pagamento.", pageWidth / 2, yPos, { align: "center" });
+      
+      // Save PDF
+      doc.save(`comprovante-${payment.id.slice(0, 8)}.pdf`);
+      toast.success("Comprovante baixado com sucesso!");
+    } catch (error) {
+      console.error("Error generating receipt:", error);
+      toast.error("Erro ao gerar comprovante");
+    }
   };
 
   const getStatusBadge = (status: string) => {
