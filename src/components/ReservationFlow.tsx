@@ -79,6 +79,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [nextDestination, setNextDestination] = useState("");
   const [dietaryRestrictions, setDietaryRestrictions] = useState("");
   const [emergencyContact, setEmergencyContact] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   
   // Payment state
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -329,7 +330,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         foreign_passport: isForeign ? passport : null,
         foreign_nationality: isForeign ? nationality : null,
         total_amount: totalPrice,
-        package_id: selectedPackage || null
+        package_id: selectedPackage || null,
+        accepted_terms: acceptedTerms,
+        accepted_at: acceptedTerms ? new Date().toISOString() : null
       };
 
       // Call dedicated PIX Edge Function
@@ -411,6 +414,31 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         toast.error("Selecione as datas de check-in e check-out");
         return;
       }
+      
+      // Validate check-in is not in the past
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const checkInDate = new Date(checkIn);
+      checkInDate.setHours(0, 0, 0, 0);
+      
+      if (checkInDate < today) {
+        toast.error("Check-in não pode ser em data passada");
+        return;
+      }
+      
+      // Validate check-out is after check-in
+      if (checkOut <= checkIn) {
+        toast.error("Check-out deve ser posterior ao check-in");
+        return;
+      }
+      
+      // Minimum 1 night
+      const nights = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
+      if (nights < 1) {
+        toast.error("Mínimo de 1 noite para reserva");
+        return;
+      }
+      
       if (!checkAvailability(checkIn, checkOut)) {
         toast.error("As datas selecionadas não estão disponíveis");
         return;
@@ -436,6 +464,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           toast.error("Preencha CPF e Data de Nascimento");
           return;
         }
+      }
+      if (!acceptedTerms) {
+        toast.error("Você precisa aceitar os Termos de Uso e Políticas para continuar");
+        return;
       }
       if (selectedPackage) {
         const pkg = packages.find(p => p.id === selectedPackage);
@@ -610,7 +642,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           card_token: cardToken.id,
           card_brand: cardBrand,
           installments: parseInt(installments),
-          package_id: selectedPackage || null
+          package_id: selectedPackage || null,
+          accepted_terms: acceptedTerms,
+          accepted_at: acceptedTerms ? new Date().toISOString() : null
         };
 
         const { data: orderResult, error: orderError } = await supabase.functions.invoke(
@@ -799,6 +833,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               setDietaryRestrictions={setDietaryRestrictions}
               specialRequests={specialRequests}
               setSpecialRequests={setSpecialRequests}
+              acceptedTerms={acceptedTerms}
+              setAcceptedTerms={setAcceptedTerms}
             />
           )}
 
