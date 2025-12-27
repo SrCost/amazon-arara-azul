@@ -55,7 +55,7 @@
     "upTo": "Até",
     "notChargedYet": "Você não será cobrado ainda",
     "cancellationPolicy": "Política de Cancelamento",
-    "cancellationText": "Cancelamentos com até 30 dias de antecedência garantem reembolso parcial conforme política vigente. Cancelamentos com menos de 7 dias do check-in ou não comparecimento não geram reembolso. Taxas administrativas e bancárias podem ser aplicadas.",
+    "cancellationText": "Cancelamento com até 30 dias: reembolso parcial conforme política. Menos de 7 dias do check-in ou no-show: sem reembolso.",
     "cancellationLink": "Consulte os Termos e Política de Cancelamento para detalhes completos."
   },
   "footer": {
