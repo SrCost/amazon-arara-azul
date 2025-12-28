@@ -94,10 +94,16 @@ serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Extrair IP do cliente para logs
+  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || req.headers.get('cf-connecting-ip')
+    || 'unknown';
+
   try {
     const body = await req.json();
     console.log('=== CREATE-CARD-PAYMENT INICIADO ===');
     console.log('Timestamp:', new Date().toISOString());
+    console.log('Client IP:', clientIp);
 
     // === VALIDAÇÃO DE ENTRADA ===
     const {
@@ -147,6 +153,40 @@ serve(async (req) => {
 
     if (!card_token || typeof card_token !== 'string' || card_token.length < 10) {
       throw new Error('Token do cartão inválido');
+    }
+
+    // === RATE LIMITING POR EMAIL ===
+    const { data: rateLimitOk } = await supabase
+      .rpc('check_rate_limit', { 
+        p_key: `card_${email}`, 
+        p_max_requests: 5,  // Max 5 tentativas por email
+        p_window_seconds: 300  // Em 5 minutos
+      });
+
+    if (!rateLimitOk) {
+      console.warn('=== RATE LIMIT EXCEDIDO para email:', email);
+      
+      await supabase.from('activity_log').insert({
+        user_email: 'system',
+        action: 'payment_rate_limited',
+        description: `Rate limit excedido para pagamento com cartão: ${email}`,
+        entity_type: 'security',
+        metadata: {
+          email: email,
+          payment_method: 'credit_card',
+          client_ip: clientIp,
+          severity: 'medium'
+        }
+      });
+      
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'rate_limit_exceeded',
+        message: 'Muitas tentativas de pagamento. Aguarde alguns minutos.'
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 429
+      });
     }
 
     // Sanitizar strings
