@@ -6,6 +6,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// IPs conhecidos do Mercado Pago (prefixos)
+const MERCADO_PAGO_IP_PREFIXES = [
+  '18.230.',
+  '18.231.',
+  '54.94.',
+  '52.67.',
+  '34.206.',
+  '3.232.',
+  '52.4.',
+  '54.166.',
+  '54.236.',
+  '52.7.',
+];
+
 // Função para criar hash HMAC-SHA256
 async function createHmacSha256(key: string, data: string): Promise<string> {
   const encoder = new TextEncoder();
@@ -57,7 +71,6 @@ async function validateMercadoPagoSignature(
     }
 
     // Construir manifest conforme documentação MP
-    // Template: id:[data.id];request-id:[x-request-id];ts:[ts];
     const manifest = `id:${dataId};request-id:${xRequestId || ''};ts:${ts};`;
     
     // Gerar HMAC-SHA256
@@ -74,6 +87,20 @@ async function validateMercadoPagoSignature(
   }
 }
 
+// Validar IP de origem
+function validateSourceIp(ip: string | null): boolean {
+  if (!ip) return false;
+  return MERCADO_PAGO_IP_PREFIXES.some(prefix => ip.startsWith(prefix));
+}
+
+// Extrair IP do cliente
+function getClientIp(req: Request): string | null {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || req.headers.get('cf-connecting-ip')
+    || req.headers.get('x-real-ip')
+    || null;
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -87,6 +114,10 @@ serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Extrair informações de segurança
+  const clientIp = getClientIp(req);
+  const userAgent = req.headers.get('user-agent') || 'unknown';
+
   try {
     // Extrair headers de segurança do Mercado Pago
     const xSignature = req.headers.get('x-signature');
@@ -97,6 +128,7 @@ serve(async (req) => {
     console.log('Timestamp:', new Date().toISOString());
     console.log('X-Request-Id:', xRequestId);
     console.log('X-Signature presente:', !!xSignature);
+    console.log('Client IP:', clientIp);
     console.log('Body:', JSON.stringify(body, null, 2));
 
     // Verificar se é um evento de pagamento
@@ -108,35 +140,106 @@ serve(async (req) => {
     const paymentId = body.data.id;
     const action = body.action || body.type;
 
-    // === VALIDAÇÃO DE ASSINATURA (se webhook secret configurado) ===
-    if (mercadoPagoWebhookSecret) {
-      const isValidSignature = await validateMercadoPagoSignature(
-        xSignature,
-        xRequestId,
-        paymentId.toString(),
-        mercadoPagoWebhookSecret
-      );
+    // === VALIDAÇÃO DE ASSINATURA (OBRIGATÓRIA EM PRODUÇÃO) ===
+    if (!mercadoPagoWebhookSecret) {
+      console.error('=== CRITICAL: MERCADO_PAGO_WEBHOOK_SECRET NÃO CONFIGURADO ===');
+      
+      // Registrar tentativa sem secret configurado
+      await supabase.from('activity_log').insert({
+        user_email: 'system',
+        action: 'webhook_no_secret_configured',
+        description: 'Webhook recebido mas MERCADO_PAGO_WEBHOOK_SECRET não está configurado - BLOQUEADO',
+        entity_type: 'security',
+        metadata: {
+          payment_id: paymentId,
+          x_request_id: xRequestId,
+          client_ip: clientIp,
+          user_agent: userAgent,
+          severity: 'critical'
+        }
+      });
+      
+      // Retornar 200 para não revelar que bloqueamos, mas NÃO processar
+      return new Response('OK', { status: 200, headers: corsHeaders });
+    }
 
-      if (!isValidSignature) {
-        console.error('=== ASSINATURA INVÁLIDA - POSSÍVEL FRAUDE ===');
-        // Registrar tentativa suspeita
-        await supabase.from('activity_log').insert({
-          user_email: 'system',
-          action: 'webhook_invalid_signature',
-          description: `Tentativa de webhook com assinatura inválida - Payment ID: ${paymentId}`,
-          entity_type: 'security',
-          metadata: {
-            payment_id: paymentId,
-            x_request_id: xRequestId,
-            action: action,
-            ip: req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip')
-          }
-        });
-        // Retornar 200 para não revelar que detectamos a fraude
-        return new Response('OK', { status: 200, headers: corsHeaders });
-      }
-    } else {
-      console.log('AVISO: MERCADO_PAGO_WEBHOOK_SECRET não configurado - validação de assinatura desabilitada');
+    // Validar assinatura
+    const isValidSignature = await validateMercadoPagoSignature(
+      xSignature,
+      xRequestId,
+      paymentId.toString(),
+      mercadoPagoWebhookSecret
+    );
+
+    // Validar IP de origem (camada adicional)
+    const isValidIp = validateSourceIp(clientIp);
+    
+    if (!isValidSignature) {
+      console.error('=== ASSINATURA INVÁLIDA - POSSÍVEL FRAUDE ===');
+      
+      // Registrar tentativa suspeita com detalhes completos
+      await supabase.from('activity_log').insert({
+        user_email: 'system',
+        action: 'webhook_invalid_signature',
+        description: `Tentativa de webhook com assinatura inválida - Payment ID: ${paymentId}`,
+        entity_type: 'security',
+        metadata: {
+          payment_id: paymentId,
+          x_request_id: xRequestId,
+          x_signature_present: !!xSignature,
+          client_ip: clientIp,
+          ip_valid: isValidIp,
+          user_agent: userAgent,
+          action: action,
+          severity: 'high',
+          body_preview: JSON.stringify(body).slice(0, 500)
+        }
+      });
+      
+      // Retornar 200 para não revelar que detectamos a fraude
+      return new Response('OK', { status: 200, headers: corsHeaders });
+    }
+
+    // Log de IP suspeito (apenas aviso, não bloqueia)
+    if (!isValidIp) {
+      console.warn('AVISO: Webhook recebido de IP não listado como MP:', clientIp);
+      await supabase.from('activity_log').insert({
+        user_email: 'system',
+        action: 'webhook_unknown_ip',
+        description: `Webhook válido mas de IP desconhecido: ${clientIp}`,
+        entity_type: 'security',
+        metadata: {
+          payment_id: paymentId,
+          client_ip: clientIp,
+          severity: 'low'
+        }
+      });
+    }
+
+    // === RATE LIMITING POR PAYMENT_ID ===
+    const { data: rateLimitOk } = await supabase
+      .rpc('check_rate_limit', { 
+        p_key: `webhook_${paymentId}`, 
+        p_max_requests: 5,  // Max 5 webhooks por payment_id
+        p_window_seconds: 300  // Em 5 minutos
+      });
+
+    if (!rateLimitOk) {
+      console.warn('=== RATE LIMIT EXCEDIDO para payment_id:', paymentId);
+      
+      await supabase.from('activity_log').insert({
+        user_email: 'system',
+        action: 'webhook_rate_limited',
+        description: `Rate limit excedido para payment_id: ${paymentId}`,
+        entity_type: 'security',
+        metadata: {
+          payment_id: paymentId,
+          client_ip: clientIp,
+          severity: 'medium'
+        }
+      });
+      
+      return new Response('OK', { status: 200, headers: corsHeaders });
     }
 
     // === VERIFICAÇÃO DE IDEMPOTÊNCIA ===
@@ -146,7 +249,7 @@ serve(async (req) => {
         .select('id')
         .eq('action', 'webhook_processed')
         .contains('response_payload', { x_request_id: xRequestId })
-        .single();
+        .maybeSingle();
 
       if (existingLog) {
         console.log('Webhook já processado (idempotência) - x-request-id:', xRequestId);
@@ -167,6 +270,7 @@ serve(async (req) => {
 
     if (!mpResponse.ok) {
       console.error('Erro ao consultar pagamento ou payment ID inválido:', mpResponse.status);
+      
       // Registrar tentativa com payment ID inválido
       await supabase.from('activity_log').insert({
         user_email: 'system',
@@ -175,9 +279,12 @@ serve(async (req) => {
         entity_type: 'security',
         metadata: {
           payment_id: paymentId,
-          mp_response_status: mpResponse.status
+          mp_response_status: mpResponse.status,
+          client_ip: clientIp,
+          severity: 'high'
         }
       });
+      
       return new Response('OK', { status: 200, headers: corsHeaders });
     }
 
@@ -294,11 +401,14 @@ serve(async (req) => {
       response_payload: {
         x_request_id: xRequestId,
         payment_id: paymentId,
-        mp_status: mpStatus
+        mp_status: mpStatus,
+        client_ip: clientIp,
+        signature_valid: true,
+        processed_at: new Date().toISOString()
       }
     });
 
-    // Registrar log de auditoria
+    // Registrar log de auditoria detalhado
     await supabase.from('activity_log').insert({
       user_email: 'system',
       action: 'webhook_payment_update',
@@ -308,8 +418,14 @@ serve(async (req) => {
       metadata: {
         payment_id: paymentId,
         mp_status: mpStatus,
+        mp_status_detail: mpStatusDetail,
         payment_status: paymentStatus,
-        reservation_status: reservationStatus
+        reservation_status: reservationStatus,
+        payment_method: normalizedPaymentMethod,
+        transaction_amount: mpData.transaction_amount,
+        client_ip: clientIp,
+        x_request_id: xRequestId,
+        signature_validated: true
       }
     });
 
@@ -348,11 +464,27 @@ serve(async (req) => {
             action: 'email_confirmation_sent',
             description: `Email de confirmação enviado para ${reservationData.guest_email}`,
             entity_type: 'reservation',
-            entity_id: reservationId
+            entity_id: reservationId,
+            metadata: {
+              email: reservationData.guest_email,
+              triggered_by: 'webhook',
+              payment_id: paymentId
+            }
           });
         } catch (emailError) {
           console.error('Erro ao enviar email:', emailError);
-          // Não bloquear o webhook por erro de email
+          // Registrar falha de email
+          await supabase.from('activity_log').insert({
+            user_email: 'system',
+            action: 'email_confirmation_failed',
+            description: `Falha ao enviar email de confirmação para ${reservationData.guest_email}`,
+            entity_type: 'reservation',
+            entity_id: reservationId,
+            metadata: {
+              error: String(emailError),
+              payment_id: paymentId
+            }
+          });
         }
       }
     }
@@ -365,6 +497,20 @@ serve(async (req) => {
   } catch (error) {
     console.error('=== ERRO NO MP-WEBHOOK ===');
     console.error('Error:', error);
+
+    // Registrar erro no log de auditoria
+    await supabase.from('activity_log').insert({
+      user_email: 'system',
+      action: 'webhook_processing_error',
+      description: `Erro ao processar webhook: ${String(error)}`,
+      entity_type: 'security',
+      metadata: {
+        error: String(error),
+        client_ip: clientIp,
+        user_agent: userAgent,
+        severity: 'high'
+      }
+    });
 
     // Sempre retornar 200 mesmo em caso de erro
     return new Response('OK', { status: 200, headers: corsHeaders });
