@@ -48,7 +48,7 @@ export const PackageSelection = ({
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-display font-bold mb-4">
-          {t('reservation.step1')} ({t('common.cancel').toLowerCase()})
+          {t('reservation.selectPackage')}
         </h2>
         <p className="text-muted-foreground mb-6">
           {t('packages.subtitle')}
@@ -96,9 +96,9 @@ export const PackageSelection = ({
           onClick={() => onSelectPackage(null)}
         >
           <CardContent className="p-4">
-            <h3 className="font-semibold mb-2">{t('common.cancel')}</h3>
+            <h3 className="font-semibold mb-2">{t('reservation.skipPackage')}</h3>
             <p className="text-sm text-muted-foreground">
-              {t('reservation.step1')}
+              {t('reservation.skipPackageDescription')}
             </p>
           </CardContent>
         </Card>

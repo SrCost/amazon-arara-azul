@@ -116,6 +116,9 @@
   "reservation": {
     "loginRequired": "Você precisa estar logado para fazer uma reserva",
     "title": "Reservar",
+    "selectPackage": "Escolha um Pacote",
+    "skipPackage": "Continuar sem pacote",
+    "skipPackageDescription": "Prosseguir para escolher o bangalô e as datas",
     "step1": "Escolha o Quarto",
     "step2": "Selecione as Datas",
     "step3": "Dados do Hóspede",

@@ -115,6 +115,9 @@
   },
   "reservation": {
     "title": "Reservar",
+    "selectPackage": "Elige un Paquete",
+    "skipPackage": "Continuar sin paquete",
+    "skipPackageDescription": "Continuar para elegir el bungaló y las fechas",
     "step1": "Elegir Habitación",
     "step2": "Seleccionar Fechas",
     "step3": "Datos del Huésped",
