@@ -99,7 +99,7 @@ const Payments = () => {
         .from("payments")
         .select(`
           *,
-          reservations!inner (
+          reservations (
             guest_name,
             guest_email,
             room_name,
@@ -108,19 +108,18 @@ const Payments = () => {
             is_test
           )
         `, { count: 'exact' })
-        .or("reservations.is_test.is.null,reservations.is_test.eq.false")
         .order("created_at", { ascending: false })
         .range(from, to);
 
       if (error) throw error;
       
-      // Filter out test reservations client-side as fallback
+      // Filter out test reservations client-side
       const filteredPayments = (data || []).filter(
         (p: any) => !p.reservations?.is_test
       );
       
       setPayments(filteredPayments);
-      setTotalCount(count || 0);
+      setTotalCount(filteredPayments.length);
     } catch (error) {
       console.error("Error fetching payments:", error);
       toast.error("Erro ao carregar pagamentos");

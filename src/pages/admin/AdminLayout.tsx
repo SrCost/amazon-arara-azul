@@ -73,7 +73,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
   ];
 
-  // Admin e Super Admin têm acesso a Pacotes e Bangalôs
+  // Admin e Super Admin têm acesso a Pacotes, Bangalôs e Pagamentos
   const adminItems = isAdmin || isSuperAdmin
     ? [
         {
@@ -86,17 +86,17 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           label: "Bangalôs",
           path: "/admin/bangalos",
         },
-      ]
-    : [];
-
-  // Apenas Super Admin tem acesso a Pagamentos, Users e Audit
-  const superAdminItems = isSuperAdmin
-    ? [
         {
           icon: DollarSign,
           label: "Pagamentos",
           path: "/admin/payments",
         },
+      ]
+    : [];
+
+  // Apenas Super Admin tem acesso a Users e Audit
+  const superAdminItems = isSuperAdmin
+    ? [
         {
           icon: UsersIcon,
           label: t("admin.users"),

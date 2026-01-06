@@ -115,6 +115,9 @@
   },
   "reservation": {
     "title": "Book",
+    "selectPackage": "Choose a Package",
+    "skipPackage": "Continue without package",
+    "skipPackageDescription": "Proceed to choose the bungalow and dates",
     "step1": "Choose Room",
     "step2": "Select Dates",
     "step3": "Guest Information",

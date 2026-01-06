@@ -115,6 +115,9 @@
   },
   "reservation": {
     "title": "Réserver",
+    "selectPackage": "Choisir un Forfait",
+    "skipPackage": "Continuer sans forfait",
+    "skipPackageDescription": "Continuer pour choisir le bungalow et les dates",
     "step1": "Choisir la Chambre",
     "step2": "Sélectionner les Dates",
     "step3": "Informations sur l'Invité",
