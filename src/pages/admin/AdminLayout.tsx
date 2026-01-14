@@ -11,6 +11,7 @@ import {
 import {
   LayoutDashboard,
   CalendarCheck,
+  CalendarRange,
   MessageSquare,
   LogOut,
   Home,
@@ -55,6 +56,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: LayoutDashboard,
       label: t("admin.dashboard"),
       path: "/admin",
+    },
+    {
+      icon: CalendarRange,
+      label: "Calendário",
+      path: "/admin/calendario-reservas",
     },
     {
       icon: CalendarCheck,

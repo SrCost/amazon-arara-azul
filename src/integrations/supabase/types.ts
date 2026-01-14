@@ -50,6 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_dates: {
+        Row: {
+          block_type: string | null
+          created_at: string | null
+          created_by: string | null
+          end_date: string
+          id: string
+          reason: string | null
+          room_id: string
+          start_date: string
+          updated_at: string | null
+        }
+        Insert: {
+          block_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          end_date: string
+          id?: string
+          reason?: string | null
+          room_id: string
+          start_date: string
+          updated_at?: string | null
+        }
+        Update: {
+          block_type?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          end_date?: string
+          id?: string
+          reason?: string | null
+          room_id?: string
+          start_date?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocked_dates_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string | null
@@ -493,11 +537,13 @@ export type Database = {
           accepted_terms: boolean | null
           address: string | null
           birth_date: string | null
+          channel_reference_id: string | null
           check_in: string
           check_out: string
           country: string | null
           cpf: string | null
           created_at: string | null
+          daily_rate: number | null
           dietary_restrictions: string | null
           emergency_contact: string | null
           guest_email: string
@@ -511,6 +557,8 @@ export type Database = {
           mp_transaction_id: string | null
           nationality: string | null
           next_destination: string | null
+          operational_notes: string | null
+          operational_status: string | null
           package_id: string | null
           passport: string | null
           payer_cpf: string | null
@@ -523,6 +571,7 @@ export type Database = {
           payment_reference: string | null
           payment_status: string | null
           payment_ticket_url: string | null
+          reservation_source: string | null
           room_id: string
           room_name: string | null
           special_requests: string | null
@@ -538,11 +587,13 @@ export type Database = {
           accepted_terms?: boolean | null
           address?: string | null
           birth_date?: string | null
+          channel_reference_id?: string | null
           check_in: string
           check_out: string
           country?: string | null
           cpf?: string | null
           created_at?: string | null
+          daily_rate?: number | null
           dietary_restrictions?: string | null
           emergency_contact?: string | null
           guest_email: string
@@ -556,6 +607,8 @@ export type Database = {
           mp_transaction_id?: string | null
           nationality?: string | null
           next_destination?: string | null
+          operational_notes?: string | null
+          operational_status?: string | null
           package_id?: string | null
           passport?: string | null
           payer_cpf?: string | null
@@ -568,6 +621,7 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: string | null
           payment_ticket_url?: string | null
+          reservation_source?: string | null
           room_id: string
           room_name?: string | null
           special_requests?: string | null
@@ -583,11 +637,13 @@ export type Database = {
           accepted_terms?: boolean | null
           address?: string | null
           birth_date?: string | null
+          channel_reference_id?: string | null
           check_in?: string
           check_out?: string
           country?: string | null
           cpf?: string | null
           created_at?: string | null
+          daily_rate?: number | null
           dietary_restrictions?: string | null
           emergency_contact?: string | null
           guest_email?: string
@@ -601,6 +657,8 @@ export type Database = {
           mp_transaction_id?: string | null
           nationality?: string | null
           next_destination?: string | null
+          operational_notes?: string | null
+          operational_status?: string | null
           package_id?: string | null
           passport?: string | null
           payer_cpf?: string | null
@@ -613,6 +671,7 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: string | null
           payment_ticket_url?: string | null
+          reservation_source?: string | null
           room_id?: string
           room_name?: string | null
           special_requests?: string | null
@@ -960,6 +1019,16 @@ export type Database = {
           status: string
         }[]
       }
+      get_room_availability_with_blocks: {
+        Args: { p_room_id: string }
+        Returns: {
+          block_type: string
+          check_in: string
+          check_out: string
+          is_blocked: boolean
+          status: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -975,6 +1044,13 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "admin" | "user"
+      reservation_source_type:
+        | "site"
+        | "whatsapp"
+        | "booking"
+        | "airbnb"
+        | "agency"
+        | "manual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1103,6 +1179,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "user"],
+      reservation_source_type: [
+        "site",
+        "whatsapp",
+        "booking",
+        "airbnb",
+        "agency",
+        "manual",
+      ],
     },
   },
 } as const

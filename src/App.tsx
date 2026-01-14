@@ -29,6 +29,7 @@ import Audit from "./pages/admin/Audit";
 import AdminPackages from "./pages/admin/Packages";
 import Gallery from "./pages/admin/Gallery";
 import AdminBangalos from "./pages/admin/Bangalos";
+import CalendarReservations from "./pages/admin/CalendarReservations";
 
 const queryClient = new QueryClient();
 
@@ -140,9 +141,19 @@ const App = () => (
                 <ProtectedRoute requiredRole="super_admin">
                   <AdminLayout>
                     <Audit />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/calendario-reservas"
+          element={
+            <ProtectedRoute requiredRole="user">
+              <AdminLayout>
+                <CalendarReservations />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
