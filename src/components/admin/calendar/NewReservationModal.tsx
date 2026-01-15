@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format, addDays, differenceInDays } from "date-fns";
+import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,9 +33,17 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/hooks/useCalendarReservations";
+
+interface PackageOption {
+  id: string;
+  name: string;
+  price: number;
+  duration: string;
+  people: number;
+}
 
 const formSchema = z.object({
   guest_name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -45,6 +53,7 @@ const formSchema = z.object({
   check_in: z.date(),
   check_out: z.date(),
   room_id: z.string().uuid(),
+  package_id: z.string().optional(),
   cpf: z.string().optional(),
   passport: z.string().optional(),
   daily_rate: z.number().min(0),
@@ -77,6 +86,8 @@ const NewReservationModal = ({
   onSuccess,
 }: NewReservationModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [packages, setPackages] = useState<PackageOption[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<PackageOption | null>(null);
 
   const defaultRoom = rooms.find((r) => r.id === initialRoomId) || rooms[0];
   const defaultCheckIn = initialDate || new Date();
@@ -92,6 +103,7 @@ const NewReservationModal = ({
       check_in: defaultCheckIn,
       check_out: defaultCheckOut,
       room_id: defaultRoom?.id || "",
+      package_id: "",
       cpf: "",
       passport: "",
       daily_rate: defaultRoom?.price_per_night || 1500,
@@ -104,23 +116,70 @@ const NewReservationModal = ({
   });
 
   const watchedValues = form.watch();
+  
+  // Calculate pricing based on package or manual
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
-  const dailyRate = getDailyRate(watchedValues.guests, watchedValues.daily_rate);
-  const totalPrice = dailyRate * nights;
+  const dailyRate = selectedPackage 
+    ? selectedPackage.price / nights 
+    : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
+  const totalPrice = selectedPackage 
+    ? selectedPackage.price 
+    : dailyRate * nights;
 
-  // Update daily rate when room changes
+  // Fetch packages
   useEffect(() => {
-    const room = rooms.find((r) => r.id === watchedValues.room_id);
-    if (room) {
-      form.setValue("daily_rate", room.price_per_night);
+    const fetchPackages = async () => {
+      const { data, error } = await supabase
+        .from("packages")
+        .select("id, name, price, duration, people")
+        .eq("is_active", true)
+        .order("price");
+
+      if (!error && data) {
+        setPackages(data);
+      }
+    };
+    fetchPackages();
+  }, []);
+
+  // Handle package selection
+  const handlePackageChange = (packageId: string) => {
+    form.setValue("package_id", packageId);
+    
+    if (packageId && packageId !== "none") {
+      const pkg = packages.find((p) => p.id === packageId);
+      if (pkg) {
+        setSelectedPackage(pkg);
+        form.setValue("guests", Math.min(pkg.people, 4));
+        
+        // Parse duration to get nights (e.g., "4 noites / 5 dias" -> 4)
+        const durationMatch = pkg.duration.match(/(\d+)\s*noite/i);
+        const pkgNights = durationMatch ? parseInt(durationMatch[1]) : 4;
+        
+        const checkIn = watchedValues.check_in;
+        form.setValue("check_out", addDays(checkIn, pkgNights));
+      }
+    } else {
+      setSelectedPackage(null);
     }
-  }, [watchedValues.room_id, rooms]);
+  };
+
+  // Update daily rate when room changes (only if no package selected)
+  useEffect(() => {
+    if (!selectedPackage) {
+      const room = rooms.find((r) => r.id === watchedValues.room_id);
+      if (room) {
+        form.setValue("daily_rate", room.price_per_night);
+      }
+    }
+  }, [watchedValues.room_id, rooms, selectedPackage]);
 
   // Reset form when modal opens with new data
   useEffect(() => {
     if (open) {
       const room = rooms.find((r) => r.id === initialRoomId) || rooms[0];
       const checkIn = initialDate || new Date();
+      setSelectedPackage(null);
       form.reset({
         guest_name: "",
         guest_email: "",
@@ -129,6 +188,7 @@ const NewReservationModal = ({
         check_in: checkIn,
         check_out: addDays(checkIn, 2),
         room_id: room?.id || "",
+        package_id: "",
         cpf: "",
         passport: "",
         daily_rate: room?.price_per_night || 1500,
@@ -161,9 +221,10 @@ const NewReservationModal = ({
         check_out: format(data.check_out, "yyyy-MM-dd"),
         room_id: data.room_id,
         room_name: room?.name_pt || null,
+        package_id: data.package_id && data.package_id !== "none" ? data.package_id : null,
         cpf: data.cpf || null,
         passport: data.passport || null,
-        daily_rate: data.daily_rate,
+        daily_rate: selectedPackage ? selectedPackage.price / nights : data.daily_rate,
         total_price: totalPrice,
         reservation_source: data.reservation_source,
         operational_status: data.operational_status,
@@ -248,6 +309,7 @@ const NewReservationModal = ({
                     <Select
                       value={String(field.value)}
                       onValueChange={(v) => field.onChange(Number(v))}
+                      disabled={!!selectedPackage}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -293,6 +355,46 @@ const NewReservationModal = ({
                     <FormControl>
                       <Input placeholder="Número do passaporte" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Package Selection */}
+            <div className="p-4 bg-accent/20 rounded-lg border border-accent">
+              <FormField
+                control={form.control}
+                name="package_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      Pacote (opcional)
+                    </FormLabel>
+                    <Select 
+                      value={field.value || "none"} 
+                      onValueChange={handlePackageChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sem pacote - tarifa manual" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Sem pacote - tarifa manual</SelectItem>
+                        {packages.map((pkg) => (
+                          <SelectItem key={pkg.id} value={pkg.id}>
+                            {pkg.name} - R$ {pkg.price.toLocaleString("pt-BR")} ({pkg.duration})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedPackage && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Pacote para {selectedPackage.people} pessoa(s). Datas ajustadas automaticamente.
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -355,8 +457,17 @@ const NewReservationModal = ({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            // If package selected, adjust checkout
+                            if (selectedPackage && date) {
+                              const durationMatch = selectedPackage.duration.match(/(\d+)\s*noite/i);
+                              const pkgNights = durationMatch ? parseInt(durationMatch[1]) : 4;
+                              form.setValue("check_out", addDays(date, pkgNights));
+                            }
+                          }}
                           locale={ptBR}
+                          className="pointer-events-auto"
                           initialFocus
                         />
                       </PopoverContent>
@@ -381,6 +492,7 @@ const NewReservationModal = ({
                               "pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
+                            disabled={!!selectedPackage}
                           >
                             {field.value ? (
                               format(field.value, "dd/MM/yyyy", { locale: ptBR })
@@ -398,6 +510,7 @@ const NewReservationModal = ({
                           onSelect={field.onChange}
                           locale={ptBR}
                           disabled={(date) => date <= watchedValues.check_in}
+                          className="pointer-events-auto"
                           initialFocus
                         />
                       </PopoverContent>
@@ -422,8 +535,12 @@ const NewReservationModal = ({
                         step="0.01"
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
+                        disabled={!!selectedPackage}
                       />
                     </FormControl>
+                    {selectedPackage && (
+                      <p className="text-xs text-muted-foreground">Definido pelo pacote</p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -435,7 +552,7 @@ const NewReservationModal = ({
                   R$ {dailyRate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Para {watchedValues.guests} pessoa(s)
+                  {selectedPackage ? `Pacote: ${selectedPackage.name}` : `Para ${watchedValues.guests} pessoa(s)`}
                 </p>
               </div>
 
@@ -492,8 +609,8 @@ const NewReservationModal = ({
                         <SelectItem value="confirmed">Confirmado</SelectItem>
                         <SelectItem value="hosted">Hospedado</SelectItem>
                         <SelectItem value="finished">Finalizado</SelectItem>
-                        <SelectItem value="no-show">No-show</SelectItem>
                         <SelectItem value="cancelled">Cancelado</SelectItem>
+                        <SelectItem value="no-show">No-show</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -506,7 +623,7 @@ const NewReservationModal = ({
                 name="payment_status"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status Financeiro *</FormLabel>
+                    <FormLabel>Status Pagamento *</FormLabel>
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
@@ -516,6 +633,7 @@ const NewReservationModal = ({
                       <SelectContent>
                         <SelectItem value="pending">Pendente</SelectItem>
                         <SelectItem value="paid">Pago</SelectItem>
+                        <SelectItem value="partial">Parcial</SelectItem>
                         <SelectItem value="failed">Falhou</SelectItem>
                         <SelectItem value="refunded">Reembolsado</SelectItem>
                       </SelectContent>
@@ -533,10 +651,11 @@ const NewReservationModal = ({
                 name="operational_notes"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Observações Internas</FormLabel>
+                    <FormLabel>Notas Operacionais</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Notas visíveis apenas para a equipe..."
+                        placeholder="Notas internas para a equipe..."
+                        className="resize-none"
                         {...field}
                       />
                     </FormControl>
@@ -550,10 +669,11 @@ const NewReservationModal = ({
                 name="special_requests"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Solicitações Especiais</FormLabel>
+                    <FormLabel>Pedidos Especiais</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Pedidos do hóspede..."
+                        placeholder="Solicitações do hóspede..."
+                        className="resize-none"
                         {...field}
                       />
                     </FormControl>

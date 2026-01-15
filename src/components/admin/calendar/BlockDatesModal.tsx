@@ -48,7 +48,7 @@ import { cn } from "@/lib/utils";
 import type { BlockedDate, Room } from "@/hooks/useCalendarReservations";
 
 const formSchema = z.object({
-  room_id: z.string().uuid(),
+  room_id: z.string().min(1, "Selecione um bangalô"),
   start_date: z.date(),
   end_date: z.date(),
   block_type: z.string(),
@@ -121,13 +121,17 @@ const BlockDatesModal = ({
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
+      const formattedStartDate = format(data.start_date, "yyyy-MM-dd");
+      const formattedEndDate = format(data.end_date, "yyyy-MM-dd");
+
       if (isEditing && existingBlock) {
+        // Cannot change to "all" when editing
         const { error } = await supabase
           .from("blocked_dates")
           .update({
             room_id: data.room_id,
-            start_date: format(data.start_date, "yyyy-MM-dd"),
-            end_date: format(data.end_date, "yyyy-MM-dd"),
+            start_date: formattedStartDate,
+            end_date: formattedEndDate,
             block_type: data.block_type,
             reason: data.reason || null,
           })
@@ -136,17 +140,33 @@ const BlockDatesModal = ({
         if (error) throw error;
         toast.success("Bloqueio atualizado com sucesso!");
       } else {
-        const { error } = await supabase.from("blocked_dates").insert({
-          room_id: data.room_id,
-          start_date: format(data.start_date, "yyyy-MM-dd"),
-          end_date: format(data.end_date, "yyyy-MM-dd"),
-          block_type: data.block_type,
-          reason: data.reason || null,
-          created_by: user?.id || null,
-        });
+        // Check if blocking all rooms
+        if (data.room_id === "all") {
+          const inserts = rooms.map((room) => ({
+            room_id: room.id,
+            start_date: formattedStartDate,
+            end_date: formattedEndDate,
+            block_type: data.block_type,
+            reason: data.reason || null,
+            created_by: user?.id || null,
+          }));
 
-        if (error) throw error;
-        toast.success("Bloqueio criado com sucesso!");
+          const { error } = await supabase.from("blocked_dates").insert(inserts);
+          if (error) throw error;
+          toast.success(`Bloqueio criado para ${rooms.length} bangalôs!`);
+        } else {
+          const { error } = await supabase.from("blocked_dates").insert({
+            room_id: data.room_id,
+            start_date: formattedStartDate,
+            end_date: formattedEndDate,
+            block_type: data.block_type,
+            reason: data.reason || null,
+            created_by: user?.id || null,
+          });
+
+          if (error) throw error;
+          toast.success("Bloqueio criado com sucesso!");
+        }
       }
 
       onSuccess();
@@ -199,13 +219,22 @@ const BlockDatesModal = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Bangalô *</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select 
+                    value={field.value} 
+                    onValueChange={field.onChange}
+                    disabled={isEditing}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione..." />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      {!isEditing && (
+                        <SelectItem value="all" className="font-medium text-amber-600">
+                          🔒 Todos os Bangalôs
+                        </SelectItem>
+                      )}
                       {rooms.map((room) => (
                         <SelectItem key={room.id} value={room.id}>
                           {room.name_pt}
@@ -213,6 +242,11 @@ const BlockDatesModal = ({
                       ))}
                     </SelectContent>
                   </Select>
+                  {!isEditing && field.value === "all" && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      O bloqueio será aplicado a todos os {rooms.length} bangalôs
+                    </p>
+                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -250,6 +284,7 @@ const BlockDatesModal = ({
                           selected={field.value}
                           onSelect={field.onChange}
                           locale={ptBR}
+                          className="pointer-events-auto"
                           initialFocus
                         />
                       </PopoverContent>
@@ -291,6 +326,7 @@ const BlockDatesModal = ({
                           onSelect={field.onChange}
                           locale={ptBR}
                           disabled={(date) => date < watchedValues.start_date}
+                          className="pointer-events-auto"
                           initialFocus
                         />
                       </PopoverContent>
