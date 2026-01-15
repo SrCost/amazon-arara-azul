@@ -103,6 +103,18 @@ const getSourceLabel = (source: string | null) => {
   }
 };
 
+// Helper to get initials from name
+const getInitials = (name: string): string => {
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+};
+
+// Helper to get first name
+const getFirstName = (name: string): string => {
+  return name.trim().split(" ")[0];
+};
+
 const ReservationBlock = ({
   reservation,
   startCol,
@@ -114,31 +126,67 @@ const ReservationBlock = ({
     reservation.payment_status
   );
 
+  // Determine display based on span width
+  const renderContent = () => {
+    if (span <= 1) {
+      // Very narrow: just initials
+      return (
+        <div className="font-bold text-[10px] text-center">
+          {getInitials(reservation.guest_name)}
+        </div>
+      );
+    } else if (span === 2) {
+      // Narrow: first name only
+      return (
+        <div className="font-medium text-[10px] truncate">
+          {getFirstName(reservation.guest_name)}
+        </div>
+      );
+    } else if (span <= 4) {
+      // Medium: first name + guests
+      return (
+        <>
+          <div className="font-medium text-xs truncate">
+            {getFirstName(reservation.guest_name)}
+          </div>
+          <div className="text-[9px] opacity-90">
+            {reservation.guests}p
+          </div>
+        </>
+      );
+    } else {
+      // Wide: full info
+      return (
+        <>
+          <div className="font-medium text-xs truncate">
+            {reservation.guest_name}
+          </div>
+          <div className="text-[10px] opacity-90">
+            {reservation.guests}p · R$ {(reservation.total_price || 0).toLocaleString("pt-BR", { maximumFractionDigits: 0 })}
+          </div>
+        </>
+      );
+    }
+  };
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <div
           onClick={onClick}
           className={cn(
-            "absolute top-1 bottom-1 rounded-md border-l-4 px-2 py-1 cursor-pointer",
+            "absolute top-1 bottom-1 rounded-md border-l-4 px-1.5 py-0.5 cursor-pointer",
             "flex flex-col justify-center overflow-hidden",
             "hover:scale-[1.02] hover:shadow-lg transition-all z-10",
             statusColor
           )}
           style={{
             gridColumn: `${startCol} / span ${span}`,
-            left: "2px",
-            right: "2px",
+            left: "1px",
+            right: "1px",
           }}
         >
-          <div className="font-medium text-xs truncate">
-            {reservation.guest_name}
-          </div>
-          {span > 2 && (
-            <div className="text-[10px] opacity-90 truncate">
-              {reservation.guests}p · R$ {reservation.total_price?.toLocaleString("pt-BR")}
-            </div>
-          )}
+          {renderContent()}
         </div>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-xs">

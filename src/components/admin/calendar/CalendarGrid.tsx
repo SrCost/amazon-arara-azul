@@ -63,10 +63,10 @@ const CalendarGrid = ({
   return (
     <div className="overflow-x-auto border border-border rounded-lg bg-card">
       <div
-        className="min-w-[1200px]"
+        className="min-w-[1400px]"
         style={{
           display: "grid",
-          gridTemplateColumns: `180px repeat(${days.length}, minmax(40px, 1fr))`,
+          gridTemplateColumns: `160px repeat(${days.length}, minmax(50px, 1fr))`,
         }}
       >
         {/* Header Row - Days */}
@@ -77,16 +77,18 @@ const CalendarGrid = ({
           <div
             key={day.toISOString()}
             className={cn(
-              "border-b border-r border-border p-1 text-center text-xs",
+              "border-b border-r border-border py-1 px-0.5 text-center",
               isToday(day) && "bg-primary/10 font-bold",
               isPast(day) && !isToday(day) && "bg-muted/50 text-muted-foreground",
               isWeekend(day) && "bg-accent/30"
             )}
           >
-            <div className="font-medium">{format(day, "EEE", { locale: ptBR })}</div>
+            <div className="text-[10px] font-medium uppercase text-muted-foreground">
+              {format(day, "EEEEE", { locale: ptBR })}
+            </div>
             <div className={cn(
-              "text-lg",
-              isToday(day) && "text-primary font-bold"
+              "text-sm font-semibold",
+              isToday(day) && "text-primary"
             )}>
               {format(day, "d")}
             </div>
@@ -115,7 +117,7 @@ const CalendarGrid = ({
                 className="relative col-span-full grid"
                 style={{
                   gridColumn: `2 / -1`,
-                  gridTemplateColumns: `repeat(${days.length}, minmax(40px, 1fr))`,
+                  gridTemplateColumns: `repeat(${days.length}, minmax(50px, 1fr))`,
                 }}
               >
                 {/* Background cells (clickable) */}
