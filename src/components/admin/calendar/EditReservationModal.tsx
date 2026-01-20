@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -46,9 +46,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CalendarIcon, Loader2, ExternalLink, Trash2 } from "lucide-react";
+import { CalendarIcon, Loader2, ExternalLink, Trash2, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CalendarReservation, Room } from "@/hooks/useCalendarReservations";
+
+interface PackageOption {
+  id: string;
+  name: string;
+  price: number;
+  duration: string;
+  people: number;
+}
 
 const formSchema = z.object({
   guest_name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
@@ -64,6 +72,7 @@ const formSchema = z.object({
   payment_status: z.string(),
   operational_notes: z.string().optional(),
   special_requests: z.string().optional(),
+  package_id: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -87,6 +96,8 @@ const EditReservationModal = ({
 }: EditReservationModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [packages, setPackages] = useState<PackageOption[]>([]);
+  const [selectedPackage, setSelectedPackage] = useState<PackageOption | null>(null);
   const { isSuperAdmin, isAdmin } = useAuth();
 
   const form = useForm<FormData>({
@@ -105,18 +116,47 @@ const EditReservationModal = ({
       payment_status: "pending",
       operational_notes: "",
       special_requests: "",
+      package_id: "",
     },
   });
 
   const watchedValues = form.watch();
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
-  const dailyRate = getDailyRate(watchedValues.guests, watchedValues.daily_rate);
-  const totalPrice = dailyRate * nights;
+  
+  // Calculate price - use package price if selected, otherwise use daily rate calculation
+  const dailyRate = selectedPackage ? 0 : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
+  const totalPrice = selectedPackage ? selectedPackage.price : dailyRate * nights;
+
+  // Fetch packages when modal opens
+  useEffect(() => {
+    const fetchPackages = async () => {
+      const { data, error } = await supabase
+        .from("packages")
+        .select("id, name, price, duration, people")
+        .eq("is_active", true)
+        .order("price");
+
+      if (!error && data) {
+        setPackages(data);
+      }
+    };
+
+    if (open) {
+      fetchPackages();
+    }
+  }, [open]);
 
   // Load reservation data when modal opens
   useEffect(() => {
     if (open && reservation) {
       const room = rooms.find((r) => r.id === reservation.room_id);
+      
+      // Find the package if reservation has one
+      const reservationPackage = reservation.package_id 
+        ? packages.find(p => p.id === reservation.package_id) 
+        : null;
+      setSelectedPackage(reservationPackage || null);
+      
       form.reset({
         guest_name: reservation.guest_name,
         guest_email: reservation.guest_email,
@@ -131,9 +171,35 @@ const EditReservationModal = ({
         payment_status: reservation.payment_status || "pending",
         operational_notes: reservation.operational_notes || "",
         special_requests: reservation.special_requests || "",
+        package_id: reservation.package_id || "",
       });
     }
-  }, [open, reservation, rooms]);
+  }, [open, reservation, rooms, packages]);
+
+  // Handle package selection
+  const handlePackageChange = (packageId: string) => {
+    if (packageId === "none") {
+      setSelectedPackage(null);
+      form.setValue("package_id", "");
+      return;
+    }
+
+    const pkg = packages.find(p => p.id === packageId);
+    if (pkg) {
+      setSelectedPackage(pkg);
+      form.setValue("package_id", packageId);
+      form.setValue("guests", pkg.people);
+
+      // Auto-adjust check-out based on package duration
+      const checkIn = form.getValues("check_in");
+      const durationNights = pkg.duration === "4 dias / 3 noites" ? 3 
+        : pkg.duration === "5 dias / 4 noites" ? 4
+        : pkg.duration === "6 dias / 5 noites" ? 5
+        : pkg.duration === "7 dias / 6 noites" ? 6
+        : 4;
+      form.setValue("check_out", addDays(checkIn, durationNights));
+    }
+  };
 
   const onSubmit = async (data: FormData) => {
     if (!reservation) return;
@@ -167,6 +233,7 @@ const EditReservationModal = ({
           payment_status: data.payment_status,
           operational_notes: data.operational_notes || null,
           special_requests: data.special_requests || null,
+          package_id: data.package_id && data.package_id !== "" ? data.package_id : null,
         })
         .eq("id", reservation.id);
 
@@ -279,6 +346,7 @@ const EditReservationModal = ({
                     <Select
                       value={String(field.value)}
                       onValueChange={(v) => field.onChange(Number(v))}
+                      disabled={!!selectedPackage}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -293,6 +361,46 @@ const EditReservationModal = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Package Selection */}
+            <div className="p-4 bg-accent/20 rounded-lg border border-accent">
+              <FormField
+                control={form.control}
+                name="package_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      Pacote (opcional)
+                    </FormLabel>
+                    <Select 
+                      value={field.value || "none"} 
+                      onValueChange={handlePackageChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um pacote..." />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">Sem pacote - tarifa manual</SelectItem>
+                        {packages.map((pkg) => (
+                          <SelectItem key={pkg.id} value={pkg.id}>
+                            {pkg.name} - R$ {pkg.price.toLocaleString("pt-BR")} ({pkg.duration})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedPackage && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Pacote selecionado: {selectedPackage.people} pessoa(s), {selectedPackage.duration}
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -355,7 +463,18 @@ const EditReservationModal = ({
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={field.onChange}
+                          onSelect={(date) => {
+                            field.onChange(date);
+                            // Auto-adjust check-out if package is selected
+                            if (selectedPackage && date) {
+                              const durationNights = selectedPackage.duration === "4 dias / 3 noites" ? 3 
+                                : selectedPackage.duration === "5 dias / 4 noites" ? 4
+                                : selectedPackage.duration === "6 dias / 5 noites" ? 5
+                                : selectedPackage.duration === "7 dias / 6 noites" ? 6
+                                : 4;
+                              form.setValue("check_out", addDays(date, durationNights));
+                            }
+                          }}
                           locale={ptBR}
                           initialFocus
                         />
@@ -377,6 +496,7 @@ const EditReservationModal = ({
                         <FormControl>
                           <Button
                             variant="outline"
+                            disabled={!!selectedPackage}
                             className={cn(
                               "pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
@@ -420,22 +540,36 @@ const EditReservationModal = ({
                       <Input
                         type="number"
                         step="0.01"
+                        disabled={!!selectedPackage}
                         {...field}
                         onChange={(e) => field.onChange(Number(e.target.value))}
                       />
                     </FormControl>
+                    {selectedPackage && (
+                      <p className="text-xs text-muted-foreground">
+                        Preço do pacote aplicado
+                      </p>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
               <div className="space-y-1">
-                <p className="text-sm font-medium">Diária Calculada</p>
+                <p className="text-sm font-medium">
+                  {selectedPackage ? "Pacote" : "Diária Calculada"}
+                </p>
                 <p className="text-lg font-bold text-primary">
-                  R$ {dailyRate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                  {selectedPackage 
+                    ? selectedPackage.name
+                    : `R$ ${dailyRate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                  }
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Para {watchedValues.guests} pessoa(s)
+                  {selectedPackage 
+                    ? selectedPackage.duration
+                    : `Para ${watchedValues.guests} pessoa(s)`
+                  }
                 </p>
               </div>
 
