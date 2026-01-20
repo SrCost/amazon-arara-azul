@@ -22,6 +22,7 @@ export interface CalendarReservation {
   operational_notes: string | null;
   special_requests: string | null;
   created_at: string | null;
+  package_id: string | null;
 }
 
 export interface BlockedDate {

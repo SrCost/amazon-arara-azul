@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, addDays, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useCalendarReservations } from "@/hooks/useCalendarReservations";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,6 +16,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   ChevronLeft,
@@ -21,6 +35,7 @@ import {
   Ban,
   Search,
   RefreshCw,
+  Move,
 } from "lucide-react";
 import CalendarGrid from "@/components/admin/calendar/CalendarGrid";
 import NewReservationModal from "@/components/admin/calendar/NewReservationModal";
@@ -64,21 +79,34 @@ const CalendarReservations = () => {
   const [selectedRoomId, setSelectedRoomId] = useState<string | undefined>();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
 
+  // Drag-and-drop state
+  const [isDragEnabled, setIsDragEnabled] = useState(false);
+  const [moveConfirmDialog, setMoveConfirmDialog] = useState<{
+    open: boolean;
+    reservationId: string;
+    reservation: CalendarReservation | null;
+    newRoomId: string;
+    newCheckIn: Date;
+    newCheckOut: Date;
+    newRoomName: string;
+  } | null>(null);
+
   // Handlers
   const handleCellClick = (roomId: string, date: Date) => {
-    if (!canEdit) return;
+    if (!canEdit || isDragEnabled) return;
     setSelectedRoomId(roomId);
     setSelectedDate(date);
     setNewReservationModal(true);
   };
 
   const handleReservationClick = (reservation: CalendarReservation) => {
+    if (isDragEnabled) return;
     setSelectedReservation(reservation);
     setEditReservationModal(true);
   };
 
   const handleBlockClick = (block: BlockedDate) => {
-    if (!canEdit) return;
+    if (!canEdit || isDragEnabled) return;
     setSelectedBlock(block);
     setBlockDatesModal(true);
   };
@@ -90,6 +118,65 @@ const CalendarReservations = () => {
 
   const handleModalSuccess = () => {
     refresh();
+  };
+
+  // Handle reservation move via drag-and-drop
+  const handleReservationMove = (reservationId: string, newRoomId: string, newCheckIn: Date) => {
+    const reservation = reservations.find(r => r.id === reservationId);
+    if (!reservation) return;
+
+    // Calculate new check-out maintaining the same duration
+    const originalCheckIn = new Date(reservation.check_in);
+    const originalCheckOut = new Date(reservation.check_out);
+    const nights = differenceInDays(originalCheckOut, originalCheckIn);
+    const newCheckOut = addDays(newCheckIn, nights);
+
+    // Check for conflicts (excluding this reservation)
+    if (checkConflict(newRoomId, newCheckIn, newCheckOut, reservationId)) {
+      toast.error("Conflito de datas! O período já está ocupado neste bangalô.");
+      return;
+    }
+
+    const newRoom = rooms.find(r => r.id === newRoomId);
+
+    // Show confirmation dialog
+    setMoveConfirmDialog({
+      open: true,
+      reservationId,
+      reservation,
+      newRoomId,
+      newCheckIn,
+      newCheckOut,
+      newRoomName: newRoom?.name_pt || "Bangalô",
+    });
+  };
+
+  const confirmMove = async () => {
+    if (!moveConfirmDialog) return;
+
+    const { reservationId, newRoomId, newCheckIn, newCheckOut, newRoomName } = moveConfirmDialog;
+
+    try {
+      const { error } = await supabase
+        .from("reservations")
+        .update({
+          room_id: newRoomId,
+          room_name: newRoomName,
+          check_in: format(newCheckIn, "yyyy-MM-dd"),
+          check_out: format(newCheckOut, "yyyy-MM-dd"),
+        })
+        .eq("id", reservationId);
+
+      if (error) throw error;
+
+      toast.success("Reserva movida com sucesso!");
+      refresh();
+    } catch (error: any) {
+      console.error("Error moving reservation:", error);
+      toast.error(error.message || "Erro ao mover reserva");
+    } finally {
+      setMoveConfirmDialog(null);
+    }
   };
 
   // Stats
@@ -214,36 +301,59 @@ const CalendarReservations = () => {
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 text-xs">
-        <span className="text-muted-foreground">Legenda:</span>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-emerald-500" />
-          <span>Confirmado</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-blue-500" />
-          <span>Hospedado</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-amber-400" />
-          <span>Pendente</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-amber-500" />
-          <span>Pgto Pendente</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-slate-500" />
-          <span>Finalizado</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-red-400" />
-          <span>Cancelado</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-gray-400" />
-          <span>Bloqueado</span>
+      {/* Drag Mode Toggle + Legend */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        {/* Drag mode toggle */}
+        {canEdit && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-card border rounded-lg">
+            <Move className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor="drag-mode" className="text-sm cursor-pointer">
+              Modo arrastar
+            </Label>
+            <Switch
+              id="drag-mode"
+              checked={isDragEnabled}
+              onCheckedChange={setIsDragEnabled}
+            />
+            {isDragEnabled && (
+              <span className="text-xs text-primary font-medium ml-2">
+                Arraste reservas para mover
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-4 text-xs">
+          <span className="text-muted-foreground">Legenda:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-emerald-500" />
+            <span>Confirmado</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-blue-500" />
+            <span>Hospedado</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-amber-400" />
+            <span>Pendente</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-amber-500" />
+            <span>Pgto Pendente</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-slate-500" />
+            <span>Finalizado</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-red-400" />
+            <span>Cancelado</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-3 h-3 rounded bg-gray-400" />
+            <span>Bloqueado</span>
+          </div>
         </div>
       </div>
 
@@ -270,6 +380,8 @@ const CalendarReservations = () => {
           onCellClick={handleCellClick}
           onReservationClick={handleReservationClick}
           onBlockClick={handleBlockClick}
+          onReservationMove={handleReservationMove}
+          isDragEnabled={isDragEnabled && canEdit}
         />
       )}
 
@@ -302,6 +414,39 @@ const CalendarReservations = () => {
         existingBlock={selectedBlock}
         onSuccess={handleModalSuccess}
       />
+
+      {/* Move Confirmation Dialog */}
+      <AlertDialog 
+        open={moveConfirmDialog?.open || false} 
+        onOpenChange={(open) => !open && setMoveConfirmDialog(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar movimentação</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Deseja mover a reserva de <strong>{moveConfirmDialog?.reservation?.guest_name}</strong>?
+                </p>
+                <div className="bg-muted p-3 rounded-lg text-sm space-y-1">
+                  <p><strong>Novo bangalô:</strong> {moveConfirmDialog?.newRoomName}</p>
+                  <p><strong>Novas datas:</strong>{" "}
+                    {moveConfirmDialog?.newCheckIn && format(moveConfirmDialog.newCheckIn, "dd/MM/yyyy", { locale: ptBR })}
+                    {" → "}
+                    {moveConfirmDialog?.newCheckOut && format(moveConfirmDialog.newCheckOut, "dd/MM/yyyy", { locale: ptBR })}
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmMove}>
+              Confirmar Movimentação
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

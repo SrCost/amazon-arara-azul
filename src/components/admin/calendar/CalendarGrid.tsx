@@ -1,8 +1,11 @@
-import { useMemo } from "react";
-import { format, eachDayOfInterval, isToday, isPast, isSameDay, isWeekend } from "date-fns";
+import { useMemo, useState } from "react";
+import { format, eachDayOfInterval, isToday, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { DndContext, DragOverlay, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
-import ReservationBlock from "./ReservationBlock";
+import DraggableReservationBlock from "./DraggableReservationBlock";
+import DroppableCell from "./DroppableCell";
+import DragOverlayContent from "./DragOverlayContent";
 import BlockedBlock from "./BlockedBlock";
 import type { CalendarReservation, BlockedDate, Room } from "@/hooks/useCalendarReservations";
 
@@ -15,6 +18,8 @@ interface CalendarGridProps {
   onCellClick: (roomId: string, date: Date) => void;
   onReservationClick: (reservation: CalendarReservation) => void;
   onBlockClick: (block: BlockedDate) => void;
+  onReservationMove?: (reservationId: string, newRoomId: string, newCheckIn: Date) => void;
+  isDragEnabled?: boolean;
 }
 
 const CalendarGrid = ({
@@ -26,7 +31,11 @@ const CalendarGrid = ({
   onCellClick,
   onReservationClick,
   onBlockClick,
+  onReservationMove,
+  isDragEnabled = false,
 }: CalendarGridProps) => {
+  const [activeReservation, setActiveReservation] = useState<CalendarReservation | null>(null);
+
   const days = useMemo(
     () => eachDayOfInterval({ start: monthStart, end: monthEnd }),
     [monthStart, monthEnd]
@@ -44,12 +53,10 @@ const CalendarGrid = ({
     let startCol = days.findIndex((d) => isSameDay(d, checkInDate));
     let endCol = days.findIndex((d) => isSameDay(d, checkOutDate));
 
-    // Adjust for reservations that start before the visible period
     if (startCol === -1 && checkInDate < days[0]) {
       startCol = 0;
     }
 
-    // Adjust for reservations that end after the visible period
     if (endCol === -1 && checkOutDate > days[days.length - 1]) {
       endCol = days.length;
     }
@@ -60,7 +67,32 @@ const CalendarGrid = ({
     return { startCol: startCol + 1, span: endCol - startCol };
   };
 
-  return (
+  const handleDragStart = (event: DragStartEvent) => {
+    const reservation = event.active.data.current?.reservation as CalendarReservation;
+    if (reservation) {
+      setActiveReservation(reservation);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    setActiveReservation(null);
+
+    const { active, over } = event;
+    if (!over || !onReservationMove) return;
+
+    const reservation = active.data.current?.reservation as CalendarReservation;
+    const dropData = over.data.current as { roomId: string; date: Date } | undefined;
+
+    if (reservation && dropData) {
+      onReservationMove(reservation.id, dropData.roomId, dropData.date);
+    }
+  };
+
+  const handleDragCancel = () => {
+    setActiveReservation(null);
+  };
+
+  const gridContent = (
     <div className="overflow-x-auto border border-border rounded-lg bg-card">
       <div
         className="min-w-[1400px]"
@@ -78,9 +110,7 @@ const CalendarGrid = ({
             key={day.toISOString()}
             className={cn(
               "border-b border-r border-border py-1 px-0.5 text-center",
-              isToday(day) && "bg-primary/10 font-bold",
-              isPast(day) && !isToday(day) && "bg-muted/50 text-muted-foreground",
-              isWeekend(day) && "bg-accent/30"
+              isToday(day) && "bg-primary/10 font-bold"
             )}
           >
             <div className="text-[10px] font-medium uppercase text-muted-foreground">
@@ -120,17 +150,13 @@ const CalendarGrid = ({
                   gridTemplateColumns: `repeat(${days.length}, minmax(50px, 1fr))`,
                 }}
               >
-                {/* Background cells (clickable) */}
+                {/* Background cells (droppable) */}
                 {days.map((day) => (
-                  <div
+                  <DroppableCell
                     key={day.toISOString()}
+                    roomId={room.id}
+                    date={day}
                     onClick={() => onCellClick(room.id, day)}
-                    className={cn(
-                      "border-b border-r border-border min-h-[60px] cursor-pointer hover:bg-accent/20 transition-colors",
-                      isPast(day) && !isToday(day) && "bg-muted/30 cursor-not-allowed",
-                      isToday(day) && "bg-primary/5",
-                      isWeekend(day) && !isPast(day) && "bg-accent/10"
-                    )}
                   />
                 ))}
 
@@ -150,7 +176,7 @@ const CalendarGrid = ({
                   );
                 })}
 
-                {/* Reservations overlay */}
+                {/* Reservations overlay (draggable) */}
                 {roomReservations.map((reservation) => {
                   const position = getReservationPosition(
                     reservation.check_in,
@@ -160,12 +186,13 @@ const CalendarGrid = ({
                   if (!position) return null;
 
                   return (
-                    <ReservationBlock
+                    <DraggableReservationBlock
                       key={reservation.id}
                       reservation={reservation}
                       startCol={position.startCol}
                       span={position.span}
                       onClick={() => onReservationClick(reservation)}
+                      isDragEnabled={isDragEnabled}
                     />
                   );
                 })}
@@ -176,6 +203,25 @@ const CalendarGrid = ({
       </div>
     </div>
   );
+
+  if (isDragEnabled) {
+    return (
+      <DndContext
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        {gridContent}
+        <DragOverlay>
+          {activeReservation && (
+            <DragOverlayContent reservation={activeReservation} />
+          )}
+        </DragOverlay>
+      </DndContext>
+    );
+  }
+
+  return gridContent;
 };
 
 export default CalendarGrid;
