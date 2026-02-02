@@ -238,11 +238,13 @@ export const useCalendarReservations = (initialDate?: Date) => {
     const checkOutStr = format(checkOut, "yyyy-MM-dd");
 
     // Check against existing reservations
+    // Regra hoteleira: check-in pode ocorrer no dia de check-out de outra reserva
     for (const res of roomReservations) {
+      // Conflito real: sobreposição de períodos (não inclui contiguidade)
       const hasConflict = 
         (checkInStr >= res.check_in && checkInStr < res.check_out) ||
         (checkOutStr > res.check_in && checkOutStr <= res.check_out) ||
-        (checkInStr <= res.check_in && checkOutStr >= res.check_out);
+        (checkInStr < res.check_in && checkOutStr > res.check_out);
 
       if (hasConflict) {
         console.log("⚠️ Conflito detectado com:", res);
