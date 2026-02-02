@@ -1,8 +1,18 @@
 import { useMemo, useState } from "react";
 import { format, eachDayOfInterval, isToday, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { DndContext, DragOverlay, DragEndEvent, DragStartEvent } from "@dnd-kit/core";
+import { 
+  DndContext, 
+  DragOverlay, 
+  DragEndEvent, 
+  DragStartEvent,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
+import { parseDateOnly } from "@/lib/dateOnly";
 import DraggableReservationBlock from "./DraggableReservationBlock";
 import DroppableCell from "./DroppableCell";
 import DragOverlayContent from "./DragOverlayContent";
@@ -36,19 +46,28 @@ const CalendarGrid = ({
 }: CalendarGridProps) => {
   const [activeReservation, setActiveReservation] = useState<CalendarReservation | null>(null);
 
+  // Sensors para drag-and-drop com threshold de ativação
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Mínimo de 8px antes de ativar drag
+      },
+    })
+  );
+
   const days = useMemo(
     () => eachDayOfInterval({ start: monthStart, end: monthEnd }),
     [monthStart, monthEnd]
   );
 
-  // Calculate grid column positions for reservations
+  // Calculate grid column positions for reservations using parseDateOnly for timezone safety
   const getReservationPosition = (
     checkIn: string,
     checkOut: string,
     days: Date[]
   ): { startCol: number; span: number } | null => {
-    const checkInDate = new Date(checkIn);
-    const checkOutDate = new Date(checkOut);
+    const checkInDate = parseDateOnly(checkIn);
+    const checkOutDate = parseDateOnly(checkOut);
     
     let startCol = days.findIndex((d) => isSameDay(d, checkInDate));
     let endCol = days.findIndex((d) => isSameDay(d, checkOutDate));
@@ -207,12 +226,14 @@ const CalendarGrid = ({
   if (isDragEnabled) {
     return (
       <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
         {gridContent}
-        <DragOverlay>
+        <DragOverlay dropAnimation={null}>
           {activeReservation && (
             <DragOverlayContent reservation={activeReservation} />
           )}
