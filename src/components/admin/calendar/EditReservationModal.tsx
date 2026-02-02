@@ -253,6 +253,12 @@ const EditReservationModal = ({
   const handleDelete = async () => {
     if (!reservation) return;
 
+    // Verificação extra de permissão no frontend (RLS já protege no backend)
+    if (!isAdmin && !isSuperAdmin) {
+      toast.error("Apenas administradores podem excluir reservas.");
+      return;
+    }
+
     setIsDeleting(true);
     try {
       const { error } = await supabase
@@ -260,7 +266,15 @@ const EditReservationModal = ({
         .delete()
         .eq("id", reservation.id);
 
-      if (error) throw error;
+      if (error) {
+        // Mensagem específica para erro de FK (código PostgreSQL 23503)
+        if (error.code === "23503") {
+          toast.error("Não foi possível excluir: existem registros vinculados a esta reserva.");
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       toast.success("Reserva excluída com sucesso!");
       onSuccess();
