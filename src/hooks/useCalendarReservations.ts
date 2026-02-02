@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { startOfMonth, endOfMonth, format, addMonths, subMonths } from "date-fns";
@@ -206,16 +206,32 @@ export const useCalendarReservations = (initialDate?: Date) => {
   const goToToday = () => setCurrentDate(new Date());
   const goToDate = (date: Date) => setCurrentDate(date);
 
-  // Check for conflicts
-  const checkConflict = (
+  // Check for conflicts - wrapped in useCallback to prevent stale closure
+  const checkConflict = useCallback((
     roomId: string,
     checkIn: Date,
     checkOut: Date,
     excludeReservationId?: string
   ): boolean => {
+    console.log("🔍 checkConflict chamado:", {
+      roomId,
+      checkIn: format(checkIn, "yyyy-MM-dd"),
+      checkOut: format(checkOut, "yyyy-MM-dd"),
+      excludeReservationId,
+      totalReservations: reservations.length,
+    });
+
     const roomReservations = reservations.filter(
       (r) => r.room_id === roomId && r.id !== excludeReservationId
     );
+
+    console.log("📋 Reservas no mesmo quarto:", roomReservations.map(r => ({
+      id: r.id,
+      guest: r.guest_name,
+      checkIn: r.check_in,
+      checkOut: r.check_out
+    })));
+
     const roomBlocks = blockedDates.filter((b) => b.room_id === roomId);
 
     const checkInStr = format(checkIn, "yyyy-MM-dd");
@@ -223,11 +239,13 @@ export const useCalendarReservations = (initialDate?: Date) => {
 
     // Check against existing reservations
     for (const res of roomReservations) {
-      if (
+      const hasConflict = 
         (checkInStr >= res.check_in && checkInStr < res.check_out) ||
         (checkOutStr > res.check_in && checkOutStr <= res.check_out) ||
-        (checkInStr <= res.check_in && checkOutStr >= res.check_out)
-      ) {
+        (checkInStr <= res.check_in && checkOutStr >= res.check_out);
+
+      if (hasConflict) {
+        console.log("⚠️ Conflito detectado com:", res);
         return true;
       }
     }
@@ -239,12 +257,14 @@ export const useCalendarReservations = (initialDate?: Date) => {
         (checkOutStr >= block.start_date && checkOutStr <= block.end_date) ||
         (checkInStr <= block.start_date && checkOutStr >= block.end_date)
       ) {
+        console.log("🚫 Conflito com bloqueio:", block);
         return true;
       }
     }
 
+    console.log("✅ Sem conflitos");
     return false;
-  };
+  }, [reservations, blockedDates]);
 
   return {
     currentDate,
