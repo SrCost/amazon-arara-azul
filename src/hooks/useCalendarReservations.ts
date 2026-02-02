@@ -94,7 +94,8 @@ export const useCalendarReservations = (initialDate?: Date) => {
           reservation_source,
           operational_notes,
           special_requests,
-          created_at
+          created_at,
+          package_id
         `)
         .or(`check_in.gte.${startStr},check_out.gte.${startStr}`)
         .lte("check_in", endStr)
