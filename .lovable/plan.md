@@ -1,62 +1,96 @@
 
 
-# Plano: Melhorar o Modo Arrastar no Calendário de Reservas
+# Plano: Dashboard com Dados Reais e Validados
 
-## Diagnóstico do Problema
+## Diagnóstico do Problema Atual
 
-O sistema de drag-and-drop atual usa a estratégia de colisão `closestCenter`, que calcula a distância do **centro** do elemento arrastado até o **centro** de cada célula droppable. Em um grid de calendário com muitas células pequenas, isso causa imprecisão porque:
+Analisando o código do Dashboard e os dados do banco:
 
-1. Quando você arrasta uma reserva (que pode ocupar 3-5 dias), o centro da reserva pode estar longe do ponteiro do mouse
-2. O algoritmo seleciona a célula cujo centro está mais próximo do centro do elemento arrastado, não onde o mouse está
-3. Isso resulta no "pulo" para células incorretas, especialmente ao mover entre linhas (bangalôs)
+| Elemento | Status Atual | Problema |
+|----------|--------------|----------|
+| **Cards de estatísticas** | Consulta banco | ✅ Funciona, mas filtra `is_test` parcialmente |
+| **Tendências (trends)** | Hardcoded | ❌ Valores fixos "+12.5%", "-3.1%" não são reais |
+| **Gráfico de Reservas** | Dados mockados | ❌ Array estático `monthlyData` com valores fictícios |
+| **Gráfico de Receita** | Dados mockados | ❌ Mesmo array estático com receitas falsas |
+| **Taxa de Ocupação** | Cálculo simplista | ⚠️ Não considera período de hospedagem real |
+
+### Dados Reais no Banco
+
+| Métrica | Valor Real |
+|---------|------------|
+| Total de reservas | **25** (23 teste + 2 reais) |
+| Reservas reais (is_test=false) | **2** |
+| Quartos ativos | **3** |
+| Mensagens novas | **0** (1 lida) |
+| Receita do ano (real) | **R$ 9.440** (Jan/2026) |
+
+---
 
 ## Solução Proposta
 
-### 1. Mudar Estratégia de Colisão para `pointerWithin`
+### 1. Substituir Gráficos Mockados por Dados Reais
 
-A estratégia `pointerWithin` detecta colisão baseada na posição real do **ponteiro do mouse**, não no centro do elemento. Isso é muito mais intuitivo para calendários.
+Criar consultas que busquem dados mensais reais:
 
 ```typescript
-// CalendarGrid.tsx - Alteração
-import { pointerWithin } from "@dnd-kit/core";
-
-// Em vez de:
-collisionDetection={closestCenter}
-
-// Usar:
-collisionDetection={pointerWithin}
+// Buscar dados mensais dos últimos 6 meses
+const fetchMonthlyData = async () => {
+  const { data } = await supabase.rpc('get_monthly_dashboard_stats');
+  // ou consulta direta com agregação
+};
 ```
 
-### 2. Adicionar Feedback Visual Aprimorado Durante o Arraste
+**Nova consulta SQL** para dados mensais:
+```sql
+SELECT 
+  TO_CHAR(check_in, 'Mon') as month,
+  COUNT(*) as reservations,
+  COALESCE(SUM(total_price), 0) as revenue
+FROM reservations
+WHERE is_test = false
+  AND status NOT IN ('cancelled')
+  AND check_in >= CURRENT_DATE - INTERVAL '6 months'
+GROUP BY DATE_TRUNC('month', check_in), TO_CHAR(check_in, 'Mon')
+ORDER BY DATE_TRUNC('month', check_in)
+```
 
-Melhorar o DroppableCell para mostrar claramente qual célula será selecionada:
+### 2. Calcular Tendências Reais
 
-- Aumentar o destaque visual da célula sob o ponteiro
-- Mostrar indicador da data que será usada como novo check-in
-- Adicionar transição suave
-
-### 3. Melhorar o DragOverlay
-
-Adicionar ao componente DragOverlay:
-- Mostrar a data de destino atual enquanto arrasta
-- Indicar visualmente se o drop é permitido ou bloqueado
-
-### 4. Implementar Fallback de Colisão Customizado
-
-Caso `pointerWithin` não encontre colisão (mouse fora da área), usar `closestCenter` como fallback:
+Comparar período atual com período anterior:
 
 ```typescript
-import { pointerWithin, closestCenter, CollisionDetection } from "@dnd-kit/core";
-
-const customCollisionDetection: CollisionDetection = (args) => {
-  // Primeiro, tenta pointerWithin (mais preciso)
-  const pointerCollisions = pointerWithin(args);
-  if (pointerCollisions.length > 0) {
-    return pointerCollisions;
-  }
-  // Fallback para closestCenter se o ponteiro está fora
-  return closestCenter(args);
+// Tendência = ((valor_atual - valor_anterior) / valor_anterior) * 100
+const calculateTrend = (current: number, previous: number): string => {
+  if (previous === 0) return current > 0 ? "+100%" : "0%";
+  const trend = ((current - previous) / previous) * 100;
+  return `${trend >= 0 ? '+' : ''}${trend.toFixed(1)}%`;
 };
+```
+
+### 3. Melhorar Cálculo de Taxa de Ocupação
+
+A taxa atual é incorreta. O cálculo correto considera **quarto-noites**:
+
+```
+Taxa de Ocupação = (Noites Ocupadas / Noites Disponíveis) × 100
+
+Onde:
+- Noites Disponíveis = Quartos Ativos × Dias no Período
+- Noites Ocupadas = Soma das noites de cada reserva confirmada
+```
+
+Para o mês atual (Fevereiro/2026):
+- 3 quartos × 28 dias = 84 noites disponíveis
+- 0 noites ocupadas (reservas reais)
+- Taxa = 0%
+
+### 4. Garantir Filtro `is_test = false`
+
+Todas as consultas devem excluir dados de teste:
+
+```typescript
+// Sempre usar este filtro
+.eq("is_test", false)
 ```
 
 ---
@@ -65,101 +99,149 @@ const customCollisionDetection: CollisionDetection = (args) => {
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `CalendarGrid.tsx` | Implementar estratégia de colisão customizada com `pointerWithin` + fallback |
-| `DroppableCell.tsx` | Melhorar feedback visual com indicador de data |
-| `DragOverlayContent.tsx` | Adicionar informação de destino em tempo real (opcional) |
+| `src/pages/admin/Dashboard.tsx` | Refatorar para buscar dados reais, calcular tendências e ocupação corretamente |
 
 ---
 
-## Detalhes Técnicos
+## Detalhes da Implementação
 
-### CalendarGrid.tsx
+### Dashboard.tsx - Nova Estrutura
 
 ```typescript
-import { 
-  DndContext, 
-  DragOverlay, 
-  DragEndEvent, 
-  DragStartEvent,
-  DragMoveEvent,
-  pointerWithin,
-  closestCenter,
-  CollisionDetection,
-  PointerSensor,
-  useSensor,
-  useSensors
-} from "@dnd-kit/core";
+interface MonthlyStats {
+  month: string;
+  reservations: number;
+  revenue: number;
+}
 
-// Estratégia de colisão híbrida: pointerWithin com fallback
-const customCollisionDetection: CollisionDetection = (args) => {
-  const pointerCollisions = pointerWithin(args);
-  if (pointerCollisions.length > 0) {
-    return pointerCollisions;
-  }
-  return closestCenter(args);
+interface DashboardStats {
+  totalReservations: number;
+  occupancyRate: number;
+  pendingPayments: number;
+  newMessages: number;
+  totalRevenue: number;
+}
+
+interface Trends {
+  reservations: string;
+  occupancy: string;
+  payments: string;
+  messages: string;
+}
+
+const Dashboard = () => {
+  const [stats, setStats] = useState<DashboardStats>({...});
+  const [trends, setTrends] = useState<Trends>({...});
+  const [monthlyData, setMonthlyData] = useState<MonthlyStats[]>([]);
+  
+  // Buscar dados mensais reais
+  const fetchMonthlyStats = async () => {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    const { data } = await supabase
+      .from("reservations")
+      .select("check_in, total_price, status")
+      .eq("is_test", false)
+      .neq("status", "cancelled")
+      .gte("check_in", sixMonthsAgo.toISOString());
+    
+    // Agrupar por mês no frontend
+    const grouped = groupByMonth(data);
+    setMonthlyData(grouped);
+  };
+  
+  // Calcular ocupação real
+  const calculateOccupancy = async () => {
+    const { data: reservations } = await supabase
+      .from("reservations")
+      .select("check_in, check_out, room_id")
+      .eq("is_test", false)
+      .in("status", ["confirmed", "pending", "hosted"]);
+    
+    const { count: roomsCount } = await supabase
+      .from("rooms")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true);
+    
+    const daysInMonth = new Date(
+      new Date().getFullYear(), 
+      new Date().getMonth() + 1, 
+      0
+    ).getDate();
+    
+    const totalNightsAvailable = roomsCount * daysInMonth;
+    const occupiedNights = calculateOccupiedNights(reservations);
+    
+    return Math.round((occupiedNights / totalNightsAvailable) * 100);
+  };
+  
+  // Calcular tendências comparando com mês anterior
+  const calculateTrends = async () => {
+    // Mês atual vs mês anterior
+    const currentMonth = await getMonthStats(0);
+    const previousMonth = await getMonthStats(-1);
+    
+    setTrends({
+      reservations: calculateTrend(currentMonth.reservations, previousMonth.reservations),
+      occupancy: calculateTrend(currentMonth.occupancy, previousMonth.occupancy),
+      payments: calculateTrend(currentMonth.pendingPayments, previousMonth.pendingPayments),
+      messages: calculateTrend(currentMonth.messages, previousMonth.messages),
+    });
+  };
 };
-
-// No DndContext:
-<DndContext
-  sensors={sensors}
-  collisionDetection={customCollisionDetection}
-  onDragStart={handleDragStart}
-  onDragEnd={handleDragEnd}
-  onDragCancel={handleDragCancel}
->
 ```
 
-### DroppableCell.tsx
-
-Adicionar indicador visual da data quando está em hover:
+### Visualização dos Cards com Tendências Reais
 
 ```typescript
-const DroppableCell = ({ roomId, date, onClick }: DroppableCellProps) => {
-  const { setNodeRef, isOver, active } = useDroppable({
-    id: `cell-${roomId}-${date.toISOString()}`,
-    data: { roomId, date },
-  });
+const statCards = [
+  {
+    title: t("admin.totalReservations"),
+    value: loading ? "..." : stats.totalReservations.toString(),
+    icon: CalendarCheck,
+    trend: trends.reservations, // Calculado dinamicamente
+  },
+  // ... outros cards com trends calculados
+];
+```
 
-  const isPastDay = isPast(date) && !isToday(date);
-  const isDragging = !!active;
+### Gráficos com Dados Reais
 
-  return (
-    <div
-      ref={setNodeRef}
-      onClick={onClick}
-      className={cn(
-        "border-b border-r border-border min-h-[60px] relative",
-        // ... estilos existentes ...
-        isOver && !isPastDay && isDragging && "bg-primary/30 ring-2 ring-primary ring-inset",
-      )}
-    >
-      {/* Indicador de data quando hover durante drag */}
-      {isOver && isDragging && !isPastDay && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded shadow-lg">
-            {format(date, "dd/MM")}
-          </span>
-        </div>
-      )}
-    </div>
-  );
-};
+Os gráficos usarão o state `monthlyData` que é preenchido com dados do banco:
+
+```typescript
+<LineChart data={monthlyData}> {/* Dados reais, não mockados */}
 ```
 
 ---
 
-## Benefícios
+## Estado Final dos Dados
 
-1. **Precisão**: O drop ocorre exatamente onde o mouse está, não onde o centro do elemento arrastado está
-2. **Feedback claro**: Usuário vê exatamente qual data será selecionada como novo check-in
-3. **Robustez**: Fallback para `closestCenter` evita problemas quando o mouse sai da área do grid
-4. **Experiência intuitiva**: Comportamento previsível que segue o cursor
+Após implementação, se não houver reservas reais suficientes, os gráficos mostrarão:
 
-## Resultado Esperado
+- **Meses sem dados**: Não aparecerão no gráfico (ou aparecerão com valor 0)
+- **Tendências**: Mostrarão "0%" ou "-" quando não há dados suficientes
+- **Taxa de ocupação**: Cálculo preciso baseado em noites-quarto
 
-Ao arrastar uma reserva:
-1. A célula diretamente sob o cursor será destacada
-2. Um indicador mostrará a data (ex: "05/02") na célula alvo
-3. Ao soltar, a reserva será movida para a data correta
-4. A duração da reserva será mantida (mesmo número de noites)
+---
+
+## Considerações Importantes
+
+1. **Dados Escassos**: Com apenas 2 reservas reais, os gráficos ficarão "vazios" - isso é **correto e verdadeiro**
+2. **Período dos Gráficos**: Buscar últimos 6 meses com dados reais
+3. **Fallback Visual**: Mostrar mensagem "Dados insuficientes" se não houver reservas no período
+4. **Performance**: Usar consultas otimizadas com agregação no banco quando possível
+
+---
+
+## Resumo das Alterações
+
+| Componente | De | Para |
+|------------|-----|------|
+| Gráfico de Reservas | Array estático mockado | Consulta real agrupada por mês |
+| Gráfico de Receita | Array estático mockado | Soma de `total_price` por mês |
+| Trends dos Cards | Valores hardcoded | Cálculo comparativo mês atual vs anterior |
+| Taxa de Ocupação | `confirmados / quartos` | `noites_ocupadas / (quartos × dias)` |
+| Filtro is_test | Parcial | Aplicado em todas as consultas |
 
