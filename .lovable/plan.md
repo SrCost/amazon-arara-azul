@@ -1,66 +1,109 @@
 
-## Plano: Correção da Lógica de Conflito de Datas e Campos Editáveis de Preços
+## Plano: Correção Completa do CRUD de Reservas
 
-### Problema Principal: Conflito Falso-Positivo
+### Problema 1: Constraint de Status Bloqueando Alterações
 
-A função `checkConflict` está detectando conflito quando não deveria. Exemplo identificado nos logs:
+**Causa Raiz Identificada:**
 
-| Reserva Existente | Reserva Sendo Editada | Resultado |
-|------------------|----------------------|-----------|
-| Check-in: 31/01, Check-out: 02/02 | Check-in: 01/02, Check-out: 05/02 | ❌ Conflito falso |
-
-**Por que é falso?** Na hotelaria, quando uma reserva faz **check-out dia 02/02**, o quarto está **disponível para check-in no mesmo dia 02/02**. A lógica atual está bloqueando incorretamente essa situação.
-
-### Causa Raiz
-
-Na função `checkConflict` em `useCalendarReservations.ts`:
-
-```typescript
-const hasConflict = 
-  (checkInStr >= res.check_in && checkInStr < res.check_out) ||  // ❌ Muito restritivo
-  (checkOutStr > res.check_in && checkOutStr <= res.check_out) ||
-  (checkInStr <= res.check_in && checkOutStr >= res.check_out);
+A tabela `reservations` tem uma CHECK constraint que permite apenas 4 valores para o campo `status`:
+```sql
+CHECK (status = ANY (ARRAY['pending', 'confirmed', 'cancelled', 'completed']))
 ```
 
-O problema está na **primeira condição**: `checkInStr < res.check_out` não permite check-in no dia do check-out de outra reserva.
+Mas o dropdown do modal oferece opções adicionais que o sistema precisa:
+- `hosted` (Hospedado)
+- `finished` (Finalizado)  
+- `no-show` (No-show)
 
-### Solução: Ajustar Lógica de Conflito
+**Solução:** Atualizar a constraint para incluir todos os status operacionais válidos.
 
-```typescript
-const hasConflict = 
-  (checkInStr >= res.check_in && checkInStr < res.check_out) ||
-  (checkOutStr > res.check_in && checkOutStr <= res.check_out) ||
-  (checkInStr < res.check_in && checkOutStr > res.check_out);
+```sql
+-- Remover constraint antiga
+ALTER TABLE public.reservations DROP CONSTRAINT IF EXISTS reservations_status_check;
+
+-- Criar nova constraint com todos os status válidos
+ALTER TABLE public.reservations ADD CONSTRAINT reservations_status_check 
+CHECK (status = ANY (ARRAY[
+  'pending',
+  'confirmed', 
+  'cancelled',
+  'completed',
+  'hosted',
+  'finished',
+  'no-show'
+]));
 ```
-
-**Mudança na terceira condição**: `checkOutStr >= res.check_out` → `checkOutStr > res.check_out`
-
-Isso permite:
-- Check-in no dia de check-out de outra reserva (comportamento padrão hoteleiro)
-- Preserva detecção de sobreposições reais
 
 ---
 
-### Problema Secundário: Campos de Preço Editáveis
+### Problema 2: Conflito de Datas ao Trocar Bangalô
 
-O usuário solicitou botões minimalistas para editar os campos:
-- Tarifa Base
-- Diária Calculada
-- Total
+**Causa Raiz Identificada:**
 
-Atualmente, esses campos estão:
-1. **Tarifa Base**: Input editável (já funciona quando não há pacote)
-2. **Diária Calculada**: Texto estático (calculado automaticamente)
-3. **Total**: Texto estático (calculado automaticamente)
+O `CalendarGrid` usa `new Date(checkIn)` para calcular posições das reservas, causando interpretação UTC e shifts de timezone. Além disso, a função `checkConflict` pode estar comparando strings de datas com formatos inconsistentes.
 
-### Solução: Modo de Edição Manual
+**Solução:** 
+1. Usar `parseDateOnly` consistentemente em `CalendarGrid.tsx`
+2. Garantir que a verificação de conflito use as mesmas funções de parsing em todo o fluxo
 
-Adicionar um toggle que permita sobrescrever os valores calculados:
+```typescript
+// CalendarGrid.tsx - getReservationPosition
+const getReservationPosition = (
+  checkIn: string,
+  checkOut: string,
+  days: Date[]
+): { startCol: number; span: number } | null => {
+  const checkInDate = parseDateOnly(checkIn);  // Usar parseDateOnly
+  const checkOutDate = parseDateOnly(checkOut); // Usar parseDateOnly
+  // ... resto da lógica
+};
+```
 
-1. Botão de edição ao lado de cada campo estático
-2. Ao clicar, campo vira input editável
-3. Total pode ser sobrescrito manualmente
-4. Indicador visual de "valor manual" vs "valor calculado"
+---
+
+### Problema 3: Drag-and-Drop Impreciso
+
+**Causa Raiz Identificada:**
+
+O sistema de drag-and-drop do `@dnd-kit/core` está detectando a célula de drop incorreta porque:
+
+1. Os blocos de reserva são `position: absolute` sobre as células, o que pode interferir na detecção
+2. A estrutura do grid com `contents` pode causar confusão na hierarquia de elementos
+3. O cálculo da posição do drop não leva em conta o offset do scroll horizontal
+
+**Solução:** 
+1. Adicionar sensors personalizados com threshold de ativação
+2. Usar `closestCenter` ou `closestCorners` como estratégia de colisão
+3. Adicionar `pointer-events-none` aos blocos durante o drag para melhorar a detecção das células
+
+```typescript
+// CalendarGrid.tsx
+import { 
+  DndContext, 
+  DragOverlay, 
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors 
+} from "@dnd-kit/core";
+
+const sensors = useSensors(
+  useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 8, // Mínimo de 8px antes de ativar drag
+    },
+  })
+);
+
+// No DndContext
+<DndContext
+  sensors={sensors}
+  collisionDetection={closestCenter}
+  onDragStart={handleDragStart}
+  onDragEnd={handleDragEnd}
+  onDragCancel={handleDragCancel}
+>
+```
 
 ---
 
@@ -68,62 +111,140 @@ Adicionar um toggle que permita sobrescrever os valores calculados:
 
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/hooks/useCalendarReservations.ts` | Corrigir lógica de conflito na função `checkConflict` |
-| `src/components/admin/calendar/EditReservationModal.tsx` | Adicionar campos editáveis com botão toggle para preços |
+| **Database Migration** | Atualizar `reservations_status_check` para incluir `hosted`, `finished`, `no-show` |
+| `src/components/admin/calendar/CalendarGrid.tsx` | Usar `parseDateOnly` no cálculo de posições + adicionar sensors e collision detection |
+| `src/components/admin/calendar/EditReservationModal.tsx` | Verificar consistência dos valores do dropdown com a constraint |
+
+---
 
 ### Detalhes Técnicos
 
-#### 1. Correção do `checkConflict`
+#### 1. Migration SQL (Prioridade Alta)
 
-```typescript
-// ANTES (incorreto)
-(checkInStr <= res.check_in && checkOutStr >= res.check_out)
+```sql
+-- Atualizar constraint de status
+ALTER TABLE public.reservations DROP CONSTRAINT IF EXISTS reservations_status_check;
 
-// DEPOIS (correto - permite contiguidade)
-(checkInStr < res.check_in && checkOutStr > res.check_out)
+ALTER TABLE public.reservations ADD CONSTRAINT reservations_status_check 
+CHECK (status = ANY (ARRAY[
+  'pending',
+  'confirmed', 
+  'cancelled',
+  'completed',
+  'hosted',
+  'finished',
+  'no-show'
+]));
+
+-- Também atualizar payment_status se necessário
+ALTER TABLE public.reservations DROP CONSTRAINT IF EXISTS reservations_payment_status_check;
+
+ALTER TABLE public.reservations ADD CONSTRAINT reservations_payment_status_check 
+CHECK (payment_status = ANY (ARRAY[
+  'pending',
+  'paid',
+  'failed',
+  'refunded',
+  'cancelled'
+]));
 ```
 
-#### 2. Estado para edição manual de preços
+#### 2. CalendarGrid.tsx Atualizado
 
 ```typescript
-const [manualPricing, setManualPricing] = useState(false);
-const [manualDailyRate, setManualDailyRate] = useState<number | null>(null);
-const [manualTotal, setManualTotal] = useState<number | null>(null);
-```
+import { parseDateOnly } from "@/lib/dateOnly";
+import { 
+  DndContext, 
+  DragOverlay, 
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent, 
+  DragStartEvent 
+} from "@dnd-kit/core";
 
-#### 3. Campos editáveis no formulário
+const CalendarGrid = ({ ... }) => {
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
-```typescript
-<div className="space-y-1 relative">
-  <div className="flex items-center gap-2">
-    <p className="text-sm font-medium">Total</p>
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      className="h-5 w-5"
-      onClick={() => setManualPricing(!manualPricing)}
+  const getReservationPosition = (
+    checkIn: string,
+    checkOut: string,
+    days: Date[]
+  ): { startCol: number; span: number } | null => {
+    const checkInDate = parseDateOnly(checkIn);
+    const checkOutDate = parseDateOnly(checkOut);
+    // ... resto mantido
+  };
+
+  // No return com DndContext
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
-      <Pencil className="h-3 w-3" />
-    </Button>
-  </div>
-  {manualPricing ? (
-    <Input
-      type="number"
-      value={manualTotal ?? totalPrice}
-      onChange={(e) => setManualTotal(Number(e.target.value))}
-    />
-  ) : (
-    <p className="text-2xl font-bold text-primary">
-      R$ {totalPrice.toLocaleString("pt-BR")}
-    </p>
-  )}
-</div>
+      {gridContent}
+      <DragOverlay dropAnimation={null}>
+        {activeReservation && (
+          <DragOverlayContent reservation={activeReservation} />
+        )}
+      </DragOverlay>
+    </DndContext>
+  );
+};
 ```
+
+#### 3. Melhoria nas Células Droppable
+
+```typescript
+// DroppableCell.tsx - adicionar data-room-id para debug
+const DroppableCell = ({ roomId, date, onClick }: DroppableCellProps) => {
+  const { setNodeRef, isOver, active } = useDroppable({
+    id: `cell-${roomId}-${date.toISOString()}`,
+    data: { roomId, date },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-room-id={roomId}
+      data-date={date.toISOString()}
+      onClick={onClick}
+      className={cn(
+        "border-b border-r border-border min-h-[60px] transition-all",
+        // ... classes existentes
+        isOver && active && "bg-primary/30 ring-2 ring-primary"
+      )}
+    />
+  );
+};
+```
+
+---
 
 ### Resultado Esperado
 
-1. **Edição de reservas funcionando**: Sem falsos conflitos de data
-2. **CRUD completo**: Criar, Ler, Atualizar e Excluir reservas funcionais
-3. **Campos de preço editáveis**: Administradores podem sobrescrever valores calculados
-4. **Interface limpa**: Botões minimalistas que não poluem a interface
+| Funcionalidade | Antes | Depois |
+|---------------|-------|--------|
+| Alterar Status Operacional | ❌ Erro de constraint | ✅ Salva corretamente |
+| Trocar Bangalô | ❌ Falso conflito | ✅ Permite troca se disponível |
+| Drag-and-Drop | ❌ Impreciso | ✅ Detecta célula correta |
+| Editar qualquer campo | ❌ Erros variados | ✅ CRUD completo funcionando |
+
+---
+
+### Histórico/Auditoria
+
+Todas as alterações de reservas continuarão sendo registradas automaticamente pelos triggers de auditoria existentes (`trg_audit_reservations`), incluindo:
+- Mudanças de status operacional
+- Alterações de bangalô
+- Movimentações via drag-and-drop
