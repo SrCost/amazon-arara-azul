@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CalendarIcon, Loader2, ExternalLink, Trash2, Package, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { parseDateOnly, formatDateOnly } from "@/lib/dateOnly";
 import type { CalendarReservation, Room } from "@/hooks/useCalendarReservations";
 
 interface PackageOption {
@@ -176,8 +177,8 @@ const EditReservationModal = ({
         guest_email: reservation.guest_email,
         guest_phone: reservation.guest_phone || "",
         guests: reservation.guests,
-        check_in: new Date(reservation.check_in),
-        check_out: new Date(reservation.check_out),
+         check_in: parseDateOnly(reservation.check_in),
+         check_out: parseDateOnly(reservation.check_out),
         room_id: reservation.room_id,
         daily_rate: reservation.daily_rate || room?.price_per_night || 1500,
         reservation_source: reservation.reservation_source || "site",
@@ -235,8 +236,8 @@ const EditReservationModal = ({
           guest_email: data.guest_email,
           guest_phone: data.guest_phone || null,
           guests: data.guests,
-          check_in: format(data.check_in, "yyyy-MM-dd"),
-          check_out: format(data.check_out, "yyyy-MM-dd"),
+          check_in: formatDateOnly(data.check_in),
+          check_out: formatDateOnly(data.check_out),
           room_id: data.room_id,
           room_name: room?.name_pt || null,
           daily_rate: data.daily_rate,

@@ -1,6 +1,7 @@
 import { User } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseDateOnly } from "@/lib/dateOnly";
 import type { CalendarReservation } from "@/hooks/useCalendarReservations";
 
 interface DragOverlayContentProps {
@@ -18,9 +19,9 @@ const DragOverlayContent = ({ reservation }: DragOverlayContentProps) => {
         {reservation.guests} pessoa(s)
       </div>
       <div className="text-xs opacity-80 mt-1 flex items-center gap-2">
-        <span>{format(new Date(reservation.check_in), "dd/MM", { locale: ptBR })}</span>
+        <span>{format(parseDateOnly(reservation.check_in), "dd/MM", { locale: ptBR })}</span>
         <span>→</span>
-        <span>{format(new Date(reservation.check_out), "dd/MM", { locale: ptBR })}</span>
+        <span>{format(parseDateOnly(reservation.check_out), "dd/MM", { locale: ptBR })}</span>
       </div>
       <div className="text-xs mt-2 font-medium bg-primary-foreground/20 rounded px-2 py-1">
         Solte para mover
