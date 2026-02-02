@@ -206,7 +206,7 @@ export const useCalendarReservations = (initialDate?: Date) => {
   const goToToday = () => setCurrentDate(new Date());
   const goToDate = (date: Date) => setCurrentDate(date);
 
-  // Check for conflicts - wrapped in useCallback to prevent stale closure
+  // Check for conflicts - useCallback ensures fresh data on every call
   const checkConflict = useCallback((
     roomId: string,
     checkIn: Date,
