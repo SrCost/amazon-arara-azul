@@ -1,167 +1,165 @@
 
 
-## Plano: Correção Definitiva do Conflito Falso ao Alterar Bangalô
+# Plano: Melhorar o Modo Arrastar no Calendário de Reservas
 
-### Diagnóstico Completo
+## Diagnóstico do Problema
 
-Após análise detalhada dos logs do console e consultas ao banco de dados, identifiquei **duas causas raízes** do problema:
+O sistema de drag-and-drop atual usa a estratégia de colisão `closestCenter`, que calcula a distância do **centro** do elemento arrastado até o **centro** de cada célula droppable. Em um grid de calendário com muitas células pequenas, isso causa imprecisão porque:
 
----
+1. Quando você arrasta uma reserva (que pode ocupar 3-5 dias), o centro da reserva pode estar longe do ponteiro do mouse
+2. O algoritmo seleciona a célula cujo centro está mais próximo do centro do elemento arrastado, não onde o mouse está
+3. Isso resulta no "pulo" para células incorretas, especialmente ao mover entre linhas (bangalôs)
 
-### Problema 1: Reservas com Datas Inválidas no Banco
+## Solução Proposta
 
-O banco contém **2 reservas com check-out anterior ao check-in**:
+### 1. Mudar Estratégia de Colisão para `pointerWithin`
 
-| Hóspede | Check-in | Check-out | Status |
-|---------|----------|-----------|--------|
-| Jessica Ariane da Silva | 2026-02-18 | 2026-01-23 | pending |
-| flavio a costa | 2026-01-16 | 2026-01-14 | pending |
+A estratégia `pointerWithin` detecta colisão baseada na posição real do **ponteiro do mouse**, não no centro do elemento. Isso é muito mais intuitivo para calendários.
 
-Essas reservas "impossíveis" causam comportamentos imprevisíveis na lógica de conflito, pois qualquer data pode ser interpretada como dentro do período.
-
-**Solução:** Executar correção de dados via SQL (conforme escolhido: check-out = check-in + 1 dia).
-
----
-
-### Problema 2: Lógica de Comparação com Dados Desatualizados (CRÍTICO)
-
-A função `checkConflict` no hook `useCalendarReservations.ts` usa `useCallback` com dependência em `reservations` e `blockedDates`. **O problema é que quando o usuário abre o modal de edição, os dados usados para verificar conflito vêm do estado que foi carregado inicialmente e podem estar desatualizados.**
-
-Quando o usuário tenta trocar de bangalô:
-1. Modal carrega a reserva existente
-2. Usuário seleciona novo bangalô
-3. `checkConflict` é chamado com o `excludeReservationId` correto
-4. **Porém**, a reserva sendo editada **ainda está na lista filtrada** porque o `useCallback` pode ter sido criado com dados stale
-
-Analisando os logs:
-```
-🔍 checkConflict chamado: {
-  "roomId": "11111111-1111-1111-1111-111111111111",  // Novo bangalô
-  "checkIn": "2026-02-03",
-  "checkOut": "2026-02-08",
-  "excludeReservationId": "68068a71-cdbf-49bc-97fc-bbf2c4fa4467",
-  "totalReservations": 10
-}
-```
-
-O bangalô `11111111-1111-1111-1111-111111111111` **não tem nenhuma reserva** no período 03/02 a 08/02 (confirmado via SQL), então o conflito detectado é **falso**.
-
-**Causa Real Identificada:** O filtro `r.room_id === roomId` filtra as reservas do **novo** bangalô selecionado. Porém, quando consultamos o banco:
-- Bangalô `22222222` (original) tem a reserva `68068a71` com datas 03/02 → 08/02
-- Bangalô `11111111` (destino) **não tem reservas** nesse período
-
-A consulta `roomReservations` deveria retornar **0 reservas** para o bangalô destino, mas algo está causando a detecção de conflito.
-
-**Após nova análise:** O problema pode estar nas **reservas com datas inválidas** que aparecem em filtros inesperados. A reserva `a386d307` tem check-in `2026-02-18` e check-out `2026-01-23`, o que causa:
-- A lógica `checkIn >= res.check_in && checkIn < res.check_out` se comporta de forma imprevisível
-- `2026-02-03 >= 2026-02-18` = false
-- `2026-02-03 < 2026-01-23` = false (strings comparadas lexicograficamente)
-
-Mas o problema persiste mesmo para bangalôs sem essas reservas problemáticas.
-
-**Nova Hipótese:** O `filteredReservations` aplicado no return do hook pode estar incluindo reservas de **todos** os bangalôs quando não há filtro de room aplicado, e a função `checkConflict` está iterando sobre a lista **já filtrada** que pode não incluir todas as reservas do sistema.
-
-Verificando código:
 ```typescript
-const checkConflict = useCallback((roomId, ...) => {
-  const roomReservations = reservations.filter(
-    (r) => r.room_id === roomId && r.id !== excludeReservationId
+// CalendarGrid.tsx - Alteração
+import { pointerWithin } from "@dnd-kit/core";
+
+// Em vez de:
+collisionDetection={closestCenter}
+
+// Usar:
+collisionDetection={pointerWithin}
+```
+
+### 2. Adicionar Feedback Visual Aprimorado Durante o Arraste
+
+Melhorar o DroppableCell para mostrar claramente qual célula será selecionada:
+
+- Aumentar o destaque visual da célula sob o ponteiro
+- Mostrar indicador da data que será usada como novo check-in
+- Adicionar transição suave
+
+### 3. Melhorar o DragOverlay
+
+Adicionar ao componente DragOverlay:
+- Mostrar a data de destino atual enquanto arrasta
+- Indicar visualmente se o drop é permitido ou bloqueado
+
+### 4. Implementar Fallback de Colisão Customizado
+
+Caso `pointerWithin` não encontre colisão (mouse fora da área), usar `closestCenter` como fallback:
+
+```typescript
+import { pointerWithin, closestCenter, CollisionDetection } from "@dnd-kit/core";
+
+const customCollisionDetection: CollisionDetection = (args) => {
+  // Primeiro, tenta pointerWithin (mais preciso)
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+  // Fallback para closestCenter se o ponteiro está fora
+  return closestCenter(args);
+};
+```
+
+---
+
+## Arquivos a Modificar
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `CalendarGrid.tsx` | Implementar estratégia de colisão customizada com `pointerWithin` + fallback |
+| `DroppableCell.tsx` | Melhorar feedback visual com indicador de data |
+| `DragOverlayContent.tsx` | Adicionar informação de destino em tempo real (opcional) |
+
+---
+
+## Detalhes Técnicos
+
+### CalendarGrid.tsx
+
+```typescript
+import { 
+  DndContext, 
+  DragOverlay, 
+  DragEndEvent, 
+  DragStartEvent,
+  DragMoveEvent,
+  pointerWithin,
+  closestCenter,
+  CollisionDetection,
+  PointerSensor,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
+
+// Estratégia de colisão híbrida: pointerWithin com fallback
+const customCollisionDetection: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  if (pointerCollisions.length > 0) {
+    return pointerCollisions;
+  }
+  return closestCenter(args);
+};
+
+// No DndContext:
+<DndContext
+  sensors={sensors}
+  collisionDetection={customCollisionDetection}
+  onDragStart={handleDragStart}
+  onDragEnd={handleDragEnd}
+  onDragCancel={handleDragCancel}
+>
+```
+
+### DroppableCell.tsx
+
+Adicionar indicador visual da data quando está em hover:
+
+```typescript
+const DroppableCell = ({ roomId, date, onClick }: DroppableCellProps) => {
+  const { setNodeRef, isOver, active } = useDroppable({
+    id: `cell-${roomId}-${date.toISOString()}`,
+    data: { roomId, date },
+  });
+
+  const isPastDay = isPast(date) && !isToday(date);
+  const isDragging = !!active;
+
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={onClick}
+      className={cn(
+        "border-b border-r border-border min-h-[60px] relative",
+        // ... estilos existentes ...
+        isOver && !isPastDay && isDragging && "bg-primary/30 ring-2 ring-primary ring-inset",
+      )}
+    >
+      {/* Indicador de data quando hover durante drag */}
+      {isOver && isDragging && !isPastDay && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded shadow-lg">
+            {format(date, "dd/MM")}
+          </span>
+        </div>
+      )}
+    </div>
   );
-  // ...
-}, [reservations, blockedDates]);
-```
-
-O `reservations` aqui é o `filteredReservations` que já passou por filtros de busca, status e room! Isso significa:
-- Se o usuário está com filtro de "roomFilter = bangalô A"
-- E tenta mover uma reserva para "bangalô B"
-- A lista `reservations` pode não incluir as reservas do bangalô B!
-
-**PORÉM**, olhando o return:
-```typescript
-return {
-  reservations: filteredReservations,  // ← FILTRADO para exibição
-  checkConflict,  // ← USA reservations do ESCOPO que é o state original!
-}
-```
-
-Na verdade, o `useCallback` captura `reservations` do escopo, que é o **state original** não filtrado. Então isso não deveria ser o problema...
-
-**Teste Final no Console:**
-Os logs mostram `totalReservations: 10`, mas quando filtramos por `roomId === '11111111...'`:
-```javascript
-roomReservations = reservations.filter(r => r.room_id === '11111111...' && r.id !== 'excluído')
-```
-
-Se não há reservas no bangalô destino, `roomReservations.length === 0`, e o loop não deveria detectar conflito.
-
-**CONCLUSÃO FINAL:** As reservas com datas inválidas (`check_out < check_in`) causam comparações imprevisíveis que podem gerar falsos positivos em condições específicas.
-
----
-
-### Solução Completa
-
-#### 1. Corrigir Dados Inválidos no Banco (SQL)
-
-```sql
--- Corrigir reservas com check_out <= check_in
-UPDATE public.reservations
-SET check_out = check_in + INTERVAL '1 day'
-WHERE check_out <= check_in
-  AND status <> 'cancelled';
-```
-
-#### 2. Adicionar Validação para Evitar Futuros Problemas
-
-Na função `onSubmit` do `EditReservationModal` e `NewReservationModal`, validar que check_out > check_in antes de verificar conflitos:
-
-```typescript
-// Antes de checkConflict
-if (data.check_out <= data.check_in) {
-  toast.error("A data de check-out deve ser posterior ao check-in.");
-  return;
-}
-```
-
-#### 3. Adicionar Constraint de Banco para Prevenir Dados Inválidos
-
-```sql
-ALTER TABLE public.reservations 
-ADD CONSTRAINT reservations_checkout_after_checkin 
-CHECK (check_out > check_in);
-```
-
-#### 4. Adicionar Logs de Debug Mais Detalhados (Temporário)
-
-Para confirmar que a correção funcionou, adicionar mais informação aos logs:
-
-```typescript
-console.log("📋 Reservas no mesmo quarto para conflito:", 
-  roomReservations.map(r => ({
-    id: r.id,
-    guest: r.guest_name,
-    checkIn: r.check_in,
-    checkOut: r.check_out,
-    isInvalid: r.check_out <= r.check_in
-  }))
-);
+};
 ```
 
 ---
 
-### Resumo das Alterações
+## Benefícios
 
-| Ordem | Tipo | Ação |
-|-------|------|------|
-| 1 | SQL (insert tool) | Corrigir 2 reservas com datas inválidas |
-| 2 | Migration | Adicionar constraint `check_out > check_in` |
-| 3 | Código | Validar datas antes de verificar conflito em `EditReservationModal.tsx` |
-| 4 | Código | Validar datas antes de verificar conflito em `NewReservationModal.tsx` |
+1. **Precisão**: O drop ocorre exatamente onde o mouse está, não onde o centro do elemento arrastado está
+2. **Feedback claro**: Usuário vê exatamente qual data será selecionada como novo check-in
+3. **Robustez**: Fallback para `closestCenter` evita problemas quando o mouse sai da área do grid
+4. **Experiência intuitiva**: Comportamento previsível que segue o cursor
 
-### Resultado Esperado
+## Resultado Esperado
 
-Após essas correções:
-1. Não haverá mais reservas impossíveis no banco
-2. A constraint impedirá criação de novas reservas inválidas
-3. A validação no frontend dará feedback imediato ao usuário
-4. A alteração de bangalô funcionará corretamente
+Ao arrastar uma reserva:
+1. A célula diretamente sob o cursor será destacada
+2. Um indicador mostrará a data (ex: "05/02") na célula alvo
+3. Ao soltar, a reserva será movida para a data correta
+4. A duração da reserva será mantida (mesmo número de noites)
 
