@@ -7,6 +7,7 @@ import {
 import { Ban, Wrench, Home, Calendar, Star } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseDateOnly } from "@/lib/dateOnly";
 import type { BlockedDate } from "@/hooks/useCalendarReservations";
 
 interface BlockedBlockProps {
@@ -87,10 +88,10 @@ const BlockedBlock = ({ block, startCol, span, onClick }: BlockedBlockProps) => 
           
           <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
             <div className="text-muted-foreground">Início:</div>
-            <div>{format(new Date(block.start_date), "dd/MM/yyyy", { locale: ptBR })}</div>
+            <div>{format(parseDateOnly(block.start_date), "dd/MM/yyyy", { locale: ptBR })}</div>
             
             <div className="text-muted-foreground">Fim:</div>
-            <div>{format(new Date(block.end_date), "dd/MM/yyyy", { locale: ptBR })}</div>
+            <div>{format(parseDateOnly(block.end_date), "dd/MM/yyyy", { locale: ptBR })}</div>
           </div>
 
           {block.reason && (

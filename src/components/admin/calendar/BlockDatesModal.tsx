@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CalendarIcon, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { parseDateOnly, formatDateOnly } from "@/lib/dateOnly";
 import type { BlockedDate, Room } from "@/hooks/useCalendarReservations";
 
 const formSchema = z.object({
@@ -101,8 +102,8 @@ const BlockDatesModal = ({
       if (existingBlock) {
         form.reset({
           room_id: existingBlock.room_id,
-          start_date: new Date(existingBlock.start_date),
-          end_date: new Date(existingBlock.end_date),
+          start_date: parseDateOnly(existingBlock.start_date),
+          end_date: parseDateOnly(existingBlock.end_date),
           block_type: existingBlock.block_type || "maintenance",
           reason: existingBlock.reason || "",
         });
@@ -121,8 +122,8 @@ const BlockDatesModal = ({
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      const formattedStartDate = format(data.start_date, "yyyy-MM-dd");
-      const formattedEndDate = format(data.end_date, "yyyy-MM-dd");
+      const formattedStartDate = formatDateOnly(data.start_date);
+      const formattedEndDate = formatDateOnly(data.end_date);
 
       if (isEditing && existingBlock) {
         // Cannot change to "all" when editing

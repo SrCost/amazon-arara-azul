@@ -8,6 +8,7 @@ import {
 import { User, Phone, CreditCard, Calendar, GripVertical } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { parseDateOnly } from "@/lib/dateOnly";
 import type { CalendarReservation } from "@/hooks/useCalendarReservations";
 
 interface DraggableReservationBlockProps {
@@ -204,13 +205,13 @@ const DraggableReservationBlock = ({
               <Calendar className="h-3 w-3" />
               Check-in:
             </div>
-            <div>{format(new Date(reservation.check_in), "dd/MM/yyyy", { locale: ptBR })}</div>
+            <div>{format(parseDateOnly(reservation.check_in), "dd/MM/yyyy", { locale: ptBR })}</div>
             
             <div className="flex items-center gap-1 text-muted-foreground">
               <Calendar className="h-3 w-3" />
               Check-out:
             </div>
-            <div>{format(new Date(reservation.check_out), "dd/MM/yyyy", { locale: ptBR })}</div>
+            <div>{format(parseDateOnly(reservation.check_out), "dd/MM/yyyy", { locale: ptBR })}</div>
             
             <div className="text-muted-foreground">Hóspedes:</div>
             <div>{reservation.guests} pessoa(s)</div>

@@ -37,6 +37,7 @@ import {
   RefreshCw,
   Move,
 } from "lucide-react";
+import { parseDateOnly } from "@/lib/dateOnly";
 import CalendarGrid from "@/components/admin/calendar/CalendarGrid";
 import NewReservationModal from "@/components/admin/calendar/NewReservationModal";
 import EditReservationModal from "@/components/admin/calendar/EditReservationModal";
@@ -126,8 +127,8 @@ const CalendarReservations = () => {
     if (!reservation) return;
 
     // Calculate new check-out maintaining the same duration
-    const originalCheckIn = new Date(reservation.check_in);
-    const originalCheckOut = new Date(reservation.check_out);
+    const originalCheckIn = parseDateOnly(reservation.check_in);
+    const originalCheckOut = parseDateOnly(reservation.check_out);
     const nights = differenceInDays(originalCheckOut, originalCheckIn);
     const newCheckOut = addDays(newCheckIn, nights);
 
