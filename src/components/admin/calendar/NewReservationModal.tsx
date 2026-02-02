@@ -202,6 +202,12 @@ const NewReservationModal = ({
   }, [open, initialRoomId, initialDate, rooms]);
 
   const onSubmit = async (data: FormData) => {
+    // Validate dates before checking conflicts
+    if (data.check_out <= data.check_in) {
+      toast.error("A data de check-out deve ser posterior ao check-in.");
+      return;
+    }
+
     // Check for conflicts
     if (checkConflict(data.room_id, data.check_in, data.check_out)) {
       toast.error("Conflito de datas! O período selecionado já está ocupado.");
