@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarCheck, DollarSign, MessageSquare, TrendingUp } from "lucide-react";
 import {
@@ -14,165 +13,50 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  const [stats, setStats] = useState({
-    totalReservations: 0,
-    occupancyRate: 0,
-    pendingPayments: 0,
-    newMessages: 0,
-  });
-  const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDashboardData();
-    
-    // Setup realtime subscriptions
-    const reservationsChannel = supabase
-      .channel('reservations-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'reservations'
-        },
-        () => fetchDashboardData()
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(reservationsChannel);
-    };
-  }, []);
-
-  const fetchDashboardData = async () => {
-    try {
-      // Get total reservations (exclude test reservations)
-      const { count: reservationsCount } = await supabase
-        .from("reservations")
-        .select("*", { count: "exact", head: true })
-        .or("is_test.is.null,is_test.eq.false");
-
-      // Get confirmed reservations for occupancy (exclude test)
-      const { count: confirmedReservationsCount } = await supabase
-        .from("reservations")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "confirmed")
-        .or("is_test.is.null,is_test.eq.false");
-
-      // Get total rooms for occupancy calculation
-      const { count: roomsCount } = await supabase
-        .from("rooms")
-        .select("*", { count: "exact", head: true })
-        .eq("is_active", true);
-
-      // Get pending payments (exclude test reservations via join)
-      const { count: pendingPaymentsCount } = await supabase
-        .from("payments")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending");
-
-      // Get unread messages
-      const { count: messagesCount } = await supabase
-        .from("contact_messages")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "new");
-
-      // Get recent reservations for activity (exclude test, últimas 5 ações)
-      const { data: recentReservations } = await supabase
-        .from("reservations")
-        .select("*")
-        .or("is_test.is.null,is_test.eq.false")
-        .order("created_at", { ascending: false })
-        .limit(5);
-
-      // Calculate occupancy rate: (confirmed reservations ÷ total rooms) × 100
-      const occupancy = roomsCount && confirmedReservationsCount 
-        ? Math.round((confirmedReservationsCount / roomsCount) * 100) 
-        : 0;
-
-      setStats({
-        totalReservations: reservationsCount || 0,
-        occupancyRate: occupancy,
-        pendingPayments: pendingPaymentsCount || 0,
-        newMessages: messagesCount || 0,
-      });
-
-      // Format recent activity with proper status translation
-      if (recentReservations) {
-        const activity = recentReservations.map((res) => {
-          let action = "Reserva atualizada";
-          if (res.status === "confirmed") action = "Nova reserva confirmada";
-          else if (res.status === "pending") action = "Nova reserva pendente";
-          else if (res.status === "cancelled") action = "Reserva cancelada";
-          
-          return {
-            action,
-            user: res.guest_name,
-            time: new Date(res.created_at).toLocaleDateString("pt-BR", {
-              day: "2-digit",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          };
-        });
-        setRecentActivity(activity);
-      }
-
-      console.log("Dashboard data loaded:", {
-        totalReservations: reservationsCount,
-        confirmedReservations: confirmedReservationsCount,
-        occupancyRate: occupancy,
-        pendingPayments: pendingPaymentsCount,
-        newMessages: messagesCount
-      });
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { stats, trends, monthlyData, recentActivity, loading } = useDashboardStats();
 
   const statCards = [
     {
       title: t("admin.totalReservations"),
       value: loading ? "..." : stats.totalReservations.toString(),
       icon: CalendarCheck,
-      trend: "+12.5%",
+      trend: trends.reservations,
     },
     {
       title: t("admin.occupancyRate"),
       value: loading ? "..." : `${stats.occupancyRate}%`,
       icon: TrendingUp,
-      trend: "+5.2%",
+      trend: trends.occupancy,
     },
     {
       title: t("admin.pendingPayments"),
       value: loading ? "..." : stats.pendingPayments.toString(),
       icon: DollarSign,
-      trend: "-3.1%",
+      trend: trends.payments,
     },
     {
       title: t("admin.newMessages"),
       value: loading ? "..." : stats.newMessages.toString(),
       icon: MessageSquare,
-      trend: "+8.4%",
+      trend: trends.messages,
     },
   ];
 
-  const monthlyData = [
-    { month: "Jan", reservations: 45, revenue: 38000 },
-    { month: "Fev", reservations: 52, revenue: 44000 },
-    { month: "Mar", reservations: 61, revenue: 52000 },
-    { month: "Abr", reservations: 58, revenue: 49000 },
-    { month: "Mai", reservations: 67, revenue: 57000 },
-    { month: "Jun", reservations: 72, revenue: 61000 },
-  ];
+  const hasMonthlyData = monthlyData.some(
+    (d) => d.reservations > 0 || d.revenue > 0
+  );
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+      minimumFractionDigits: 0,
+    }).format(value);
+  };
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 lg:space-y-8">
@@ -194,7 +78,11 @@ const Dashboard = () => {
                 </div>
                 <span
                   className={`text-xs sm:text-sm font-medium ${
-                    stat.trend.startsWith("+") ? "text-green-600" : "text-red-600"
+                    stat.trend.startsWith("+") && stat.trend !== "+0%" 
+                      ? "text-green-600" 
+                      : stat.trend.startsWith("-") 
+                        ? "text-red-600" 
+                        : "text-muted-foreground"
                   }`}
                 >
                   {stat.trend}
@@ -214,21 +102,32 @@ const Dashboard = () => {
             <CardTitle className="text-base sm:text-lg">{t("admin.recentReservations")}</CardTitle>
           </CardHeader>
           <CardContent className="p-2 sm:p-6 pt-0">
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Line
-                  type="monotone"
-                  dataKey="reservations"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            {hasMonthlyData ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Line
+                    type="monotone"
+                    dataKey="reservations"
+                    name="Reservas"
+                    stroke="hsl(var(--primary))"
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                <p className="text-center">
+                  Nenhuma reserva nos últimos 6 meses.
+                  <br />
+                  <span className="text-sm">Os dados aparecerão aqui quando houver reservas reais.</span>
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -237,16 +136,31 @@ const Dashboard = () => {
             <CardTitle className="text-base sm:text-lg">Receita Mensal</CardTitle>
           </CardHeader>
           <CardContent className="p-2 sm:p-6 pt-0">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="revenue" fill="hsl(var(--accent))" />
-              </BarChart>
-            </ResponsiveContainer>
+            {hasMonthlyData ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={monthlyData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                  <YAxis 
+                    tick={{ fontSize: 12 }} 
+                    tickFormatter={(value) => `R$${(value / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => [formatCurrency(value), "Receita"]}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Bar dataKey="revenue" name="Receita" fill="hsl(var(--accent))" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                <p className="text-center">
+                  Nenhuma receita registrada nos últimos 6 meses.
+                  <br />
+                  <span className="text-sm">Os dados aparecerão aqui quando houver reservas reais.</span>
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -269,7 +183,9 @@ const Dashboard = () => {
                 </div>
               ))
             ) : (
-              <p className="text-muted-foreground text-center py-4 text-sm">Nenhuma atividade recente</p>
+              <p className="text-muted-foreground text-center py-4 text-sm">
+                {loading ? "Carregando..." : "Nenhuma atividade recente com reservas reais"}
+              </p>
             )}
           </div>
         </CardContent>
