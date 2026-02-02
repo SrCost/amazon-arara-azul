@@ -46,7 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CalendarIcon, Loader2, ExternalLink, Trash2, Package } from "lucide-react";
+import { CalendarIcon, Loader2, ExternalLink, Trash2, Package, Pencil, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CalendarReservation, Room } from "@/hooks/useCalendarReservations";
 
@@ -99,6 +99,12 @@ const EditReservationModal = ({
   const [packages, setPackages] = useState<PackageOption[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<PackageOption | null>(null);
   const { isSuperAdmin, isAdmin } = useAuth();
+  
+  // Manual pricing overrides
+  const [manualDailyRate, setManualDailyRate] = useState<number | null>(null);
+  const [manualTotal, setManualTotal] = useState<number | null>(null);
+  const [editingDailyRate, setEditingDailyRate] = useState(false);
+  const [editingTotal, setEditingTotal] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -123,9 +129,11 @@ const EditReservationModal = ({
   const watchedValues = form.watch();
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
   
-  // Calculate price - use package price if selected, otherwise use daily rate calculation
-  const dailyRate = selectedPackage ? 0 : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
-  const totalPrice = selectedPackage ? selectedPackage.price : dailyRate * nights;
+  // Calculate price - use manual overrides if set, otherwise calculate
+  const calculatedDailyRate = selectedPackage ? 0 : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
+  const dailyRate = manualDailyRate ?? calculatedDailyRate;
+  const calculatedTotal = selectedPackage ? selectedPackage.price : dailyRate * nights;
+  const totalPrice = manualTotal ?? calculatedTotal;
 
   // Fetch packages when modal opens
   useEffect(() => {
@@ -156,6 +164,12 @@ const EditReservationModal = ({
         ? packages.find(p => p.id === reservation.package_id) 
         : null;
       setSelectedPackage(reservationPackage || null);
+      
+      // Reset manual overrides when loading new reservation
+      setManualDailyRate(null);
+      setManualTotal(null);
+      setEditingDailyRate(false);
+      setEditingTotal(false);
       
       form.reset({
         guest_name: reservation.guest_name,
@@ -570,15 +584,68 @@ const EditReservationModal = ({
               />
 
               <div className="space-y-1">
-                <p className="text-sm font-medium">
-                  {selectedPackage ? "Pacote" : "Diária Calculada"}
-                </p>
-                <p className="text-lg font-bold text-primary">
-                  {selectedPackage 
-                    ? selectedPackage.name
-                    : `R$ ${dailyRate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
-                  }
-                </p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm font-medium">
+                    {selectedPackage ? "Pacote" : "Diária Calculada"}
+                  </p>
+                  {!selectedPackage && !editingDailyRate && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 opacity-50 hover:opacity-100"
+                      onClick={() => {
+                        setManualDailyRate(dailyRate);
+                        setEditingDailyRate(true);
+                      }}
+                      title="Editar diária manualmente"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                {editingDailyRate && !selectedPackage ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="h-8 w-32"
+                      value={manualDailyRate ?? dailyRate}
+                      onChange={(e) => setManualDailyRate(Number(e.target.value))}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-green-600"
+                      onClick={() => setEditingDailyRate(false)}
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-red-600"
+                      onClick={() => {
+                        setManualDailyRate(null);
+                        setEditingDailyRate(false);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-lg font-bold text-primary">
+                    {selectedPackage 
+                      ? selectedPackage.name
+                      : `R$ ${dailyRate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+                    }
+                    {manualDailyRate !== null && !selectedPackage && (
+                      <span className="ml-1 text-xs font-normal text-orange-500">(manual)</span>
+                    )}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {selectedPackage 
                     ? selectedPackage.duration
@@ -588,10 +655,63 @@ const EditReservationModal = ({
               </div>
 
               <div className="space-y-1">
-                <p className="text-sm font-medium">Total ({nights} noite{nights !== 1 ? "s" : ""})</p>
-                <p className="text-2xl font-bold text-primary">
-                  R$ {totalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm font-medium">Total ({nights} noite{nights !== 1 ? "s" : ""})</p>
+                  {!editingTotal && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-5 w-5 opacity-50 hover:opacity-100"
+                      onClick={() => {
+                        setManualTotal(totalPrice);
+                        setEditingTotal(true);
+                      }}
+                      title="Editar total manualmente"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                {editingTotal ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      step="0.01"
+                      className="h-8 w-32"
+                      value={manualTotal ?? totalPrice}
+                      onChange={(e) => setManualTotal(Number(e.target.value))}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-green-600"
+                      onClick={() => setEditingTotal(false)}
+                    >
+                      <Check className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-red-600"
+                      onClick={() => {
+                        setManualTotal(null);
+                        setEditingTotal(false);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-2xl font-bold text-primary">
+                    R$ {totalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
+                    {manualTotal !== null && (
+                      <span className="ml-1 text-xs font-normal text-orange-500">(manual)</span>
+                    )}
+                  </p>
+                )}
               </div>
             </div>
 
