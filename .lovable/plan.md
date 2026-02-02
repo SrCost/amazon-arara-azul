@@ -1,71 +1,129 @@
 
+## Plano: Correção da Lógica de Conflito de Datas e Campos Editáveis de Preços
 
-## Plano: Correção Completa da Exclusão de Reservas
+### Problema Principal: Conflito Falso-Positivo
 
-### Problema Identificado
+A função `checkConflict` está detectando conflito quando não deveria. Exemplo identificado nos logs:
 
-O fluxo de exclusão de reservas está sendo bloqueado por **duas** foreign keys na tabela `payment_logs`:
+| Reserva Existente | Reserva Sendo Editada | Resultado |
+|------------------|----------------------|-----------|
+| Check-in: 31/01, Check-out: 02/02 | Check-in: 01/02, Check-out: 05/02 | ❌ Conflito falso |
 
-| Constraint | Referencia | Estado Atual | Estado Desejado |
-|------------|------------|--------------|-----------------|
-| `payment_logs_reservation_id_fkey` | `reservations.id` | ✅ SET NULL (corrigido) | ✅ OK |
-| `payment_logs_payment_id_fkey` | `payments.id` | ❌ NO ACTION | 🔧 SET NULL |
+**Por que é falso?** Na hotelaria, quando uma reserva faz **check-out dia 02/02**, o quarto está **disponível para check-in no mesmo dia 02/02**. A lógica atual está bloqueando incorretamente essa situação.
 
-### Cadeia de Exclusão
+### Causa Raiz
 
-Quando uma reserva é excluída:
+Na função `checkConflict` em `useCalendarReservations.ts`:
+
+```typescript
+const hasConflict = 
+  (checkInStr >= res.check_in && checkInStr < res.check_out) ||  // ❌ Muito restritivo
+  (checkOutStr > res.check_in && checkOutStr <= res.check_out) ||
+  (checkInStr <= res.check_in && checkOutStr >= res.check_out);
 ```
-reservations (DELETE)
-    └── payments (CASCADE) ← Tenta excluir
-           └── payment_logs.payment_id (NO ACTION) ← BLOQUEIA!
+
+O problema está na **primeira condição**: `checkInStr < res.check_out` não permite check-in no dia do check-out de outra reserva.
+
+### Solução: Ajustar Lógica de Conflito
+
+```typescript
+const hasConflict = 
+  (checkInStr >= res.check_in && checkInStr < res.check_out) ||
+  (checkOutStr > res.check_in && checkOutStr <= res.check_out) ||
+  (checkInStr < res.check_in && checkOutStr > res.check_out);
 ```
 
-### Solução Proposta
+**Mudança na terceira condição**: `checkOutStr >= res.check_out` → `checkOutStr > res.check_out`
 
-#### Migration SQL
+Isso permite:
+- Check-in no dia de check-out de outra reserva (comportamento padrão hoteleiro)
+- Preserva detecção de sobreposições reais
 
-Modificar a constraint `payment_logs_payment_id_fkey` para `ON DELETE SET NULL`:
+---
 
-```sql
--- Remover constraint antiga do payment_id
-ALTER TABLE public.payment_logs 
-DROP CONSTRAINT IF EXISTS payment_logs_payment_id_fkey;
+### Problema Secundário: Campos de Preço Editáveis
 
--- Adicionar constraint com ON DELETE SET NULL
-ALTER TABLE public.payment_logs 
-ADD CONSTRAINT payment_logs_payment_id_fkey 
-FOREIGN KEY (payment_id) 
-REFERENCES public.payments(id) 
-ON DELETE SET NULL;
+O usuário solicitou botões minimalistas para editar os campos:
+- Tarifa Base
+- Diária Calculada
+- Total
+
+Atualmente, esses campos estão:
+1. **Tarifa Base**: Input editável (já funciona quando não há pacote)
+2. **Diária Calculada**: Texto estático (calculado automaticamente)
+3. **Total**: Texto estático (calculado automaticamente)
+
+### Solução: Modo de Edição Manual
+
+Adicionar um toggle que permita sobrescrever os valores calculados:
+
+1. Botão de edição ao lado de cada campo estático
+2. Ao clicar, campo vira input editável
+3. Total pode ser sobrescrito manualmente
+4. Indicador visual de "valor manual" vs "valor calculado"
+
+---
+
+### Resumo das Alterações
+
+| Arquivo | Alteração |
+|---------|-----------|
+| `src/hooks/useCalendarReservations.ts` | Corrigir lógica de conflito na função `checkConflict` |
+| `src/components/admin/calendar/EditReservationModal.tsx` | Adicionar campos editáveis com botão toggle para preços |
+
+### Detalhes Técnicos
+
+#### 1. Correção do `checkConflict`
+
+```typescript
+// ANTES (incorreto)
+(checkInStr <= res.check_in && checkOutStr >= res.check_out)
+
+// DEPOIS (correto - permite contiguidade)
+(checkInStr < res.check_in && checkOutStr > res.check_out)
+```
+
+#### 2. Estado para edição manual de preços
+
+```typescript
+const [manualPricing, setManualPricing] = useState(false);
+const [manualDailyRate, setManualDailyRate] = useState<number | null>(null);
+const [manualTotal, setManualTotal] = useState<number | null>(null);
+```
+
+#### 3. Campos editáveis no formulário
+
+```typescript
+<div className="space-y-1 relative">
+  <div className="flex items-center gap-2">
+    <p className="text-sm font-medium">Total</p>
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className="h-5 w-5"
+      onClick={() => setManualPricing(!manualPricing)}
+    >
+      <Pencil className="h-3 w-3" />
+    </Button>
+  </div>
+  {manualPricing ? (
+    <Input
+      type="number"
+      value={manualTotal ?? totalPrice}
+      onChange={(e) => setManualTotal(Number(e.target.value))}
+    />
+  ) : (
+    <p className="text-2xl font-bold text-primary">
+      R$ {totalPrice.toLocaleString("pt-BR")}
+    </p>
+  )}
+</div>
 ```
 
 ### Resultado Esperado
 
-Após a correção, o fluxo de exclusão funcionará assim:
-
-```
-reservations (DELETE)
-    ├── payments (CASCADE) → Excluídos
-    │      └── payment_logs.payment_id → SET NULL (preserva log)
-    ├── payment_logs.reservation_id → SET NULL (preserva log)
-    └── reservation_access_tokens (CASCADE) → Excluídos
-```
-
-**Benefícios:**
-1. ✅ Reservas podem ser excluídas sem erros
-2. ✅ Logs de pagamento são preservados para auditoria
-3. ✅ Campos `reservation_id` e `payment_id` ficam NULL indicando registros excluídos
-4. ✅ Apenas admin/super_admin podem excluir (protegido por RLS)
-
-### Arquivos a Modificar
-
-| Tipo | Arquivo | Alteração |
-|------|---------|-----------|
-| **Database** | Nova migration | Alterar FK `payment_logs_payment_id_fkey` para `ON DELETE SET NULL` |
-
-### Impacto
-
-- **Mínimo** - Apenas altera comportamento de exclusão
-- **Segurança** - RLS já garante que só admin/super_admin excluem
-- **Auditoria** - Logs preservados com referências nulas
-
+1. **Edição de reservas funcionando**: Sem falsos conflitos de data
+2. **CRUD completo**: Criar, Ler, Atualizar e Excluir reservas funcionais
+3. **Campos de preço editáveis**: Administradores podem sobrescrever valores calculados
+4. **Interface limpa**: Botões minimalistas que não poluem a interface
