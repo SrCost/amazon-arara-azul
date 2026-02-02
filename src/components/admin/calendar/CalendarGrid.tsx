@@ -6,7 +6,9 @@ import {
   DragOverlay, 
   DragEndEvent, 
   DragStartEvent,
+  pointerWithin,
   closestCenter,
+  CollisionDetection,
   PointerSensor,
   useSensor,
   useSensors
@@ -45,6 +47,15 @@ const CalendarGrid = ({
   isDragEnabled = false,
 }: CalendarGridProps) => {
   const [activeReservation, setActiveReservation] = useState<CalendarReservation | null>(null);
+
+  // Estratégia de colisão híbrida: pointerWithin (preciso) com fallback para closestCenter
+  const customCollisionDetection: CollisionDetection = (args) => {
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) {
+      return pointerCollisions;
+    }
+    return closestCenter(args);
+  };
 
   // Sensors para drag-and-drop com threshold de ativação
   const sensors = useSensors(
@@ -227,7 +238,7 @@ const CalendarGrid = ({
     return (
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={customCollisionDetection}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
