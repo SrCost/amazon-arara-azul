@@ -1,7 +1,8 @@
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Leaf, Sun, Droplet, Users, Heart, Recycle } from "lucide-react";
+import { Leaf, Sun, Droplet, Users, Heart, Recycle, Home } from "lucide-react";
 import sustainabilityImg from "@/assets/sustainability-new.jpg";
+import familiaAnfitria from "@/assets/familia-anfitria.jpg";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
 const Sustainability = () => {
@@ -114,6 +115,59 @@ const Sustainability = () => {
               </div>
             </div>
           </div>
+
+          {/* Host Family Section */}
+          <section className="mt-12 sm:mt-16 relative overflow-hidden">
+            {/* Background decorativo */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 rounded-2xl" />
+            
+            <div className="relative bg-card rounded-2xl shadow-strong p-6 sm:p-10 md:p-16">
+              {/* Título com ícone */}
+              <div className="text-center mb-8 sm:mb-12">
+                <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-forest mb-4">
+                  <Home className="h-7 w-7 sm:h-8 sm:w-8 text-white" />
+                </div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
+                  Nossa Família Anfitriã
+                </h2>
+                {/* Linha decorativa */}
+                <div className="w-20 sm:w-24 h-1 bg-gradient-forest mx-auto mt-4 rounded-full" />
+              </div>
+
+              {/* Grid: Foto + Texto */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+                {/* Foto com moldura */}
+                <div className="relative group">
+                  <div className="absolute -inset-2 bg-gradient-forest rounded-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 blur-xl" />
+                  <img
+                    src={familiaAnfitria}
+                    alt="Família anfitriã ribeirinha da Pousada Arara Azul"
+                    className="relative w-full rounded-xl shadow-strong object-cover aspect-[4/5] sm:aspect-[3/4] group-hover:scale-[1.02] transition-transform duration-500"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+
+                {/* Texto */}
+                <div className="space-y-5 sm:space-y-6">
+                  <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                    Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha, a família vive às margens do Rio Negro, preservando tradições, histórias e saberes da vida amazônica.
+                  </p>
+                  
+                  <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+                    Eles conhecem cada canto dos lagos de Acajatuba, os segredos da pesca, das plantas medicinais e da vida cotidiana na floresta. Com carinho e simplicidade, compartilham sua cultura: preparam refeições típicas, conduzem passeios e ensinam sobre os costumes locais.
+                  </p>
+
+                  {/* Citação em destaque */}
+                  <blockquote className="relative pl-5 sm:pl-6 border-l-4 border-primary bg-primary/5 py-4 pr-4 rounded-r-lg">
+                    <p className="text-base sm:text-lg text-foreground italic leading-relaxed">
+                      "Cada hóspede se torna parte da história da família, participando de atividades como oficinas de artesanato, pescarias, visitas à comunidade e momentos de convivência ao redor da mesa de jantar. A hospitalidade da família ribeirinha transforma sua estadia em uma experiência única, genuína e inesquecível, conectando você à natureza e à cultura amazônica de forma autêntica."
+                    </p>
+                  </blockquote>
+                </div>
+              </div>
+            </div>
+          </section>
 
           {/* Mission Statement */}
           <div className="mt-12 sm:mt-16 max-w-4xl mx-auto text-center">
