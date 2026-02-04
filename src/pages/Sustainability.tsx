@@ -136,8 +136,8 @@ const Sustainability = () => {
 
               {/* Grid: Foto + Texto */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                {/* Foto com moldura */}
-                <div className="relative group">
+                {/* Foto com moldura e animação de entrada */}
+                <div className="relative group opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
                   <div className="absolute -inset-2 bg-gradient-forest rounded-2xl opacity-20 group-hover:opacity-30 transition-opacity duration-500 blur-xl" />
                   <img
                     src={familiaAnfitria}
@@ -148,8 +148,8 @@ const Sustainability = () => {
                   />
                 </div>
 
-                {/* Texto */}
-                <div className="space-y-5 sm:space-y-6">
+                {/* Texto com animação de entrada */}
+                <div className="space-y-5 sm:space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
                   <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
                     Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha, a família vive às margens do Rio Negro, preservando tradições, histórias e saberes da vida amazônica.
                   </p>
