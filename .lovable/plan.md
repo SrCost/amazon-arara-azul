@@ -1,247 +1,137 @@
 
 
-# Plano: Dashboard com Dados Reais e Validados
+# Plano: Seção "Nossa Família Anfitriã" na Página de Sustentabilidade
 
-## Diagnóstico do Problema Atual
+## Visão Geral
 
-Analisando o código do Dashboard e os dados do banco:
+Adicionar uma nova seção visualmente impactante na página `/sustentabilidade` apresentando a família ribeirinha que recebe os hóspedes na Pousada Arara Azul.
 
-| Elemento | Status Atual | Problema |
-|----------|--------------|----------|
-| **Cards de estatísticas** | Consulta banco | ✅ Funciona, mas filtra `is_test` parcialmente |
-| **Tendências (trends)** | Hardcoded | ❌ Valores fixos "+12.5%", "-3.1%" não são reais |
-| **Gráfico de Reservas** | Dados mockados | ❌ Array estático `monthlyData` com valores fictícios |
-| **Gráfico de Receita** | Dados mockados | ❌ Mesmo array estático com receitas falsas |
-| **Taxa de Ocupação** | Cálculo simplista | ⚠️ Não considera período de hospedagem real |
+## Localização na Página
 
-### Dados Reais no Banco
+A seção será inserida **após a seção "Nosso Impacto em Números"** e **antes da seção "Nossa Missão"**, criando uma transição natural entre os números de impacto social e a missão da pousada.
 
-| Métrica | Valor Real |
-|---------|------------|
-| Total de reservas | **25** (23 teste + 2 reais) |
-| Reservas reais (is_test=false) | **2** |
-| Quartos ativos | **3** |
-| Mensagens novas | **0** (1 lida) |
-| Receita do ano (real) | **R$ 9.440** (Jan/2026) |
+## Design Visual Proposto
 
----
+### Layout
+- Fundo com gradiente sutil verde/terra para destacar a seção
+- Layout em duas colunas no desktop (foto à esquerda, texto à direita)
+- Layout empilhado no mobile (foto em cima, texto embaixo)
 
-## Solução Proposta
+### Efeitos Visuais
+1. **Animação de entrada**: Fade-in-up ao entrar na viewport
+2. **Foto com moldura decorativa**: Borda arredondada com sombra suave e pequeno detalhe decorativo
+3. **Hover na foto**: Leve zoom e aumento de sombra
+4. **Ícone decorativo**: Coração ou ícone de família no título
+5. **Aspas decorativas**: Citação estilizada para destacar parte do texto
+6. **Linha decorativa**: Separador visual com gradiente verde
 
-### 1. Substituir Gráficos Mockados por Dados Reais
-
-Criar consultas que busquem dados mensais reais:
-
-```typescript
-// Buscar dados mensais dos últimos 6 meses
-const fetchMonthlyData = async () => {
-  const { data } = await supabase.rpc('get_monthly_dashboard_stats');
-  // ou consulta direta com agregação
-};
-```
-
-**Nova consulta SQL** para dados mensais:
-```sql
-SELECT 
-  TO_CHAR(check_in, 'Mon') as month,
-  COUNT(*) as reservations,
-  COALESCE(SUM(total_price), 0) as revenue
-FROM reservations
-WHERE is_test = false
-  AND status NOT IN ('cancelled')
-  AND check_in >= CURRENT_DATE - INTERVAL '6 months'
-GROUP BY DATE_TRUNC('month', check_in), TO_CHAR(check_in, 'Mon')
-ORDER BY DATE_TRUNC('month', check_in)
-```
-
-### 2. Calcular Tendências Reais
-
-Comparar período atual com período anterior:
-
-```typescript
-// Tendência = ((valor_atual - valor_anterior) / valor_anterior) * 100
-const calculateTrend = (current: number, previous: number): string => {
-  if (previous === 0) return current > 0 ? "+100%" : "0%";
-  const trend = ((current - previous) / previous) * 100;
-  return `${trend >= 0 ? '+' : ''}${trend.toFixed(1)}%`;
-};
-```
-
-### 3. Melhorar Cálculo de Taxa de Ocupação
-
-A taxa atual é incorreta. O cálculo correto considera **quarto-noites**:
+### Estrutura do Texto
 
 ```
-Taxa de Ocupação = (Noites Ocupadas / Noites Disponíveis) × 100
+🏠 Nossa Família Anfitriã
 
-Onde:
-- Noites Disponíveis = Quartos Ativos × Dias no Período
-- Noites Ocupadas = Soma das noites de cada reserva confirmada
-```
+[Parágrafo 1 - Introdução]
+Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha...
 
-Para o mês atual (Fevereiro/2026):
-- 3 quartos × 28 dias = 84 noites disponíveis
-- 0 noites ocupadas (reservas reais)
-- Taxa = 0%
+[Parágrafo 2 - Conhecimento]
+Eles conhecem cada canto dos lagos de Acajatuba...
 
-### 4. Garantir Filtro `is_test = false`
-
-Todas as consultas devem excluir dados de teste:
-
-```typescript
-// Sempre usar este filtro
-.eq("is_test", false)
+[Parágrafo 3 - Experiência - em destaque como citação]
+"Cada hóspede se torna parte da história da família..."
 ```
 
 ---
 
-## Arquivos a Modificar
+## Detalhes Técnicos
 
+### Arquivo a Modificar
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/admin/Dashboard.tsx` | Refatorar para buscar dados reais, calcular tendências e ocupação corretamente |
+| `src/pages/Sustainability.tsx` | Adicionar nova seção com foto e texto |
 
----
+### Arquivo de Imagem
+| Arquivo | Ação |
+|---------|------|
+| `src/assets/familia-anfitria.jpg` | Copiar a imagem enviada pelo usuário |
 
-## Detalhes da Implementação
+### Componente da Nova Seção
 
-### Dashboard.tsx - Nova Estrutura
-
-```typescript
-interface MonthlyStats {
-  month: string;
-  reservations: number;
-  revenue: number;
-}
-
-interface DashboardStats {
-  totalReservations: number;
-  occupancyRate: number;
-  pendingPayments: number;
-  newMessages: number;
-  totalRevenue: number;
-}
-
-interface Trends {
-  reservations: string;
-  occupancy: string;
-  payments: string;
-  messages: string;
-}
-
-const Dashboard = () => {
-  const [stats, setStats] = useState<DashboardStats>({...});
-  const [trends, setTrends] = useState<Trends>({...});
-  const [monthlyData, setMonthlyData] = useState<MonthlyStats[]>([]);
+```tsx
+{/* Host Family Section */}
+<section className="mt-16 sm:mt-20 relative overflow-hidden">
+  {/* Background decorativo */}
+  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
   
-  // Buscar dados mensais reais
-  const fetchMonthlyStats = async () => {
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
-    
-    const { data } = await supabase
-      .from("reservations")
-      .select("check_in, total_price, status")
-      .eq("is_test", false)
-      .neq("status", "cancelled")
-      .gte("check_in", sixMonthsAgo.toISOString());
-    
-    // Agrupar por mês no frontend
-    const grouped = groupByMonth(data);
-    setMonthlyData(grouped);
-  };
-  
-  // Calcular ocupação real
-  const calculateOccupancy = async () => {
-    const { data: reservations } = await supabase
-      .from("reservations")
-      .select("check_in, check_out, room_id")
-      .eq("is_test", false)
-      .in("status", ["confirmed", "pending", "hosted"]);
-    
-    const { count: roomsCount } = await supabase
-      .from("rooms")
-      .select("*", { count: "exact", head: true })
-      .eq("is_active", true);
-    
-    const daysInMonth = new Date(
-      new Date().getFullYear(), 
-      new Date().getMonth() + 1, 
-      0
-    ).getDate();
-    
-    const totalNightsAvailable = roomsCount * daysInMonth;
-    const occupiedNights = calculateOccupiedNights(reservations);
-    
-    return Math.round((occupiedNights / totalNightsAvailable) * 100);
-  };
-  
-  // Calcular tendências comparando com mês anterior
-  const calculateTrends = async () => {
-    // Mês atual vs mês anterior
-    const currentMonth = await getMonthStats(0);
-    const previousMonth = await getMonthStats(-1);
-    
-    setTrends({
-      reservations: calculateTrend(currentMonth.reservations, previousMonth.reservations),
-      occupancy: calculateTrend(currentMonth.occupancy, previousMonth.occupancy),
-      payments: calculateTrend(currentMonth.pendingPayments, previousMonth.pendingPayments),
-      messages: calculateTrend(currentMonth.messages, previousMonth.messages),
-    });
-  };
-};
+  <div className="relative bg-card rounded-2xl shadow-strong p-6 sm:p-10 md:p-16">
+    {/* Título com ícone */}
+    <div className="text-center mb-8 sm:mb-12">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-forest mb-4">
+        <Home className="h-8 w-8 text-white" />
+      </div>
+      <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
+        Nossa Família Anfitriã
+      </h2>
+      {/* Linha decorativa */}
+      <div className="w-24 h-1 bg-gradient-forest mx-auto mt-4 rounded-full" />
+    </div>
+
+    {/* Grid: Foto + Texto */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+      {/* Foto com moldura */}
+      <div className="relative group">
+        <div className="absolute -inset-2 bg-gradient-forest rounded-2xl opacity-20 
+                        group-hover:opacity-30 transition-opacity blur-xl" />
+        <img
+          src={familiaAnfitria}
+          alt="Família anfitriã ribeirinha da Pousada Arara Azul"
+          className="relative w-full rounded-xl shadow-strong object-cover 
+                     aspect-[4/5] sm:aspect-[3/4] 
+                     group-hover:scale-[1.02] transition-transform duration-500"
+        />
+      </div>
+
+      {/* Texto */}
+      <div className="space-y-6">
+        <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+          Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha...
+        </p>
+        
+        <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+          Eles conhecem cada canto dos lagos de Acajatuba...
+        </p>
+
+        {/* Citação em destaque */}
+        <blockquote className="relative pl-6 border-l-4 border-primary 
+                               bg-primary/5 py-4 pr-4 rounded-r-lg">
+          <p className="text-base sm:text-lg text-foreground italic leading-relaxed">
+            "Cada hóspede se torna parte da história da família..."
+          </p>
+        </blockquote>
+      </div>
+    </div>
+  </div>
+</section>
 ```
-
-### Visualização dos Cards com Tendências Reais
-
-```typescript
-const statCards = [
-  {
-    title: t("admin.totalReservations"),
-    value: loading ? "..." : stats.totalReservations.toString(),
-    icon: CalendarCheck,
-    trend: trends.reservations, // Calculado dinamicamente
-  },
-  // ... outros cards com trends calculados
-];
-```
-
-### Gráficos com Dados Reais
-
-Os gráficos usarão o state `monthlyData` que é preenchido com dados do banco:
-
-```typescript
-<LineChart data={monthlyData}> {/* Dados reais, não mockados */}
-```
-
----
-
-## Estado Final dos Dados
-
-Após implementação, se não houver reservas reais suficientes, os gráficos mostrarão:
-
-- **Meses sem dados**: Não aparecerão no gráfico (ou aparecerão com valor 0)
-- **Tendências**: Mostrarão "0%" ou "-" quando não há dados suficientes
-- **Taxa de ocupação**: Cálculo preciso baseado em noites-quarto
-
----
-
-## Considerações Importantes
-
-1. **Dados Escassos**: Com apenas 2 reservas reais, os gráficos ficarão "vazios" - isso é **correto e verdadeiro**
-2. **Período dos Gráficos**: Buscar últimos 6 meses com dados reais
-3. **Fallback Visual**: Mostrar mensagem "Dados insuficientes" se não houver reservas no período
-4. **Performance**: Usar consultas otimizadas com agregação no banco quando possível
 
 ---
 
 ## Resumo das Alterações
 
-| Componente | De | Para |
-|------------|-----|------|
-| Gráfico de Reservas | Array estático mockado | Consulta real agrupada por mês |
-| Gráfico de Receita | Array estático mockado | Soma de `total_price` por mês |
-| Trends dos Cards | Valores hardcoded | Cálculo comparativo mês atual vs anterior |
-| Taxa de Ocupação | `confirmados / quartos` | `noites_ocupadas / (quartos × dias)` |
-| Filtro is_test | Parcial | Aplicado em todas as consultas |
+| Item | Descrição |
+|------|-----------|
+| **Imagem** | Copiar foto da família para `src/assets/familia-anfitria.jpg` |
+| **Import** | Adicionar import da imagem e ícone `Home` |
+| **Seção** | Nova seção entre "Impacto em Números" e "Nossa Missão" |
+| **Efeitos** | Gradiente de fundo, moldura com glow, hover com zoom, blockquote estilizado |
+| **Responsivo** | Grid adaptativo (1 coluna mobile, 2 colunas desktop) |
+
+---
+
+## Resultado Visual Esperado
+
+- Seção que se destaca visualmente do resto da página
+- Foto da família com efeito de "glow" suave ao redor
+- Texto bem organizado em parágrafos com citação em destaque
+- Transição suave de hover que convida à interação
+- Design consistente com o estilo "amazônico verde" do resto do site
 
