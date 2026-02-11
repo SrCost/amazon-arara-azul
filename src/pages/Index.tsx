@@ -114,7 +114,7 @@ const Index = () => {
           <HeroCarousel onSlideChange={setHideHeroOverlay} />
           
           {/* Content Overlay */}
-          <div className={`absolute inset-0 z-10 transition-opacity duration-700 ${
+          <div className={`absolute inset-0 z-10 transition-opacity duration-500 will-change-[opacity] ${
             hideHeroOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
           }`}>
             <div className="flex items-center justify-center h-full">
