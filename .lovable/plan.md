@@ -1,57 +1,52 @@
 
 
-# Banner de Páscoa com Imagem Dedicada para Mobile
+# Correcao do Banner Mobile e Tablet
 
-## Problema
+## Problemas Identificados
 
-O banner de Páscoa atual é panorâmico (horizontal), o que não se adapta bem ao formato vertical do hero no mobile. Em vez de usar efeitos de blur ou corte, o usuário forneceu uma versão vertical do banner otimizada para mobile.
+1. **Mobile**: a imagem mobile esta usando `object-cover`, o que corta partes importantes do banner
+2. **Tablet** (768px-1023px): o breakpoint atual e `sm:` (640px), entao tablets recebem a versao desktop com `object-contain` e preenchimento azul liso
 
-## Solução
+## Solucao
 
-Adicionar suporte a uma imagem alternativa para mobile no carrossel, usando a imagem vertical fornecida no mobile e mantendo o banner panorâmico no desktop.
+### 1. Trocar breakpoint de `sm:` para `lg:` (1024px)
 
-## Alterações
+Seguindo o padrao ja estabelecido no projeto (tablets usam layout mobile), a imagem mobile sera exibida ate 1023px. Apenas a partir de 1024px (desktop) a versao panoramica sera usada.
 
-### 1. Copiar a imagem para o projeto
-- Copiar `user-uploads://image-14.png` para `src/assets/pascoa-pacote-banner-mobile.png`
+### 2. Usar `object-contain` + blur de fundo no mobile/tablet
 
-### 2. `src/components/HeroCarousel.tsx`
+Em vez de `object-cover` (que corta), a imagem mobile usara `object-contain` para mostrar o conteudo completo. O espaco restante sera preenchido com o efeito de blur (mesma tecnica implementada anteriormente):
 
-- Adicionar campo `mobileSrc` opcional na interface `CarouselImage`
-- Configurar o slide do banner de Páscoa com `mobileSrc` apontando para a imagem vertical
-- Renderizar duas tags `<img>` quando `mobileSrc` existir: uma visível apenas no mobile (`sm:hidden`) e outra apenas no desktop (`hidden sm:block`)
-- Remover a camada de blur (não será mais necessária)
+- Camada de fundo: imagem com `object-cover`, `blur-2xl`, `scale-110`, `opacity-80`
+- Camada principal: imagem com `object-contain` (nitida e completa)
+- Ambas visiveis apenas ate `lg:` (mobile + tablet)
+
+## Alteracao Tecnica
+
+### `src/components/HeroCarousel.tsx`
+
+Dentro do bloco `image.mobileSrc`, alterar de:
 
 ```tsx
-interface CarouselImage {
-  src: string;
-  mobileSrc?: string;  // novo campo
-  alt: string;
-  objectFit: "cover" | "contain";
-  backgroundColor?: string;
-  hideOverlay?: boolean;
-}
-
-const CAROUSEL_IMAGES: CarouselImage[] = [
-  { src: heroBungalow1, alt: "...", objectFit: "cover" },
-  { src: heroBungalow2, alt: "...", objectFit: "cover" },
-  { 
-    src: pascoaBanner, 
-    mobileSrc: pascoaBannerMobile,  // imagem vertical
-    alt: "Pacote Páscoa", 
-    objectFit: "contain", 
-    backgroundColor: "rgb(30, 58, 140)", 
-    hideOverlay: true 
-  },
-];
+<img src={image.mobileSrc} className="... object-cover sm:hidden" />
+<img src={image.src} className="... object-contain hidden sm:block" />
 ```
 
-Na renderização, quando `mobileSrc` existir:
-- Imagem mobile: `object-cover sm:hidden`
-- Imagem desktop: `hidden sm:block object-contain`
-- Quando não tiver `mobileSrc`: comportamento atual sem mudança
+Para:
+
+```tsx
+{/* Blur background - mobile/tablet only */}
+<img src={image.mobileSrc} aria-hidden="true"
+     className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-80 lg:hidden" />
+{/* Sharp mobile image - mobile/tablet only */}
+<img src={image.mobileSrc} className="absolute inset-0 w-full h-full object-contain lg:hidden" />
+{/* Desktop image */}
+<img src={image.src} className="absolute inset-0 w-full h-full object-contain hidden lg:block" />
+```
 
 ## Resultado Esperado
 
-- **Mobile**: banner vertical preenche o hero perfeitamente, sem corte, sem blur, sem preenchimento
-- **Desktop**: banner panorâmico exibido normalmente com `object-contain` e fundo azul
+- **Mobile**: banner completo sem corte, fundo preenchido com blur suave da propria imagem
+- **Tablet**: mesmo tratamento do mobile, sem preenchimento azul liso
+- **Desktop** (1024px+): banner panoramico com `object-contain` e fundo azul (sem mudanca)
+
