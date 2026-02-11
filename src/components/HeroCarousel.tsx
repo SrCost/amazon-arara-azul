@@ -3,9 +3,11 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import heroBungalow1 from "@/assets/hero-bungalow-1.jpg";
 import heroBungalow2 from "@/assets/hero-bungalow-2.jpg";
 import pascoaBanner from "@/assets/pascoa-pacote-banner.png";
+import pascoaBannerMobile from "@/assets/pascoa-pacote-banner-mobile.png";
 
 interface CarouselImage {
   src: string;
+  mobileSrc?: string;
   alt: string;
   objectFit: "cover" | "contain";
   backgroundColor?: string;
@@ -19,7 +21,7 @@ interface HeroCarouselProps {
 const CAROUSEL_IMAGES: CarouselImage[] = [
   { src: heroBungalow1, alt: "Pousada Arara Azul - Bangalô", objectFit: "cover" },
   { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" },
-  { src: pascoaBanner, alt: "Pacote Páscoa - Pousada Arara Azul", objectFit: "contain", backgroundColor: "rgb(30, 58, 140)", hideOverlay: true },
+  { src: pascoaBanner, mobileSrc: pascoaBannerMobile, alt: "Pacote Páscoa - Pousada Arara Azul", objectFit: "contain", backgroundColor: "rgb(30, 58, 140)", hideOverlay: true },
 ];
 
 const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
@@ -54,26 +56,39 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
           }`}
           style={{ backgroundColor: image.backgroundColor || "transparent" }}
         >
-          {image.objectFit === "contain" && (
+          {image.mobileSrc ? (
+            <>
+              <img
+                src={image.mobileSrc}
+                alt={image.alt}
+                loading={index === 0 ? "eager" : "lazy"}
+                decoding={index === 0 ? "sync" : "async"}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                className="absolute inset-0 w-full h-full object-cover sm:hidden"
+              />
+              <img
+                src={image.src}
+                alt={image.alt}
+                loading={index === 0 ? "eager" : "lazy"}
+                decoding={index === 0 ? "sync" : "async"}
+                fetchPriority={index === 0 ? "high" : "auto"}
+                className="absolute inset-0 w-full h-full object-contain hidden sm:block"
+              />
+            </>
+          ) : (
             <img
               src={image.src}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-80 sm:hidden"
+              alt={image.alt}
+              width={1920}
+              height={1080}
+              loading={index === 0 ? "eager" : "lazy"}
+              decoding={index === 0 ? "sync" : "async"}
+              fetchPriority={index === 0 ? "high" : "auto"}
+              className={`absolute inset-0 w-full h-full ${
+                image.objectFit === "cover" ? "object-cover" : "object-contain"
+              }`}
             />
           )}
-          <img
-            src={image.src}
-            alt={image.alt}
-            width={1920}
-            height={1080}
-            loading={index === 0 ? "eager" : "lazy"}
-            decoding={index === 0 ? "sync" : "async"}
-            fetchPriority={index === 0 ? "high" : "auto"}
-            className={`absolute inset-0 w-full h-full ${
-              image.objectFit === "cover" ? "object-cover" : "object-contain"
-            }`}
-          />
           {!image.hideOverlay && <div className="absolute inset-0 bg-black/20" />}
         </div>
       ))}
