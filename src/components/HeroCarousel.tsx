@@ -16,36 +16,37 @@ interface HeroCarouselProps {
   onSlideChange?: (hideOverlay: boolean) => void;
 }
 
+const CAROUSEL_IMAGES: CarouselImage[] = [
+  { src: heroBungalow1, alt: "Pousada Arara Azul - Bangalô", objectFit: "cover" },
+  { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" },
+  { src: pascoaBanner, alt: "Pacote Páscoa - Pousada Arara Azul", objectFit: "contain", backgroundColor: "rgb(30, 58, 140)", hideOverlay: true },
+];
+
 const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
-  const images: CarouselImage[] = [
-    { src: heroBungalow1, alt: "Pousada Arara Azul - Bangalô", objectFit: "cover" },
-    { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" },
-    { src: pascoaBanner, alt: "Pacote Páscoa - Pousada Arara Azul", objectFit: "contain", backgroundColor: "rgb(30, 58, 140)", hideOverlay: true },
-  ];
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
+      setCurrentIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [images.length]);
+  }, []);
 
   useEffect(() => {
-    onSlideChange?.(images[currentIndex].hideOverlay ?? false);
+    onSlideChange?.(CAROUSEL_IMAGES[currentIndex].hideOverlay ?? false);
   }, [currentIndex, onSlideChange]);
 
   const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
+    setCurrentIndex((prev) => (prev - 1 + CAROUSEL_IMAGES.length) % CAROUSEL_IMAGES.length);
   };
 
   const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
+    setCurrentIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
   };
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      {images.map((image, index) => (
+      {CAROUSEL_IMAGES.map((image, index) => (
         <div
           key={index}
           className={`absolute inset-0 transition-opacity duration-1000 ${
@@ -85,7 +86,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
       </button>
 
       <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {images.map((_, index) => (
+        {CAROUSEL_IMAGES.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
