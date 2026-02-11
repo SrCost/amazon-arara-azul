@@ -26,6 +26,7 @@ const fallbackCoverImages: Record<string, string> = {
 
 const Index = () => {
   const { t, i18n } = useTranslation();
+  const [hideHeroOverlay, setHideHeroOverlay] = useState(false);
   const [lodges, setLodges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -110,10 +111,12 @@ const Index = () => {
       {/* Hero Section with Carousel */}
       <section className="relative">
         <div className="relative w-full h-[400px] sm:h-[550px] md:h-[650px] lg:h-[700px] overflow-hidden">
-          <HeroCarousel />
+          <HeroCarousel onSlideChange={setHideHeroOverlay} />
           
           {/* Content Overlay */}
-          <div className="absolute inset-0 z-10">
+          <div className={`absolute inset-0 z-10 transition-opacity duration-700 ${
+            hideHeroOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
+          }`}>
             <div className="flex items-center justify-center h-full">
             <div className="text-center px-6 max-w-4xl mx-auto pt-20 sm:pt-16 md:pt-8 lg:pt-0">
                 <h1 className="text-lg xs:text-xl sm:text-2xl md:text-4xl lg:text-6xl xl:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in-up drop-shadow-lg leading-snug">
