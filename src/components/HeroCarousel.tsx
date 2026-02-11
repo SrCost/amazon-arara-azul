@@ -54,6 +54,14 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
           }`}
           style={{ backgroundColor: image.backgroundColor || "transparent" }}
         >
+          {image.objectFit === "contain" && (
+            <img
+              src={image.src}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-80 sm:hidden"
+            />
+          )}
           <img
             src={image.src}
             alt={image.alt}
@@ -63,7 +71,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
             decoding={index === 0 ? "sync" : "async"}
             fetchPriority={index === 0 ? "high" : "auto"}
             className={`absolute inset-0 w-full h-full ${
-              image.objectFit === "cover" ? "object-cover" : "object-cover sm:object-contain"
+              image.objectFit === "cover" ? "object-cover" : "object-contain"
             }`}
           />
           {!image.hideOverlay && <div className="absolute inset-0 bg-black/20" />}
