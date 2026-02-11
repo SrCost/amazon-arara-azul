@@ -1,66 +1,38 @@
 
 
-# Correção: Overlay do Hero Interferindo no Banner de Páscoa
+# Correção: Banner de Páscoa no Mobile sem Preenchimento Azul
 
 ## Problema
 
-O mecanismo de esconder o overlay (texto, botões, barra de busca) não está funcionando corretamente durante a transição do carrossel. O texto do hero permanece visível sobre o banner de Páscoa, prejudicando a leitura de ambos.
-
-## Causa Raiz
-
-O array `images` é recriado a cada render dentro do componente `HeroCarousel`, o que pode causar instabilidade na referência usada pelo `useEffect`. Além disso, a transição cross-fade de 1000ms do carrossel cria um período onde ambas as imagens são parcialmente visíveis, mas o overlay ainda está totalmente visível.
+No mobile, o hero tem proporção vertical (ex: 400px de altura em ~390px de largura), mas o banner de Páscoa é panorâmico (1200x628, ratio 1.91:1). Com `object-contain`, a imagem fica pequena e o fundo azul preenche o espaço restante acima e abaixo.
 
 ## Solução
 
-### 1. `src/components/HeroCarousel.tsx`
-- Mover o array `images` para fora do componente (constante estável) para evitar re-criação a cada render
-- Garantir que o `onSlideChange` seja chamado de forma confiável
+Usar `object-cover` no mobile para que o banner preencha todo o espaço (aceitando um leve corte lateral), e manter `object-contain` apenas em telas maiores (a partir de `sm:` / 640px) onde a proporção do container é mais compatível com o banner.
 
-### 2. `src/pages/Index.tsx`
-- Acelerar a transição do overlay para `duration-500` (mais rápida que a do carrossel)
-- Adicionar `will-change-opacity` para melhor performance da transição
-- Garantir que o overlay também esconda a barra de busca mobile abaixo do hero quando o banner estiver ativo
+## Alteração
 
-## Detalhes Técnicos
+### `src/components/HeroCarousel.tsx`
 
-### HeroCarousel.tsx - Images como constante externa
+Substituir a classe condicional de `objectFit` para usar classes responsivas:
 
+- Imagens normais (bangalôs): `object-cover` em todos os tamanhos (sem mudança)
+- Banner de Páscoa: `object-cover` no mobile + `object-contain` a partir de `sm:`
+
+A lógica muda de:
 ```tsx
-// Mover para FORA do componente
-const CAROUSEL_IMAGES: CarouselImage[] = [
-  { src: heroBungalow1, alt: "...", objectFit: "cover" },
-  { src: heroBungalow2, alt: "...", objectFit: "cover" },
-  { src: pascoaBanner, alt: "...", objectFit: "contain", backgroundColor: "rgb(30, 58, 140)", hideOverlay: true },
-];
-
-const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    onSlideChange?.(CAROUSEL_IMAGES[currentIndex].hideOverlay ?? false);
-  }, [currentIndex, onSlideChange]);
-  // ...
-};
+image.objectFit === "cover" ? "object-cover" : "object-contain"
 ```
 
-### Index.tsx - Transição mais rápida
-
+Para:
 ```tsx
-<div className={`absolute inset-0 z-10 transition-opacity duration-500 ${
-  hideHeroOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
-}`}>
+image.objectFit === "cover" ? "object-cover" : "object-cover sm:object-contain"
 ```
+
+Isso garante que no mobile o banner preencha o container sem letterboxing azul, enquanto em telas maiores a imagem continua sendo exibida inteira.
 
 ## Resultado Esperado
 
-- Quando o carrossel chegar ao banner de Páscoa, o texto/botões/barra de busca desaparecem rapidamente (500ms)
-- O banner fica limpo e totalmente legível
-- Quando voltar para os slides dos bangalôs, o texto reaparece suavemente
+- **Mobile**: Banner de Páscoa preenche o hero inteiro, com leve corte lateral se necessário, sem faixas azuis
+- **Desktop/Tablet**: Banner continua sendo exibido inteiramente com fundo azul nas laterais
 
