@@ -1,60 +1,66 @@
 
-# Plano: Esconder Texto do Hero Quando o Banner de Pascoa Estiver Ativo
+
+# Correção: Overlay do Hero Interferindo no Banner de Páscoa
 
 ## Problema
 
-O texto do hero ("Viva a Amazonia com Responsabilidade", subtitulo, botoes e barra de busca) fica sobreposto ao banner de Pascoa, tornando ambos ilegiveis.
+O mecanismo de esconder o overlay (texto, botões, barra de busca) não está funcionando corretamente durante a transição do carrossel. O texto do hero permanece visível sobre o banner de Páscoa, prejudicando a leitura de ambos.
 
-## Solucao
+## Causa Raiz
 
-Expor o estado do slide atual do `HeroCarousel` para o `Index.tsx`, e esconder o overlay de texto com uma transicao suave quando o slide ativo for o banner de Pascoa (que tem `hideOverlay: true`).
+O array `images` é recriado a cada render dentro do componente `HeroCarousel`, o que pode causar instabilidade na referência usada pelo `useEffect`. Além disso, a transição cross-fade de 1000ms do carrossel cria um período onde ambas as imagens são parcialmente visíveis, mas o overlay ainda está totalmente visível.
 
-## Alteracoes
+## Solução
 
 ### 1. `src/components/HeroCarousel.tsx`
-- Adicionar prop `onSlideChange?: (hideOverlay: boolean) => void`
-- Chamar o callback sempre que `currentIndex` mudar, passando o valor de `images[currentIndex].hideOverlay`
+- Mover o array `images` para fora do componente (constante estável) para evitar re-criação a cada render
+- Garantir que o `onSlideChange` seja chamado de forma confiável
 
 ### 2. `src/pages/Index.tsx`
-- Criar estado `hideHeroOverlay` (boolean)
-- Passar callback `onSlideChange` para `HeroCarousel`
-- Envolver o bloco "Content Overlay" (titulo, subtitulo, botoes, SearchBar) em uma transicao de opacidade:
-  - `opacity-100` quando slides normais estao ativos
-  - `opacity-0 pointer-events-none` quando o banner de Pascoa esta ativo
-- Usar `transition-opacity duration-700` para uma transicao suave entre estados
+- Acelerar a transição do overlay para `duration-500` (mais rápida que a do carrossel)
+- Adicionar `will-change-opacity` para melhor performance da transição
+- Garantir que o overlay também esconda a barra de busca mobile abaixo do hero quando o banner estiver ativo
 
-## Detalhes Tecnicos
+## Detalhes Técnicos
 
-### HeroCarousel.tsx - Nova prop
+### HeroCarousel.tsx - Images como constante externa
 
 ```tsx
-interface HeroCarouselProps {
-  onSlideChange?: (hideOverlay: boolean) => void;
-}
+// Mover para FORA do componente
+const CAROUSEL_IMAGES: CarouselImage[] = [
+  { src: heroBungalow1, alt: "...", objectFit: "cover" },
+  { src: heroBungalow2, alt: "...", objectFit: "cover" },
+  { src: pascoaBanner, alt: "...", objectFit: "contain", backgroundColor: "rgb(30, 58, 140)", hideOverlay: true },
+];
 
 const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
-  // ... existing code
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    onSlideChange?.(images[currentIndex].hideOverlay ?? false);
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    onSlideChange?.(CAROUSEL_IMAGES[currentIndex].hideOverlay ?? false);
   }, [currentIndex, onSlideChange]);
+  // ...
+};
 ```
 
-### Index.tsx - Estado e transicao
+### Index.tsx - Transição mais rápida
 
 ```tsx
-const [hideHeroOverlay, setHideHeroOverlay] = useState(false);
-
-<HeroCarousel onSlideChange={setHideHeroOverlay} />
-
-{/* Content Overlay - com transicao */}
-<div className={`absolute inset-0 z-10 transition-opacity duration-700 ${
+<div className={`absolute inset-0 z-10 transition-opacity duration-500 ${
   hideHeroOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
 }`}>
 ```
 
-## Resultado
+## Resultado Esperado
 
-- Slides dos bangalos: texto, botoes e barra de busca visiveis normalmente
-- Slide do banner de Pascoa: texto desaparece suavemente, mostrando o banner limpo
-- Transicao suave de 700ms entre os estados
+- Quando o carrossel chegar ao banner de Páscoa, o texto/botões/barra de busca desaparecem rapidamente (500ms)
+- O banner fica limpo e totalmente legível
+- Quando voltar para os slides dos bangalôs, o texto reaparece suavemente
+
