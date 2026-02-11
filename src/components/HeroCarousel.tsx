@@ -63,7 +63,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
             decoding={index === 0 ? "sync" : "async"}
             fetchPriority={index === 0 ? "high" : "auto"}
             className={`absolute inset-0 w-full h-full ${
-              image.objectFit === "cover" ? "object-cover" : "object-contain"
+              image.objectFit === "cover" ? "object-cover" : "object-cover sm:object-contain"
             }`}
           />
           {!image.hideOverlay && <div className="absolute inset-0 bg-black/20" />}
