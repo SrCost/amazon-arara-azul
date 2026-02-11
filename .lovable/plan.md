@@ -1,137 +1,118 @@
 
+# Plano: Adicionar Banner de Páscoa ao Carrossel da Página Inicial
 
-# Plano: Seção "Nossa Família Anfitriã" na Página de Sustentabilidade
+## Diagnóstico do Carrossel Atual
 
-## Visão Geral
+O `HeroCarousel.tsx` usa:
+- **Imagens atuais**: 1920x1080 (panorama largo)
+- **Array de imagens**: Hardcoded com `heroBungalow1` e `heroBungalow2`
+- **Renderização**: Cada imagem usa `object-cover` que corta a imagem para preencher o container
+- **Altura do hero**: Responsiva: 400px (mobile) → 550px (sm) → 650px (md) → 700px (lg)
+- **Taxa de aspecto**: Aproximadamente 16:9 (1920÷1080 = 1.78)
 
-Adicionar uma nova seção visualmente impactante na página `/sustentabilidade` apresentando a família ribeirinha que recebe os hóspedes na Pousada Arara Azul.
+## Problema com a Imagem de Páscoa
 
-## Localização na Página
+Sua imagem tem dimensões **1200x628**, o que resulta em:
+- **Taxa de aspecto**: 1200÷628 = **1.91** (mais panorâmica que 16:9)
+- **Comportamento com `object-cover`**: A imagem será **cortada horizontalmente** ou **verticalmente** dependendo do viewport, ocultando informações da campanha
 
-A seção será inserida **após a seção "Nosso Impacto em Números"** e **antes da seção "Nossa Missão"**, criando uma transição natural entre os números de impacto social e a missão da pousada.
+## Solução Proposta
 
-## Design Visual Proposto
+### Opção 1: Adicionar a Imagem com `object-contain` Seletivo (Recomendado)
+- Detectar qual imagem está sendo exibida
+- Para a imagem de Páscoa: usar `object-contain` (mostra a imagem inteira, pode ter letterboxing)
+- Para as outras: manter `object-cover` (preenche o container)
+- Adicionar fundo colorido (azul escuro, como na imagem) para o letterboxing
 
-### Layout
-- Fundo com gradiente sutil verde/terra para destacar a seção
-- Layout em duas colunas no desktop (foto à esquerda, texto à direita)
-- Layout empilhado no mobile (foto em cima, texto embaixo)
+### Opção 2: Redimensionar a Imagem em Edição (Mais Simples)
+- Redimensionar a imagem para 1920x1080 em uma ferramenta de edição (mantendo a proporção ou adicionando background)
+- Adicionar ao carrossel normalmente com `object-cover`
+- ✅ Mais simples, sem lógica adicional
+- ❌ Requer edição externa
 
-### Efeitos Visuais
-1. **Animação de entrada**: Fade-in-up ao entrar na viewport
-2. **Foto com moldura decorativa**: Borda arredondada com sombra suave e pequeno detalhe decorativo
-3. **Hover na foto**: Leve zoom e aumento de sombra
-4. **Ícone decorativo**: Coração ou ícone de família no título
-5. **Aspas decorativas**: Citação estilizada para destacar parte do texto
-6. **Linha decorativa**: Separador visual com gradiente verde
+### Opção 3: Usar Container Flex com Background Dinâmico
+- Manter a imagem em `object-contain` para não cortar
+- Usar um background dinâmico baseado na imagem (azul para Páscoa)
+- Criar um componente mais sofisticado
 
-### Estrutura do Texto
+## Implementação Recomendada (Opção 1)
 
+### Estrutura de Dados
+```typescript
+interface CarouselImage {
+  src: string;
+  alt: string;
+  objectFit: 'cover' | 'contain';
+  backgroundColor?: string; // Para letterboxing
+}
+
+const images: CarouselImage[] = [
+  {
+    src: heroBungalow1,
+    alt: "Pousada Arara Azul - Bangalô",
+    objectFit: 'cover',
+  },
+  {
+    src: heroBungalow2,
+    alt: "Pousada Arara Azul - Bangalô 2",
+    objectFit: 'cover',
+  },
+  {
+    src: pascoapacoteImage,
+    alt: "Pacote Páscoa - Pousada Arara Azul",
+    objectFit: 'contain', // Mostra a imagem inteira
+    backgroundColor: 'rgb(30, 58, 140)', // Azul da campanha
+  },
+];
 ```
-🏠 Nossa Família Anfitriã
 
-[Parágrafo 1 - Introdução]
-Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha...
-
-[Parágrafo 2 - Conhecimento]
-Eles conhecem cada canto dos lagos de Acajatuba...
-
-[Parágrafo 3 - Experiência - em destaque como citação]
-"Cada hóspede se torna parte da história da família..."
+### Renderização Atualizada
+```tsx
+<div
+  key={index}
+  className={`absolute inset-0 transition-opacity duration-1000 ${
+    index === currentIndex ? "opacity-100" : "opacity-0"
+  }`}
+  style={{
+    backgroundColor: images[index].backgroundColor || 'transparent',
+  }}
+>
+  <img
+    src={images[index].src}
+    alt={images[index].alt}
+    width={1920}
+    height={1080}
+    loading={index === 0 ? "eager" : "lazy"}
+    decoding={index === 0 ? "sync" : "async"}
+    fetchPriority={index === 0 ? "high" : "auto"}
+    className={`absolute inset-0 w-full h-full ${
+      images[index].objectFit === 'cover' ? 'object-cover' : 'object-contain'
+    }`}
+  />
+  <div className="absolute inset-0 bg-black/20" />
+</div>
 ```
 
----
+## Arquivos a Modificar
 
-## Detalhes Técnicos
-
-### Arquivo a Modificar
 | Arquivo | Alteração |
 |---------|-----------|
-| `src/pages/Sustainability.tsx` | Adicionar nova seção com foto e texto |
+| `src/assets/` | Copiar `CAMPANHA-PACOTE-PASCOASITE.png` como `pascoa-pacote-banner.png` |
+| `src/components/HeroCarousel.tsx` | Refatorar para array de objetos com metadados de imagem, usar `object-contain` para Páscoa |
 
-### Arquivo de Imagem
-| Arquivo | Ação |
-|---------|------|
-| `src/assets/familia-anfitria.jpg` | Copiar a imagem enviada pelo usuário |
+## Benefícios da Solução
 
-### Componente da Nova Seção
+✅ **Sem corte de informações**: A imagem de Páscoa será exibida inteira
+✅ **Responsivo**: Funciona em todos os tamanhos de tela
+✅ **Flexível**: Fácil adicionar mais imagens com diferentes comportamentos
+✅ **Visual coeso**: Background azul combina com o design da campanha
+✅ **Performance**: Mesmo carregamento de imagens (lazy loading mantido)
 
-```tsx
-{/* Host Family Section */}
-<section className="mt-16 sm:mt-20 relative overflow-hidden">
-  {/* Background decorativo */}
-  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-  
-  <div className="relative bg-card rounded-2xl shadow-strong p-6 sm:p-10 md:p-16">
-    {/* Título com ícone */}
-    <div className="text-center mb-8 sm:mb-12">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-forest mb-4">
-        <Home className="h-8 w-8 text-white" />
-      </div>
-      <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground">
-        Nossa Família Anfitriã
-      </h2>
-      {/* Linha decorativa */}
-      <div className="w-24 h-1 bg-gradient-forest mx-auto mt-4 rounded-full" />
-    </div>
+## Resultado Final
 
-    {/* Grid: Foto + Texto */}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-      {/* Foto com moldura */}
-      <div className="relative group">
-        <div className="absolute -inset-2 bg-gradient-forest rounded-2xl opacity-20 
-                        group-hover:opacity-30 transition-opacity blur-xl" />
-        <img
-          src={familiaAnfitria}
-          alt="Família anfitriã ribeirinha da Pousada Arara Azul"
-          className="relative w-full rounded-xl shadow-strong object-cover 
-                     aspect-[4/5] sm:aspect-[3/4] 
-                     group-hover:scale-[1.02] transition-transform duration-500"
-        />
-      </div>
-
-      {/* Texto */}
-      <div className="space-y-6">
-        <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha...
-        </p>
-        
-        <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-          Eles conhecem cada canto dos lagos de Acajatuba...
-        </p>
-
-        {/* Citação em destaque */}
-        <blockquote className="relative pl-6 border-l-4 border-primary 
-                               bg-primary/5 py-4 pr-4 rounded-r-lg">
-          <p className="text-base sm:text-lg text-foreground italic leading-relaxed">
-            "Cada hóspede se torna parte da história da família..."
-          </p>
-        </blockquote>
-      </div>
-    </div>
-  </div>
-</section>
-```
-
----
-
-## Resumo das Alterações
-
-| Item | Descrição |
-|------|-----------|
-| **Imagem** | Copiar foto da família para `src/assets/familia-anfitria.jpg` |
-| **Import** | Adicionar import da imagem e ícone `Home` |
-| **Seção** | Nova seção entre "Impacto em Números" e "Nossa Missão" |
-| **Efeitos** | Gradiente de fundo, moldura com glow, hover com zoom, blockquote estilizado |
-| **Responsivo** | Grid adaptativo (1 coluna mobile, 2 colunas desktop) |
-
----
-
-## Resultado Visual Esperado
-
-- Seção que se destaca visualmente do resto da página
-- Foto da família com efeito de "glow" suave ao redor
-- Texto bem organizado em parágrafos com citação em destaque
-- Transição suave de hover que convida à interação
-- Design consistente com o estilo "amazônico verde" do resto do site
-
+- Carrossel rotacionará entre:
+  1. Bangalô 1 (object-cover)
+  2. Bangalô 2 (object-cover)
+  3. Pacote Páscoa (object-contain com fundo azul)
+- Cada imagem será exibida por 5 segundos
+- Navegação por setas e indicadores funcionará normalmente
