@@ -1,57 +1,57 @@
 
 
-# Efeito Blur de Fundo para Banner no Mobile
+# Banner de Páscoa com Imagem Dedicada para Mobile
 
 ## Problema
 
-Com `object-cover` no mobile, o banner fica muito cortado e perde informacao importante. Com `object-contain`, sobra espaco azul liso que nao fica agradavel.
+O banner de Páscoa atual é panorâmico (horizontal), o que não se adapta bem ao formato vertical do hero no mobile. Em vez de usar efeitos de blur ou corte, o usuário forneceu uma versão vertical do banner otimizada para mobile.
 
-## Solucao
+## Solução
 
-Usar uma tecnica de "blurred background" no mobile: renderizar a mesma imagem do banner duas vezes em camadas sobrepostas:
+Adicionar suporte a uma imagem alternativa para mobile no carrossel, usando a imagem vertical fornecida no mobile e mantendo o banner panorâmico no desktop.
 
-1. **Camada de fundo**: a imagem com `object-cover`, escala ampliada e `blur` forte -- preenche todo o espaco com uma versao desfocada e colorida do banner
-2. **Camada principal**: a imagem com `object-contain` por cima, mostrando o banner completo e nitido
+## Alterações
 
-No desktop (a partir de `sm:`), mantemos o comportamento atual com `object-contain` e fundo azul solido.
+### 1. Copiar a imagem para o projeto
+- Copiar `user-uploads://image-14.png` para `src/assets/pascoa-pacote-banner-mobile.png`
 
-## Resultado Visual
+### 2. `src/components/HeroCarousel.tsx`
 
-- **Mobile**: fundo preenchido com uma versao desfocada/colorida do proprio banner, sem faixas lisas. A imagem principal aparece centralizada e completa
-- **Desktop**: sem mudanca, banner exibido inteiramente com fundo azul
-
-## Alteracao Tecnica
-
-### `src/components/HeroCarousel.tsx`
-
-Para slides com `objectFit: "contain"`, renderizar duas tags `<img>`:
+- Adicionar campo `mobileSrc` opcional na interface `CarouselImage`
+- Configurar o slide do banner de Páscoa com `mobileSrc` apontando para a imagem vertical
+- Renderizar duas tags `<img>` quando `mobileSrc` existir: uma visível apenas no mobile (`sm:hidden`) e outra apenas no desktop (`hidden sm:block`)
+- Remover a camada de blur (não será mais necessária)
 
 ```tsx
-{image.objectFit === "contain" && (
-  <img
-    src={image.src}
-    alt=""
-    aria-hidden="true"
-    className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-80 sm:hidden"
-  />
-)}
-<img
-  src={image.src}
-  alt={image.alt}
-  className={`absolute inset-0 w-full h-full ${
-    image.objectFit === "cover"
-      ? "object-cover"
-      : "object-contain"
-  }`}
-/>
+interface CarouselImage {
+  src: string;
+  mobileSrc?: string;  // novo campo
+  alt: string;
+  objectFit: "cover" | "contain";
+  backgroundColor?: string;
+  hideOverlay?: boolean;
+}
+
+const CAROUSEL_IMAGES: CarouselImage[] = [
+  { src: heroBungalow1, alt: "...", objectFit: "cover" },
+  { src: heroBungalow2, alt: "...", objectFit: "cover" },
+  { 
+    src: pascoaBanner, 
+    mobileSrc: pascoaBannerMobile,  // imagem vertical
+    alt: "Pacote Páscoa", 
+    objectFit: "contain", 
+    backgroundColor: "rgb(30, 58, 140)", 
+    hideOverlay: true 
+  },
+];
 ```
 
-A camada de blur usa:
-- `object-cover` para preencher todo o espaco
-- `scale-110` para evitar bordas transparentes do blur
-- `blur-2xl` para desfocar bastante (efeito minimalista)
-- `opacity-80` para suavizar
-- `sm:hidden` para mostrar apenas no mobile
+Na renderização, quando `mobileSrc` existir:
+- Imagem mobile: `object-cover sm:hidden`
+- Imagem desktop: `hidden sm:block object-contain`
+- Quando não tiver `mobileSrc`: comportamento atual sem mudança
 
-No mobile, a imagem principal volta a usar `object-contain` (nao mais `object-cover`), pois o fundo desfocado ja resolve o problema do espaco vazio.
+## Resultado Esperado
 
+- **Mobile**: banner vertical preenche o hero perfeitamente, sem corte, sem blur, sem preenchimento
+- **Desktop**: banner panorâmico exibido normalmente com `object-contain` e fundo azul
