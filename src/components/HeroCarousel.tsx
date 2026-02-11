@@ -12,7 +12,11 @@ interface CarouselImage {
   hideOverlay?: boolean;
 }
 
-const HeroCarousel = () => {
+interface HeroCarouselProps {
+  onSlideChange?: (hideOverlay: boolean) => void;
+}
+
+const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
   const images: CarouselImage[] = [
     { src: heroBungalow1, alt: "Pousada Arara Azul - Bangalô", objectFit: "cover" },
     { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" },
@@ -26,6 +30,10 @@ const HeroCarousel = () => {
     }, 5000);
     return () => clearInterval(interval);
   }, [images.length]);
+
+  useEffect(() => {
+    onSlideChange?.(images[currentIndex].hideOverlay ?? false);
+  }, [currentIndex, onSlideChange]);
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
