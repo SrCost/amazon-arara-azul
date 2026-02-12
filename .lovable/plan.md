@@ -1,39 +1,39 @@
 
-# Substituir Imagem Mobile/Tablet do Banner de Páscoa
 
-## Estado Atual
+# Substituir Imagem Mobile/Tablet do Banner de Pascoa (1080x1080)
 
-O componente `HeroCarousel.tsx` já está corretamente configurado para usar imagens responsivas:
-- `src` (desktop): banner panorâmico com `object-contain`
-- `mobileSrc` (mobile/tablet até 1023px): imagem vertical com `object-cover object-top lg:hidden`
-- A configuração técnica está pronta, apenas a imagem precisa ser atualizada
+## Problema
 
-## Nova Imagem Redimensionada
+As imagens anteriores (formato story 9:16) eram muito altas para o container do hero, resultando em corte excessivo mesmo com `object-top`.
 
-A imagem enviada (`user-uploads://image-15.png`) é uma versão otimizada para mobile/tablet com:
-- Layout vertical (story 9:16)
-- Logo "Arara Azul" bem posicionado no topo
-- "Pacote Páscoa" em destaque (caixa amarela)
-- Fundo com céu (melhor aproveitamento visual)
-- "15% OFF" em amarelo bem visível
-- Textos descritivos claros
-- CTA "Faça sua reserva" no rodapé
-- Enquadramento otimizado para evitar cortes indesejados
+## Nova Imagem
 
-## Solução
+A imagem enviada tem dimensoes 1080x1080 (quadrada), que se encaixa muito melhor no container do hero (que tem proporcao mais larga que alta). Com uma imagem quadrada, o corte sera minimo ou inexistente.
 
-### Substituir o asset `src/assets/pascoa-pacote-banner-mobile.png`
+## Solucao
 
-Copiar `user-uploads://image-15.png` para `src/assets/pascoa-pacote-banner-mobile.png`, substituindo a versão anterior.
+### 1. Substituir o asset
 
-**Nenhuma alteração no código TypeScript é necessária** - o componente já está configurado corretamente para:
-- Exibir a imagem mobile com `object-cover object-top` em dispositivos até 1023px
-- Manter o banner panorâmico no desktop (1024px+)
-- Preservar o fundo azul no desktop
+Copiar `user-uploads://Captura_de_tela_2026-02-12_092611_1.jpg` para `src/assets/pascoa-pacote-banner-mobile.png`, substituindo a versao anterior.
+
+### 2. Ajustar posicionamento para `object-center`
+
+Como a imagem agora e quadrada (1080x1080), o conteudo esta distribuido de forma mais uniforme. Trocar `object-top` por `object-[center_top]` ou manter `object-top` pode cortar a parte inferior desnecessariamente. Com uma imagem quadrada, `object-cover` com posicionamento centralizado (`object-center`) ou levemente para cima (`object-[20%]`) pode funcionar melhor, ja que o logo esta no topo e o CTA no rodape.
+
+Vamos usar `object-cover object-top` mesmo, pois o logo Arara Azul e o "Pacote Pascoa" estao no topo e sao os elementos mais importantes. O CTA "Faca sua reserva" na parte inferior pode ser levemente cortado em telas muito largas, mas todo o conteudo principal ficara visivel.
+
+## Alteracao Tecnica
+
+### `src/assets/pascoa-pacote-banner-mobile.png`
+- Substituir pela nova imagem quadrada 1080x1080
+
+### `src/components/HeroCarousel.tsx`
+- Nenhuma alteracao de codigo necessaria
+- O `object-cover object-top lg:hidden` existente ja funciona bem para uma imagem quadrada
 
 ## Resultado Esperado
 
-- **Mobile (400px)**: Imagem preenche toda a área com melhor enquadramento, logo e texto bem visíveis
-- **Tablet (550-650px)**: Aproveitamento máximo do espaço vertical, sem cortes críticos
-- **Desktop (1024px+)**: Banner panorámico sem mudança (mantém fundo azul)
+- **Mobile (400px)**: Imagem quadrada preenche a area com corte minimo. Logo, "15% OFF", textos e fotos bem visiveis
+- **Tablet (768px)**: Ainda melhor aproveitamento, praticamente sem corte
+- **Desktop (1024px+)**: Sem mudanca (banner panoramico)
 
