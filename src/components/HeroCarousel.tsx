@@ -64,7 +64,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
                 loading={index === 0 ? "eager" : "lazy"}
                 decoding={index === 0 ? "sync" : "async"}
                 fetchPriority={index === 0 ? "high" : "auto"}
-                className="absolute inset-0 w-full h-full object-cover object-top lg:hidden"
+                className="absolute inset-0 w-full h-full object-contain lg:hidden"
               />
               <img
                 src={image.src}
