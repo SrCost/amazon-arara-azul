@@ -21,7 +21,7 @@ interface HeroCarouselProps {
 const CAROUSEL_IMAGES: CarouselImage[] = [
   { src: heroBungalow1, alt: "Pousada Arara Azul - Bangalô", objectFit: "cover" },
   { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" },
-  { src: pascoaBanner, mobileSrc: pascoaBannerMobile, alt: "Pacote Páscoa - Pousada Arara Azul", objectFit: "contain", backgroundColor: "rgb(30, 58, 140)", hideOverlay: true },
+  { src: pascoaBanner, mobileSrc: pascoaBannerMobile, alt: "Pacote Páscoa - Pousada Arara Azul", objectFit: "contain", backgroundColor: "hsl(120, 15%, 97%)", hideOverlay: true },
 ];
 
 const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
