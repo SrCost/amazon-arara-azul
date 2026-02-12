@@ -1,55 +1,39 @@
 
+# Substituir Imagem Mobile/Tablet do Banner de Páscoa
 
-# Trocar Imagem Mobile do Banner e Ajustar Enquadramento
+## Estado Atual
 
-## Problema Atual
+O componente `HeroCarousel.tsx` já está corretamente configurado para usar imagens responsivas:
+- `src` (desktop): banner panorâmico com `object-contain`
+- `mobileSrc` (mobile/tablet até 1023px): imagem vertical com `object-cover object-top lg:hidden`
+- A configuração técnica está pronta, apenas a imagem precisa ser atualizada
 
-A imagem mobile atual nao se encaixa bem no container do hero. O `object-contain` deixa a imagem muito pequena com espacos vazios, e o `object-cover` corta demais.
+## Nova Imagem Redimensionada
 
-## Nova Imagem
+A imagem enviada (`user-uploads://image-15.png`) é uma versão otimizada para mobile/tablet com:
+- Layout vertical (story 9:16)
+- Logo "Arara Azul" bem posicionado no topo
+- "Pacote Páscoa" em destaque (caixa amarela)
+- Fundo com céu (melhor aproveitamento visual)
+- "15% OFF" em amarelo bem visível
+- Textos descritivos claros
+- CTA "Faça sua reserva" no rodapé
+- Enquadramento otimizado para evitar cortes indesejados
 
-A nova imagem enviada (formato story 9:16) tem o conteudo principal (logotipo, "15% OFF", texto, "Faca sua reserva") concentrado na metade superior/central da imagem. A parte inferior e majoritariamente a ponte de madeira (menos importante).
+## Solução
 
-## Solucao
+### Substituir o asset `src/assets/pascoa-pacote-banner-mobile.png`
 
-### 1. Substituir a imagem mobile
+Copiar `user-uploads://image-15.png` para `src/assets/pascoa-pacote-banner-mobile.png`, substituindo a versão anterior.
 
-Copiar `user-uploads://CAMPANHA-PACOTE-PASCOASTORY.png` para `src/assets/pascoa-pacote-banner-mobile.png` (substituindo a anterior).
-
-### 2. Usar `object-cover` com `object-top` no mobile/tablet
-
-Como a imagem e bem mais alta que o container (hero tem 400-650px, imagem tem ~1920px de altura), `object-cover` vai cortar -- mas usando `object-top` garantimos que o corte acontece apenas na parte inferior (a ponte), preservando o logotipo, o "15% OFF" e todo o texto informativo.
-
-### 3. Remover o efeito blur de fundo
-
-Com `object-cover`, a imagem preenche todo o container sem espacos vazios, entao a camada de blur nao e mais necessaria.
-
-## Alteracao Tecnica
-
-### `src/components/HeroCarousel.tsx`
-
-Dentro do bloco `image.mobileSrc`:
-
-**De:**
-```
-blur background img (lg:hidden)
-img object-contain lg:hidden
-img object-contain hidden lg:block
-```
-
-**Para:**
-```
-img object-cover object-top lg:hidden
-img object-contain hidden lg:block
-```
-
-- Remover a tag `<img>` do blur (aria-hidden)
-- Trocar `object-contain` por `object-cover object-top` na imagem mobile
-- Manter a imagem desktop (`object-contain hidden lg:block`) sem mudanca
+**Nenhuma alteração no código TypeScript é necessária** - o componente já está configurado corretamente para:
+- Exibir a imagem mobile com `object-cover object-top` em dispositivos até 1023px
+- Manter o banner panorâmico no desktop (1024px+)
+- Preservar o fundo azul no desktop
 
 ## Resultado Esperado
 
-- **Mobile (400px)**: a imagem preenche toda a area, corte apenas na parte inferior (ponte). Logo, "15% OFF", texto e botao ficam visiveis
-- **Tablet (550-650px)**: mais espaco vertical, mostra ainda mais conteudo da imagem. Mesmo enquadramento a partir do topo
-- **Desktop (1024px+)**: banner panoramico sem mudanca
+- **Mobile (400px)**: Imagem preenche toda a área com melhor enquadramento, logo e texto bem visíveis
+- **Tablet (550-650px)**: Aproveitamento máximo do espaço vertical, sem cortes críticos
+- **Desktop (1024px+)**: Banner panorámico sem mudança (mantém fundo azul)
 
