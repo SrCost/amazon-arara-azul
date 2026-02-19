@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Package } from "lucide-react";
+import { CalendarIcon, Loader2, Package, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/hooks/useCalendarReservations";
 
@@ -88,6 +88,10 @@ const NewReservationModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [packages, setPackages] = useState<PackageOption[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<PackageOption | null>(null);
+  const [isManualDailyRate, setIsManualDailyRate] = useState(false);
+  const [manualDailyRateValue, setManualDailyRateValue] = useState(0);
+  const [isManualTotalPrice, setIsManualTotalPrice] = useState(false);
+  const [manualTotalPriceValue, setManualTotalPriceValue] = useState(0);
 
   const defaultRoom = rooms.find((r) => r.id === initialRoomId) || rooms[0];
   const defaultCheckIn = initialDate || new Date();
@@ -119,12 +123,19 @@ const NewReservationModal = ({
   
   // Calculate pricing based on package or manual
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
-  const dailyRate = selectedPackage 
-    ? selectedPackage.price / nights 
-    : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
-  const totalPrice = selectedPackage 
-    ? selectedPackage.price 
-    : dailyRate * nights;
+  const calculatedDailyRate = Math.round(
+    (selectedPackage 
+      ? selectedPackage.price / nights 
+      : getDailyRate(watchedValues.guests, watchedValues.daily_rate)) * 100
+  ) / 100;
+  const calculatedTotalPrice = Math.round(
+    (selectedPackage 
+      ? selectedPackage.price 
+      : calculatedDailyRate * nights) * 100
+  ) / 100;
+  
+  const dailyRate = isManualDailyRate ? manualDailyRateValue : calculatedDailyRate;
+  const totalPrice = isManualTotalPrice ? manualTotalPriceValue : calculatedTotalPrice;
 
   // Fetch packages
   useEffect(() => {
@@ -146,6 +157,8 @@ const NewReservationModal = ({
   const handlePackageChange = (packageId: string) => {
     form.setValue("package_id", packageId);
     
+    setIsManualDailyRate(false);
+    setIsManualTotalPrice(false);
     if (packageId && packageId !== "none") {
       const pkg = packages.find((p) => p.id === packageId);
       if (pkg) {
@@ -180,6 +193,8 @@ const NewReservationModal = ({
       const room = rooms.find((r) => r.id === initialRoomId) || rooms[0];
       const checkIn = initialDate || new Date();
       setSelectedPackage(null);
+      setIsManualDailyRate(false);
+      setIsManualTotalPrice(false);
       form.reset({
         guest_name: "",
         guest_email: "",
@@ -230,7 +245,7 @@ const NewReservationModal = ({
         package_id: data.package_id && data.package_id !== "none" ? data.package_id : null,
         cpf: data.cpf || null,
         passport: data.passport || null,
-        daily_rate: selectedPackage ? selectedPackage.price / nights : data.daily_rate,
+        daily_rate: dailyRate,
         total_price: totalPrice,
         reservation_source: data.reservation_source,
         operational_status: data.operational_status,
@@ -553,20 +568,74 @@ const NewReservationModal = ({
               />
 
               <div className="space-y-1">
-                <p className="text-sm font-medium">Diária Calculada</p>
-                <p className="text-lg font-bold text-primary">
-                  R$ {dailyRate.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm font-medium">Diária Calculada</p>
+                  {isManualDailyRate && <span className="text-xs text-amber-600 font-medium">(manual)</span>}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      if (!isManualDailyRate) {
+                        setManualDailyRateValue(calculatedDailyRate);
+                      }
+                      setIsManualDailyRate(!isManualDailyRate);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+                {isManualDailyRate ? (
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={manualDailyRateValue}
+                    onChange={(e) => setManualDailyRateValue(Number(e.target.value))}
+                    className="h-8"
+                  />
+                ) : (
+                  <p className="text-lg font-bold text-primary">
+                    R$ {calculatedDailyRate.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                )}
                 <p className="text-xs text-muted-foreground">
                   {selectedPackage ? `Pacote: ${selectedPackage.name}` : `Para ${watchedValues.guests} pessoa(s)`}
                 </p>
               </div>
 
               <div className="space-y-1">
-                <p className="text-sm font-medium">Total ({nights} noite{nights !== 1 ? "s" : ""})</p>
-                <p className="text-2xl font-bold text-primary">
-                  R$ {totalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </p>
+                <div className="flex items-center gap-1">
+                  <p className="text-sm font-medium">Total ({nights} noite{nights !== 1 ? "s" : ""})</p>
+                  {isManualTotalPrice && <span className="text-xs text-amber-600 font-medium">(manual)</span>}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      if (!isManualTotalPrice) {
+                        setManualTotalPriceValue(calculatedTotalPrice);
+                      }
+                      setIsManualTotalPrice(!isManualTotalPrice);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+                {isManualTotalPrice ? (
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={manualTotalPriceValue}
+                    onChange={(e) => setManualTotalPriceValue(Number(e.target.value))}
+                    className="h-8"
+                  />
+                ) : (
+                  <p className="text-2xl font-bold text-primary">
+                    R$ {calculatedTotalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                )}
               </div>
             </div>
 
