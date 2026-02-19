@@ -1,45 +1,34 @@
 
 
-# Corrigir Permissoes de Admin no Calendario de Reservas
+# Corrigir Calculo de Precos e Adicionar Edicao Manual no Modal de Nova Reserva
 
-## Problema Identificado
+## Problemas Identificados
 
-A tabela `user_roles` possui apenas politicas RLS que permitem SELECT para `super_admin`. Quando um usuario com role `admin` faz login, o `AuthContext` consulta diretamente a tabela `user_roles` para verificar o papel do usuario, mas a politica RLS bloqueia a leitura -- retornando resultado vazio. Isso faz com que `isAdmin = false`, escondendo todos os botoes de edicao ("Nova Reserva", "Bloquear Datas", "Modo arrastar") e impedindo cliques nas celulas do calendario.
+1. **Formatacao incorreta**: Os valores de "Diaria Calculada" e "Total" exibem 3 casas decimais (ex: R$ 2.393,936) em vez de 2 casas (R$ 2.393,94). O calculo aplica o multiplicador de hospedes (1.596) sobre a tarifa base (1499,96) sem arredondar o resultado.
 
-## Usuarios Afetados
-
-- **laracabral@pousadararazul.com** (role: admin)
-- **teste2@gmail.com** (role: admin)
-
-Os usuarios `super_admin` nao sao afetados porque a politica existente ja permite SELECT para eles.
+2. **Sem edicao manual**: Os campos "Diaria Calculada" e "Total" sao somente leitura, sem opcao de sobrescrita manual pelo administrador.
 
 ## Solucao
 
-Adicionar uma politica RLS na tabela `user_roles` que permita cada usuario autenticado ver **seus proprios** registros de role.
+### Arquivo: `src/components/admin/calendar/NewReservationModal.tsx`
 
-## Detalhes Tecnicos
+1. **Arredondar valores calculados** para 2 casas decimais usando `Math.round(value * 100) / 100`
 
-### Migracao SQL
+2. **Adicionar estados de override manual** (`manualDailyRate` e `manualTotalPrice`) que, quando ativados, permitem ao admin digitar valores customizados nos campos
 
-```sql
-CREATE POLICY "Users can view own roles"
-ON public.user_roles
-FOR SELECT
-TO authenticated
-USING (auth.uid() = user_id);
-```
+3. **Adicionar botoes de edicao (icone de lapis)** ao lado dos labels "Diaria Calculada" e "Total" que alternam entre modo calculado automatico e modo manual
 
-Esta politica e simples e segura:
-- Cada usuario so ve seus proprios roles (filtro por `user_id`)
-- Nao expoe roles de outros usuarios
-- Aplica-se apenas a usuarios autenticados (`TO authenticated`)
-- Nenhuma alteracao de codigo e necessaria -- o `AuthContext` ja faz a query correta, so precisa que o RLS permita a leitura
+4. **Indicador visual "(manual)"** quando o valor foi sobrescrito manualmente, similar ao que ja existe no modal de edicao de reserva (conforme memoria do projeto)
 
-### Nenhuma alteracao de codigo
+5. **Ao salvar**, usar os valores manuais quando definidos, caso contrario usar os calculados (arredondados)
 
-O fluxo existente no `AuthContext.checkUserRole()` ja funciona corretamente:
-1. Consulta `user_roles` filtrando por `user_id`
-2. Extrai os roles retornados
-3. Define `isAdmin` e `isSuperAdmin` conforme encontrado
+### Detalhes tecnicos das alteracoes
 
-O unico problema e que a query retorna vazio para admins por causa do RLS. Com a nova politica, a query retornara o role correto e tudo funcionara automaticamente.
+- Importar icone `Pencil` do lucide-react
+- Adicionar estados: `isManualDailyRate`, `manualDailyRateValue`, `isManualTotalPrice`, `manualTotalPriceValue`
+- Arredondar `dailyRate` e `totalPrice` com `Math.round(x * 100) / 100`
+- Substituir os `<div>` de exibicao de "Diaria Calculada" e "Total" por componentes que alternam entre texto (calculado) e `<Input type="number">` (manual) conforme o estado
+- Adicionar botao com icone de lapis ao lado de cada label para ativar/desativar modo manual
+- No `onSubmit`, usar `isManualDailyRate ? manualDailyRateValue : dailyRate` para `daily_rate` e equivalente para `total_price`
+- Resetar os estados de override manual quando o modal abre ou quando o pacote muda
+
