@@ -46,7 +46,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CalendarIcon, Loader2, ExternalLink, Trash2, Package, Pencil, Check, X } from "lucide-react";
+import { CalendarIcon, Loader2, ExternalLink, Trash2, Package, Pencil, Check, X, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { parseDateOnly, formatDateOnly } from "@/lib/dateOnly";
 import type { CalendarReservation, Room } from "@/hooks/useCalendarReservations";
@@ -97,6 +97,7 @@ const EditReservationModal = ({
 }: EditReservationModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [packages, setPackages] = useState<PackageOption[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<PackageOption | null>(null);
   const { isSuperAdmin, isAdmin } = useAuth();
@@ -307,6 +308,28 @@ const EditReservationModal = ({
       toast.error(error.message || "Erro ao excluir reserva");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!reservation?.guest_email) return;
+    setIsSendingEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-reservation-email", {
+        body: {
+          type: "reservation_confirmed",
+          reservationId: reservation.id,
+          email: reservation.guest_email,
+          name: reservation.guest_name,
+        },
+      });
+      if (error) throw error;
+      toast.success("E-mail de confirmação enviado ao hóspede!");
+    } catch (err: any) {
+      console.error("Email send failed:", err);
+      toast.error("Erro ao enviar e-mail de confirmação.");
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -876,6 +899,18 @@ const EditReservationModal = ({
               </div>
 
               <div className="flex gap-2">
+                {reservation?.guest_email && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSendEmail}
+                    disabled={isSendingEmail}
+                  >
+                    {isSendingEmail ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
+                    Enviar Email
+                  </Button>
+                )}
                 <Button
                   type="button"
                   variant="outline"
