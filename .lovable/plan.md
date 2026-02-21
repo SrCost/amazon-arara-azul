@@ -1,74 +1,55 @@
 
-# Corrigir persistencia de precos no modal de edicao de reservas
 
-## Problema raiz
+# Atualizar template de email de reserva confirmada
 
-Ao carregar uma reserva existente no `EditReservationModal`, o campo `daily_rate` do formulario recebe o valor JA CALCULADO da reserva (ex: R$ 99). Esse valor e passado para `getDailyRate(guests, 99)` que aplica o multiplicador de hospedes NOVAMENTE (99 x 1.596 = R$ 158). Mesmo com a correcao anterior de `manualDailyRate`, a dupla aplicacao do multiplicador causa inconsistencias:
+## O que sera feito
 
-1. Ao clicar no botao X (cancelar override manual), `manualDailyRate` volta a `null` e o valor exibido pula para o duplamente multiplicado
-2. Qualquer mudanca no numero de hospedes recalcula com base errada
+Substituir o template atual `getReservationConfirmedEmailPremium` no edge function `send-reservation-email` pelo novo template fornecido, mapeando as variaveis dinamicas corretamente.
 
-## Solucao
+## Mapeamento de variaveis
 
-Duas alteracoes no `EditReservationModal.tsx`:
+| Placeholder no template | Valor dinamico |
+|---|---|
+| `{nome_cliente}` | `data.nome_cliente` |
+| `{codigo_reserva}` | `data.codigo_reserva` |
+| `{tipo_quarto}` | `data.tipo_quarto` |
+| `{checkin}` | `data.checkin` |
+| `{checkout}` | `data.checkout` |
+| `{numero_noites}` | Novo campo calculado (checkout - checkin) |
+| `{forma_pagamento}` | `data.metodo_pagamento` (formatado) |
+| `{status_pagamento}` | Novo campo do status |
+| `{valor_total}` | `data.valor_total` |
+| `{ano_atual}` | `getCurrentYear()` |
 
-### 1. Corrigir `daily_rate` no form.reset (linha 187)
+## Ajustes necessarios no template
 
-Usar o preco base do QUARTO (`room?.price_per_night`) em vez do `reservation.daily_rate` (que ja tem multiplicador aplicado). Isso garante que `getDailyRate()` calcule corretamente quando nao ha override manual.
+1. O link do WhatsApp no template usa `wa.me/message/G5O3HIKODARQB1` - sera atualizado para `wa.me/5592984125475` (consistente com o resto do projeto)
+2. O link "VER MINHA RESERVA" aponta para `pousadararazul.com` - sera mantido como esta
+3. O logo usa URL do S3 do Resend (`resend-attachments.s3.amazonaws.com`) - sera mantido conforme fornecido
 
-**De:**
+## Alteracao tecnica
+
+### `supabase/functions/send-reservation-email/index.ts`
+
+1. Adicionar campos `numero_noites` e `status_pagamento` na interface de dados do template
+2. Substituir a funcao `getReservationConfirmedEmailPremium` (linhas 76-273) pelo novo template HTML convertido para template literal
+3. Atualizar a chamada na linha 628-640 para passar os novos campos (`numero_noites` calculado e `status_pagamento`)
+4. Corrigir link WhatsApp para `wa.me/5592984125475`
+
+### Calculo de noites (na chamada do template, ~linha 628)
+
 ```
-daily_rate: reservation.daily_rate || room?.price_per_night || 1500,
-```
-
-**Para:**
-```
-daily_rate: room?.price_per_night || 1500,
-```
-
-### 2. Corrigir botao X (cancelar override) para resetar ao valor do banco (linhas 640-643 e 709-712)
-
-Em vez de resetar `manualDailyRate` e `manualTotal` para `null` (que expoe o calculo automatico com base potencialmente errada), resetar para os valores originais da reserva.
-
-**Diaria - De:**
-```typescript
-onClick={() => {
-  setManualDailyRate(null);
-  setEditingDailyRate(false);
-}}
-```
-
-**Para:**
-```typescript
-onClick={() => {
-  setManualDailyRate(reservation?.daily_rate ?? null);
-  setEditingDailyRate(false);
-}}
+const checkInDate = new Date(reservation.check_in);
+const checkOutDate = new Date(reservation.check_out);
+const nights = Math.ceil((checkOutDate - checkInDate) / (1000 * 60 * 60 * 24));
 ```
 
-**Total - De:**
-```typescript
-onClick={() => {
-  setManualTotal(null);
-  setEditingTotal(false);
-}}
-```
+### Formato do status de pagamento
 
-**Para:**
-```typescript
-onClick={() => {
-  setManualTotal(reservation?.total_price ?? null);
-  setEditingTotal(false);
-}}
-```
+Mapear `reservation.payment_status` para labels legiveis:
+- `paid` -> `Aprovado`
+- `pending` -> `Pendente`
+- `failed` -> `Falhou`
 
-## Resultado esperado
+Os templates de `payment_success` e `payment_error` permanecem inalterados.
 
-- Ao abrir uma reserva existente, os valores de diaria e total serao exatamente os salvos no banco
-- Ao cancelar uma edicao manual (botao X), os valores voltam ao que estava salvo (nao recalcula)
-- Ao salvar, os valores persistem corretamente sem modificacao
-- Mudancas no numero de hospedes so afetam o calculo quando nao ha override manual
-
-## Arquivo alterado
-
-- `src/components/admin/calendar/EditReservationModal.tsx` (3 alteracoes pontuais)
