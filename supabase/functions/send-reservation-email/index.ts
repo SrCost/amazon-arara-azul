@@ -70,120 +70,123 @@ const formatReservationNumber = (id: string): string => {
 
 const getCurrentYear = () => new Date().getFullYear();
 
+// Helper para gerar link do Google Calendar
+const buildGoogleCalendarLink = (checkIn: string, checkOut: string, codigo: string) => {
+  const formatGCalDate = (dateStr: string, time: string) => {
+    const d = new Date(dateStr);
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${y}${m}${day}T${time}`;
+  };
+  const start = formatGCalDate(checkIn, '140000');
+  const end = formatGCalDate(checkOut, '120000');
+  return `https://www.google.com/calendar/render?action=TEMPLATE&text=Reserva+Pousada+Arara+Azul&dates=${start}/${end}&details=Reserva+confirmada+Codigo+${encodeURIComponent(codigo)}&location=Manacapuru,+AM`;
+};
+
 // ============================================
 // TEMPLATE PREMIUM: RESERVA CONFIRMADA
 // ============================================
-const formatPaymentMethod = (method: string): string => {
-  const map: Record<string, string> = {
-    pix: 'PIX',
-    credit_card: 'Cartão de Crédito',
-    debit_card: 'Cartão de Débito',
-    boleto: 'Boleto',
-  };
-  return map[method] || method || 'Não informado';
-};
-
-const formatPaymentStatus = (status: string): string => {
-  const map: Record<string, string> = {
-    paid: 'Aprovado',
-    pending: 'Pendente',
-    failed: 'Falhou',
-    refunded: 'Reembolsado',
-  };
-  return map[status] || status || 'Pendente';
-};
-
 const getReservationConfirmedEmailPremium = (data: {
   codigo_reserva: string;
   nome_cliente: string;
   tipo_quarto: string;
   checkin: string;
   checkout: string;
-  numero_noites: number;
   valor_total: string;
-  forma_pagamento: string;
-  status_pagamento: string;
+  dias_para_checkin: number;
+  google_calendar_link: string;
+  link_upgrade: string;
+  link_passeio: string;
+  link_equipe: string;
 }) => `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<meta name="x-apple-disable-message-reformatting" />
-<meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no"/>
-<title>Reserva Confirmada</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
+<title>Sua Experiência na Amazônia Começa Agora</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
-<!-- PREHEADER -->
+<body style="margin:0;padding:0;background:#f2f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
-Sua reserva na Pousada Arara Azul foi confirmada com sucesso 🌿
+Faltam ${data.dias_para_checkin} dias para sua experiência na Amazônia 🌿
 </div>
-<table width="100%" cellpadding="0" cellspacing="0" border="0" align="center">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr>
-<td align="center" style="padding:40px 15px;">
-<table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 6px 18px rgba(0,0,0,0.08);">
+<td align="center" style="padding:50px 20px;">
+<table width="640" cellpadding="0" cellspacing="0" border="0"
+style="max-width:640px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 12px 35px rgba(0,0,0,0.08);">
 <!-- HEADER -->
 <tr>
-<td align="center" style="padding:36px 24px;background:linear-gradient(135deg,#0B3A66 0%, #0F6B4D 100%);">
+<td align="center"
+style="padding:50px 30px;background:linear-gradient(135deg,#0B3A66 0%,#0F6B4D 100%);color:#ffffff;">
 <img src="https://resend-attachments.s3.amazonaws.com/d5lMO5xYixu678E"
-width="120"
-style="display:block;margin-bottom:16px;border:none;"
-alt="Pousada Arara Azul Logo"/>
-<h1 style="margin:0;color:#ffffff;font-size:24px;font-weight:600;">
+width="130"
+style="display:block;margin-bottom:20px;"
+alt="Pousada Arara Azul">
+<h1 style="margin:0;font-size:26px;font-weight:600;">
 Reserva Confirmada
 </h1>
-<p style="margin:8px 0 0;color:rgba(255,255,255,0.9);font-size:14px;">
-Natureza, conforto e experiências autênticas na Amazônia
+<p style="margin:12px 0 0;font-size:14px;opacity:0.9;">
+Uma experiência exclusiva espera por você
 </p>
 </td>
 </tr>
 <!-- BODY -->
 <tr>
-<td style="padding:36px;color:#2D3748;font-size:15px;line-height:1.6;">
+<td style="padding:45px 40px;color:#2D3748;font-size:15px;line-height:1.7;">
 <p style="margin:0 0 20px;font-size:18px;color:#0B3A66;">
 Olá <strong>${data.nome_cliente}</strong>,
 </p>
-<p style="margin:0 0 28px;">
-Sua reserva foi confirmada com sucesso. Confira os detalhes abaixo:
+<p style="margin:0 0 30px;">
+Sua reserva foi confirmada com sucesso.
+Estamos preparando cada detalhe da sua estadia.
 </p>
-<!-- RESERVA BOX -->
+<!-- COUNTDOWN PREMIUM -->
 <table width="100%" cellpadding="0" cellspacing="0" border="0"
-style="background:#F4F9F6;border-radius:10px;border-left:5px solid #1E8F5A;padding:20px;">
+style="background:#0B3A66;border-radius:16px;margin-bottom:35px;">
 <tr>
-<td style="padding:20px;">
+<td align="center" style="color:#ffffff;padding:30px;">
+<p style="margin:0;font-size:14px;opacity:0.8;">
+Faltam
+</p>
+<p style="margin:8px 0;font-size:42px;font-weight:700;">
+${data.dias_para_checkin}
+</p>
+<p style="margin:0;font-size:14px;opacity:0.8;">
+dias para sua chegada 🌿
+</p>
+</td>
+</tr>
+</table>
+<!-- DETALHES -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+style="background:#F6FBF9;border-radius:14px;border:1px solid #E4EFEA;">
+<tr>
+<td style="padding:28px;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0">
 <tr>
-<td style="padding:6px 0;">Código</td>
+<td style="padding:8px 0;color:#6B7280;">Código</td>
 <td align="right"><strong>${data.codigo_reserva}</strong></td>
 </tr>
 <tr>
-<td style="padding:6px 0;">Bangalô</td>
+<td style="padding:8px 0;color:#6B7280;">Bangalô</td>
 <td align="right"><strong>${data.tipo_quarto}</strong></td>
 </tr>
 <tr>
-<td style="padding:6px 0;">Check-in</td>
+<td style="padding:8px 0;color:#6B7280;">Check-in</td>
 <td align="right"><strong>${data.checkin}</strong></td>
 </tr>
 <tr>
-<td style="padding:6px 0;">Check-out</td>
+<td style="padding:8px 0;color:#6B7280;">Check-out</td>
 <td align="right"><strong>${data.checkout}</strong></td>
 </tr>
 <tr>
-<td style="padding:6px 0;">Noites</td>
-<td align="right"><strong>${data.numero_noites}</strong></td>
-</tr>
-<tr>
-<td style="padding:6px 0;">Forma de pagamento</td>
-<td align="right"><strong>${data.forma_pagamento}</strong></td>
-</tr>
-<tr>
-<td style="padding:6px 0;">Status do pagamento</td>
-<td align="right"><strong>${data.status_pagamento}</strong></td>
-</tr>
-<tr>
-<td style="padding:10px 0;font-size:16px;color:#0B3A66;">
-<strong>Valor total</strong>
+<td style="padding-top:16px;font-size:17px;color:#0B3A66;">
+<strong>Valor Total</strong>
 </td>
-<td align="right" style="font-size:16px;">
+<td align="right" style="padding-top:16px;font-size:17px;">
 <strong>${data.valor_total}</strong>
 </td>
 </tr>
@@ -191,37 +194,68 @@ style="background:#F4F9F6;border-radius:10px;border-left:5px solid #1E8F5A;paddi
 </td>
 </tr>
 </table>
-<!-- HORÁRIOS -->
-<p style="margin:28px 0 10px;font-weight:bold;color:#0B3A66;">
-Informações Importantes
-</p>
-<p style="margin:0 0 5px;">🕑 Check-in a partir das 14h</p>
-<p style="margin:0 0 5px;">🕛 Check-out até 12h</p>
-<p style="margin:0 0 20px;">📍 Manacapuru - AM</p>
-<!-- CTA PRINCIPAL -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:30px 0;">
+<!-- BOTÃO CALENDAR -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;">
 <tr>
 <td align="center">
-<a href="https://pousadararazul.com"
-style="background:#1E8F5A;color:#ffffff;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block;">
-VER MINHA RESERVA
+<a href="${data.google_calendar_link}"
+style="background:#0B3A66;color:#ffffff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;">
+Adicionar ao Google Calendar
+</a>
+</td>
+</tr>
+</table>
+<!-- UPSELL UPGRADE -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+style="margin-top:45px;background:#FFF8ED;border-radius:14px;border:1px solid #F2E3C7;">
+<tr>
+<td style="padding:28px;">
+<h3 style="margin:0 0 12px;color:#7A4A00;">
+Upgrade Exclusivo
+</h3>
+<p style="margin:0 0 20px;">
+Deseja elevar sua experiência?
+Disponibilizamos upgrade de bangalô com vista privilegiada e comodidades especiais.
+</p>
+<a href="${data.link_upgrade}"
+style="background:#C27C2C;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">
+Ver Upgrade Disponível
+</a>
+</td>
+</tr>
+</table>
+<!-- UPSELL PASSEIO -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+style="margin-top:30px;background:#EDF6F3;border-radius:14px;border:1px solid #DDEBE5;">
+<tr>
+<td style="padding:28px;">
+<h3 style="margin:0 0 12px;color:#0B3A66;">
+Experiência na Amazônia
+</h3>
+<p style="margin:0 0 20px;">
+Passeios exclusivos pela floresta, focagem noturna de jacarés e visita às comunidades locais.
+Vagas limitadas.
+</p>
+<a href="${data.link_passeio}"
+style="background:#1E8F5A;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">
+Reservar Passeio
 </a>
 </td>
 </tr>
 </table>
 <!-- WHATSAPP -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:40px;">
 <tr>
 <td align="center">
-<a href="https://wa.me/5592984125475"
-style="color:#1E8F5A;text-decoration:none;font-weight:bold;">
-Falar com a equipe no WhatsApp
+<a href="${data.link_equipe}"
+style="color:#1E8F5A;font-weight:600;text-decoration:none;">
+Falar com nossa equipe
 </a>
 </td>
 </tr>
 </table>
-<p style="margin:32px 0 0;">
-Até breve,<br/>
+<p style="margin:40px 0 0;">
+Agradecemos sua confiança.<br>
 <strong>Equipe Pousada Arara Azul</strong>
 </p>
 </td>
@@ -229,7 +263,7 @@ Até breve,<br/>
 <!-- FOOTER -->
 <tr>
 <td align="center"
-style="padding:20px;background:#0B3A66;color:rgba(255,255,255,0.8);font-size:12px;">
+style="padding:25px;background:#0B3A66;color:rgba(255,255,255,0.8);font-size:12px;">
 © ${getCurrentYear()} Pousada Arara Azul — Manacapuru, AM
 </td>
 </tr>
@@ -594,20 +628,29 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       const checkInDate = new Date(reservation.check_in);
-      const checkOutDate = new Date(reservation.check_out);
-      const nights = Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
+      const now = new Date();
+      const daysToCheckin = Math.max(0, Math.ceil((checkInDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      const codigoReserva = formatReservationNumber(reservation.id);
+      const googleCalLink = buildGoogleCalendarLink(reservation.check_in, reservation.check_out, codigoReserva);
+      
+      const whatsappBase = 'https://wa.me/5592984125475';
+      const linkUpgrade = `${whatsappBase}?text=${encodeURIComponent(`Olá! Tenho a reserva ${codigoReserva} e gostaria de saber sobre upgrade de bangalô.`)}`;
+      const linkPasseio = `${whatsappBase}?text=${encodeURIComponent(`Olá! Tenho a reserva ${codigoReserva} e gostaria de reservar passeios para complementar minha experiência na Amazônia.`)}`;
+      const linkEquipe = `${whatsappBase}?text=${encodeURIComponent(`Olá! Tenho a reserva ${codigoReserva} e gostaria de mais informações.`)}`;
 
       subject = '🌿 Reserva confirmada – Pousada Arara Azul';
       html = getReservationConfirmedEmailPremium({
-        codigo_reserva: formatReservationNumber(reservation.id),
+        codigo_reserva: codigoReserva,
         nome_cliente: reservation.guest_name,
         tipo_quarto: reservation.room_name || 'Bangalô',
         checkin: formatDate(reservation.check_in),
         checkout: formatDate(reservation.check_out),
-        numero_noites: nights,
         valor_total: formatCurrency(reservation.total_price),
-        forma_pagamento: formatPaymentMethod(reservation.payment_method),
-        status_pagamento: formatPaymentStatus(reservation.payment_status),
+        dias_para_checkin: daysToCheckin,
+        google_calendar_link: googleCalLink,
+        link_upgrade: linkUpgrade,
+        link_passeio: linkPasseio,
+        link_equipe: linkEquipe,
       });
     }
 
@@ -635,7 +678,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (logError) {
       console.error('Erro ao registrar log de email:', logError);
-      // Não falhar o request por causa do log
     }
 
     console.log('Email enviado e logado com sucesso');
