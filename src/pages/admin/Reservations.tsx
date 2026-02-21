@@ -208,6 +208,7 @@ const Reservations = () => {
           check_out: editForm.check_out,
           guests: editForm.guests,
           status: editForm.status,
+          operational_status: editForm.status,
           payment_method: editForm.payment_method,
           total_price: editForm.total_price,
           special_requests: editForm.special_requests,

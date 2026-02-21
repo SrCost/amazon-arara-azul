@@ -233,7 +233,17 @@ const NewReservationModal = ({
     try {
       const room = rooms.find((r) => r.id === data.room_id);
       
-      const { error } = await supabase.from("reservations").insert({
+      // Validate pricing values
+      const safeDailyRate = isFinite(dailyRate) && !isNaN(dailyRate) ? dailyRate : 0;
+      const safeTotalPrice = isFinite(totalPrice) && !isNaN(totalPrice) ? totalPrice : 0;
+
+      if (safeDailyRate <= 0 || safeTotalPrice <= 0) {
+        toast.error("Valores de diária e total devem ser maiores que zero.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { data: insertedReservation, error } = await supabase.from("reservations").insert({
         guest_name: data.guest_name,
         guest_email: data.guest_email,
         guest_phone: data.guest_phone || null,
@@ -245,19 +255,42 @@ const NewReservationModal = ({
         package_id: data.package_id && data.package_id !== "none" ? data.package_id : null,
         cpf: data.cpf || null,
         passport: data.passport || null,
-        daily_rate: dailyRate,
-        total_price: totalPrice,
+        daily_rate: safeDailyRate,
+        total_price: safeTotalPrice,
         reservation_source: data.reservation_source,
         operational_status: data.operational_status,
         status: data.operational_status,
         payment_status: data.payment_status,
         operational_notes: data.operational_notes || null,
         special_requests: data.special_requests || null,
-      });
+      }).select("id").single();
 
       if (error) throw error;
 
       toast.success("Reserva criada com sucesso!");
+
+      // Send confirmation email (non-blocking)
+      if (insertedReservation?.id && data.guest_email) {
+        try {
+          const { error: emailError } = await supabase.functions.invoke("send-reservation-email", {
+            body: {
+              type: "reservation_confirmed",
+              reservationId: insertedReservation.id,
+              email: data.guest_email,
+              name: data.guest_name,
+            },
+          });
+          if (emailError) {
+            console.error("Email error:", emailError);
+            toast.error("Reserva criada, mas erro ao enviar e-mail de confirmação.");
+          } else {
+            toast.success("E-mail de confirmação enviado ao hóspede!");
+          }
+        } catch (emailErr) {
+          console.error("Email send failed:", emailErr);
+        }
+      }
+
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {

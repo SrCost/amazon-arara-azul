@@ -131,9 +131,11 @@ const EditReservationModal = ({
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
   
   // Calculate price - use manual overrides if set, otherwise calculate
-  const calculatedDailyRate = selectedPackage ? 0 : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
+  const rawDailyRate = selectedPackage ? 0 : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
+  const calculatedDailyRate = isFinite(rawDailyRate) && !isNaN(rawDailyRate) ? Math.round(rawDailyRate * 100) / 100 : 0;
   const dailyRate = manualDailyRate ?? calculatedDailyRate;
-  const calculatedTotal = selectedPackage ? selectedPackage.price : dailyRate * nights;
+  const rawTotal = selectedPackage ? selectedPackage.price : dailyRate * (nights || 1);
+  const calculatedTotal = isFinite(rawTotal) && !isNaN(rawTotal) ? Math.round(rawTotal * 100) / 100 : 0;
   const totalPrice = manualTotal ?? calculatedTotal;
 
   // Fetch packages when modal opens
