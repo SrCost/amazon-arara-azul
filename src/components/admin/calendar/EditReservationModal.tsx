@@ -171,8 +171,8 @@ const EditReservationModal = ({
       setSelectedPackage(reservationPackage || null);
       
       // Reset manual overrides when loading new reservation
-      setManualDailyRate(null);
-      setManualTotal(null);
+      setManualDailyRate(reservation.daily_rate ?? null);
+      setManualTotal(reservation.total_price ?? null);
       setEditingDailyRate(false);
       setEditingTotal(false);
       
