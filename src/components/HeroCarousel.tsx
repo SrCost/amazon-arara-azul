@@ -82,7 +82,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
       <div
         key={slide.id}
         className={`absolute inset-0 transition-opacity duration-1000 ${isActive ? "opacity-100" : "opacity-0"}`}
-        style={{ backgroundColor: slide.background_color || "transparent" }}
+        style={{ backgroundColor: slide.background_color || "hsl(120, 15%, 97%)" }}
       >
         {slide.link_url ? (
           <a href={slide.link_url} className="absolute inset-0">
