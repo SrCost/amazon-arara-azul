@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useHeroSlides } from "@/hooks/useHeroSlides";
+import { useHeroSlides, type HeroSlide } from "@/hooks/useHeroSlides";
 import heroBungalow1 from "@/assets/hero-bungalow-1.jpg";
 import heroBungalow2 from "@/assets/hero-bungalow-2.jpg";
 
@@ -13,28 +13,36 @@ const FALLBACK_IMAGES = [
   { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" as const },
 ];
 
+type UnifiedSlide =
+  | { type: "fallback"; index: number }
+  | { type: "db"; slide: HeroSlide };
+
 const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { slides, loading } = useHeroSlides();
+  const { slides: dbSlides, loading } = useHeroSlides();
 
-  const hasDbSlides = !loading && slides.length > 0;
+  // Build unified list: fallback first, then DB slides
+  const unifiedSlides: UnifiedSlide[] = [
+    ...FALLBACK_IMAGES.map((_, i) => ({ type: "fallback" as const, index: i })),
+    ...dbSlides.map((slide) => ({ type: "db" as const, slide })),
+  ];
 
-  const totalSlides = hasDbSlides ? slides.length : FALLBACK_IMAGES.length;
+  const totalSlides = unifiedSlides.length;
 
   useEffect(() => {
+    if (loading) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % totalSlides);
     }, 5000);
     return () => clearInterval(interval);
-  }, [totalSlides]);
+  }, [totalSlides, loading]);
 
   useEffect(() => {
-    if (hasDbSlides) {
-      onSlideChange?.(slides[currentIndex]?.hide_overlay ?? false);
-    } else {
-      onSlideChange?.(false);
-    }
-  }, [currentIndex, onSlideChange, hasDbSlides, slides]);
+    if (loading) return;
+    const current = unifiedSlides[currentIndex];
+    // Fallback slides show overlay (buttons), DB slides always hide it
+    onSlideChange?.(current?.type === "db");
+  }, [currentIndex, onSlideChange, loading, dbSlides]);
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
@@ -44,50 +52,51 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
     setCurrentIndex((prev) => (prev + 1) % totalSlides);
   };
 
-  const renderSlide = (index: number) => {
-    if (hasDbSlides) {
-      const slide = slides[index];
-      const isActive = index === currentIndex;
+  const renderSlide = (unified: UnifiedSlide, idx: number) => {
+    const isActive = idx === currentIndex;
+
+    if (unified.type === "fallback") {
+      const image = FALLBACK_IMAGES[unified.index];
       return (
         <div
-          key={slide.id}
+          key={`fallback-${unified.index}`}
           className={`absolute inset-0 transition-opacity duration-1000 ${isActive ? "opacity-100" : "opacity-0"}`}
-          style={{ backgroundColor: slide.background_color || "transparent" }}
-        >
-          {slide.link_url ? (
-            <a href={slide.link_url} className="absolute inset-0">
-              {renderMedia(slide, index)}
-            </a>
-          ) : (
-            renderMedia(slide, index)
-          )}
-          {!slide.hide_overlay && <div className="absolute inset-0 bg-black/20" />}
-        </div>
-      );
-    } else {
-      const image = FALLBACK_IMAGES[index];
-      return (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? "opacity-100" : "opacity-0"}`}
         >
           <img
             src={image.src}
             alt={image.alt}
             width={1920}
             height={1080}
-            loading={index === 0 ? "eager" : "lazy"}
-            decoding={index === 0 ? "sync" : "async"}
-            fetchPriority={index === 0 ? "high" : "auto"}
+            loading={idx === 0 ? "eager" : "lazy"}
+            decoding={idx === 0 ? "sync" : "async"}
+            fetchPriority={idx === 0 ? "high" : "auto"}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/20" />
         </div>
       );
     }
+
+    const slide = unified.slide;
+    return (
+      <div
+        key={slide.id}
+        className={`absolute inset-0 transition-opacity duration-1000 ${isActive ? "opacity-100" : "opacity-0"}`}
+        style={{ backgroundColor: slide.background_color || "transparent" }}
+      >
+        {slide.link_url ? (
+          <a href={slide.link_url} className="absolute inset-0">
+            {renderMedia(slide, idx)}
+          </a>
+        ) : (
+          renderMedia(slide, idx)
+        )}
+        {!slide.hide_overlay && <div className="absolute inset-0 bg-black/20" />}
+      </div>
+    );
   };
 
-  const renderMedia = (slide: typeof slides[0], index: number) => {
+  const renderMedia = (slide: HeroSlide, index: number) => {
     if (slide.media_type === "video") {
       return (
         <>
@@ -146,7 +155,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      {Array.from({ length: totalSlides }, (_, i) => renderSlide(i))}
+      {unifiedSlides.map((s, i) => renderSlide(s, i))}
 
       <button
         onClick={goToPrevious}
@@ -164,7 +173,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
       </button>
 
       <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {Array.from({ length: totalSlides }, (_, index) => (
+        {unifiedSlides.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
