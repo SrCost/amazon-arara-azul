@@ -1,20 +1,42 @@
 
-# Remover campo "Tarifa Base" dos modais de reserva
+# Corrigir persistencia de Diaria e Total ao editar reservas
 
-## Problema
-O campo "Tarifa Base (R$)" esta causando confusao ao registrar reservas manuais. O admin ve tres campos de preco (Tarifa Base, Diaria Calculada, Total) quando so precisa de dois: a diaria e o total.
+## Problema raiz
+
+Quando o `EditReservationModal` carrega uma reserva do banco, ele faz:
+1. Define `manualDailyRate = null` e `manualTotal = null` (reset)
+2. Define `data.daily_rate` com o valor salvo no banco (ex: R$ 100)
+3. Calcula `dailyRate` usando `getDailyRate(guests, data.daily_rate)` que aplica o **multiplicador de hospedes** (ex: 1.596x para 2 hospedes)
+4. Resultado: a diaria exibida vira R$ 159,60 em vez de R$ 100
+
+O mesmo acontece com o total: como a diaria foi recalculada, o total tambem muda.
 
 ## Solucao
-Remover o campo "Tarifa Base (R$)" da interface dos dois modais (criacao e edicao de reserva), mantendo apenas "Diaria Calculada" e "Total". A tarifa base continuara sendo usada internamente para os calculos, mas nao sera exibida ao usuario.
 
-## Alteracoes
+Ao carregar uma reserva existente, tratar os valores do banco (`daily_rate` e `total_price`) como **overrides manuais**, pois representam os valores que o admin efetivamente salvou.
 
-### 1. `src/components/admin/calendar/EditReservationModal.tsx`
-- Remover o bloco `FormField` de "Tarifa Base (R$)" (linhas 596-619)
-- Alterar o grid de 3 colunas para 2 colunas: `grid-cols-1 md:grid-cols-3` para `grid-cols-1 md:grid-cols-2`
+## Alteracao
 
-### 2. `src/components/admin/calendar/NewReservationModal.tsx`
-- Remover o bloco `FormField` de "Tarifa Base (R$)" (linhas 558-579)
-- Alterar o grid de 3 colunas para 2 colunas: `grid-cols-1 md:grid-cols-3` para `grid-cols-1 md:grid-cols-2`
+### `src/components/admin/calendar/EditReservationModal.tsx`
 
-O campo `daily_rate` permanece no formulario internamente (com valor default do banco), apenas a exibicao e removida. Nenhuma logica de calculo e afetada.
+Nas linhas 173-177, ao resetar os overrides manuais, em vez de setar `null`, usar os valores da reserva:
+
+**De:**
+```typescript
+setManualDailyRate(null);
+setManualTotal(null);
+setEditingDailyRate(false);
+setEditingTotal(false);
+```
+
+**Para:**
+```typescript
+setManualDailyRate(reservation.daily_rate ?? null);
+setManualTotal(reservation.total_price ?? null);
+setEditingDailyRate(false);
+setEditingTotal(false);
+```
+
+Isso garante que ao abrir o modal de edicao, a diaria e o total exibidos sao exatamente os valores salvos no banco. O admin ainda pode clicar no icone de lapis para editar, e ao salvar, os valores persistem corretamente (ja corrigido anteriormente com `daily_rate: dailyRate` e `total_price: totalPrice`).
+
+Nenhuma outra alteracao e necessaria - o `NewReservationModal` nao tem esse problema pois cria reservas novas sem valores pre-existentes.
