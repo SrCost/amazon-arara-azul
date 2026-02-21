@@ -98,6 +98,7 @@ const EditReservationModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [packages, setPackages] = useState<PackageOption[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<PackageOption | null>(null);
   const { isSuperAdmin, isAdmin } = useAuth();
@@ -249,7 +250,7 @@ const EditReservationModal = ({
           check_out: formatDateOnly(data.check_out),
           room_id: data.room_id,
           room_name: room?.name_pt || null,
-          daily_rate: data.daily_rate,
+          daily_rate: dailyRate,
           total_price: totalPrice,
           reservation_source: data.reservation_source,
           operational_status: data.operational_status,
@@ -314,6 +315,7 @@ const EditReservationModal = ({
   const handleSendEmail = async () => {
     if (!reservation?.guest_email) return;
     setIsSendingEmail(true);
+    setShowEmailPreview(false);
     try {
       const { error } = await supabase.functions.invoke("send-reservation-email", {
         body: {
@@ -321,6 +323,7 @@ const EditReservationModal = ({
           reservationId: reservation.id,
           email: reservation.guest_email,
           name: reservation.guest_name,
+          force: true,
         },
       });
       if (error) throw error;
@@ -904,7 +907,7 @@ const EditReservationModal = ({
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={handleSendEmail}
+                    onClick={() => setShowEmailPreview(true)}
                     disabled={isSendingEmail}
                   >
                     {isSendingEmail ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Mail className="h-4 w-4 mr-1" />}
@@ -927,6 +930,62 @@ const EditReservationModal = ({
           </form>
         </Form>
       </DialogContent>
+
+      {/* Email Preview Dialog */}
+      <AlertDialog open={showEmailPreview} onOpenChange={setShowEmailPreview}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Preview do E-mail de Confirmação</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm">
+                <p className="text-muted-foreground">
+                  Confira os dados que serão enviados ao hóspede:
+                </p>
+                <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Hóspede:</span>
+                    <span className="font-medium">{watchedValues.guest_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium">{watchedValues.guest_email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Bangalô:</span>
+                    <span className="font-medium">{rooms.find(r => r.id === watchedValues.room_id)?.name_pt || '—'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Check-in:</span>
+                    <span className="font-medium">{format(watchedValues.check_in, "dd/MM/yyyy", { locale: ptBR })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Check-out:</span>
+                    <span className="font-medium">{format(watchedValues.check_out, "dd/MM/yyyy", { locale: ptBR })}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Hóspedes:</span>
+                    <span className="font-medium">{watchedValues.guests} pessoa(s)</span>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <span className="font-semibold">Valor Total:</span>
+                    <span className="font-bold text-primary">R$ {totalPrice.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+                <p className="text-xs text-orange-600">
+                  ⚠️ O e-mail usará os dados <strong>salvos no banco</strong>. Certifique-se de salvar alterações antes de enviar.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSendEmail} disabled={isSendingEmail}>
+              {isSendingEmail && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirmar Envio
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };

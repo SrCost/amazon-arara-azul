@@ -14,6 +14,7 @@ interface EmailRequest {
   reservationId: string;
   email: string;
   name: string;
+  force?: boolean;
   errorMessage?: string;
   paymentDetails?: {
     method: string;
@@ -550,7 +551,7 @@ const handler = async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { type, reservationId, email, name, errorMessage, paymentDetails }: EmailRequest = await req.json();
+    const { type, reservationId, email, name, force, errorMessage, paymentDetails }: EmailRequest = await req.json();
     
     console.log('=== SEND-RESERVATION-EMAIL ===');
     console.log('Tipo:', type);
@@ -561,7 +562,7 @@ const handler = async (req: Request): Promise<Response> => {
     // ========================================
     // PROTEÇÃO CONTRA DUPLICADOS (IDEMPOTÊNCIA)
     // ========================================
-    if (reservationId) {
+    if (reservationId && !force) {
       const { data: existingEmail } = await supabase
         .from('email_logs')
         .select('id, sent_at')
