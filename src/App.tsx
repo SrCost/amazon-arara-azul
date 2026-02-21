@@ -30,6 +30,7 @@ import AdminPackages from "./pages/admin/Packages";
 import Gallery from "./pages/admin/Gallery";
 import AdminBangalos from "./pages/admin/Bangalos";
 import CalendarReservations from "./pages/admin/CalendarReservations";
+import HeroCarouselAdmin from "./pages/admin/HeroCarousel";
 
 const queryClient = new QueryClient();
 
@@ -154,6 +155,16 @@ const App = () => (
               </AdminLayout>
             </ProtectedRoute>
           }
+            />
+            <Route
+              path="/admin/carrossel"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <HeroCarouselAdmin />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

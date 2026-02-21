@@ -22,6 +22,7 @@ import {
   Images,
   Building2,
   Menu,
+  SlidersHorizontal,
 } from "lucide-react";
 import logoArara from "@/assets/logo-arara-azul.jpg";
 
@@ -76,6 +77,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: Images,
       label: "Galeria",
       path: "/admin/gallery",
+    },
+    {
+      icon: SlidersHorizontal,
+      label: "Carrossel",
+      path: "/admin/carrossel",
     },
   ];
 

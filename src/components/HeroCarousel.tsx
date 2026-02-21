@@ -1,97 +1,152 @@
 import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useHeroSlides } from "@/hooks/useHeroSlides";
 import heroBungalow1 from "@/assets/hero-bungalow-1.jpg";
 import heroBungalow2 from "@/assets/hero-bungalow-2.jpg";
-import pascoaBanner from "@/assets/pascoa-pacote-banner.png";
-import pascoaBannerMobile from "@/assets/pascoa-pacote-banner-mobile.png";
-
-interface CarouselImage {
-  src: string;
-  mobileSrc?: string;
-  alt: string;
-  objectFit: "cover" | "contain";
-  backgroundColor?: string;
-  hideOverlay?: boolean;
-}
 
 interface HeroCarouselProps {
   onSlideChange?: (hideOverlay: boolean) => void;
 }
 
-const CAROUSEL_IMAGES: CarouselImage[] = [
-  { src: heroBungalow1, alt: "Pousada Arara Azul - Bangalô", objectFit: "cover" },
-  { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" },
-  { src: pascoaBanner, mobileSrc: pascoaBannerMobile, alt: "Pacote Páscoa - Pousada Arara Azul", objectFit: "contain", backgroundColor: "hsl(120, 15%, 97%)", hideOverlay: true },
+const FALLBACK_IMAGES = [
+  { src: heroBungalow1, alt: "Pousada Arara Azul - Bangalô", objectFit: "cover" as const },
+  { src: heroBungalow2, alt: "Pousada Arara Azul - Bangalô 2", objectFit: "cover" as const },
 ];
 
 const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { slides, loading } = useHeroSlides();
+
+  const hasDbSlides = !loading && slides.length > 0;
+
+  const totalSlides = hasDbSlides ? slides.length : FALLBACK_IMAGES.length;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+      setCurrentIndex((prev) => (prev + 1) % totalSlides);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [totalSlides]);
 
   useEffect(() => {
-    onSlideChange?.(CAROUSEL_IMAGES[currentIndex].hideOverlay ?? false);
-  }, [currentIndex, onSlideChange]);
+    if (hasDbSlides) {
+      onSlideChange?.(slides[currentIndex]?.hide_overlay ?? false);
+    } else {
+      onSlideChange?.(false);
+    }
+  }, [currentIndex, onSlideChange, hasDbSlides, slides]);
 
   const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + CAROUSEL_IMAGES.length) % CAROUSEL_IMAGES.length);
+    setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
   };
 
   const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % CAROUSEL_IMAGES.length);
+    setCurrentIndex((prev) => (prev + 1) % totalSlides);
+  };
+
+  const renderSlide = (index: number) => {
+    if (hasDbSlides) {
+      const slide = slides[index];
+      const isActive = index === currentIndex;
+      return (
+        <div
+          key={slide.id}
+          className={`absolute inset-0 transition-opacity duration-1000 ${isActive ? "opacity-100" : "opacity-0"}`}
+          style={{ backgroundColor: slide.background_color || "transparent" }}
+        >
+          {slide.link_url ? (
+            <a href={slide.link_url} className="absolute inset-0">
+              {renderMedia(slide, index)}
+            </a>
+          ) : (
+            renderMedia(slide, index)
+          )}
+          {!slide.hide_overlay && <div className="absolute inset-0 bg-black/20" />}
+        </div>
+      );
+    } else {
+      const image = FALLBACK_IMAGES[index];
+      return (
+        <div
+          key={index}
+          className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? "opacity-100" : "opacity-0"}`}
+        >
+          <img
+            src={image.src}
+            alt={image.alt}
+            width={1920}
+            height={1080}
+            loading={index === 0 ? "eager" : "lazy"}
+            decoding={index === 0 ? "sync" : "async"}
+            fetchPriority={index === 0 ? "high" : "auto"}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+      );
+    }
+  };
+
+  const renderMedia = (slide: typeof slides[0], index: number) => {
+    if (slide.media_type === "video") {
+      return (
+        <>
+          {slide.mobile_image_url && (
+            <video
+              src={slide.mobile_image_url}
+              autoPlay muted loop playsInline
+              className="absolute inset-0 w-full h-full object-cover lg:hidden"
+            />
+          )}
+          <video
+            src={slide.desktop_image_url}
+            autoPlay muted loop playsInline
+            className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"} ${slide.mobile_image_url ? "hidden lg:block" : ""}`}
+          />
+        </>
+      );
+    }
+
+    if (slide.mobile_image_url) {
+      return (
+        <>
+          <img
+            src={slide.mobile_image_url}
+            alt={slide.alt_text}
+            loading={index === 0 ? "eager" : "lazy"}
+            decoding={index === 0 ? "sync" : "async"}
+            fetchPriority={index === 0 ? "high" : "auto"}
+            className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"} lg:hidden`}
+          />
+          <img
+            src={slide.desktop_image_url}
+            alt={slide.alt_text}
+            loading={index === 0 ? "eager" : "lazy"}
+            decoding={index === 0 ? "sync" : "async"}
+            fetchPriority={index === 0 ? "high" : "auto"}
+            className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"} hidden lg:block`}
+          />
+        </>
+      );
+    }
+
+    return (
+      <img
+        src={slide.desktop_image_url}
+        alt={slide.alt_text}
+        width={1920}
+        height={1080}
+        loading={index === 0 ? "eager" : "lazy"}
+        decoding={index === 0 ? "sync" : "async"}
+        fetchPriority={index === 0 ? "high" : "auto"}
+        className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"}`}
+      />
+    );
   };
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      {CAROUSEL_IMAGES.map((image, index) => (
-        <div
-          key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentIndex ? "opacity-100" : "opacity-0"
-          }`}
-          style={{ backgroundColor: image.backgroundColor || "transparent" }}
-        >
-          {image.mobileSrc ? (
-            <>
-              <img
-                src={image.mobileSrc}
-                alt={image.alt}
-                loading={index === 0 ? "eager" : "lazy"}
-                decoding={index === 0 ? "sync" : "async"}
-                fetchPriority={index === 0 ? "high" : "auto"}
-                className="absolute inset-0 w-full h-full object-contain lg:hidden"
-              />
-              <img
-                src={image.src}
-                alt={image.alt}
-                loading={index === 0 ? "eager" : "lazy"}
-                decoding={index === 0 ? "sync" : "async"}
-                fetchPriority={index === 0 ? "high" : "auto"}
-                className="absolute inset-0 w-full h-full object-contain hidden lg:block"
-              />
-            </>
-          ) : (
-            <img
-              src={image.src}
-              alt={image.alt}
-              width={1920}
-              height={1080}
-              loading={index === 0 ? "eager" : "lazy"}
-              decoding={index === 0 ? "sync" : "async"}
-              fetchPriority={index === 0 ? "high" : "auto"}
-              className={`absolute inset-0 w-full h-full ${
-                image.objectFit === "cover" ? "object-cover" : "object-contain"
-              }`}
-            />
-          )}
-          {!image.hideOverlay && <div className="absolute inset-0 bg-black/20" />}
-        </div>
-      ))}
+      {Array.from({ length: totalSlides }, (_, i) => renderSlide(i))}
 
       <button
         onClick={goToPrevious}
@@ -109,7 +164,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
       </button>
 
       <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {CAROUSEL_IMAGES.map((_, index) => (
+        {Array.from({ length: totalSlides }, (_, index) => (
           <button
             key={index}
             onClick={() => setCurrentIndex(index)}
