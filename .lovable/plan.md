@@ -1,42 +1,74 @@
 
-# Corrigir persistencia de Diaria e Total ao editar reservas
+# Corrigir persistencia de precos no modal de edicao de reservas
 
 ## Problema raiz
 
-Quando o `EditReservationModal` carrega uma reserva do banco, ele faz:
-1. Define `manualDailyRate = null` e `manualTotal = null` (reset)
-2. Define `data.daily_rate` com o valor salvo no banco (ex: R$ 100)
-3. Calcula `dailyRate` usando `getDailyRate(guests, data.daily_rate)` que aplica o **multiplicador de hospedes** (ex: 1.596x para 2 hospedes)
-4. Resultado: a diaria exibida vira R$ 159,60 em vez de R$ 100
+Ao carregar uma reserva existente no `EditReservationModal`, o campo `daily_rate` do formulario recebe o valor JA CALCULADO da reserva (ex: R$ 99). Esse valor e passado para `getDailyRate(guests, 99)` que aplica o multiplicador de hospedes NOVAMENTE (99 x 1.596 = R$ 158). Mesmo com a correcao anterior de `manualDailyRate`, a dupla aplicacao do multiplicador causa inconsistencias:
 
-O mesmo acontece com o total: como a diaria foi recalculada, o total tambem muda.
+1. Ao clicar no botao X (cancelar override manual), `manualDailyRate` volta a `null` e o valor exibido pula para o duplamente multiplicado
+2. Qualquer mudanca no numero de hospedes recalcula com base errada
 
 ## Solucao
 
-Ao carregar uma reserva existente, tratar os valores do banco (`daily_rate` e `total_price`) como **overrides manuais**, pois representam os valores que o admin efetivamente salvou.
+Duas alteracoes no `EditReservationModal.tsx`:
 
-## Alteracao
+### 1. Corrigir `daily_rate` no form.reset (linha 187)
 
-### `src/components/admin/calendar/EditReservationModal.tsx`
-
-Nas linhas 173-177, ao resetar os overrides manuais, em vez de setar `null`, usar os valores da reserva:
+Usar o preco base do QUARTO (`room?.price_per_night`) em vez do `reservation.daily_rate` (que ja tem multiplicador aplicado). Isso garante que `getDailyRate()` calcule corretamente quando nao ha override manual.
 
 **De:**
+```
+daily_rate: reservation.daily_rate || room?.price_per_night || 1500,
+```
+
+**Para:**
+```
+daily_rate: room?.price_per_night || 1500,
+```
+
+### 2. Corrigir botao X (cancelar override) para resetar ao valor do banco (linhas 640-643 e 709-712)
+
+Em vez de resetar `manualDailyRate` e `manualTotal` para `null` (que expoe o calculo automatico com base potencialmente errada), resetar para os valores originais da reserva.
+
+**Diaria - De:**
 ```typescript
-setManualDailyRate(null);
-setManualTotal(null);
-setEditingDailyRate(false);
-setEditingTotal(false);
+onClick={() => {
+  setManualDailyRate(null);
+  setEditingDailyRate(false);
+}}
 ```
 
 **Para:**
 ```typescript
-setManualDailyRate(reservation.daily_rate ?? null);
-setManualTotal(reservation.total_price ?? null);
-setEditingDailyRate(false);
-setEditingTotal(false);
+onClick={() => {
+  setManualDailyRate(reservation?.daily_rate ?? null);
+  setEditingDailyRate(false);
+}}
 ```
 
-Isso garante que ao abrir o modal de edicao, a diaria e o total exibidos sao exatamente os valores salvos no banco. O admin ainda pode clicar no icone de lapis para editar, e ao salvar, os valores persistem corretamente (ja corrigido anteriormente com `daily_rate: dailyRate` e `total_price: totalPrice`).
+**Total - De:**
+```typescript
+onClick={() => {
+  setManualTotal(null);
+  setEditingTotal(false);
+}}
+```
 
-Nenhuma outra alteracao e necessaria - o `NewReservationModal` nao tem esse problema pois cria reservas novas sem valores pre-existentes.
+**Para:**
+```typescript
+onClick={() => {
+  setManualTotal(reservation?.total_price ?? null);
+  setEditingTotal(false);
+}}
+```
+
+## Resultado esperado
+
+- Ao abrir uma reserva existente, os valores de diaria e total serao exatamente os salvos no banco
+- Ao cancelar uma edicao manual (botao X), os valores voltam ao que estava salvo (nao recalcula)
+- Ao salvar, os valores persistem corretamente sem modificacao
+- Mudancas no numero de hospedes so afetam o calculo quando nao ha override manual
+
+## Arquivo alterado
+
+- `src/components/admin/calendar/EditReservationModal.tsx` (3 alteracoes pontuais)
