@@ -1,47 +1,30 @@
 
 
-# Manter imagens padrao e adicionar midias do banco no carrossel
+# Ajustar proporção de imagens desktop no carrossel
 
-## Problema atual
+## Problema
 
-O carrossel funciona em modo "ou/ou": se existem slides no banco de dados, as imagens padrao (hero-bungalow-1, hero-bungalow-2) desaparecem completamente. Alem disso, os botoes "Reservar Agora" e "Nossa Missao" aparecem sobre as midias inseridas pelo admin, atrapalhando a visualizacao.
+Quando uma mídia é adicionada pelo admin com ajuste "Contain" (para não cortar), o fundo aparece como cor errada ou transparente, criando um visual desagradável. A imagem está sendo cortada quando usa "Cover".
 
-## Solucao
+## Solução
 
-Combinar as imagens padrao (fallback) com os slides do banco em uma unica lista. As imagens padrao sempre aparecem primeiro, e os slides do banco sao adicionados em seguida. Para os slides do banco, o overlay com botoes sera sempre ocultado automaticamente.
+Duas alterações no `HeroCarousel.tsx`:
 
-## Alteracoes tecnicas
+1. **Cor de fundo padrão para slides do banco**: Quando o slide do banco não tiver `background_color` definida, usar a cor do tema do site (`hsl(120, 15%, 97%)` - o tom claro esverdeado do fundo) em vez de `transparent`. Isso faz a imagem "mesclar" com o restante da página.
 
-### 1. `src/components/HeroCarousel.tsx`
+2. **Forçar `object-contain` como padrão para slides do banco**: Alterar o comportamento para que slides adicionados pelo admin usem `object-contain` por padrão (respeitando o campo `object_fit` do banco se o admin quiser mudar). Isso evita o corte da imagem.
 
-Mudar a logica de "ou fallback ou banco" para "fallback + banco combinados":
+## Alteração técnica
 
-- Criar uma lista unificada de slides com um tipo comum (ex: `type: "fallback" | "db"`)
-- As imagens padrao sempre aparecem (indices 0 e 1)
-- Os slides do banco sao concatenados depois
-- O `totalSlides` sera `FALLBACK_IMAGES.length + slides.length`
-- No callback `onSlideChange`:
-  - Para slides fallback: `hideOverlay = false` (botoes aparecem normalmente)
-  - Para slides do banco: `hideOverlay = true` (botoes sempre ocultos, independente do campo `hide_overlay` do banco)
-- A funcao `renderSlide` verifica se o indice corresponde a um fallback ou a um slide do banco e renderiza de acordo
+### `src/components/HeroCarousel.tsx`
 
-### Logica simplificada
+Na função `renderSlide`, para slides do tipo `"db"` (linha 85):
+
+- Alterar o `backgroundColor` padrão de `"transparent"` para `"hsl(120, 15%, 97%)"` (cor de fundo do site) quando `slide.background_color` estiver vazio
+- Isso garante que imagens com `object-contain` tenham um fundo harmonioso
 
 ```
-Slides finais = [fallback1, fallback2, ...slidesDB]
-
-Ao trocar de slide:
-  - Se indice < 2 (fallback) -> mostra overlay com botoes
-  - Se indice >= 2 (do banco) -> oculta overlay com botoes
+style={{ backgroundColor: slide.background_color || "hsl(120, 15%, 97%)" }}
 ```
 
-### 2. Nenhuma alteracao no admin (`/admin/carrossel`)
-
-O painel de gerenciamento continua funcionando da mesma forma. O campo `hide_overlay` permanece disponivel para controle futuro, mas no frontend os slides do banco sempre terao os botoes ocultos.
-
-## Resultado esperado
-
-- As 2 fotos padrao dos bangalos continuam aparecendo no carrossel com os botoes "Reservar Agora" e "Nossa Missao" visiveis
-- Qualquer midia adicionada pelo admin aparece JUNTO com as fotos padrao, sem os botoes sobrepostos
-- A ordem e: imagens padrao primeiro, depois as midias do banco ordenadas por `display_order`
-
+Nenhuma alteração no admin ou no banco de dados. O admin continua podendo definir uma cor de fundo personalizada por slide se desejar.
