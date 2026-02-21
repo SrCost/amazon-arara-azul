@@ -269,28 +269,6 @@ const NewReservationModal = ({
 
       toast.success("Reserva criada com sucesso!");
 
-      // Send confirmation email (non-blocking)
-      if (insertedReservation?.id && data.guest_email) {
-        try {
-          const { error: emailError } = await supabase.functions.invoke("send-reservation-email", {
-            body: {
-              type: "reservation_confirmed",
-              reservationId: insertedReservation.id,
-              email: data.guest_email,
-              name: data.guest_name,
-            },
-          });
-          if (emailError) {
-            console.error("Email error:", emailError);
-            toast.error("Reserva criada, mas erro ao enviar e-mail de confirmação.");
-          } else {
-            toast.success("E-mail de confirmação enviado ao hóspede!");
-          }
-        } catch (emailErr) {
-          console.error("Email send failed:", emailErr);
-        }
-      }
-
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
