@@ -592,32 +592,7 @@ const EditReservationModal = ({
             </div>
 
             {/* Pricing */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
-              <FormField
-                control={form.control}
-                name="daily_rate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tarifa Base (R$)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        disabled={!!selectedPackage}
-                        {...field}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
-                      />
-                    </FormControl>
-                    {selectedPackage && (
-                      <p className="text-xs text-muted-foreground">
-                        Preço do pacote aplicado
-                      </p>
-                    )}
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
                   <p className="text-sm font-medium">
