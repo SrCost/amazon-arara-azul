@@ -184,7 +184,7 @@ const EditReservationModal = ({
          check_in: parseDateOnly(reservation.check_in),
          check_out: parseDateOnly(reservation.check_out),
         room_id: reservation.room_id,
-        daily_rate: reservation.daily_rate || room?.price_per_night || 1500,
+        daily_rate: room?.price_per_night || 1500,
         reservation_source: reservation.reservation_source || "site",
         operational_status: reservation.operational_status || reservation.status || "pending",
         payment_status: reservation.payment_status || "pending",
@@ -638,7 +638,7 @@ const EditReservationModal = ({
                       size="icon"
                       className="h-6 w-6 text-red-600"
                       onClick={() => {
-                        setManualDailyRate(null);
+                        setManualDailyRate(reservation?.daily_rate ?? null);
                         setEditingDailyRate(false);
                       }}
                     >
@@ -707,7 +707,7 @@ const EditReservationModal = ({
                       size="icon"
                       className="h-6 w-6 text-red-600"
                       onClick={() => {
-                        setManualTotal(null);
+                        setManualTotal(reservation?.total_price ?? null);
                         setEditingTotal(false);
                       }}
                     >
