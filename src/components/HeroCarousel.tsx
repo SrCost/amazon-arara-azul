@@ -78,11 +78,12 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
     }
 
     const slide = unified.slide;
+    const bgColor = slide.background_color || "hsl(120, 15%, 97%)";
     return (
       <div
         key={slide.id}
         className={`absolute inset-0 transition-opacity duration-1000 ${isActive ? "opacity-100" : "opacity-0"}`}
-        style={{ backgroundColor: slide.background_color || "hsl(120, 15%, 97%)" }}
+        style={{ backgroundColor: bgColor }}
       >
         {slide.link_url ? (
           <a href={slide.link_url} className="absolute inset-0">
@@ -91,6 +92,15 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
         ) : (
           renderMedia(slide, idx)
         )}
+        {/* Lateral gradients to blend image edges with background on desktop */}
+        <div
+          className="absolute inset-y-0 left-0 w-[15%] z-10 hidden lg:block pointer-events-none"
+          style={{ background: `linear-gradient(to right, ${bgColor}, transparent)` }}
+        />
+        <div
+          className="absolute inset-y-0 right-0 w-[15%] z-10 hidden lg:block pointer-events-none"
+          style={{ background: `linear-gradient(to left, ${bgColor}, transparent)` }}
+        />
         {!slide.hide_overlay && <div className="absolute inset-0 bg-black/20" />}
       </div>
     );
@@ -133,23 +143,37 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
             loading={index === 0 ? "eager" : "lazy"}
             decoding={index === 0 ? "sync" : "async"}
             fetchPriority={index === 0 ? "high" : "auto"}
-            className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"} hidden lg:block`}
+            className="absolute inset-0 w-full h-full object-contain hidden lg:block"
           />
         </>
       );
     }
 
     return (
-      <img
-        src={slide.desktop_image_url}
-        alt={slide.alt_text}
-        width={1920}
-        height={1080}
-        loading={index === 0 ? "eager" : "lazy"}
-        decoding={index === 0 ? "sync" : "async"}
-        fetchPriority={index === 0 ? "high" : "auto"}
-        className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"}`}
-      />
+      <>
+        {/* Mobile: respect object_fit setting */}
+        <img
+          src={slide.desktop_image_url}
+          alt={slide.alt_text}
+          width={1920}
+          height={1080}
+          loading={index === 0 ? "eager" : "lazy"}
+          decoding={index === 0 ? "sync" : "async"}
+          fetchPriority={index === 0 ? "high" : "auto"}
+          className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"} lg:hidden`}
+        />
+        {/* Desktop: always object-contain to avoid cropping */}
+        <img
+          src={slide.desktop_image_url}
+          alt={slide.alt_text}
+          width={1920}
+          height={1080}
+          loading={index === 0 ? "eager" : "lazy"}
+          decoding={index === 0 ? "sync" : "async"}
+          fetchPriority={index === 0 ? "high" : "auto"}
+          className="absolute inset-0 w-full h-full object-contain hidden lg:block"
+        />
+      </>
     );
   };
 
