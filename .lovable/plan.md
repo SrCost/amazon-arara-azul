@@ -1,30 +1,47 @@
 
-
-# Ajustar proporção de imagens desktop no carrossel
+# Corrigir exibicao de imagens do banco no carrossel desktop
 
 ## Problema
 
-Quando uma mídia é adicionada pelo admin com ajuste "Contain" (para não cortar), o fundo aparece como cor errada ou transparente, criando um visual desagradável. A imagem está sendo cortada quando usa "Cover".
+As imagens adicionadas pelo admin estao sendo cortadas e distorcidas no desktop porque usam `object-cover`, que forca a imagem a preencher todo o espaco do carrossel, cortando partes da imagem. Mesmo com `object-contain`, as bordas ficam vazias sem transicao suave.
 
-## Solução
+## Solucao
 
-Duas alterações no `HeroCarousel.tsx`:
+Duas alteracoes no `src/components/HeroCarousel.tsx`:
 
-1. **Cor de fundo padrão para slides do banco**: Quando o slide do banco não tiver `background_color` definida, usar a cor do tema do site (`hsl(120, 15%, 97%)` - o tom claro esverdeado do fundo) em vez de `transparent`. Isso faz a imagem "mesclar" com o restante da página.
+### 1. Forcar `object-contain` para slides do banco no desktop
 
-2. **Forçar `object-contain` como padrão para slides do banco**: Alterar o comportamento para que slides adicionados pelo admin usem `object-contain` por padrão (respeitando o campo `object_fit` do banco se o admin quiser mudar). Isso evita o corte da imagem.
+Na funcao `renderMedia`, para imagens de slides do banco exibidas em desktop (`hidden lg:block` e a imagem unica), forcar `object-contain` em vez de respeitar `object_fit`. Isso garante que a imagem nunca sera cortada no desktop.
 
-## Alteração técnica
+### 2. Adicionar gradiente lateral para mesclar com o fundo
 
-### `src/components/HeroCarousel.tsx`
-
-Na função `renderSlide`, para slides do tipo `"db"` (linha 85):
-
-- Alterar o `backgroundColor` padrão de `"transparent"` para `"hsl(120, 15%, 97%)"` (cor de fundo do site) quando `slide.background_color` estiver vazio
-- Isso garante que imagens com `object-contain` tenham um fundo harmonioso
+Adicionar dois pseudo-elementos (divs) com gradiente horizontal nas laterais do slide do banco, indo da cor de fundo (`hsl(120, 15%, 97%)`) para transparente. Isso cria uma transicao suave entre a imagem e o fundo do site, disfarçando as areas vazias.
 
 ```
-style={{ backgroundColor: slide.background_color || "hsl(120, 15%, 97%)" }}
+Estrutura visual:
+
+[gradiente esq] [imagem contain centralizada] [gradiente dir]
+   cor fundo ->    <- transparente | transparente ->    <- cor fundo
 ```
 
-Nenhuma alteração no admin ou no banco de dados. O admin continua podendo definir uma cor de fundo personalizada por slide se desejar.
+### Alteracoes no codigo
+
+**`src/components/HeroCarousel.tsx`** - funcao `renderSlide` (slides tipo "db"):
+
+- Adicionar dois divs com gradiente lateral sobre a imagem:
+  - Esquerda: `background: linear-gradient(to right, bgColor, transparent)` com `w-[15%]`
+  - Direita: `background: linear-gradient(to left, bgColor, transparent)` com `w-[15%]`
+  - Visivel apenas em desktop: `hidden lg:block`
+  - Z-index acima da imagem mas abaixo dos controles
+
+**`src/components/HeroCarousel.tsx`** - funcao `renderMedia`:
+
+- Para imagens desktop de slides do banco, forcar `object-contain` sempre (ignorar `object_fit` no desktop)
+- Mobile continua respeitando o `object_fit` do banco normalmente
+
+### Resultado esperado
+
+- Imagem do banco aparece inteira no desktop, centralizada, sem corte
+- As laterais que sobram mesclam suavemente com a cor de fundo do site via gradiente
+- Mobile continua funcionando normalmente
+- Imagens fallback (bangalos) nao sao afetadas
