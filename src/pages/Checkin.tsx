@@ -48,6 +48,7 @@ const Checkin = () => {
   const [estimatedArrival, setEstimatedArrival] = useState("");
   const [notes, setNotes] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [tokenExpired, setTokenExpired] = useState(false);
 
   // Auto-validate token on mount
   useState(() => {
@@ -66,6 +67,7 @@ const Checkin = () => {
     if (error || !data || data.length === 0) {
       toast({ title: "Token inválido ou expirado", variant: "destructive" });
       setStep("validate");
+      setTokenExpired(true);
     } else {
       const r = data[0];
       if (r.checkin_completed) {
@@ -179,6 +181,22 @@ const Checkin = () => {
                 <Button type="submit" className="w-full bg-gradient-forest hover:opacity-90" disabled={loading}>
                   {loading ? "Verificando..." : "Continuar"}
                 </Button>
+                {tokenExpired && (
+                  <div className="text-center mt-4 p-4 bg-muted/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Seu link expirou? Entre em contato conosco:
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="cursor-pointer"
+                      onClick={() => window.open(createWhatsAppLink("Olá! Preciso de ajuda com meu check-in digital."), '_blank', 'noopener,noreferrer')}
+                    >
+                      <MessageCircle className="h-4 w-4 mr-2" />
+                      Falar no WhatsApp
+                    </Button>
+                  </div>
+                )}
               </form>
             </div>
           )}
