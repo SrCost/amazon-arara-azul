@@ -219,11 +219,13 @@ const Checkout = () => {
                 Ficamos muito felizes que você teve uma ótima experiência!
                 Que tal compartilhar no Google para ajudar outros viajantes?
               </p>
-              <Button size="lg" className="bg-gradient-forest hover:opacity-90" asChild>
-                <a href={reviewUrl} target="_blank" rel="noopener noreferrer">
-                  <Star className="mr-2 h-5 w-5" />
-                  Avaliar no Google
-                </a>
+              <Button
+                size="lg"
+                className="bg-gradient-forest hover:opacity-90 cursor-pointer"
+                onClick={() => window.open(reviewUrl, '_blank', 'noopener,noreferrer')}
+              >
+                <Star className="mr-2 h-5 w-5" />
+                Avaliar no Google
               </Button>
             </div>
           )}

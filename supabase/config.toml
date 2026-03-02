@@ -56,3 +56,6 @@ verify_jwt = false
 
 [functions.send-internal-feedback]
 verify_jwt = false
+
+[functions.cron-guest-emails]
+verify_jwt = false
