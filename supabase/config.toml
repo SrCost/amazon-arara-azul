@@ -44,3 +44,15 @@ verify_jwt = false
 
 [functions.mp-public-config]
 verify_jwt = false
+
+[functions.fetch-google-reviews]
+verify_jwt = false
+
+[functions.send-checkin-email]
+verify_jwt = false
+
+[functions.send-checkout-email]
+verify_jwt = false
+
+[functions.send-internal-feedback]
+verify_jwt = false
