@@ -18,6 +18,8 @@ import Auth from "./pages/Auth";
 import ReservationSuccess from "./pages/ReservationSuccess";
 import NotFound from "./pages/NotFound";
 import Experiencias from "./pages/Experiencias";
+import Checkin from "./pages/Checkin";
+import Checkout from "./pages/Checkout";
 import FloatingSupportButton from "./components/FloatingSupportButton";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
@@ -31,6 +33,7 @@ import Gallery from "./pages/admin/Gallery";
 import AdminBangalos from "./pages/admin/Bangalos";
 import CalendarReservations from "./pages/admin/CalendarReservations";
 import HeroCarouselAdmin from "./pages/admin/HeroCarousel";
+import GuestAutomation from "./pages/admin/GuestAutomation";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +59,8 @@ const App = () => (
             <Route path="/reserva-sucesso" element={<ReservationSuccess />} />
             <Route path="/reserva-confirmada" element={<ReservationSuccess />} />
             <Route path="/reserva/sucesso" element={<ReservationSuccess />} />
+            <Route path="/checkin" element={<Checkin />} />
+            <Route path="/checkout" element={<Checkout />} />
             <Route
               path="/admin"
               element={
@@ -162,6 +167,16 @@ const App = () => (
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout>
                     <HeroCarouselAdmin />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/guest-automation"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <GuestAutomation />
                   </AdminLayout>
                 </ProtectedRoute>
               }
