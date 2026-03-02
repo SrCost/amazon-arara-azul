@@ -33,18 +33,17 @@ const LeaveReviewSection = () => {
             Sua avaliação ajuda outros viajantes a descobrirem a magia da
             Amazônia. Conte como foi sua estadia na Pousada Arara Azul.
           </p>
-          <a
-            href={reviewUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => window.open(reviewUrl, '_blank', 'noopener,noreferrer')}
             className="inline-flex items-center justify-center gap-3 w-full sm:w-auto h-14 px-8 
               bg-white border-2 border-[#34A853] text-foreground font-semibold rounded-xl
               shadow-md hover:shadow-xl hover:scale-[1.03] hover:border-[#2d9249]
-              transition-all duration-300 ease-out active:scale-[0.98]"
+              transition-all duration-300 ease-out active:scale-[0.98] cursor-pointer"
           >
             <GoogleIcon className="h-5 w-5 shrink-0" />
             Avaliar no Google
-          </a>
+          </button>
         </div>
       </div>
     </section>
