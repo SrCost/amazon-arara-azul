@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import FindUsSection from "@/components/FindUsSection";
 import HeroCarousel from "@/components/HeroCarousel";
+import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
+import LeaveReviewSection from "@/components/LeaveReviewSection";
 
 // Fallback cover images
 import tipitiExterior from "@/assets/tipiti-exterior.jpg";
@@ -184,6 +186,9 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Google Reviews */}
+      <GoogleReviewsCarousel />
+
       {/* CTA after Features */}
       <CTASection variant="secondary" buttonText={t("home.viewAvailableLodges")} buttonLink="/bangalos" />
 
@@ -232,6 +237,9 @@ const Index = () => {
 
       {/* WhatsApp CTA */}
       <CTASection variant="whatsapp" description={t("home.preferDirectContact")} />
+
+      {/* Leave a Review */}
+      <LeaveReviewSection />
 
       {/* Find Us Section */}
       <FindUsSection />

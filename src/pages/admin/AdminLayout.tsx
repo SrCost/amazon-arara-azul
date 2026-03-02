@@ -23,6 +23,7 @@ import {
   Building2,
   Menu,
   SlidersHorizontal,
+  ClipboardCheck,
 } from "lucide-react";
 import logoArara from "@/assets/logo-arara-azul.jpg";
 
@@ -85,9 +86,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
   ];
 
-  // Admin e Super Admin têm acesso a Pacotes, Bangalôs e Pagamentos
+  // Admin e Super Admin têm acesso a Pacotes, Bangalôs, Pagamentos e Automação
   const adminItems = isAdmin || isSuperAdmin
     ? [
+        {
+          icon: ClipboardCheck,
+          label: "Automação",
+          path: "/admin/guest-automation",
+        },
         {
           icon: Package,
           label: "Pacotes",
