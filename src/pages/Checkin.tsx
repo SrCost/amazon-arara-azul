@@ -11,7 +11,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Leaf } from "lucide-react";
+import { CheckCircle, Leaf, MessageCircle } from "lucide-react";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 
 interface ReservationInfo {
   id: string;
