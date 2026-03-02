@@ -1,58 +1,47 @@
 
+# Corrigir exibicao de imagens do banco no carrossel desktop
 
-# Correcao Definitiva — Dominio, SEO e Seguranca
+## Problema
 
-## Problema critico encontrado
-O dominio oficial e `pousadararazul.com`, mas **index.html**, **sitemap.xml** e **robots.txt** usam o dominio errado `pousadaararaazul.com` (com "a" extra). Alem disso, o webhook do Mercado Pago ainda usa `pousada-arara-azul.lovable.app` como fallback.
+As imagens adicionadas pelo admin estao sendo cortadas e distorcidas no desktop porque usam `object-cover`, que forca a imagem a preencher todo o espaco do carrossel, cortando partes da imagem. Mesmo com `object-contain`, as bordas ficam vazias sem transicao suave.
 
-## O que ja esta correto
-- Edge functions de check-in e check-out ja usam `SITE_URL` com fallback `pousadararazul.com`
-- Token: 48h de expiracao, uso unico, validacao server-side via RPCs
-- `_redirects` para SPA routing ja existe
-- SSL/HTTPS e HSTS sao gerenciados automaticamente pela plataforma
-- Rate limiting ja implementado na tabela `rate_limits`
-- Email logs ja registram cada envio com status
+## Solucao
 
-## Itens nao aplicaveis (gerenciados pela plataforma)
-- Redirect 301 de `lovable.app` para dominio custom (gerenciado pela infraestrutura do Lovable ao configurar dominio custom)
-- HSTS e certificado SSL (automatico)
-- Headers de seguranca (ja configurados via vercel.json conforme memoria do projeto)
-- `NEXT_PUBLIC_*` / `process.env` (projeto usa Vite, nao Next.js)
+Duas alteracoes no `src/components/HeroCarousel.tsx`:
 
----
+### 1. Forcar `object-contain` para slides do banco no desktop
 
-## Alteracoes a implementar
+Na funcao `renderMedia`, para imagens de slides do banco exibidas em desktop (`hidden lg:block` e a imagem unica), forcar `object-contain` em vez de respeitar `object_fit`. Isso garante que a imagem nunca sera cortada no desktop.
 
-### 1. Corrigir dominio em index.html
-Substituir todas as 20+ ocorrencias de `pousadaararaazul.com` por `pousadararazul.com` em:
-- Canonical URL
-- Hreflang tags
-- Open Graph tags (og:url, og:image)
-- Twitter tags
-- Schema.org JSON-LD (url, @id, email, image, logo, urlTemplate)
+### 2. Adicionar gradiente lateral para mesclar com o fundo
 
-### 2. Corrigir dominio em sitemap.xml
-Substituir todas as ocorrencias de `pousadaararaazul.com` por `pousadararazul.com` nas 7 URLs + hreflang alternates.
+Adicionar dois pseudo-elementos (divs) com gradiente horizontal nas laterais do slide do banco, indo da cor de fundo (`hsl(120, 15%, 97%)`) para transparente. Isso cria uma transicao suave entre a imagem e o fundo do site, disfarçando as areas vazias.
 
-### 3. Corrigir dominio em robots.txt
-Atualizar a linha Sitemap de `pousadaararaazul.com` para `pousadararazul.com`.
+```
+Estrutura visual:
 
-### 4. Corrigir fallback no webhook Mercado Pago
-Em `supabase/functions/mercado-pago-webhook/index.ts` linha 120, trocar `pousada-arara-azul.lovable.app` por `pousadararazul.com`.
+[gradiente esq] [imagem contain centralizada] [gradiente dir]
+   cor fundo ->    <- transparente | transparente ->    <- cor fundo
+```
 
-### 5. Atualizar usePageMeta para canonical dinamico
-Estender o hook para atualizar a tag `<link rel="canonical">` dinamicamente com base na rota atual, usando `https://pousadararazul.com` como base.
+### Alteracoes no codigo
 
-### 6. Bloquear paginas privadas no robots.txt
-Adicionar `Disallow: /checkin` e `Disallow: /checkout` para evitar indexacao dessas rotas privadas.
+**`src/components/HeroCarousel.tsx`** - funcao `renderSlide` (slides tipo "db"):
 
-### 7. Corrigir window.location.origin em AuthContext
-O signup usa `window.location.origin` para redirect — isso e aceitavel para auth redirects (funciona em qualquer dominio). Nenhuma alteracao necessaria.
+- Adicionar dois divs com gradiente lateral sobre a imagem:
+  - Esquerda: `background: linear-gradient(to right, bgColor, transparent)` com `w-[15%]`
+  - Direita: `background: linear-gradient(to left, bgColor, transparent)` com `w-[15%]`
+  - Visivel apenas em desktop: `hidden lg:block`
+  - Z-index acima da imagem mas abaixo dos controles
 
-### Arquivos a editar
-- `index.html` — corrigir dominio (20+ substituicoes)
-- `public/sitemap.xml` — corrigir dominio
-- `public/robots.txt` — corrigir dominio + adicionar disallow
-- `supabase/functions/mercado-pago-webhook/index.ts` — corrigir fallback
-- `src/hooks/usePageMeta.ts` — adicionar canonical dinamico
+**`src/components/HeroCarousel.tsx`** - funcao `renderMedia`:
 
+- Para imagens desktop de slides do banco, forcar `object-contain` sempre (ignorar `object_fit` no desktop)
+- Mobile continua respeitando o `object_fit` do banco normalmente
+
+### Resultado esperado
+
+- Imagem do banco aparece inteira no desktop, centralizada, sem corte
+- As laterais que sobram mesclam suavemente com a cor de fundo do site via gradiente
+- Mobile continua funcionando normalmente
+- Imagens fallback (bangalos) nao sao afetadas

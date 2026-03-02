@@ -117,7 +117,7 @@ serve(async (req) => {
 
       console.log('Mercado Pago redirect:', { paymentId, status, externalReference });
 
-      const baseUrl = Deno.env.get('SITE_URL') || 'https://pousada-arara-azul.lovable.app';
+      const baseUrl = Deno.env.get('SITE_URL') || 'https://pousadararazul.com';
       const redirectUrl = new URL(`${baseUrl}/reserva-confirmada`);
       if (externalReference) {
         redirectUrl.searchParams.set('reservationId', externalReference);
