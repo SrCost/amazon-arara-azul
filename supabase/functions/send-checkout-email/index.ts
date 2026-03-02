@@ -39,7 +39,7 @@ serve(async (req) => {
       expires_at: expiresAt,
     });
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://pousada-arara-azul.lovable.app";
+    const siteUrl = Deno.env.get("SITE_URL") || "https://pousadararazul.com";
     const checkoutLink = `${siteUrl}/checkout?token=${token}`;
 
     const html = `<!DOCTYPE html>
