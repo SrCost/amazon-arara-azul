@@ -94,6 +94,138 @@ export type Database = {
           },
         ]
       }
+      booking_checkins: {
+        Row: {
+          accepted_terms: boolean
+          created_at: string | null
+          document: string
+          estimated_arrival_time: string | null
+          id: string
+          notes: string | null
+          reservation_id: string
+        }
+        Insert: {
+          accepted_terms?: boolean
+          created_at?: string | null
+          document: string
+          estimated_arrival_time?: string | null
+          id?: string
+          notes?: string | null
+          reservation_id: string
+        }
+        Update: {
+          accepted_terms?: boolean
+          created_at?: string | null
+          document?: string
+          estimated_arrival_time?: string | null
+          id?: string
+          notes?: string | null
+          reservation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_checkins_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_checkins_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_checkouts: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          id: string
+          issues: string | null
+          rating: number
+          reservation_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          issues?: string | null
+          rating: number
+          reservation_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          id?: string
+          issues?: string | null
+          rating?: number
+          reservation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_checkouts_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_checkouts_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_tokens: {
+        Row: {
+          created_at: string | null
+          expires_at: string
+          id: string
+          reservation_id: string
+          token: string
+          type: string
+          used: boolean
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          reservation_id: string
+          token: string
+          type: string
+          used?: boolean
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          reservation_id?: string
+          token?: string
+          type?: string
+          used?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_tokens_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_tokens_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_messages: {
         Row: {
           created_at: string | null
@@ -223,6 +355,36 @@ export type Database = {
           storage_path?: string
           updated_at?: string | null
           uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      google_reviews_cache: {
+        Row: {
+          author_name: string
+          id: string
+          profile_photo_url: string | null
+          rating: number
+          review_date: string | null
+          text: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_name: string
+          id?: string
+          profile_photo_url?: string | null
+          rating: number
+          review_date?: string | null
+          text: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_name?: string
+          id?: string
+          profile_photo_url?: string | null
+          rating?: number
+          review_date?: string | null
+          text?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -591,6 +753,8 @@ export type Database = {
           channel_reference_id: string | null
           check_in: string
           check_out: string
+          checkin_completed: boolean | null
+          checkout_completed: boolean | null
           country: string | null
           cpf: string | null
           created_at: string | null
@@ -641,6 +805,8 @@ export type Database = {
           channel_reference_id?: string | null
           check_in: string
           check_out: string
+          checkin_completed?: boolean | null
+          checkout_completed?: boolean | null
           country?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -691,6 +857,8 @@ export type Database = {
           channel_reference_id?: string | null
           check_in?: string
           check_out?: string
+          checkin_completed?: boolean | null
+          checkout_completed?: boolean | null
           country?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -1088,6 +1256,53 @@ export type Database = {
         Returns: boolean
       }
       is_service_role: { Args: never; Returns: boolean }
+      submit_checkin: {
+        Args: {
+          p_accepted_terms: boolean
+          p_document: string
+          p_estimated_arrival: string
+          p_notes: string
+          p_reservation_id: string
+          p_token?: string
+        }
+        Returns: boolean
+      }
+      submit_checkout: {
+        Args: {
+          p_comment: string
+          p_issues: string
+          p_rating: number
+          p_reservation_id: string
+          p_token?: string
+        }
+        Returns: boolean
+      }
+      validate_booking_token: {
+        Args: { p_token: string; p_type: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          checkin_completed: boolean
+          checkout_completed: boolean
+          guest_name: string
+          guests: number
+          reservation_id: string
+          room_name: string
+        }[]
+      }
+      validate_reservation_for_guest: {
+        Args: { p_email: string; p_reservation_id: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          checkin_completed: boolean
+          checkout_completed: boolean
+          guest_name: string
+          guests: number
+          id: string
+          room_name: string
+        }[]
+      }
       validate_reservation_token: {
         Args: { _reservation_id: string; _token: string }
         Returns: boolean
