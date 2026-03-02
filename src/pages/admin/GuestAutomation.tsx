@@ -31,6 +31,20 @@ interface CheckoutFeedback {
   created_at: string | null;
 }
 
+interface CheckinDetails {
+  document: string;
+  estimated_arrival_time: string | null;
+  notes: string | null;
+  accepted_terms: boolean;
+  created_at: string | null;
+}
+
+interface ReservationDetails {
+  checkin: CheckinDetails | null;
+  checkout: CheckoutFeedback | null;
+  guest_name: string;
+}
+
 const GuestAutomation = () => {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
@@ -40,6 +54,7 @@ const GuestAutomation = () => {
   const [loading, setLoading] = useState(false);
   const [sendingEmail, setSendingEmail] = useState<string | null>(null);
   const [feedbackModal, setFeedbackModal] = useState<CheckoutFeedback | null>(null);
+  const [detailsModal, setDetailsModal] = useState<ReservationDetails | null>(null);
   const [stats, setStats] = useState({
     checkinPending: 0,
     checkinDone: 0,
@@ -165,8 +180,32 @@ const GuestAutomation = () => {
     }
   }
 
+  async function viewDetails(reservation: ReservationRow) {
+    const [checkinRes, checkoutRes] = await Promise.all([
+      supabase
+        .from("booking_checkins")
+        .select("document, estimated_arrival_time, notes, accepted_terms, created_at")
+        .eq("reservation_id", reservation.id)
+        .maybeSingle(),
+      supabase
+        .from("booking_checkouts")
+        .select("rating, comment, issues, created_at")
+        .eq("reservation_id", reservation.id)
+        .maybeSingle(),
+    ]);
+
+    setDetailsModal({
+      checkin: checkinRes.data as CheckinDetails | null,
+      checkout: checkoutRes.data as CheckoutFeedback | null,
+      guest_name: reservation.guest_name,
+    });
+  }
+
   const formatDate = (d: string) =>
     new Date(d + "T12:00:00").toLocaleDateString("pt-BR");
+  
+  const formatDateTime = (d: string | null) =>
+    d ? new Date(d).toLocaleString("pt-BR") : "—";
 
   const StatusBadge = ({ done }: { done: boolean | null }) =>
     done ? (
@@ -260,6 +299,17 @@ const GuestAutomation = () => {
                     >
                       <MessageSquare className="h-3 w-3 mr-1" />
                       Feedback
+                    </Button>
+                  )}
+                  {(r.checkin_completed || r.checkout_completed) && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => viewDetails(r)}
+                      className="text-xs"
+                    >
+                      <Search className="h-3 w-3 mr-1" />
+                      Detalhes
                     </Button>
                   )}
                 </div>
@@ -448,6 +498,98 @@ const GuestAutomation = () => {
               {!feedbackModal.comment && !feedbackModal.issues && (
                 <p className="text-sm text-muted-foreground italic">Nenhum comentário adicional.</p>
               )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Details Modal */}
+      <Dialog open={!!detailsModal} onOpenChange={() => setDetailsModal(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detalhes — {detailsModal?.guest_name}</DialogTitle>
+          </DialogHeader>
+          {detailsModal && (
+            <div className="space-y-5">
+              {/* Check-in Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <LogIn className="h-4 w-4 text-primary" /> Check-in
+                </h3>
+                {detailsModal.checkin ? (
+                  <div className="space-y-2 text-sm bg-muted/30 rounded-lg p-3">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Documento:</span>
+                      <span className="font-medium text-foreground">{detailsModal.checkin.document}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Chegada estimada:</span>
+                      <span className="font-medium text-foreground">{detailsModal.checkin.estimated_arrival_time || "—"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Termos aceitos:</span>
+                      <span className="font-medium text-foreground">{detailsModal.checkin.accepted_terms ? "Sim" : "Não"}</span>
+                    </div>
+                    {detailsModal.checkin.notes && (
+                      <div>
+                        <span className="text-muted-foreground">Observações:</span>
+                        <p className="mt-1 text-foreground bg-background/50 p-2 rounded">{detailsModal.checkin.notes}</p>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+                      <span>Registrado em:</span>
+                      <span>{formatDateTime(detailsModal.checkin.created_at)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Ainda não realizado.</p>
+                )}
+              </div>
+
+              {/* Check-out Section */}
+              <div>
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <LogOut className="h-4 w-4 text-orange-600" /> Check-out
+                </h3>
+                {detailsModal.checkout ? (
+                  <div className="space-y-2 text-sm bg-muted/30 rounded-lg p-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Nota:</span>
+                      <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((v) => (
+                          <Star
+                            key={v}
+                            className={`h-4 w-4 ${
+                              v <= detailsModal.checkout!.rating
+                                ? "text-[hsl(var(--golden))] fill-[hsl(var(--golden))]"
+                                : "text-muted"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                      <span className="font-semibold text-foreground">{detailsModal.checkout.rating}/5</span>
+                    </div>
+                    {detailsModal.checkout.comment && (
+                      <div>
+                        <span className="text-muted-foreground">Comentário:</span>
+                        <p className="mt-1 text-foreground bg-background/50 p-2 rounded">{detailsModal.checkout.comment}</p>
+                      </div>
+                    )}
+                    {detailsModal.checkout.issues && (
+                      <div>
+                        <span className="text-muted-foreground">Problemas:</span>
+                        <p className="mt-1 text-foreground bg-destructive/5 p-2 rounded border border-destructive/20">{detailsModal.checkout.issues}</p>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-xs text-muted-foreground pt-1 border-t border-border">
+                      <span>Registrado em:</span>
+                      <span>{formatDateTime(detailsModal.checkout.created_at)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground italic">Ainda não realizado.</p>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
