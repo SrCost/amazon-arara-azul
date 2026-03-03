@@ -293,10 +293,13 @@ const Reservations = () => {
 
   const getStatusBadge = (status: string) => {
     const variants: { [key: string]: any } = {
-      confirmed: { label: t("admin.confirmed"), className: "bg-green-100 text-green-800" },
-      pending: { label: t("admin.pending"), className: "bg-yellow-100 text-yellow-800" },
-      completed: { label: t("admin.completed"), className: "bg-blue-100 text-blue-800" },
-      cancelled: { label: t("admin.cancelled"), className: "bg-red-100 text-red-800" },
+      pending: { label: "Pendente", className: "bg-yellow-100 text-yellow-800" },
+      confirmed: { label: "Confirmado", className: "bg-emerald-100 text-emerald-800" },
+      hosted: { label: "Hospedado", className: "bg-blue-100 text-blue-800" },
+      finished: { label: "Finalizado", className: "bg-slate-100 text-slate-800" },
+      "no-show": { label: "No-show", className: "bg-orange-100 text-orange-800" },
+      cancelled: { label: "Cancelado", className: "bg-red-100 text-red-800" },
+      completed: { label: "Finalizado", className: "bg-slate-100 text-slate-800" },
     };
 
     const variant = variants[status] || variants.pending;
@@ -644,10 +647,12 @@ const Reservations = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="confirmed">Confirmada</SelectItem>
                       <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="completed">Concluída</SelectItem>
-                      <SelectItem value="cancelled">Cancelada</SelectItem>
+                      <SelectItem value="confirmed">Confirmado</SelectItem>
+                      <SelectItem value="hosted">Hospedado</SelectItem>
+                      <SelectItem value="finished">Finalizado</SelectItem>
+                      <SelectItem value="no-show">No-show</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
