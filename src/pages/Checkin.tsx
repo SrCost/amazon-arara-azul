@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -51,11 +51,11 @@ const Checkin = () => {
   const [tokenExpired, setTokenExpired] = useState(false);
 
   // Auto-validate token on mount
-  useState(() => {
+  useEffect(() => {
     if (tokenFromUrl) {
       validateToken(tokenFromUrl);
     }
-  });
+  }, []);
 
   async function validateToken(token: string) {
     setLoading(true);

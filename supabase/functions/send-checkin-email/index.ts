@@ -41,7 +41,7 @@ serve(async (req) => {
       expires_at: expiresAt,
     });
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://pousadararazul.com";
+    const siteUrl = (Deno.env.get("SITE_URL") || "https://pousadararazul.com").replace(/\/+$/, "");
     const checkinLink = `${siteUrl}/checkin?token=${token}`;
 
     const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });

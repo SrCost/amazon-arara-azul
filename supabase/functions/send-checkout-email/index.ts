@@ -39,7 +39,7 @@ serve(async (req) => {
       expires_at: expiresAt,
     });
 
-    const siteUrl = Deno.env.get("SITE_URL") || "https://pousadararazul.com";
+    const siteUrl = (Deno.env.get("SITE_URL") || "https://pousadararazul.com").replace(/\/+$/, "");
     const checkoutLink = `${siteUrl}/checkout?token=${token}`;
 
     const html = `<!DOCTYPE html>
