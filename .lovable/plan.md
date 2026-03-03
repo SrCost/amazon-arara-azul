@@ -1,47 +1,27 @@
 
-# Corrigir exibicao de imagens do banco no carrossel desktop
+
+# Correção: Check-in/Check-out — Bug `useState` e sanitização de URL
 
 ## Problema
+1. **Bug React**: `Checkin.tsx` (linha 54) e `Checkout.tsx` (linha 43) usam `useState(() => {...})` para executar lógica no mount. Isso é incorreto — `useState` não aceita callback com side-effects. Deve ser `useEffect`.
+2. **Barra dupla na URL**: Se o secret `SITE_URL` tiver trailing slash, gera `//checkin`. Precisa sanitizar nas edge functions.
 
-As imagens adicionadas pelo admin estao sendo cortadas e distorcidas no desktop porque usam `object-cover`, que forca a imagem a preencher todo o espaco do carrossel, cortando partes da imagem. Mesmo com `object-contain`, as bordas ficam vazias sem transicao suave.
+## Alterações
 
-## Solucao
+### 1. `src/pages/Checkin.tsx`
+- Adicionar `import { useEffect }` 
+- Substituir `useState(() => { if (tokenFromUrl) validateToken(tokenFromUrl); })` por `useEffect(() => { if (tokenFromUrl) validateToken(tokenFromUrl); }, [])`
 
-Duas alteracoes no `src/components/HeroCarousel.tsx`:
+### 2. `src/pages/Checkout.tsx`
+- Adicionar `import { useEffect }` 
+- Substituir `useState(() => { if (tokenFromUrl) validateToken(tokenFromUrl); })` por `useEffect(() => { if (tokenFromUrl) validateToken(tokenFromUrl); }, [])`
 
-### 1. Forcar `object-contain` para slides do banco no desktop
+### 3. `supabase/functions/send-checkin-email/index.ts` (linha 44)
+- Sanitizar trailing slash: `const siteUrl = (Deno.env.get("SITE_URL") || "https://pousadararazul.com").replace(/\/+$/, "");`
 
-Na funcao `renderMedia`, para imagens de slides do banco exibidas em desktop (`hidden lg:block` e a imagem unica), forcar `object-contain` em vez de respeitar `object_fit`. Isso garante que a imagem nunca sera cortada no desktop.
+### 4. `supabase/functions/send-checkout-email/index.ts` (linha 42)
+- Mesma sanitização de trailing slash
 
-### 2. Adicionar gradiente lateral para mesclar com o fundo
+### 5. Atualizar secret `SITE_URL`
+- Garantir valor `https://pousadararazul.com` (sem barra final)
 
-Adicionar dois pseudo-elementos (divs) com gradiente horizontal nas laterais do slide do banco, indo da cor de fundo (`hsl(120, 15%, 97%)`) para transparente. Isso cria uma transicao suave entre a imagem e o fundo do site, disfarçando as areas vazias.
-
-```
-Estrutura visual:
-
-[gradiente esq] [imagem contain centralizada] [gradiente dir]
-   cor fundo ->    <- transparente | transparente ->    <- cor fundo
-```
-
-### Alteracoes no codigo
-
-**`src/components/HeroCarousel.tsx`** - funcao `renderSlide` (slides tipo "db"):
-
-- Adicionar dois divs com gradiente lateral sobre a imagem:
-  - Esquerda: `background: linear-gradient(to right, bgColor, transparent)` com `w-[15%]`
-  - Direita: `background: linear-gradient(to left, bgColor, transparent)` com `w-[15%]`
-  - Visivel apenas em desktop: `hidden lg:block`
-  - Z-index acima da imagem mas abaixo dos controles
-
-**`src/components/HeroCarousel.tsx`** - funcao `renderMedia`:
-
-- Para imagens desktop de slides do banco, forcar `object-contain` sempre (ignorar `object_fit` no desktop)
-- Mobile continua respeitando o `object_fit` do banco normalmente
-
-### Resultado esperado
-
-- Imagem do banco aparece inteira no desktop, centralizada, sem corte
-- As laterais que sobram mesclam suavemente com a cor de fundo do site via gradiente
-- Mobile continua funcionando normalmente
-- Imagens fallback (bangalos) nao sao afetadas
