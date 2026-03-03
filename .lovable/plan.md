@@ -1,47 +1,47 @@
 
-# Corrigir exibicao de imagens do banco no carrossel desktop
 
-## Problema
+# Plano: Unificar Status + Corrigir Envio de Email Manual
 
-As imagens adicionadas pelo admin estao sendo cortadas e distorcidas no desktop porque usam `object-cover`, que forca a imagem a preencher todo o espaco do carrossel, cortando partes da imagem. Mesmo com `object-contain`, as bordas ficam vazias sem transicao suave.
+## Problema 1: Status duplicado e inconsistente
 
-## Solucao
+O calendário (`/admin/calendario-reservas`) usa "Status Operacional" com valores: pending, confirmed, hosted, finished, no-show, cancelled.
 
-Duas alteracoes no `src/components/HeroCarousel.tsx`:
+A tela de reservas (`/admin/reservations`) usa "Status da Reserva" com valores diferentes: pending, confirmed, **completed**, cancelled — faltam hosted, finished e no-show, e usa "completed" em vez de "finished".
 
-### 1. Forcar `object-contain` para slides do banco no desktop
+Ambos gravam nos campos `status` e `operational_status` simultaneamente, mas com opções desalinhadas.
 
-Na funcao `renderMedia`, para imagens de slides do banco exibidas em desktop (`hidden lg:block` e a imagem unica), forcar `object-contain` em vez de respeitar `object_fit`. Isso garante que a imagem nunca sera cortada no desktop.
+### Correção
+1. **Reservations.tsx** — Unificar o select de "Status da Reserva" para usar as mesmas opções do calendário:
+   - pending → Pendente
+   - confirmed → Confirmado
+   - hosted → Hospedado
+   - finished → Finalizado
+   - no-show → No-show
+   - cancelled → Cancelado
+   - Remover "completed" (substituir por "finished")
 
-### 2. Adicionar gradiente lateral para mesclar com o fundo
+2. **Reservations.tsx** — No `handleUpdateReservation`, garantir que `operational_status` e `status` recebam o mesmo valor (já faz isso: `operational_status: editForm.status`).
 
-Adicionar dois pseudo-elementos (divs) com gradiente horizontal nas laterais do slide do banco, indo da cor de fundo (`hsl(120, 15%, 97%)`) para transparente. Isso cria uma transicao suave entre a imagem e o fundo do site, disfarçando as areas vazias.
+3. **Reservations.tsx** — Atualizar `getStatusBadge` para incluir os novos status (hosted, finished, no-show).
 
+---
+
+## Problema 2: Email manual não envia
+
+Os logs da Edge Function `send-reservation-email` estão vazios, indicando que a requisição nem chega ao servidor. A causa provável é **CORS**: os headers da função usam uma lista antiga sem os headers `x-supabase-client-platform*` e `x-supabase-client-runtime*` que o SDK Supabase atual envia. O preflight (OPTIONS) falha silenciosamente no browser.
+
+### Correção
+Atualizar os `corsHeaders` em `send-reservation-email/index.ts` para incluir os headers modernos do SDK:
 ```
-Estrutura visual:
-
-[gradiente esq] [imagem contain centralizada] [gradiente dir]
-   cor fundo ->    <- transparente | transparente ->    <- cor fundo
+"Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version"
 ```
 
-### Alteracoes no codigo
+---
 
-**`src/components/HeroCarousel.tsx`** - funcao `renderSlide` (slides tipo "db"):
+## Arquivos a alterar
 
-- Adicionar dois divs com gradiente lateral sobre a imagem:
-  - Esquerda: `background: linear-gradient(to right, bgColor, transparent)` com `w-[15%]`
-  - Direita: `background: linear-gradient(to left, bgColor, transparent)` com `w-[15%]`
-  - Visivel apenas em desktop: `hidden lg:block`
-  - Z-index acima da imagem mas abaixo dos controles
+| Arquivo | Mudança |
+|---|---|
+| `src/pages/admin/Reservations.tsx` | Alinhar opções de status, atualizar badges |
+| `supabase/functions/send-reservation-email/index.ts` | Atualizar CORS headers |
 
-**`src/components/HeroCarousel.tsx`** - funcao `renderMedia`:
-
-- Para imagens desktop de slides do banco, forcar `object-contain` sempre (ignorar `object_fit` no desktop)
-- Mobile continua respeitando o `object_fit` do banco normalmente
-
-### Resultado esperado
-
-- Imagem do banco aparece inteira no desktop, centralizada, sem corte
-- As laterais que sobram mesclam suavemente com a cor de fundo do site via gradiente
-- Mobile continua funcionando normalmente
-- Imagens fallback (bangalos) nao sao afetadas
