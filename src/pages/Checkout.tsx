@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,9 +40,9 @@ const Checkout = () => {
   const [comment, setComment] = useState("");
   const [issues, setIssues] = useState("");
 
-  useState(() => {
+  useEffect(() => {
     if (tokenFromUrl) validateToken(tokenFromUrl);
-  });
+  }, []);
 
   async function validateToken(token: string) {
     setLoading(true);
