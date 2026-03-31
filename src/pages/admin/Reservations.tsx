@@ -220,11 +220,22 @@ const Reservations = () => {
         throw error;
       }
 
-      console.log("✅ Reserva atualizada:", {
-        id: selectedReservation.id,
-        guest: editForm.guest_name,
-        status: editForm.status
-      });
+      // Send internal cancellation notification if status changed to cancelled
+      if (editForm.status === "cancelled" && selectedReservation.status !== "cancelled") {
+        supabase.functions.invoke("send-internal-notification", {
+          body: {
+            type: "cancellation",
+            data: {
+              guest_name: editForm.guest_name,
+              guest_email: editForm.guest_email,
+              room_name: selectedReservation.room_name,
+              check_in: editForm.check_in,
+              check_out: editForm.check_out,
+              total_price: editForm.total_price,
+            },
+          },
+        }).catch(() => {});
+      }
 
       toast.success("✅ Reserva atualizada com sucesso!", {
         description: "Todas as alterações foram salvas e registradas no log de auditoria."
