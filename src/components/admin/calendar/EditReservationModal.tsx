@@ -264,6 +264,23 @@ const EditReservationModal = ({
 
       if (error) throw error;
 
+      // Send internal cancellation notification if status changed to cancelled
+      if (data.operational_status === "cancelled" && reservation.operational_status !== "cancelled") {
+        supabase.functions.invoke("send-internal-notification", {
+          body: {
+            type: "cancellation",
+            data: {
+              guest_name: data.guest_name,
+              guest_email: data.guest_email,
+              room_name: room?.name_pt || reservation.room_name,
+              check_in: data.check_in,
+              check_out: data.check_out,
+              total_price: totalPrice,
+            },
+          },
+        }).catch(() => {});
+      }
+
       toast.success("Reserva atualizada com sucesso!");
       onSuccess();
       onOpenChange(false);
