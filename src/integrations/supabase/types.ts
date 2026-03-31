@@ -97,30 +97,51 @@ export type Database = {
       booking_checkins: {
         Row: {
           accepted_terms: boolean
+          address: string | null
+          birth_date: string | null
+          city_state: string | null
           created_at: string | null
           document: string
           estimated_arrival_time: string | null
+          full_name: string | null
           id: string
+          nationality: string | null
           notes: string | null
           reservation_id: string
+          transport_mode: string | null
+          travel_reason: string | null
         }
         Insert: {
           accepted_terms?: boolean
+          address?: string | null
+          birth_date?: string | null
+          city_state?: string | null
           created_at?: string | null
           document: string
           estimated_arrival_time?: string | null
+          full_name?: string | null
           id?: string
+          nationality?: string | null
           notes?: string | null
           reservation_id: string
+          transport_mode?: string | null
+          travel_reason?: string | null
         }
         Update: {
           accepted_terms?: boolean
+          address?: string | null
+          birth_date?: string | null
+          city_state?: string | null
           created_at?: string | null
           document?: string
           estimated_arrival_time?: string | null
+          full_name?: string | null
           id?: string
+          nationality?: string | null
           notes?: string | null
           reservation_id?: string
+          transport_mode?: string | null
+          travel_reason?: string | null
         }
         Relationships: [
           {
@@ -1256,17 +1277,36 @@ export type Database = {
         Returns: boolean
       }
       is_service_role: { Args: never; Returns: boolean }
-      submit_checkin: {
-        Args: {
-          p_accepted_terms: boolean
-          p_document: string
-          p_estimated_arrival: string
-          p_notes: string
-          p_reservation_id: string
-          p_token?: string
-        }
-        Returns: boolean
-      }
+      submit_checkin:
+        | {
+            Args: {
+              p_accepted_terms: boolean
+              p_document: string
+              p_estimated_arrival: string
+              p_notes: string
+              p_reservation_id: string
+              p_token?: string
+            }
+            Returns: boolean
+          }
+        | {
+            Args: {
+              p_accepted_terms: boolean
+              p_address?: string
+              p_birth_date?: string
+              p_city_state?: string
+              p_document: string
+              p_estimated_arrival: string
+              p_full_name?: string
+              p_nationality?: string
+              p_notes: string
+              p_reservation_id: string
+              p_token?: string
+              p_transport_mode?: string
+              p_travel_reason?: string
+            }
+            Returns: boolean
+          }
       submit_checkout: {
         Args: {
           p_comment: string

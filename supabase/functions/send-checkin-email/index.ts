@@ -69,7 +69,13 @@ serve(async (req) => {
 <a href="${checkinLink}" style="background:#0B3A66;color:#fff;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;font-size:16px;">
 Fazer Check-in Agora
 </a></td></tr></table>
-<p style="margin-top:24px;color:#6B7280;font-size:13px;">Este link expira em 48 horas.</p>
+<table width="100%" style="background:#FFF9F0;border-radius:12px;border:1px solid #F0E4D0;margin:24px 0 0;">
+<tr><td style="padding:18px 22px;">
+<p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#7A4A00;">📋 Política de Cancelamento</p>
+<p style="margin:0 0 10px;font-size:12px;color:#5C4A2A;line-height:1.5;">Cancelamento com até 30 dias: reembolso parcial conforme política. Menos de 7 dias do check-in ou no-show: sem reembolso.</p>
+<a href="https://pousadararazul.com/docs/politica-cancelamento.pdf" style="color:#7A4A00;font-size:12px;font-weight:600;text-decoration:underline;">Ver política completa (PDF)</a>
+</td></tr></table>
+<p style="margin-top:20px;color:#6B7280;font-size:13px;">Este link expira em 48 horas.</p>
 </td></tr>
 <tr><td align="center" style="background:#0B3A66;padding:20px;color:rgba(255,255,255,0.7);font-size:12px;">
 © ${new Date().getFullYear()} Pousada Arara Azul — Manacapuru, AM

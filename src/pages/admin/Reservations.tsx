@@ -299,7 +299,7 @@ const Reservations = () => {
       finished: { label: "Finalizado", className: "bg-slate-100 text-slate-800" },
       "no-show": { label: "No-show", className: "bg-orange-100 text-orange-800" },
       cancelled: { label: "Cancelado", className: "bg-red-100 text-red-800" },
-      completed: { label: "Finalizado", className: "bg-slate-100 text-slate-800" },
+      
     };
 
     const variant = variants[status] || variants.pending;
