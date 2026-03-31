@@ -243,8 +243,26 @@ Reservar Passeio
 </td>
 </tr>
 </table>
+<!-- POLÍTICA DE CANCELAMENTO -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+style="margin-top:35px;background:#FFF9F0;border-radius:12px;border:1px solid #F0E4D0;">
+<tr>
+<td style="padding:22px 28px;">
+<h3 style="margin:0 0 10px;color:#7A4A00;font-size:14px;font-weight:700;">
+📋 Política de Cancelamento
+</h3>
+<p style="margin:0 0 12px;font-size:13px;color:#5C4A2A;line-height:1.6;">
+Cancelamento com até 30 dias: reembolso parcial conforme política. Menos de 7 dias do check-in ou no-show: sem reembolso.
+</p>
+<a href="https://pousadararazul.com/docs/politica-cancelamento.pdf"
+style="color:#7A4A00;font-size:13px;font-weight:600;text-decoration:underline;">
+Ver política completa (PDF)
+</a>
+</td>
+</tr>
+</table>
 <!-- WHATSAPP -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:40px;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;">
 <tr>
 <td align="center">
 <a href="${data.link_equipe}"
