@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
@@ -10,6 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle, Leaf, MessageCircle } from "lucide-react";
 import { createWhatsAppLink } from "@/lib/whatsapp";
@@ -25,32 +31,61 @@ interface ReservationInfo {
 }
 
 const checkinSchema = z.object({
+  full_name: z.string().trim().min(3, "Nome completo é obrigatório").max(200),
   document: z.string().trim().min(3, "Documento é obrigatório").max(50),
+  birth_date: z.string().min(1, "Data de nascimento é obrigatória"),
+  nationality: z.string().trim().min(2, "Nacionalidade é obrigatória").max(100),
+  city_state: z.string().trim().min(2, "Cidade/Estado é obrigatório").max(200),
+  address: z.string().max(500).optional(),
+  transport_mode: z.string().max(100).optional(),
+  travel_reason: z.string().max(100).optional(),
   estimated_arrival: z.string().max(100).optional(),
   notes: z.string().max(500).optional(),
   accepted_terms: z.literal(true, { errorMap: () => ({ message: "Você deve aceitar os termos" }) }),
 });
+
+const TRANSPORT_OPTIONS = [
+  { value: "carro", label: "Carro" },
+  { value: "onibus", label: "Ônibus" },
+  { value: "aviao_barco", label: "Avião + Barco" },
+  { value: "barco", label: "Barco" },
+  { value: "outro", label: "Outro" },
+];
+
+const TRAVEL_REASON_OPTIONS = [
+  { value: "lazer", label: "Lazer" },
+  { value: "negocios", label: "Negócios" },
+  { value: "eventos", label: "Eventos" },
+  { value: "saude", label: "Saúde" },
+  { value: "outro", label: "Outros" },
+];
 
 const Checkin = () => {
   const [searchParams] = useSearchParams();
   const tokenFromUrl = searchParams.get("token");
   const { toast } = useToast();
 
-  const [step, setStep] = useState<"validate" | "form" | "success">(tokenFromUrl ? "validate" : "validate");
+  const [step, setStep] = useState<"validate" | "form" | "success">("validate");
   const [reservationId, setReservationId] = useState("");
   const [email, setEmail] = useState("");
   const [reservation, setReservation] = useState<ReservationInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [tokenUsed, setTokenUsed] = useState(tokenFromUrl || "");
+  const [tokenExpired, setTokenExpired] = useState(false);
 
-  // Form fields
+  // FNRH form fields
+  const [fullName, setFullName] = useState("");
   const [document, setDocument] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [nationality, setNationality] = useState("");
+  const [cityState, setCityState] = useState("");
+  const [address, setAddress] = useState("");
+  const [transportMode, setTransportMode] = useState("");
+  const [travelReason, setTravelReason] = useState("");
   const [estimatedArrival, setEstimatedArrival] = useState("");
   const [notes, setNotes] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [tokenExpired, setTokenExpired] = useState(false);
 
-  // Auto-validate token on mount
   useEffect(() => {
     if (tokenFromUrl) {
       validateToken(tokenFromUrl);
@@ -74,7 +109,7 @@ const Checkin = () => {
         toast({ title: "Check-in já realizado", description: "Você já completou o check-in." });
         setStep("validate");
       } else {
-        setReservation({
+        const info: ReservationInfo = {
           id: r.reservation_id,
           guest_name: r.guest_name,
           room_name: r.room_name,
@@ -82,7 +117,9 @@ const Checkin = () => {
           check_out: r.check_out,
           guests: r.guests,
           checkin_completed: r.checkin_completed,
-        });
+        };
+        setReservation(info);
+        setFullName(r.guest_name || "");
         setStep("form");
       }
     }
@@ -106,7 +143,7 @@ const Checkin = () => {
       if (r.checkin_completed) {
         toast({ title: "Check-in já realizado" });
       } else {
-        setReservation({
+        const info: ReservationInfo = {
           id: r.id,
           guest_name: r.guest_name,
           room_name: r.room_name,
@@ -114,7 +151,9 @@ const Checkin = () => {
           check_out: r.check_out,
           guests: r.guests,
           checkin_completed: r.checkin_completed,
-        });
+        };
+        setReservation(info);
+        setFullName(r.guest_name || "");
         setStep("form");
       }
     }
@@ -125,7 +164,14 @@ const Checkin = () => {
     e.preventDefault();
 
     const parsed = checkinSchema.safeParse({
+      full_name: fullName,
       document,
+      birth_date: birthDate,
+      nationality,
+      city_state: cityState,
+      address: address || undefined,
+      transport_mode: transportMode || undefined,
+      travel_reason: travelReason || undefined,
       estimated_arrival: estimatedArrival || undefined,
       notes: notes || undefined,
       accepted_terms: acceptedTerms,
@@ -144,6 +190,13 @@ const Checkin = () => {
       p_notes: notes.trim() || null,
       p_accepted_terms: true,
       p_token: tokenUsed || null,
+      p_full_name: fullName.trim(),
+      p_birth_date: birthDate || null,
+      p_nationality: nationality.trim() || null,
+      p_city_state: cityState.trim() || null,
+      p_address: address.trim() || null,
+      p_transport_mode: transportMode || null,
+      p_travel_reason: travelReason || null,
     });
 
     if (error) {
@@ -209,18 +262,82 @@ const Checkin = () => {
                 <p className="text-sm text-muted-foreground mt-1">{formatDate(reservation.check_in)} — {formatDate(reservation.check_out)}</p>
               </div>
               <form onSubmit={handleSubmitCheckin} className="space-y-4">
+                {/* Dados Pessoais (FNRH) */}
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">Dados Pessoais</p>
+                  <p className="text-xs text-muted-foreground">Ficha Nacional de Registro de Hóspedes</p>
+                </div>
+
                 <div>
-                  <Label htmlFor="document">Documento (RG, CPF ou Passaporte) *</Label>
+                  <Label htmlFor="fullName">Nome Completo *</Label>
+                  <Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Nome completo" required maxLength={200} />
+                </div>
+
+                <div>
+                  <Label htmlFor="document">CPF ou Passaporte *</Label>
                   <Input id="document" value={document} onChange={(e) => setDocument(e.target.value)} placeholder="Número do documento" required maxLength={50} />
                 </div>
+
+                <div>
+                  <Label htmlFor="birthDate">Data de Nascimento *</Label>
+                  <Input id="birthDate" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} required />
+                </div>
+
+                <div>
+                  <Label htmlFor="nationality">Nacionalidade *</Label>
+                  <Input id="nationality" value={nationality} onChange={(e) => setNationality(e.target.value)} placeholder="Ex: Brasileira" required maxLength={100} />
+                </div>
+
+                <div>
+                  <Label htmlFor="cityState">Cidade / Estado de Origem *</Label>
+                  <Input id="cityState" value={cityState} onChange={(e) => setCityState(e.target.value)} placeholder="Ex: São Paulo / SP" required maxLength={200} />
+                </div>
+
+                <div>
+                  <Label htmlFor="address">Endereço Completo</Label>
+                  <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rua, número, bairro, CEP" maxLength={500} />
+                </div>
+
+                <div>
+                  <Label htmlFor="transportMode">Meio de Transporte</Label>
+                  <Select value={transportMode} onValueChange={setTransportMode}>
+                    <SelectTrigger id="transportMode">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TRANSPORT_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="travelReason">Motivo da Viagem</Label>
+                  <Select value={travelReason} onValueChange={setTravelReason}>
+                    <SelectTrigger id="travelReason">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TRAVEL_REASON_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <hr className="my-2 border-border" />
+
                 <div>
                   <Label htmlFor="arrival">Horário estimado de chegada</Label>
                   <Input id="arrival" value={estimatedArrival} onChange={(e) => setEstimatedArrival(e.target.value)} placeholder="Ex: 14:00" maxLength={100} />
                 </div>
+
                 <div>
                   <Label htmlFor="notes">Observações</Label>
                   <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Alguma necessidade especial?" maxLength={500} rows={3} />
                 </div>
+
                 <div className="flex items-start gap-2">
                   <Checkbox id="terms" checked={acceptedTerms} onCheckedChange={(v) => setAcceptedTerms(v === true)} />
                   <Label htmlFor="terms" className="text-sm leading-snug cursor-pointer">
