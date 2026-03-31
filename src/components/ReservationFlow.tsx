@@ -100,7 +100,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [localPaymentStatus, setLocalPaymentStatus] = useState<string>("pending");
   const [isCheckingPayment, setIsCheckingPayment] = useState(false);
   const [paymentVerified, setPaymentVerified] = useState(false);
-  const pixTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pixTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
   // Error handling state
   const [errorDialogOpen, setErrorDialogOpen] = useState(false);

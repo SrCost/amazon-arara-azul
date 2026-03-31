@@ -458,6 +458,27 @@ serve(async (req) => {
           const emailResult = await emailResponse.json();
           console.log('Email enviado:', emailResult);
           
+          // Send internal admin notification
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-internal-notification`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({
+                type: 'new_reservation',
+                data: {
+                  guest_name: reservationData.guest_name,
+                  room_name: reservationData.room_name,
+                  check_in: reservationData.check_in,
+                  check_out: reservationData.check_out,
+                  guests: reservationData.guests,
+                  total_price: reservationData.total_price,
+                  payment_method: reservationData.payment_method,
+                  reservation_source: reservationData.reservation_source || 'site',
+                },
+              }),
+            });
+          } catch (notifErr) { console.error('Internal notification error:', notifErr); }
+
           // Registrar envio de email no log
           await supabase.from('activity_log').insert({
             user_email: 'system',

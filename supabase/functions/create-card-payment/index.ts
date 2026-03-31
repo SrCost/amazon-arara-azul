@@ -490,6 +490,18 @@ serve(async (req) => {
         const emailResult = await emailResponse.json();
         console.log('Email de confirmação enviado:', emailResult);
         
+        // Send internal admin notification
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/send-internal-notification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
+            body: JSON.stringify({
+              type: 'new_reservation',
+              data: { guest_name: sanitizedName, check_in: checkIn, check_out: checkOut, guests, total_price: totalPrice, payment_method: 'credit_card', reservation_source: 'site' },
+            }),
+          });
+        } catch (notifErr) { console.error('Internal notification error:', notifErr); }
+
         await supabase.from('activity_log').insert({
           user_email: 'system',
           action: 'email_confirmation_sent',

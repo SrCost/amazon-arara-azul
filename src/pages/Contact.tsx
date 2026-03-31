@@ -38,6 +38,19 @@ const Contact = () => {
 
       if (error) throw error;
 
+      // Fire-and-forget internal notification
+      supabase.functions.invoke("send-internal-notification", {
+        body: {
+          type: "new_message",
+          data: {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone || null,
+            message: formData.message,
+          },
+        },
+      }).catch(() => {}); // don't block UX
+
       toast.success("Mensagem enviada! Entraremos em contato em breve.");
       setFormData({ name: "", email: "", phone: "", message: "" });
     } catch (error: any) {
