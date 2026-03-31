@@ -1,47 +1,90 @@
 
-# Corrigir exibicao de imagens do banco no carrossel desktop
 
-## Problema
+# Fase 1 — Itens Críticos (1, 2, 3)
 
-As imagens adicionadas pelo admin estao sendo cortadas e distorcidas no desktop porque usam `object-cover`, que forca a imagem a preencher todo o espaco do carrossel, cortando partes da imagem. Mesmo com `object-contain`, as bordas ficam vazias sem transicao suave.
+Itens 4-7 (e-mails internos, rodapé, dashboard mobile, UX geral) serão tratados na Fase 2, após aprovação desta fase.
 
-## Solucao
+---
 
-Duas alteracoes no `src/components/HeroCarousel.tsx`:
+## 1. Política de Cancelamento no E-mail de Confirmação e Check-in
 
-### 1. Forcar `object-contain` para slides do banco no desktop
+### O que muda
+Adicionar bloco de política de cancelamento nos templates HTML dos e-mails:
+- **`send-reservation-email`** — template `reservation_confirmed`: inserir seção após os detalhes da reserva (após a tabela de valores) com texto curto + link para PDF
+- **`send-checkin-email`** — template de check-in digital: inserir a mesma seção após os dados de datas
 
-Na funcao `renderMedia`, para imagens de slides do banco exibidas em desktop (`hidden lg:block` e a imagem unica), forcar `object-contain` em vez de respeitar `object_fit`. Isso garante que a imagem nunca sera cortada no desktop.
+### Texto da seção
+> **Política de Cancelamento**
+> Cancelamento com até 30 dias: reembolso parcial conforme política. Menos de 7 dias do check-in ou no-show: sem reembolso.
+> [Ver política completa (PDF)]
 
-### 2. Adicionar gradiente lateral para mesclar com o fundo
+Link: `https://pousadararazul.com/docs/politica-cancelamento.pdf`
 
-Adicionar dois pseudo-elementos (divs) com gradiente horizontal nas laterais do slide do banco, indo da cor de fundo (`hsl(120, 15%, 97%)`) para transparente. Isso cria uma transicao suave entre a imagem e o fundo do site, disfarçando as areas vazias.
+### Arquivos alterados
+- `supabase/functions/send-reservation-email/index.ts` (template `getReservationConfirmedEmailPremium`)
+- `supabase/functions/send-checkin-email/index.ts` (template HTML)
+- Redeploy de ambas Edge Functions
 
-```
-Estrutura visual:
+---
 
-[gradiente esq] [imagem contain centralizada] [gradiente dir]
-   cor fundo ->    <- transparente | transparente ->    <- cor fundo
-```
+## 2. Adaptação do Check-in para FNRH
 
-### Alteracoes no codigo
+### Campos que já existem na tabela `booking_checkins`
+- `document` (CPF/Passaporte) ✓
+- `notes` ✓
+- `estimated_arrival_time` ✓
 
-**`src/components/HeroCarousel.tsx`** - funcao `renderSlide` (slides tipo "db"):
+### Campos que já existem na tabela `reservations`
+- `birth_date`, `nationality`, `address`, `cpf`, `country`, `passport` ✓
 
-- Adicionar dois divs com gradiente lateral sobre a imagem:
-  - Esquerda: `background: linear-gradient(to right, bgColor, transparent)` com `w-[15%]`
-  - Direita: `background: linear-gradient(to left, bgColor, transparent)` com `w-[15%]`
-  - Visivel apenas em desktop: `hidden lg:block`
-  - Z-index acima da imagem mas abaixo dos controles
+### Novos campos necessários na `booking_checkins` (via migration)
+- `full_name` (text) — nome completo no ato do check-in
+- `birth_date` (date)
+- `nationality` (text)
+- `city_state` (text) — cidade/estado de origem
+- `address` (text) — endereço completo
+- `transport_mode` (text) — meio de transporte
+- `travel_reason` (text) — motivo da viagem
 
-**`src/components/HeroCarousel.tsx`** - funcao `renderMedia`:
+### Mudanças na função `submit_checkin`
+Atualizar para aceitar os novos parâmetros e gravá-los na tabela.
 
-- Para imagens desktop de slides do banco, forcar `object-contain` sempre (ignorar `object_fit` no desktop)
-- Mobile continua respeitando o `object_fit` do banco normalmente
+### Mudanças no frontend (`src/pages/Checkin.tsx`)
+- Adicionar os novos campos ao formulário (com labels em português)
+- Campos obrigatórios: nome completo, documento, data de nascimento, nacionalidade, cidade/estado
+- Campos opcionais: endereço, meio de transporte, motivo da viagem
+- Atualizar o schema Zod
+- Select para motivo da viagem: Lazer, Negócios, Eventos, Saúde, Outros
+- Select para meio de transporte: Carro, Ônibus, Avião + Barco, Barco, Outros
 
-### Resultado esperado
+---
 
-- Imagem do banco aparece inteira no desktop, centralizada, sem corte
-- As laterais que sobram mesclam suavemente com a cor de fundo do site via gradiente
-- Mobile continua funcionando normalmente
-- Imagens fallback (bangalos) nao sao afetadas
+## 3. Sincronização de Status (Calendário x Reservations)
+
+### Situação atual
+Ambas as telas já gravam `status` e `operational_status` com o mesmo valor — isso já foi implementado na última iteração. Preciso verificar se há alguma divergência restante.
+
+### Verificação
+- `EditReservationModal.tsx` (calendário): grava `status: data.operational_status` e `operational_status: data.operational_status` ✓
+- `Reservations.tsx`: grava `status: editForm.status` e `operational_status: editForm.status` ✓
+- Ambos usam os mesmos 6 status (pending, confirmed, hosted, finished, no-show, cancelled) ✓
+
+### Ação
+Sincronização já está implementada. Apenas garantir que o select no `Reservations.tsx` não tenha `completed` residual (remover se existir — confirmei que `getStatusBadge` ainda tem entry para `completed`, posso limpar).
+
+---
+
+## Detalhes Técnicos
+
+| Item | Tipo de mudança | Arquivos |
+|------|----------------|----------|
+| 1 | Edge Functions (HTML templates) | `send-reservation-email/index.ts`, `send-checkin-email/index.ts` |
+| 2 | Migration DB + Function DB + Frontend | Migration SQL, `Checkin.tsx` |
+| 3 | Limpeza frontend | `Reservations.tsx` (remover `completed` residual) |
+
+### Impacto
+- Nenhuma alteração no fluxo de pagamento
+- Nenhuma quebra de funcionalidade existente
+- Check-in continua sem exigir login (validação por token)
+- Dados FNRH salvos vinculados à reserva via `booking_checkins`
+
