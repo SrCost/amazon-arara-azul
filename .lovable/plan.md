@@ -1,90 +1,57 @@
 
 
-# Fase 1 — Itens Críticos (1, 2, 3)
+# Implementação Google Tag Manager - GTM-T3BX6WPJ
 
-Itens 4-7 (e-mails internos, rodapé, dashboard mobile, UX geral) serão tratados na Fase 2, após aprovação desta fase.
+## Objetivo
+Implementar o Google Tag Manager seguindo **exatamente** o padrão oficial do Google, com o container ID `GTM-T3BX6WPJ`.
 
----
+## Estrutura da Implementação
 
-## 1. Política de Cancelamento no E-mail de Confirmação e Check-in
+### 1. Script no `<head>` (alta prioridade de carregamento)
+Inserir **imediatamente após** a tag de abertura `<head>` na linha 3 do `index.html`:
+- Código JavaScript do GTM loader
+- Inicializa o `dataLayer`
+- Carrega o script do GTM de forma assíncrona
 
-### O que muda
-Adicionar bloco de política de cancelamento nos templates HTML dos e-mails:
-- **`send-reservation-email`** — template `reservation_confirmed`: inserir seção após os detalhes da reserva (após a tabela de valores) com texto curto + link para PDF
-- **`send-checkin-email`** — template de check-in digital: inserir a mesma seção após os dados de datas
+### 2. Fallback `<noscript>` no `<body>`
+Inserir **imediatamente após** a tag de abertura `<body>` na linha 124 do `index.html`:
+- Iframe invisível para browsers sem JavaScript
+- Garante que o GTM funcione mesmo com JS desabilitado
 
-### Texto da seção
-> **Política de Cancelamento**
-> Cancelamento com até 30 dias: reembolso parcial conforme política. Menos de 7 dias do check-in ou no-show: sem reembolso.
-> [Ver política completa (PDF)]
+## Códigos Oficiais (sem adaptações)
 
-Link: `https://pousadararazul.com/docs/politica-cancelamento.pdf`
+**Script para `<head>`:**
+```html
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-T3BX6WPJ');</script>
+<!-- End Google Tag Manager -->
+```
 
-### Arquivos alterados
-- `supabase/functions/send-reservation-email/index.ts` (template `getReservationConfirmedEmailPremium`)
-- `supabase/functions/send-checkin-email/index.ts` (template HTML)
-- Redeploy de ambas Edge Functions
+**Noscript para `<body>`:**
+```html
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T3BX6WPJ"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+```
 
----
+## Arquivo a Modificar
+- `index.html` — único arquivo HTML da aplicação React SPA
 
-## 2. Adaptação do Check-in para FNRH
+## Posicionamento Exato
+| Código | Linha | Posição |
+|--------|-------|---------|
+| GTM Script | Após linha 3 | Logo após `<head>` |
+| GTM Noscript | Após linha 124 | Logo após `<body>` |
 
-### Campos que já existem na tabela `booking_checkins`
-- `document` (CPF/Passaporte) ✓
-- `notes` ✓
-- `estimated_arrival_time` ✓
-
-### Campos que já existem na tabela `reservations`
-- `birth_date`, `nationality`, `address`, `cpf`, `country`, `passport` ✓
-
-### Novos campos necessários na `booking_checkins` (via migration)
-- `full_name` (text) — nome completo no ato do check-in
-- `birth_date` (date)
-- `nationality` (text)
-- `city_state` (text) — cidade/estado de origem
-- `address` (text) — endereço completo
-- `transport_mode` (text) — meio de transporte
-- `travel_reason` (text) — motivo da viagem
-
-### Mudanças na função `submit_checkin`
-Atualizar para aceitar os novos parâmetros e gravá-los na tabela.
-
-### Mudanças no frontend (`src/pages/Checkin.tsx`)
-- Adicionar os novos campos ao formulário (com labels em português)
-- Campos obrigatórios: nome completo, documento, data de nascimento, nacionalidade, cidade/estado
-- Campos opcionais: endereço, meio de transporte, motivo da viagem
-- Atualizar o schema Zod
-- Select para motivo da viagem: Lazer, Negócios, Eventos, Saúde, Outros
-- Select para meio de transporte: Carro, Ônibus, Avião + Barco, Barco, Outros
-
----
-
-## 3. Sincronização de Status (Calendário x Reservations)
-
-### Situação atual
-Ambas as telas já gravam `status` e `operational_status` com o mesmo valor — isso já foi implementado na última iteração. Preciso verificar se há alguma divergência restante.
-
-### Verificação
-- `EditReservationModal.tsx` (calendário): grava `status: data.operational_status` e `operational_status: data.operational_status` ✓
-- `Reservations.tsx`: grava `status: editForm.status` e `operational_status: editForm.status` ✓
-- Ambos usam os mesmos 6 status (pending, confirmed, hosted, finished, no-show, cancelled) ✓
-
-### Ação
-Sincronização já está implementada. Apenas garantir que o select no `Reservations.tsx` não tenha `completed` residual (remover se existir — confirmei que `getStatusBadge` ainda tem entry para `completed`, posso limpar).
-
----
-
-## Detalhes Técnicos
-
-| Item | Tipo de mudança | Arquivos |
-|------|----------------|----------|
-| 1 | Edge Functions (HTML templates) | `send-reservation-email/index.ts`, `send-checkin-email/index.ts` |
-| 2 | Migration DB + Function DB + Frontend | Migration SQL, `Checkin.tsx` |
-| 3 | Limpeza frontend | `Reservations.tsx` (remover `completed` residual) |
-
-### Impacto
-- Nenhuma alteração no fluxo de pagamento
-- Nenhuma quebra de funcionalidade existente
-- Check-in continua sem exigir login (validação por token)
-- Dados FNRH salvos vinculados à reserva via `booking_checkins`
+## Garantias
+- Código carrega **uma única vez** por página (SPA carrega `index.html` uma vez)
+- Sem duplicatas
+- Sem conflitos com scripts existentes (SEO, Schema.org)
+- Funciona desktop e mobile
+- Pronto para Google Analytics 4 e pixels de marketing
 
