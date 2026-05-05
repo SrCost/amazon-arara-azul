@@ -249,7 +249,15 @@
     "localTeam": "Equipe Local",
     "missionTitle": "Nossa Missão",
     "missionText1": "Acreditamos que o turismo pode ser uma força positiva para a conservação ambiental e o desenvolvimento social. Cada hóspede que recebemos contribui diretamente para a proteção da floresta amazônica e para o bem-estar das comunidades tradicionais.",
-    "missionText2": "Ao escolher nossas pousadas, você não está apenas vivendo uma experiência inesquecível — está investindo no futuro da Amazônia e de seu povo."
+    "missionText2": "Ao escolher nossas pousadas, você não está apenas vivendo uma experiência inesquecível — está investindo no futuro da Amazônia e de seu povo.",
+    "familyHostTitle": "Nossa Família Anfitriã",
+    "familyHostText1": "Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha, a família vive às margens do Rio Negro, preservando tradições, histórias e saberes da vida amazônica.",
+    "familyHostText2": "Eles conhecem cada canto dos lagos de Acajatuba, os segredos da pesca, das plantas medicinais e da vida cotidiana na floresta. Com carinho e simplicidade, compartilham sua cultura: preparam refeições típicas, conduzem passeios e ensinam sobre os costumes locais.",
+    "familyHostQuote": "Cada hóspede se torna parte da história da família, participando de atividades como oficinas de artesanato, pescarias, visitas à comunidade e momentos de convivência ao redor da mesa de jantar. A hospitalidade da família ribeirinha transforma sua estadia em uma experiência única, genuína e inesquecível, conectando você à natureza e à cultura amazônica de forma autêntica.",
+    "stat5000": "5.000+",
+    "stat120": "120",
+    "stat100": "100%",
+    "stat85": "85%"
   },
   "howToGetThere": {
     "title": "Como Chegar",
