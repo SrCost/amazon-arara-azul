@@ -394,5 +394,10 @@
     "highlight_japiim": "Conforto, autenticidade e sabor regional. Viva a essência da floresta com acolhimento e comida caseira amazônica.",
     "highlight_uirapuru": "Um convite à serenidade e à cultura amazônica, com experiências únicas e gastronomia local inesquecível.",
     "highlight_arauna": "O pacote mais completo e imersivo. Ideal para quem deseja mergulhar profundamente na natureza e cultura amazônica com conforto e exclusividade."
+  },
+  "languageSuggestion": {
+    "message": "Notamos que você fala português. Deseja navegar em português?",
+    "switch": "Trocar",
+    "dismiss": "Fechar"
   }
 }
