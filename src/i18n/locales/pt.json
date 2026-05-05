@@ -95,7 +95,27 @@
     "message": "Mensagem",
     "send": "Enviar Mensagem",
     "success": "Mensagem enviada com sucesso!",
-    "error": "Erro ao enviar mensagem"
+    "error": "Erro ao enviar mensagem",
+    "fullName": "Nome Completo",
+    "phoneOptional": "Telefone (opcional)",
+    "namePlaceholder": "Seu nome",
+    "emailPlaceholder": "seu@email.com",
+    "phonePlaceholder": "+55 (92) 99999-0000",
+    "messagePlaceholder": "Como podemos ajudá-lo?",
+    "sendMessage": "Envie sua Mensagem",
+    "successToast": "Mensagem enviada! Entraremos em contato em breve.",
+    "errorToast": "Erro ao enviar mensagem. Tente novamente.",
+    "phoneTitle": "Telefone",
+    "emailTitle": "E-mail",
+    "addressTitle": "Endereço",
+    "addressLine1": "A MARGEM ESQUERDA DO LAGO ACAJATUBA, S/N",
+    "addressLine2": "AREA RURAL DE MANACAPURU, MANAUS - AM",
+    "addressLine3": "CEP: 69.409-899",
+    "hoursTitle": "Horário de Atendimento",
+    "hoursWeek": "Segunda a Sexta: 8h - 18h",
+    "hoursSat": "Sábado: 9h - 14h",
+    "hoursSun": "Domingo: 9h - 14h",
+    "heroSubtitle": "Nossa equipe está pronta para ajudar você a planejar sua experiência perfeita na Amazônia. Entre em contato conosco!"
   },
   "support": {
     "title": "Como podemos ajudar?",
@@ -249,7 +269,15 @@
     "localTeam": "Equipe Local",
     "missionTitle": "Nossa Missão",
     "missionText1": "Acreditamos que o turismo pode ser uma força positiva para a conservação ambiental e o desenvolvimento social. Cada hóspede que recebemos contribui diretamente para a proteção da floresta amazônica e para o bem-estar das comunidades tradicionais.",
-    "missionText2": "Ao escolher nossas pousadas, você não está apenas vivendo uma experiência inesquecível — está investindo no futuro da Amazônia e de seu povo."
+    "missionText2": "Ao escolher nossas pousadas, você não está apenas vivendo uma experiência inesquecível — está investindo no futuro da Amazônia e de seu povo.",
+    "familyHostTitle": "Nossa Família Anfitriã",
+    "familyHostText1": "Na Pousada Arara Azul, você é recebido por uma verdadeira família ribeirinha, a família vive às margens do Rio Negro, preservando tradições, histórias e saberes da vida amazônica.",
+    "familyHostText2": "Eles conhecem cada canto dos lagos de Acajatuba, os segredos da pesca, das plantas medicinais e da vida cotidiana na floresta. Com carinho e simplicidade, compartilham sua cultura: preparam refeições típicas, conduzem passeios e ensinam sobre os costumes locais.",
+    "familyHostQuote": "Cada hóspede se torna parte da história da família, participando de atividades como oficinas de artesanato, pescarias, visitas à comunidade e momentos de convivência ao redor da mesa de jantar. A hospitalidade da família ribeirinha transforma sua estadia em uma experiência única, genuína e inesquecível, conectando você à natureza e à cultura amazônica de forma autêntica.",
+    "stat5000": "5.000+",
+    "stat120": "120",
+    "stat100": "100%",
+    "stat85": "85%"
   },
   "howToGetThere": {
     "title": "Como Chegar",
@@ -266,7 +294,20 @@
     "transferDesc": "Todos os nossos pacotes incluem transfer do aeroporto/porto até a pousada e vice-versa. Nossa equipe entrará em contato após a confirmação da reserva para coordenar horários e detalhes logísticos.",
     "importantTips": "Dicas Importantes",
     "documentation": "Documentação",
-    "whatToBring": "O que Levar"
+    "whatToBring": "O que Levar",
+    "duration34h": "Duração total: 3-4 horas",
+    "departureManaus": "Saída de Manaus",
+    "duration12d": "Duração: 1-2 dias",
+    "doc1": "Documento de identificação com foto",
+    "doc2": "Comprovante de vacinação (febre amarela recomendada)",
+    "doc3": "Seguro viagem (opcional, mas recomendado)",
+    "bring1": "Roupas leves e confortáveis",
+    "bring2": "Repelente de insetos e protetor solar",
+    "bring3": "Calçados para trilhas e chinelos",
+    "bring4": "Binóculos para observação de fauna",
+    "locationTitle": "Nossa Localização",
+    "openInMaps": "Abrir no Google Maps",
+    "heroAlt": "Encontro das Águas - Rio Negro e Rio Solimões em Manaus"
   },
   "faq": {
     "title": "Perguntas Frequentes",
@@ -353,5 +394,10 @@
     "highlight_japiim": "Conforto, autenticidade e sabor regional. Viva a essência da floresta com acolhimento e comida caseira amazônica.",
     "highlight_uirapuru": "Um convite à serenidade e à cultura amazônica, com experiências únicas e gastronomia local inesquecível.",
     "highlight_arauna": "O pacote mais completo e imersivo. Ideal para quem deseja mergulhar profundamente na natureza e cultura amazônica com conforto e exclusividade."
+  },
+  "languageSuggestion": {
+    "message": "Notamos que você fala português. Deseja navegar em português?",
+    "switch": "Trocar",
+    "dismiss": "Fechar"
   }
 }

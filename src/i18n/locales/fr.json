@@ -95,7 +95,27 @@
     "message": "Message",
     "send": "Envoyer le Message",
     "success": "Message envoyé avec succès!",
-    "error": "Erreur lors de l'envoi du message"
+    "error": "Erreur lors de l'envoi du message",
+    "fullName": "Nom complet",
+    "phoneOptional": "Téléphone (facultatif)",
+    "namePlaceholder": "Votre nom",
+    "emailPlaceholder": "vous@email.com",
+    "phonePlaceholder": "+33 6 00 00 00 00",
+    "messagePlaceholder": "Comment pouvons-nous vous aider ?",
+    "sendMessage": "Envoyez-nous un message",
+    "successToast": "Message envoyé ! Nous vous contacterons bientôt.",
+    "errorToast": "Erreur lors de l'envoi. Veuillez réessayer.",
+    "phoneTitle": "Téléphone",
+    "emailTitle": "E-mail",
+    "addressTitle": "Adresse",
+    "addressLine1": "Sur la rive gauche du lac Acajatuba, sans numéro",
+    "addressLine2": "Zone rurale de Manacapuru, Manaus - AM, Brésil",
+    "addressLine3": "Code postal : 69.409-899",
+    "hoursTitle": "Horaires d'ouverture",
+    "hoursWeek": "Lundi à vendredi : 8h - 18h",
+    "hoursSat": "Samedi : 9h - 14h",
+    "hoursSun": "Dimanche : 9h - 14h",
+    "heroSubtitle": "Notre équipe est prête à vous aider à planifier votre expérience amazonienne idéale. Contactez-nous !"
   },
   "support": {
     "title": "Comment pouvons-nous vous aider?",
@@ -248,7 +268,15 @@
     "localTeam": "Équipe Locale",
     "missionTitle": "Notre Mission",
     "missionText1": "Nous croyons que le tourisme peut être une force positive pour la conservation de l'environnement et le développement social. Chaque invité que nous accueillons contribue directement à la protection de la forêt amazonienne et au bien-être des communautés traditionnelles.",
-    "missionText2": "En choisissant nos lodges, vous ne vivez pas seulement une expérience inoubliable — vous investissez dans l'avenir de l'Amazonie et de son peuple."
+    "missionText2": "En choisissant nos lodges, vous ne vivez pas seulement une expérience inoubliable — vous investissez dans l'avenir de l'Amazonie et de son peuple.",
+    "familyHostTitle": "Notre famille d'accueil",
+    "familyHostText1": "À la Pousada Arara Azul, vous êtes accueillis par une véritable famille riveraine qui vit sur les rives du Rio Negro et préserve les traditions, les histoires et les savoirs de la vie amazonienne.",
+    "familyHostText2": "Ils connaissent chaque recoin des lacs d'Acajatuba, les secrets de la pêche, des plantes médicinales et de la vie quotidienne en forêt. Avec chaleur et simplicité, ils partagent leur culture : repas typiques, sorties guidées et coutumes locales.",
+    "familyHostQuote": "Chaque hôte devient partie de l'histoire familiale en participant à des ateliers d'artisanat, des sorties de pêche, des visites communautaires et des moments partagés à table. L'hospitalité de la famille riveraine transforme votre séjour en une expérience unique, authentique et inoubliable, vous reliant véritablement à la nature et à la culture amazoniennes.",
+    "stat5000": "5 000+",
+    "stat120": "120",
+    "stat100": "100 %",
+    "stat85": "85 %"
   },
   "howToGetThere": {
     "title": "Comment s'y rendre",
@@ -265,7 +293,20 @@
     "transferDesc": "Tous nos forfaits incluent le transfer de l'aéroport/port au lodge et vice versa. Notre équipe vous contactera après la confirmation de la réservation pour coordonner les horaires et les détails logistiques.",
     "importantTips": "Conseils Importants",
     "documentation": "Documentation",
-    "whatToBring": "Quoi Apporter"
+    "whatToBring": "Quoi Apporter",
+    "duration34h": "Durée totale : 3-4 heures",
+    "departureManaus": "Départ de Manaus",
+    "duration12d": "Durée : 1-2 jours",
+    "doc1": "Pièce d'identité avec photo",
+    "doc2": "Certificat de vaccination (fièvre jaune recommandée)",
+    "doc3": "Assurance voyage (facultative mais recommandée)",
+    "bring1": "Vêtements légers et confortables",
+    "bring2": "Anti-moustique et crème solaire",
+    "bring3": "Chaussures de randonnée et tongs",
+    "bring4": "Jumelles pour observer la faune",
+    "locationTitle": "Notre emplacement",
+    "openInMaps": "Ouvrir dans Google Maps",
+    "heroAlt": "Rencontre des Eaux - Rio Negro et Rio Solimões à Manaus"
   },
   "faq": {
     "title": "Questions Fréquentes",
@@ -352,5 +393,10 @@
     "highlight_japiim": "Confort, authenticité et saveur régionale. Vivez l'essence de la forêt avec chaleur et cuisine maison amazonienne.",
     "highlight_uirapuru": "Une invitation à la sérénité et à la culture amazonienne, avec des expériences uniques et une gastronomie locale inoubliable.",
     "highlight_arauna": "Le forfait le plus complet et immersif. Idéal pour ceux qui souhaitent plonger profondément dans la nature et la culture amazonienne avec confort et exclusivité."
+  },
+  "languageSuggestion": {
+    "message": "Nous avons remarqué que vous parlez français. Passer en français ?",
+    "switch": "Changer",
+    "dismiss": "Fermer"
   }
 }
