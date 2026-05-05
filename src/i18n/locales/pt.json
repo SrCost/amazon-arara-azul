@@ -274,7 +274,20 @@
     "transferDesc": "Todos os nossos pacotes incluem transfer do aeroporto/porto até a pousada e vice-versa. Nossa equipe entrará em contato após a confirmação da reserva para coordenar horários e detalhes logísticos.",
     "importantTips": "Dicas Importantes",
     "documentation": "Documentação",
-    "whatToBring": "O que Levar"
+    "whatToBring": "O que Levar",
+    "duration34h": "Duração total: 3-4 horas",
+    "departureManaus": "Saída de Manaus",
+    "duration12d": "Duração: 1-2 dias",
+    "doc1": "Documento de identificação com foto",
+    "doc2": "Comprovante de vacinação (febre amarela recomendada)",
+    "doc3": "Seguro viagem (opcional, mas recomendado)",
+    "bring1": "Roupas leves e confortáveis",
+    "bring2": "Repelente de insetos e protetor solar",
+    "bring3": "Calçados para trilhas e chinelos",
+    "bring4": "Binóculos para observação de fauna",
+    "locationTitle": "Nossa Localização",
+    "openInMaps": "Abrir no Google Maps",
+    "heroAlt": "Encontro das Águas - Rio Negro e Rio Solimões em Manaus"
   },
   "faq": {
     "title": "Perguntas Frequentes",
