@@ -21,6 +21,7 @@ import Experiencias from "./pages/Experiencias";
 import Checkin from "./pages/Checkin";
 import Checkout from "./pages/Checkout";
 import FloatingSupportButton from "./components/FloatingSupportButton";
+import LanguageSuggestionBanner from "./components/LanguageSuggestionBanner";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Reservations from "./pages/admin/Reservations";
@@ -185,6 +186,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
           <FloatingSupportButton />
+          <LanguageSuggestionBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
