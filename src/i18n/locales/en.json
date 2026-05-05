@@ -393,5 +393,10 @@
     "highlight_japiim": "Comfort, authenticity and regional flavor. Experience the essence of the forest with warmth and traditional Amazonian cuisine.",
     "highlight_uirapuru": "An invitation to serenity and Amazonian culture, with unique experiences and unforgettable local gastronomy.",
     "highlight_arauna": "The most complete and immersive package. Ideal for those who want to dive deep into nature and Amazonian culture with comfort and exclusivity."
+  },
+  "languageSuggestion": {
+    "message": "We noticed you speak English. Switch to English?",
+    "switch": "Switch",
+    "dismiss": "Dismiss"
   }
 }

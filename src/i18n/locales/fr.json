@@ -352,5 +352,10 @@
     "highlight_japiim": "Confort, authenticité et saveur régionale. Vivez l'essence de la forêt avec chaleur et cuisine maison amazonienne.",
     "highlight_uirapuru": "Une invitation à la sérénité et à la culture amazonienne, avec des expériences uniques et une gastronomie locale inoubliable.",
     "highlight_arauna": "Le forfait le plus complet et immersif. Idéal pour ceux qui souhaitent plonger profondément dans la nature et la culture amazonienne avec confort et exclusivité."
+  },
+  "languageSuggestion": {
+    "message": "Nous avons remarqué que vous parlez français. Passer en français ?",
+    "switch": "Changer",
+    "dismiss": "Fermer"
   }
 }

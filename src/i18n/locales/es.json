@@ -352,5 +352,10 @@
     "highlight_japiim": "Confort, autenticidad y sabor regional. Vive la esencia de la selva con calidez y cocina casera amazónica.",
     "highlight_uirapuru": "Una invitación a la serenidad y la cultura amazónica, con experiencias únicas y gastronomía local inolvidable.",
     "highlight_arauna": "El paquete más completo e inmersivo. Ideal para quienes desean sumergirse profundamente en la naturaleza y cultura amazónica con confort y exclusividad."
+  },
+  "languageSuggestion": {
+    "message": "Notamos que hablas español. ¿Cambiar a español?",
+    "switch": "Cambiar",
+    "dismiss": "Cerrar"
   }
 }
