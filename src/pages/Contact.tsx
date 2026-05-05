@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
 const Contact = () => {
+  const { t } = useTranslation();
   usePageMeta({
     title: 'Contato | Pousada Arara Azul – Manacapuru, AM',
     description: 'Entre em contato com a Pousada Arara Azul. WhatsApp, e-mail e endereço para reservas e informações sobre hospedagem na Amazônia.',
@@ -38,7 +39,6 @@ const Contact = () => {
 
       if (error) throw error;
 
-      // Fire-and-forget internal notification
       supabase.functions.invoke("send-internal-notification", {
         body: {
           type: "new_message",
@@ -49,20 +49,17 @@ const Contact = () => {
             message: formData.message,
           },
         },
-      }).catch(() => {}); // don't block UX
+      }).catch(() => {});
 
-      toast.success("Mensagem enviada! Entraremos em contato em breve.");
+      toast.success(t("contact.successToast"));
       setFormData({ name: "", email: "", phone: "", message: "" });
-    } catch (error: any) {
-      toast.error("Erro ao enviar mensagem. Tente novamente.");
+    } catch {
+      toast.error(t("contact.errorToast"));
     }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
@@ -72,15 +69,15 @@ const Contact = () => {
       <section className="pt-24 sm:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">Entre em Contato</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">
+              {t("contact.title")}
+            </h1>
             <p className="text-base sm:text-lg text-muted-foreground max-w-3xl mx-auto">
-              Nossa equipe está pronta para ajudar você a planejar sua experiência perfeita na Amazônia. Entre em
-              contato conosco!
+              {t("contact.heroSubtitle")}
             </p>
           </div>
 
           <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Contact Info */}
             <div className="space-y-4 sm:space-y-6">
               <Card>
                 <CardContent className="p-4 sm:p-6">
@@ -89,7 +86,7 @@ const Contact = () => {
                       <Phone className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1 sm:mb-2">Telefone</h3>
+                      <h3 className="font-semibold text-foreground mb-1 sm:mb-2">{t("contact.phoneTitle")}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground">WhatsApp: +55 92 9 8412-5475</p>
                     </div>
                   </div>
@@ -103,7 +100,7 @@ const Contact = () => {
                       <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1 sm:mb-2">E-mail</h3>
+                      <h3 className="font-semibold text-foreground mb-1 sm:mb-2">{t("contact.emailTitle")}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground break-all sm:break-normal">adm@pousadararazul.com</p>
                       <p className="text-xs sm:text-sm text-muted-foreground break-all sm:break-normal">reservas@pousadararazul.com</p>
                     </div>
@@ -118,13 +115,13 @@ const Contact = () => {
                       <MapPin className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground mb-1 sm:mb-2">Endereço</h3>
+                      <h3 className="font-semibold text-foreground mb-1 sm:mb-2">{t("contact.addressTitle")}</h3>
                       <p className="text-xs sm:text-sm text-muted-foreground">
-                        A MARGEM ESQUERDA DO LAGO ACAJATUBA, S/N
+                        {t("contact.addressLine1")}
                         <br />
-                        AREA RURAL DE MANACAPURU, MANAUS - AM
+                        {t("contact.addressLine2")}
                         <br />
-                        CEP: 69.409-899
+                        {t("contact.addressLine3")}
                       </p>
                     </div>
                   </div>
@@ -133,23 +130,24 @@ const Contact = () => {
 
               <Card className="bg-gradient-forest text-white">
                 <CardContent className="p-4 sm:p-6">
-                  <h3 className="font-semibold mb-1 sm:mb-2">Horário de Atendimento</h3>
-                  <p className="text-xs sm:text-sm opacity-90">Segunda a Sexta: 8h - 18h</p>
-                  <p className="text-xs sm:text-sm opacity-90">Sábado: 9h - 14h</p>
-                  <p className="text-xs sm:text-sm opacity-90">Domingo: 9h - 14h</p>
+                  <h3 className="font-semibold mb-1 sm:mb-2">{t("contact.hoursTitle")}</h3>
+                  <p className="text-xs sm:text-sm opacity-90">{t("contact.hoursWeek")}</p>
+                  <p className="text-xs sm:text-sm opacity-90">{t("contact.hoursSat")}</p>
+                  <p className="text-xs sm:text-sm opacity-90">{t("contact.hoursSun")}</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Contact Form */}
             <div className="lg:col-span-2">
               <Card>
                 <CardContent className="p-4 sm:p-6 lg:p-8">
-                  <h2 className="text-xl sm:text-2xl font-display font-semibold mb-4 sm:mb-6 text-foreground">Envie sua Mensagem</h2>
+                  <h2 className="text-xl sm:text-2xl font-display font-semibold mb-4 sm:mb-6 text-foreground">
+                    {t("contact.sendMessage")}
+                  </h2>
                   <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                     <div>
                       <label htmlFor="name" className="block text-sm font-medium mb-2">
-                        Nome Completo
+                        {t("contact.fullName")}
                       </label>
                       <Input
                         id="name"
@@ -158,13 +156,13 @@ const Contact = () => {
                         required
                         value={formData.name}
                         onChange={handleChange}
-                        placeholder="Seu nome"
+                        placeholder={t("contact.namePlaceholder")}
                       />
                     </div>
 
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium mb-2">
-                        E-mail
+                        {t("contact.email")}
                       </label>
                       <Input
                         id="email"
@@ -173,13 +171,13 @@ const Contact = () => {
                         required
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="seu@email.com"
+                        placeholder={t("contact.emailPlaceholder")}
                       />
                     </div>
 
                     <div>
                       <label htmlFor="phone" className="block text-sm font-medium mb-2">
-                        Telefone (opcional)
+                        {t("contact.phoneOptional")}
                       </label>
                       <Input
                         id="phone"
@@ -187,13 +185,13 @@ const Contact = () => {
                         type="tel"
                         value={formData.phone}
                         onChange={handleChange}
-                        placeholder="+55 (92) 99999-0000"
+                        placeholder={t("contact.phonePlaceholder")}
                       />
                     </div>
 
                     <div>
                       <label htmlFor="message" className="block text-sm font-medium mb-2">
-                        Mensagem
+                        {t("contact.message")}
                       </label>
                       <Textarea
                         id="message"
@@ -201,7 +199,7 @@ const Contact = () => {
                         required
                         value={formData.message}
                         onChange={handleChange}
-                        placeholder="Como podemos ajudá-lo?"
+                        placeholder={t("contact.messagePlaceholder")}
                         rows={5}
                         className="min-h-[120px] sm:min-h-[150px]"
                       />
@@ -209,7 +207,7 @@ const Contact = () => {
 
                     <Button type="submit" className="w-full bg-gradient-forest hover:opacity-90 h-11 sm:h-12 text-base sm:text-lg">
                       <Send className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                      Enviar Mensagem
+                      {t("contact.send")}
                     </Button>
                   </form>
                 </CardContent>
