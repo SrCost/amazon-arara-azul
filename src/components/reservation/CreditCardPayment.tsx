@@ -45,6 +45,9 @@ export const CreditCardPayment = ({
   onCardCpfChange,
   onInstallmentsChange,
 }: CreditCardPaymentProps) => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language?.split("-")[0] || "pt";
+  const dateLocale = lang === "pt" ? "pt-BR" : lang === "en" ? "en-US" : lang === "es" ? "es-ES" : lang === "fr" ? "fr-FR" : "de-DE";
   const cardBrand = detectCardBrand(cardNumber);
   const cpfError = cardCpf && !validateCPF(cardCpf);
   const cardNumberError = cardNumber && cardNumber.replace(/\s/g, '').length >= 15 && !validateCardNumber(cardNumber);
