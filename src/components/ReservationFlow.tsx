@@ -38,7 +38,8 @@ interface ReservationFlowProps {
 }
 
 const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: ReservationFlowProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const guestLanguage = (i18n.language || 'pt').split('-')[0];
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
