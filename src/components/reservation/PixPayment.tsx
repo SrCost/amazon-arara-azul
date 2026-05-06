@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { QrCode, Copy, ExternalLink, Clock, CheckCircle, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { validateCPF, maskCPF } from "@/lib/cpfValidator";
+import { useTranslation } from "react-i18next";
 
 interface PixPaymentProps {
   pixQrCode: string;
@@ -31,13 +32,12 @@ export const PixPayment = ({
   onCpfChange,
   onGeneratePix,
 }: PixPaymentProps) => {
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutes in seconds
+  const { t } = useTranslation();
+  const [timeLeft, setTimeLeft] = useState(15 * 60);
   const [copied, setCopied] = useState(false);
 
-  // Countdown timer
   useEffect(() => {
     if (!pixQrCode || paymentVerified) return;
-
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -47,7 +47,6 @@ export const PixPayment = ({
         return prev - 1;
       });
     }, 1000);
-
     return () => clearInterval(timer);
   }, [pixQrCode, paymentVerified]);
 
@@ -61,10 +60,10 @@ export const PixPayment = ({
     if (pixQrCode) {
       navigator.clipboard.writeText(pixQrCode);
       setCopied(true);
-      toast.success("Código PIX copiado!");
+      toast.success(t("reservation.pix.copiedToast"));
       setTimeout(() => setCopied(false), 3000);
     }
-  }, [pixQrCode]);
+  }, [pixQrCode, t]);
 
   const handleOpenInBank = useCallback(() => {
     if (ticketUrl) {
@@ -74,37 +73,32 @@ export const PixPayment = ({
 
   const cpfError = cpf && !validateCPF(cpf);
 
-  // If PIX QR Code is generated, show the payment interface
   if (pixQrCode) {
     return (
       <div className="space-y-6">
-        {/* Success state */}
         {paymentVerified && (
           <Alert className="bg-green-50 border-green-200">
             <CheckCircle className="h-5 w-5 text-green-600" />
             <AlertDescription className="text-green-800 ml-2">
-              <strong>Pagamento confirmado!</strong> Sua reserva foi aprovada com sucesso.
+              <strong>{t("reservation.pix.confirmed")}</strong> {t("reservation.pix.confirmedDesc")}
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Pending state */}
         {!paymentVerified && (
           <div className="text-center space-y-4">
-            {/* Countdown */}
             <div className="flex items-center justify-center gap-2 text-amber-600">
               <Clock className="h-5 w-5" />
               <span className="font-mono text-lg font-bold">{formatTime(timeLeft)}</span>
-              <span className="text-sm">restantes</span>
+              <span className="text-sm">{t("reservation.pix.remaining")}</span>
             </div>
 
-            {/* QR Code */}
             <div className="flex justify-center">
               <Card className="p-6 bg-white inline-block shadow-lg">
                 {pixQrCodeBase64 ? (
-                  <img 
-                    src={`data:image/png;base64,${pixQrCodeBase64}`} 
-                    alt="QR Code PIX" 
+                  <img
+                    src={`data:image/png;base64,${pixQrCodeBase64}`}
+                    alt={t("reservation.pix.qrAlt")}
                     width={256}
                     height={256}
                     className="w-64 h-64"
@@ -117,7 +111,6 @@ export const PixPayment = ({
               </Card>
             </div>
 
-            {/* Copy code button */}
             <div className="space-y-3">
               <Button
                 onClick={handleCopyCode}
@@ -126,7 +119,7 @@ export const PixPayment = ({
                 className="w-full max-w-md"
               >
                 <Copy className="h-4 w-4 mr-2" />
-                {copied ? "Código copiado!" : "Copiar código PIX"}
+                {copied ? t("reservation.pix.copied") : t("reservation.pix.copy")}
               </Button>
 
               {ticketUrl && (
@@ -137,23 +130,21 @@ export const PixPayment = ({
                   className="w-full max-w-md"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  Abrir no app do banco
+                  {t("reservation.pix.openBank")}
                 </Button>
               )}
             </div>
 
-            {/* Info message */}
             <Alert className="max-w-md mx-auto">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="ml-2 text-sm">
-                Aguarde a confirmação. Assim que o pagamento for aprovado, sua reserva será liberada automaticamente.
+                {t("reservation.pix.waitInfo")}
               </AlertDescription>
             </Alert>
 
-            {/* Status indicator */}
             <div className="flex items-center justify-center gap-2 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Aguardando pagamento...</span>
+              <span className="text-sm">{t("reservation.pix.waiting")}</span>
             </div>
           </div>
         )}
@@ -161,7 +152,6 @@ export const PixPayment = ({
     );
   }
 
-  // Initial state - CPF input and generate button
   return (
     <div className="space-y-4">
       <Card className="border-primary/20 bg-primary/5">
@@ -171,15 +161,15 @@ export const PixPayment = ({
               <QrCode className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h3 className="font-semibold">Pagamento via PIX</h3>
+              <h3 className="font-semibold">{t("reservation.pix.title")}</h3>
               <p className="text-sm text-muted-foreground">
-                Pagamento instantâneo e seguro
+                {t("reservation.pix.subtitle")}
               </p>
             </div>
           </div>
 
           <div>
-            <Label htmlFor="pixCpf">CPF do Pagador *</Label>
+            <Label htmlFor="pixCpf">{t("reservation.pix.cpf")}</Label>
             <Input
               id="pixCpf"
               value={cpf}
@@ -189,7 +179,7 @@ export const PixPayment = ({
               className={cpfError ? "border-destructive" : ""}
             />
             {cpfError && (
-              <p className="text-xs text-destructive mt-1">CPF inválido</p>
+              <p className="text-xs text-destructive mt-1">{t("reservation.pix.cpfInvalid")}</p>
             )}
           </div>
 
@@ -202,12 +192,12 @@ export const PixPayment = ({
             {isGenerating ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Gerando QR Code...
+                {t("reservation.pix.generating")}
               </>
             ) : (
               <>
                 <QrCode className="h-4 w-4 mr-2" />
-                Gerar QR Code PIX
+                {t("reservation.pix.generate")}
               </>
             )}
           </Button>

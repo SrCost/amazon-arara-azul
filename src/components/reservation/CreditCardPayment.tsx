@@ -12,6 +12,7 @@ import {
 import { CreditCard, Lock } from "lucide-react";
 import { validateCPF, maskCPF } from "@/lib/cpfValidator";
 import { maskCardNumber, maskExpiryDate, maskCVV, detectCardBrand, validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
+import { useTranslation } from "react-i18next";
 
 interface CreditCardPaymentProps {
   cardName: string;
@@ -44,6 +45,9 @@ export const CreditCardPayment = ({
   onCardCpfChange,
   onInstallmentsChange,
 }: CreditCardPaymentProps) => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language?.split("-")[0] || "pt";
+  const dateLocale = lang === "pt" ? "pt-BR" : lang === "en" ? "en-US" : lang === "es" ? "es-ES" : lang === "fr" ? "fr-FR" : "de-DE";
   const cardBrand = detectCardBrand(cardNumber);
   const cpfError = cardCpf && !validateCPF(cardCpf);
   const cardNumberError = cardNumber && cardNumber.replace(/\s/g, '').length >= 15 && !validateCardNumber(cardNumber);
@@ -72,11 +76,13 @@ export const CreditCardPayment = ({
   // Calculate installment values
   const getInstallmentOptions = () => {
     const options = [];
+    const fmt = (v: number) =>
+      `R$ ${v.toLocaleString(dateLocale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     for (let i = 1; i <= 12; i++) {
       const value = totalAmount / i;
-      const label = i === 1 
-        ? `À vista - R$ ${totalAmount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-        : `${i}x de R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} sem juros`;
+      const label = i === 1
+        ? t("reservation.card.cash", { amount: fmt(totalAmount) })
+        : t("reservation.card.installmentOption", { n: i, amount: fmt(value) });
       options.push({ value: i.toString(), label });
     }
     return options;
@@ -90,28 +96,26 @@ export const CreditCardPayment = ({
             <CreditCard className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold">Cartão de Crédito</h3>
+            <h3 className="font-semibold">{t("reservation.card.title")}</h3>
             <p className="text-sm text-muted-foreground flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Pagamento seguro e criptografado
+              <Lock className="h-3 w-3" /> {t("reservation.card.secure")}
             </p>
           </div>
         </div>
 
-        {/* Card Name */}
         <div>
-          <Label htmlFor="cardName">Nome no Cartão *</Label>
+          <Label htmlFor="cardName">{t("reservation.card.name")}</Label>
           <Input
             id="cardName"
             value={cardName}
             onChange={(e) => onCardNameChange(e.target.value.toUpperCase())}
-            placeholder="NOME COMO NO CARTÃO"
+            placeholder={t("reservation.card.namePlaceholder")}
             className="uppercase"
           />
         </div>
 
-        {/* Card Number with brand detection */}
         <div>
-          <Label htmlFor="cardNumber">Número do Cartão *</Label>
+          <Label htmlFor="cardNumber">{t("reservation.card.number")}</Label>
           <div className="relative">
             <Input
               id="cardNumber"
@@ -128,29 +132,28 @@ export const CreditCardPayment = ({
             )}
           </div>
           {cardNumberError && (
-            <p className="text-xs text-destructive mt-1">Número do cartão inválido</p>
+            <p className="text-xs text-destructive mt-1">{t("reservation.card.numberInvalid")}</p>
           )}
         </div>
 
-        {/* Expiry and CVV in two columns */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="cardExpiry">Validade *</Label>
+            <Label htmlFor="cardExpiry">{t("reservation.card.expiry")}</Label>
             <Input
               id="cardExpiry"
               value={cardExpiry}
               onChange={(e) => onCardExpiryChange(maskExpiryDate(e.target.value))}
-              placeholder="MM/AA"
+              placeholder={t("reservation.card.expiryPlaceholder")}
               maxLength={5}
               className={expiryError ? "border-destructive" : ""}
             />
             {expiryError && (
-              <p className="text-xs text-destructive mt-1">Data inválida</p>
+              <p className="text-xs text-destructive mt-1">{t("reservation.card.expiryInvalid")}</p>
             )}
           </div>
 
           <div>
-            <Label htmlFor="cardCvv">CVV *</Label>
+            <Label htmlFor="cardCvv">{t("reservation.card.cvv")}</Label>
             <Input
               id="cardCvv"
               value={cardCvv}
@@ -162,9 +165,8 @@ export const CreditCardPayment = ({
           </div>
         </div>
 
-        {/* CPF */}
         <div>
-          <Label htmlFor="cardCpf">CPF do Titular *</Label>
+          <Label htmlFor="cardCpf">{t("reservation.card.cpf")}</Label>
           <Input
             id="cardCpf"
             value={cardCpf}
@@ -174,16 +176,15 @@ export const CreditCardPayment = ({
             className={cpfError ? "border-destructive" : ""}
           />
           {cpfError && (
-            <p className="text-xs text-destructive mt-1">CPF inválido</p>
+            <p className="text-xs text-destructive mt-1">{t("reservation.card.cpfInvalid")}</p>
           )}
         </div>
 
-        {/* Installments */}
         <div>
-          <Label htmlFor="installments">Parcelas</Label>
+          <Label htmlFor="installments">{t("reservation.card.installments")}</Label>
           <Select value={installments} onValueChange={onInstallmentsChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Selecione as parcelas" />
+              <SelectValue placeholder={t("reservation.card.selectInstallments")} />
             </SelectTrigger>
             <SelectContent>
               {getInstallmentOptions().map((option) => (
