@@ -783,6 +783,7 @@ export type Database = {
           dietary_restrictions: string | null
           emergency_contact: string | null
           guest_email: string
+          guest_language: string
           guest_name: string
           guest_phone: string | null
           guests: number
@@ -835,6 +836,7 @@ export type Database = {
           dietary_restrictions?: string | null
           emergency_contact?: string | null
           guest_email: string
+          guest_language?: string
           guest_name: string
           guest_phone?: string | null
           guests: number
@@ -887,6 +889,7 @@ export type Database = {
           dietary_restrictions?: string | null
           emergency_contact?: string | null
           guest_email?: string
+          guest_language?: string
           guest_name?: string
           guest_phone?: string | null
           guests?: number
@@ -950,6 +953,7 @@ export type Database = {
         Row: {
           amenities: Json | null
           created_at: string | null
+          description_de: string
           description_en: string
           description_es: string
           description_fr: string
@@ -958,6 +962,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           max_guests: number
+          name_de: string
           name_en: string
           name_es: string
           name_fr: string
@@ -969,6 +974,7 @@ export type Database = {
         Insert: {
           amenities?: Json | null
           created_at?: string | null
+          description_de: string
           description_en: string
           description_es: string
           description_fr: string
@@ -977,6 +983,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           max_guests: number
+          name_de: string
           name_en: string
           name_es: string
           name_fr: string
@@ -988,6 +995,7 @@ export type Database = {
         Update: {
           amenities?: Json | null
           created_at?: string | null
+          description_de?: string
           description_en?: string
           description_es?: string
           description_fr?: string
@@ -996,6 +1004,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           max_guests?: number
+          name_de?: string
           name_en?: string
           name_es?: string
           name_fr?: string
