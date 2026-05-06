@@ -646,7 +646,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           installments: parseInt(installments),
           package_id: selectedPackage || null,
           accepted_terms: acceptedTerms,
-          accepted_at: acceptedTerms ? new Date().toISOString() : null
+          accepted_at: acceptedTerms ? new Date().toISOString() : null,
+          guest_language: guestLanguage
         };
 
         const { data: orderResult, error: orderError } = await supabase.functions.invoke(
