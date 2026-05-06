@@ -556,13 +556,16 @@ const handler = async (req: Request): Promise<Response> => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { type, reservationId, email, name, force, errorMessage, paymentDetails }: EmailRequest = await req.json();
+    const { type, reservationId, email, name, force, errorMessage, paymentDetails, lang: bodyLang }: EmailRequest = await req.json();
     
     console.log('=== SEND-RESERVATION-EMAIL ===');
     console.log('Tipo:', type);
     console.log('ReservationId:', reservationId);
     console.log('Email:', email);
     console.log('Nome:', name);
+
+    // Determine language: explicit body lang > reservation.guest_language > 'pt'
+    let lang: Lang = normalizeLang(bodyLang);
 
     // ========================================
     // PROTEÇÃO CONTRA DUPLICADOS (IDEMPOTÊNCIA)
@@ -590,43 +593,47 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    const dataPagamento = formatDateShort(new Date().toISOString());
+    // If reservationId is given and no explicit lang, fetch from reservation
+    let reservation: any = null;
+    if (reservationId) {
+      const { data } = await supabase
+        .from('reservations')
+        .select('*, packages:package_id (name)')
+        .eq('id', reservationId)
+        .maybeSingle();
+      reservation = data;
+      if (!bodyLang && reservation?.guest_language) {
+        lang = normalizeLang(reservation.guest_language);
+      }
+    }
+
+    const T = I18N[lang];
+    const dataPagamento = formatDateShort(new Date().toISOString(), lang);
     let subject = '';
     let html = '';
 
-    // ========================================
-    // GERAR TEMPLATE BASEADO NO TIPO
-    // ========================================
     if (type === 'payment_success') {
-      subject = '✓ Pagamento Aprovado – Pousada Arara Azul';
+      subject = T.subjectPaid;
       html = getPaymentSuccessEmailPremium({
         nome_cliente: name,
         metodo_pagamento: paymentDetails?.method || 'credit_card',
-        valor: formatCurrency(paymentDetails?.amount || 0),
+        valor: formatCurrency(paymentDetails?.amount || 0, lang),
         payment_id: paymentDetails?.paymentId || 'N/A',
         data_pagamento: dataPagamento,
+        lang,
       });
       
     } else if (type === 'payment_error') {
-      subject = 'Atenção: Erro no Pagamento – Pousada Arara Azul';
+      subject = T.subjectError;
       html = getPaymentErrorEmailPremium({
         nome_cliente: name,
-        erro: errorMessage || 'Erro desconhecido',
+        erro: errorMessage || T.errorUnknown,
+        lang,
       });
       
     } else if (type === 'reservation_confirmed') {
-      // Buscar dados completos da reserva
-      const { data: reservation, error: reservationError } = await supabase
-        .from('reservations')
-        .select(`
-          *,
-          packages:package_id (name)
-        `)
-        .eq('id', reservationId)
-        .single();
-
-      if (reservationError) {
-        throw new Error(`Erro ao buscar reserva: ${reservationError.message}`);
+      if (!reservation) {
+        throw new Error('Reserva não encontrada');
       }
 
       const checkInDate = new Date(reservation.check_in);
@@ -636,23 +643,24 @@ const handler = async (req: Request): Promise<Response> => {
       const googleCalLink = buildGoogleCalendarLink(reservation.check_in, reservation.check_out, codigoReserva);
       
       const whatsappBase = 'https://wa.me/5592984125475';
-      const linkUpgrade = `${whatsappBase}?text=${encodeURIComponent(`Olá! Tenho a reserva ${codigoReserva} e gostaria de saber sobre upgrade de bangalô.`)}`;
-      const linkPasseio = `${whatsappBase}?text=${encodeURIComponent(`Olá! Tenho a reserva ${codigoReserva} e gostaria de reservar passeios para complementar minha experiência na Amazônia.`)}`;
-      const linkEquipe = `${whatsappBase}?text=${encodeURIComponent(`Olá! Tenho a reserva ${codigoReserva} e gostaria de mais informações.`)}`;
+      const linkUpgrade = `${whatsappBase}?text=${encodeURIComponent(T.waUpgrade(codigoReserva))}`;
+      const linkPasseio = `${whatsappBase}?text=${encodeURIComponent(T.waTour(codigoReserva))}`;
+      const linkEquipe = `${whatsappBase}?text=${encodeURIComponent(T.waTeam(codigoReserva))}`;
 
-      subject = '🌿 Reserva confirmada – Pousada Arara Azul';
+      subject = T.subjectConfirmed;
       html = getReservationConfirmedEmailPremium({
         codigo_reserva: codigoReserva,
         nome_cliente: reservation.guest_name,
-        tipo_quarto: reservation.room_name || 'Bangalô',
-        checkin: formatDate(reservation.check_in),
-        checkout: formatDate(reservation.check_out),
-        valor_total: formatCurrency(reservation.total_price),
+        tipo_quarto: reservation.room_name || T.bungalow,
+        checkin: formatDate(reservation.check_in, lang),
+        checkout: formatDate(reservation.check_out, lang),
+        valor_total: formatCurrency(reservation.total_price, lang),
         dias_para_checkin: daysToCheckin,
         google_calendar_link: googleCalLink,
         link_upgrade: linkUpgrade,
         link_passeio: linkPasseio,
         link_equipe: linkEquipe,
+        lang,
       });
     }
 
