@@ -8,12 +8,11 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { createWhatsAppLink } from "@/lib/whatsapp";
 
 const FAQ = () => {
-  usePageMeta({
-    title: 'Perguntas Frequentes | Pousada Arara Azul – Manacapuru, AM',
-    description: 'Dúvidas sobre reservas, check-in, transfer, pagamento e atividades na Pousada Arara Azul. Respostas para planejar sua viagem à Amazônia.',
-  });
-
   const { t } = useTranslation();
+  usePageMeta({
+    title: t('pages.faqTitle'),
+    description: t('pages.faqDesc'),
+  });
 
   const faqItems = [
     {

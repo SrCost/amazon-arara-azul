@@ -8,12 +8,11 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { createWhatsAppLink } from "@/lib/whatsapp";
 
 const Packages = () => {
-  usePageMeta({
-    title: 'Pacotes Amazônicos | Pousada Arara Azul – Manacapuru, AM',
-    description: 'Pacotes completos com hospedagem, alimentação, transporte e experiências na Amazônia. Japiim, Uirapuru e Araraúna: escolha sua aventura.',
-  });
-
   const { t } = useTranslation();
+  usePageMeta({
+    title: t('pages.packagesTitle'),
+    description: t('pages.packagesDesc'),
+  });
 
   const packages = [
     {
