@@ -107,7 +107,7 @@ const LodgeDetail = () => {
       if (error) throw error;
 
       if (!data) {
-        toast.error("Bangalô não encontrado");
+        toast.error(t("lodgeDetail.notFound"));
         return;
       }
 
@@ -122,7 +122,7 @@ const LodgeDetail = () => {
         id: data.id,
         slug: data.slug,
         name: data[`name_${currentLang}`] || data.name_pt,
-        location: "MANACAPURU, AMAZONIA - AM",
+        location: t("lodgeDetail.location"),
         images: data.image_url ? [data.image_url, lodge1, lodge2] : [lodge1, lodge2, lodge3],
         price: `R$ ${data.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
         pricePerNight: Number(data.price_per_night),
@@ -146,7 +146,7 @@ const LodgeDetail = () => {
       setLodge(lodgeData);
     } catch (error) {
       console.error("Error fetching lodge:", error);
-      toast.error("Erro ao carregar detalhes do bangalô");
+      toast.error(t("lodgeDetail.loadError"));
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,7 @@ const LodgeDetail = () => {
       <div className="min-h-screen bg-background">
         <Navigation />
         <div className="pt-24 pb-16 flex items-center justify-center">
-          <p className="text-lg">Carregando...</p>
+          <p className="text-lg">{t("lodgeDetail.loading")}</p>
         </div>
         <Footer />
       </div>
@@ -172,7 +172,7 @@ const LodgeDetail = () => {
           <Button variant="ghost" asChild className="mt-4">
             <Link to="/bangalos">
               <ArrowLeft className="mr-2" />
-              Voltar para bangalôs
+              {t("lodge.backToLodges")}
             </Link>
           </Button>
         </div>
@@ -220,7 +220,7 @@ const LodgeDetail = () => {
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
                   <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 px-4 py-2 rounded-lg backdrop-blur-sm font-medium">
-                    Clique para ampliar
+                    {t("lodgeDetail.clickToZoom")}
                   </span>
                 </div>
               </div>
@@ -263,10 +263,10 @@ const LodgeDetail = () => {
                   <div className="absolute inset-0 bg-black/60 group-hover:bg-black/70 transition-all duration-300 flex items-center justify-center">
                     <div className="text-center">
                       <span className="text-white text-lg font-semibold block">
-                        Ver todas as fotos
+                        {t("lodgeDetail.viewAllPhotos")}
                       </span>
                       <span className="text-white/80 text-sm">
-                        +{allImages.length - 5} fotos
+                        {t("lodgeDetail.morePhotos", { count: allImages.length - 5 })}
                       </span>
                     </div>
                   </div>
@@ -328,7 +328,7 @@ const LodgeDetail = () => {
               <Card className="sticky top-28 shadow-medium">
                 <CardContent className="p-6">
                   <div className="mb-6">
-                    <div className="text-sm text-muted-foreground mb-1">A partir de</div>
+                    <div className="text-sm text-muted-foreground mb-1">{t("lodgeDetail.fromPrice")}</div>
                     <div className="text-3xl font-bold text-primary mb-1">{lodge.price}</div>
                     <div className="text-sm text-muted-foreground">{t("common.perNight")}</div>
                   </div>
@@ -377,7 +377,7 @@ const LodgeDetail = () => {
           aria-describedby={undefined}
         >
           <DialogTitle className="sr-only">
-            Reservar {lodge.name}
+            {t("lodgeDetail.reserveTitle", { name: lodge.name })}
           </DialogTitle>
           <div className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6">
             <ReservationFlow

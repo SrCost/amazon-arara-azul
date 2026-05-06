@@ -29,7 +29,7 @@ const Auth = () => {
     } catch (error: any) {
       toast({
         title: t("common.error"),
-        description: error.message || "Erro ao fazer login",
+        description: error.message || t("auth.errorLogin"),
         variant: "destructive",
       });
     } finally {
@@ -47,10 +47,10 @@ const Auth = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl text-center">
-                Pousada Arara Azul
+                {t("auth.title")}
               </CardTitle>
               <CardDescription className="text-center">
-                Acesso Administrativo
+                {t("admin.adminAccess")}
               </CardDescription>
             </CardHeader>
             <CardContent>

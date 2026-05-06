@@ -21,12 +21,11 @@ const fallbackCoverImages: Record<string, string> = {
 };
 
 const Lodges = () => {
-  usePageMeta({
-    title: 'Bangalôs Exclusivos | Pousada Arara Azul – Manacapuru, AM',
-    description: 'Conheça nossos bangalôs sustentáveis em meio à floresta amazônica. Hospedagem com conforto, natureza e experiências únicas em Manacapuru, Amazonas.',
-  });
-
   const { t, i18n } = useTranslation();
+  usePageMeta({
+    title: t('pages.lodgesTitle'),
+    description: t('pages.lodgesDesc'),
+  });
   const [searchParams] = useSearchParams();
   const [lodges, setLodges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,11 +89,11 @@ const Lodges = () => {
             id: room.id,
             slug: room.slug || room.id,
             name: room[`name_${i18n.language}`] || room.name_pt,
-            location: "MANACAPURU, AMAZONIA - AM",
+            location: t('lodgeDetail.location'),
             image: room.slug 
               ? (coverImageMap[room.slug] || fallbackCoverImages[room.slug]) 
               : undefined,
-            price: `A partir de R$ ${room.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            price: `${t('lodgeDetail.fromPrice')} R$ ${room.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
             amenities: room.amenities || ["wifi", "breakfast"],

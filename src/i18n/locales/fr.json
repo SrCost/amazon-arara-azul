@@ -84,7 +84,9 @@
     "signupSuccess": "Inscription réussie!",
     "loginError": "Erreur de connexion",
     "signupError": "Erreur d'inscription",
-    "logoutSuccess": "Déconnexion réussie!"
+    "logoutSuccess": "Déconnexion réussie!",
+    "title": "Pousada Arara Azul",
+    "errorLogin": "Erreur de connexion"
   },
   "contact": {
     "title": "Contactez-nous",
@@ -662,5 +664,42 @@
     "title": "Partagez votre expérience",
     "subtitle": "Votre avis aide d'autres voyageurs à découvrir la magie de l'Amazonie. Racontez votre séjour à la Pousada Arara Azul.",
     "cta": "Évaluer sur Google"
+  },
+  "pages": {
+    "indexTitle": "Pousada Arara Azul – Manacapuru, Amazonie | Hébergement en Amazonie",
+    "indexDesc": "Bungalows durables au cœur de la forêt amazonienne. Réservez votre séjour à la Pousada Arara Azul.",
+    "lodgesTitle": "Bungalows Exclusifs | Pousada Arara Azul – Manacapuru, Amazonie",
+    "lodgesDesc": "Découvrez nos bungalows durables en pleine forêt amazonienne. Confort, nature et expériences uniques à Manacapuru, Amazonas.",
+    "packagesTitle": "Forfaits Amazoniens | Pousada Arara Azul – Manacapuru, Amazonie",
+    "packagesDesc": "Forfaits complets avec hébergement, repas, transferts et expériences en Amazonie. Japiim, Uirapuru et Araraúna : choisissez votre aventure.",
+    "experiencesTitle": "Expériences en Amazonie | Pousada Arara Azul – Manacapuru, Amazonie",
+    "experiencesDesc": "Sentiers guidés, observation des oiseaux, balades en canoë et couchers de soleil sur le Rio Negro. Expériences authentiques en forêt amazonienne.",
+    "faqTitle": "Questions Fréquentes | Pousada Arara Azul – Manacapuru, Amazonie",
+    "faqDesc": "Questions sur les réservations, l'arrivée, les transferts, les paiements et les activités à la Pousada Arara Azul. Planifiez votre voyage en Amazonie."
+  },
+  "lodgeDetail": {
+    "loading": "Chargement...",
+    "notFound": "Bungalow introuvable",
+    "loadError": "Erreur lors du chargement des détails du bungalow",
+    "clickToZoom": "Cliquez pour agrandir",
+    "viewAllPhotos": "Voir toutes les photos",
+    "morePhotos": "+{{count}} photos",
+    "fromPrice": "À partir de",
+    "reserveTitle": "Réserver {{name}}",
+    "location": "MANACAPURU, AMAZONIE - BRÉSIL"
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "back": "Retour à l'accueil"
+  },
+  "reservationSuccess": {
+    "guest": "Client",
+    "lodge": "Bungalow",
+    "person": "personne",
+    "wpNumber": "Numéro",
+    "wpName": "Nom",
+    "wpLodge": "Bungalow",
+    "wpCheckIn": "Arrivée",
+    "wpCheckOut": "Départ"
   }
 }

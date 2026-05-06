@@ -14,8 +14,8 @@ const Experiencias = () => {
   const { t } = useTranslation();
   
   usePageMeta({
-    title: 'Experiências na Amazônia | Pousada Arara Azul – Manacapuru, AM',
-    description: 'Descubra trilhas guiadas, observação de aves, passeios de canoa e pôr do sol no Rio Negro. Experiências autênticas na floresta amazônica.',
+    title: t('pages.experiencesTitle'),
+    description: t('pages.experiencesDesc'),
   });
 
   const { data: galleryImages = [], isLoading } = useGalleryImages("experiences");
