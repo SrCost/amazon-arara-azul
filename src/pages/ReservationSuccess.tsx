@@ -17,8 +17,8 @@ const ReservationSuccess = () => {
   const [searchParams] = useSearchParams();
   
   const reservationId = searchParams.get("reservationId") || "";
-  const guestName = searchParams.get("name") || searchParams.get("guestName") || "Hóspede";
-  const lodgeName = searchParams.get("lodge") || searchParams.get("lodgeName") || "Bangalô";
+  const guestName = searchParams.get("name") || searchParams.get("guestName") || t("reservationSuccess.guest");
+  const lodgeName = searchParams.get("lodge") || searchParams.get("lodgeName") || t("reservationSuccess.lodge");
   const packageName = searchParams.get("package");
   const checkIn = searchParams.get("checkIn");
   const checkOut = searchParams.get("checkOut");
@@ -68,7 +68,7 @@ const ReservationSuccess = () => {
   };
 
   const handleWhatsApp = () => {
-    const reservationMessage = `${t('whatsapp.reservationContact')}\n\nNúmero: ${formatReservationNumber(reservationId)}\nNome: ${guestName}\nBangalô: ${lodgeName}\nCheck-in: ${checkIn}\nCheck-out: ${checkOut}`;
+    const reservationMessage = `${t('whatsapp.reservationContact')}\n\n${t('reservationSuccess.wpNumber')}: ${formatReservationNumber(reservationId)}\n${t('reservationSuccess.wpName')}: ${guestName}\n${t('reservationSuccess.wpLodge')}: ${lodgeName}\n${t('reservationSuccess.wpCheckIn')}: ${checkIn}\n${t('reservationSuccess.wpCheckOut')}: ${checkOut}`;
     const whatsappUrl = createWhatsAppLink(reservationMessage);
     window.open(whatsappUrl, '_blank');
   };
@@ -135,7 +135,7 @@ const ReservationSuccess = () => {
                   <Users className="h-5 w-5 text-primary mt-0.5" />
                   <div>
                     <p className="text-sm text-muted-foreground">{t('search.guests')}</p>
-                    <p className="font-medium">{guests} {parseInt(guests) === 1 ? 'pessoa' : t('common.people')}</p>
+                    <p className="font-medium">{guests} {parseInt(guests) === 1 ? t('reservationSuccess.person') : t('common.people')}</p>
                   </div>
                 </div>
 
