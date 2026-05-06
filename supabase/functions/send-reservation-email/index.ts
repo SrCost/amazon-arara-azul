@@ -347,199 +347,67 @@ const getReservationConfirmedEmailPremium = (data: {
   link_upgrade: string;
   link_passeio: string;
   link_equipe: string;
-}) => `<!DOCTYPE html>
-<html lang="pt-BR">
+  lang: Lang;
+}) => { const T = I18N[data.lang]; return `<!DOCTYPE html>
+<html lang="${LOCALE_MAP[data.lang]}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="x-apple-disable-message-reformatting">
-<meta name="format-detection" content="telephone=no,address=no,email=no,date=no,url=no">
-<title>Sua Experiência na Amazônia Começa Agora</title>
+<title>${T.confirmedTitle}</title>
 </head>
 <body style="margin:0;padding:0;background:#f2f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;">
-Faltam ${data.dias_para_checkin} dias para sua experiência na Amazônia 🌿
-</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${T.daysLeft} ${data.dias_para_checkin} ${T.daysToArrival}</div>
+<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="padding:50px 20px;">
+<table width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 12px 35px rgba(0,0,0,0.08);">
+<tr><td align="center" style="padding:50px 30px;background:linear-gradient(135deg,#0B3A66 0%,#0F6B4D 100%);color:#ffffff;">
+<img src="https://resend-attachments.s3.amazonaws.com/d5lMO5xYixu678E" width="130" style="display:block;margin-bottom:20px;" alt="Pousada Arara Azul">
+<h1 style="margin:0;font-size:26px;font-weight:600;">${T.confirmedTitle}</h1>
+<p style="margin:12px 0 0;font-size:14px;opacity:0.9;">${T.confirmedSubtitle}</p>
+</td></tr>
+<tr><td style="padding:45px 40px;color:#2D3748;font-size:15px;line-height:1.7;">
+<p style="margin:0 0 20px;font-size:18px;color:#0B3A66;">${T.hello} <strong>${data.nome_cliente}</strong>,</p>
+<p style="margin:0 0 30px;">${T.confirmedIntro}</p>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0B3A66;border-radius:16px;margin-bottom:35px;"><tr><td align="center" style="color:#ffffff;padding:30px;">
+<p style="margin:0;font-size:14px;opacity:0.8;">${T.daysLeft}</p>
+<p style="margin:8px 0;font-size:42px;font-weight:700;">${data.dias_para_checkin}</p>
+<p style="margin:0;font-size:14px;opacity:0.8;">${T.daysToArrival}</p>
+</td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F6FBF9;border-radius:14px;border:1px solid #E4EFEA;"><tr><td style="padding:28px;">
 <table width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr>
-<td align="center" style="padding:50px 20px;">
-<table width="640" cellpadding="0" cellspacing="0" border="0"
-style="max-width:640px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 12px 35px rgba(0,0,0,0.08);">
-<!-- HEADER -->
-<tr>
-<td align="center"
-style="padding:50px 30px;background:linear-gradient(135deg,#0B3A66 0%,#0F6B4D 100%);color:#ffffff;">
-<img src="https://resend-attachments.s3.amazonaws.com/d5lMO5xYixu678E"
-width="130"
-style="display:block;margin-bottom:20px;"
-alt="Pousada Arara Azul">
-<h1 style="margin:0;font-size:26px;font-weight:600;">
-Reserva Confirmada
-</h1>
-<p style="margin:12px 0 0;font-size:14px;opacity:0.9;">
-Uma experiência exclusiva espera por você
-</p>
-</td>
-</tr>
-<!-- BODY -->
-<tr>
-<td style="padding:45px 40px;color:#2D3748;font-size:15px;line-height:1.7;">
-<p style="margin:0 0 20px;font-size:18px;color:#0B3A66;">
-Olá <strong>${data.nome_cliente}</strong>,
-</p>
-<p style="margin:0 0 30px;">
-Sua reserva foi confirmada com sucesso.
-Estamos preparando cada detalhe da sua estadia.
-</p>
-<!-- COUNTDOWN PREMIUM -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-style="background:#0B3A66;border-radius:16px;margin-bottom:35px;">
-<tr>
-<td align="center" style="color:#ffffff;padding:30px;">
-<p style="margin:0;font-size:14px;opacity:0.8;">
-Faltam
-</p>
-<p style="margin:8px 0;font-size:42px;font-weight:700;">
-${data.dias_para_checkin}
-</p>
-<p style="margin:0;font-size:14px;opacity:0.8;">
-dias para sua chegada 🌿
-</p>
-</td>
-</tr>
-</table>
-<!-- DETALHES -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-style="background:#F6FBF9;border-radius:14px;border:1px solid #E4EFEA;">
-<tr>
-<td style="padding:28px;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr>
-<td style="padding:8px 0;color:#6B7280;">Código</td>
-<td align="right"><strong>${data.codigo_reserva}</strong></td>
-</tr>
-<tr>
-<td style="padding:8px 0;color:#6B7280;">Bangalô</td>
-<td align="right"><strong>${data.tipo_quarto}</strong></td>
-</tr>
-<tr>
-<td style="padding:8px 0;color:#6B7280;">Check-in</td>
-<td align="right"><strong>${data.checkin}</strong></td>
-</tr>
-<tr>
-<td style="padding:8px 0;color:#6B7280;">Check-out</td>
-<td align="right"><strong>${data.checkout}</strong></td>
-</tr>
-<tr>
-<td style="padding-top:16px;font-size:17px;color:#0B3A66;">
-<strong>Valor Total</strong>
-</td>
-<td align="right" style="padding-top:16px;font-size:17px;">
-<strong>${data.valor_total}</strong>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-<!-- BOTÃO CALENDAR -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;">
-<tr>
-<td align="center">
-<a href="${data.google_calendar_link}"
-style="background:#0B3A66;color:#ffffff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;">
-Adicionar ao Google Calendar
-</a>
-</td>
-</tr>
-</table>
-<!-- UPSELL UPGRADE -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-style="margin-top:45px;background:#FFF8ED;border-radius:14px;border:1px solid #F2E3C7;">
-<tr>
-<td style="padding:28px;">
-<h3 style="margin:0 0 12px;color:#7A4A00;">
-Upgrade Exclusivo
-</h3>
-<p style="margin:0 0 20px;">
-Deseja elevar sua experiência?
-Disponibilizamos upgrade de bangalô com vista privilegiada e comodidades especiais.
-</p>
-<a href="${data.link_upgrade}"
-style="background:#C27C2C;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">
-Ver Upgrade Disponível
-</a>
-</td>
-</tr>
-</table>
-<!-- UPSELL PASSEIO -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-style="margin-top:30px;background:#EDF6F3;border-radius:14px;border:1px solid #DDEBE5;">
-<tr>
-<td style="padding:28px;">
-<h3 style="margin:0 0 12px;color:#0B3A66;">
-Experiência na Amazônia
-</h3>
-<p style="margin:0 0 20px;">
-Passeios exclusivos pela floresta, focagem noturna de jacarés e visita às comunidades locais.
-Vagas limitadas.
-</p>
-<a href="${data.link_passeio}"
-style="background:#1E8F5A;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">
-Reservar Passeio
-</a>
-</td>
-</tr>
-</table>
-<!-- POLÍTICA DE CANCELAMENTO -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0"
-style="margin-top:35px;background:#FFF9F0;border-radius:12px;border:1px solid #F0E4D0;">
-<tr>
-<td style="padding:22px 28px;">
-<h3 style="margin:0 0 10px;color:#7A4A00;font-size:14px;font-weight:700;">
-📋 Política de Cancelamento
-</h3>
-<p style="margin:0 0 12px;font-size:13px;color:#5C4A2A;line-height:1.6;">
-Cancelamento com até 30 dias: reembolso parcial conforme política. Menos de 7 dias do check-in ou no-show: sem reembolso.
-</p>
-<a href="https://pousadararazul.com/docs/politica-cancelamento.pdf"
-style="color:#7A4A00;font-size:13px;font-weight:600;text-decoration:underline;">
-Ver política completa (PDF)
-</a>
-</td>
-</tr>
-</table>
-<!-- WHATSAPP -->
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;">
-<tr>
-<td align="center">
-<a href="${data.link_equipe}"
-style="color:#1E8F5A;font-weight:600;text-decoration:none;">
-Falar com nossa equipe
-</a>
-</td>
-</tr>
-</table>
-<p style="margin:40px 0 0;">
-Agradecemos sua confiança.<br>
-<strong>Equipe Pousada Arara Azul</strong>
-</p>
-</td>
-</tr>
-<!-- FOOTER -->
-<tr>
-<td align="center"
-style="padding:25px;background:#0B3A66;color:rgba(255,255,255,0.8);font-size:12px;">
+<tr><td style="padding:8px 0;color:#6B7280;">${T.code}</td><td align="right"><strong>${data.codigo_reserva}</strong></td></tr>
+<tr><td style="padding:8px 0;color:#6B7280;">${T.bungalow}</td><td align="right"><strong>${data.tipo_quarto}</strong></td></tr>
+<tr><td style="padding:8px 0;color:#6B7280;">${T.checkin}</td><td align="right"><strong>${data.checkin}</strong></td></tr>
+<tr><td style="padding:8px 0;color:#6B7280;">${T.checkout}</td><td align="right"><strong>${data.checkout}</strong></td></tr>
+<tr><td style="padding-top:16px;font-size:17px;color:#0B3A66;"><strong>${T.total}</strong></td><td align="right" style="padding-top:16px;font-size:17px;"><strong>${data.valor_total}</strong></td></tr>
+</table></td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;"><tr><td align="center">
+<a href="${data.google_calendar_link}" style="background:#0B3A66;color:#ffffff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;">${T.addCalendar}</a>
+</td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:45px;background:#FFF8ED;border-radius:14px;border:1px solid #F2E3C7;"><tr><td style="padding:28px;">
+<h3 style="margin:0 0 12px;color:#7A4A00;">${T.upgradeTitle}</h3>
+<p style="margin:0 0 20px;">${T.upgradeText}</p>
+<a href="${data.link_upgrade}" style="background:#C27C2C;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">${T.upgradeBtn}</a>
+</td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;background:#EDF6F3;border-radius:14px;border:1px solid #DDEBE5;"><tr><td style="padding:28px;">
+<h3 style="margin:0 0 12px;color:#0B3A66;">${T.tourTitle}</h3>
+<p style="margin:0 0 20px;">${T.tourText}</p>
+<a href="${data.link_passeio}" style="background:#1E8F5A;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;">${T.tourBtn}</a>
+</td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:35px;background:#FFF9F0;border-radius:12px;border:1px solid #F0E4D0;"><tr><td style="padding:22px 28px;">
+<h3 style="margin:0 0 10px;color:#7A4A00;font-size:14px;font-weight:700;">${T.cancelTitle}</h3>
+<p style="margin:0 0 12px;font-size:13px;color:#5C4A2A;line-height:1.6;">${T.cancelText}</p>
+<a href="https://pousadararazul.com/docs/politica-cancelamento.pdf" style="color:#7A4A00;font-size:13px;font-weight:600;text-decoration:underline;">${T.cancelLink}</a>
+</td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;"><tr><td align="center">
+<a href="${data.link_equipe}" style="color:#1E8F5A;font-weight:600;text-decoration:none;">${T.contactTeam}</a>
+</td></tr></table>
+<p style="margin:40px 0 0;">${T.thanks}<br><strong>${T.team}</strong></p>
+</td></tr>
+<tr><td align="center" style="padding:25px;background:#0B3A66;color:rgba(255,255,255,0.8);font-size:12px;">
 © ${getCurrentYear()} Pousada Arara Azul — Manacapuru, AM
-</td>
-</tr>
-</table>
-</td>
-</tr>
-</table>
-</body>
-</html>
-`;
+</td></tr>
+</table></td></tr></table>
+</body></html>`; };
 
 // ============================================
 // TEMPLATE PREMIUM: PAGAMENTO APROVADO
