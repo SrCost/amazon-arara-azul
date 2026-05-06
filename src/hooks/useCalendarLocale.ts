@@ -1,11 +1,12 @@
 import { useTranslation } from 'react-i18next';
-import { pt, enUS, es, fr, Locale } from 'date-fns/locale';
+import { pt, enUS, es, fr, de, Locale } from 'date-fns/locale';
 
 const localeMap: Record<string, Locale> = {
   pt: pt,
   en: enUS,
   es: es,
   fr: fr,
+  de: de,
 };
 
 export const useCalendarLocale = (): Locale => {
