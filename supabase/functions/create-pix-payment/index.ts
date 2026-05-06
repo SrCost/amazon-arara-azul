@@ -317,7 +317,8 @@ serve(async (req) => {
           total_price: amount,
           status: 'pending',
           payment_status: 'pending',
-          package_id: package_id || null
+          package_id: package_id || null,
+          guest_language: lang
         })
         .select()
         .single();
