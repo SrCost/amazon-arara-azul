@@ -225,7 +225,8 @@
       "selectInstallments": "Sélectionnez les mensualités",
       "cash": "Paiement unique - {{amount}}",
       "installmentOption": "{{n}}× de {{amount}} sans intérêts"
-    }
+    },
+    "loginRequired": "Vous devez être connecté pour faire une réservation"
   },
   "admin": {
     "dashboard": "Tableau de Bord",

@@ -225,7 +225,8 @@
       "selectInstallments": "Seleccione las cuotas",
       "cash": "Pago único - {{amount}}",
       "installmentOption": "{{n}}× de {{amount}} sin intereses"
-    }
+    },
+    "loginRequired": "Debes iniciar sesión para hacer una reserva"
   },
   "admin": {
     "dashboard": "Panel de Control",

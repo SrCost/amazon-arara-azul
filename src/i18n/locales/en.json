@@ -225,7 +225,8 @@
       "selectInstallments": "Select installments",
       "cash": "One payment - {{amount}}",
       "installmentOption": "{{n}}× of {{amount}} interest-free"
-    }
+    },
+    "loginRequired": "You must be logged in to make a reservation"
   },
   "admin": {
     "dashboard": "Dashboard",
