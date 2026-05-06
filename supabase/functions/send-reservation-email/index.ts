@@ -286,23 +286,23 @@ const COLORS = {
   errorRed: '#ef4444',
 };
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('pt-BR', {
+const formatCurrency = (value: number, lang: Lang = 'pt') => {
+  return new Intl.NumberFormat(CURRENCY_LOCALE[lang], {
     style: 'currency',
     currency: 'BRL'
   }).format(value);
 };
 
-const formatDate = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('pt-BR', {
+const formatDate = (dateStr: string, lang: Lang = 'pt') => {
+  return new Date(dateStr).toLocaleDateString(LOCALE_MAP[lang], {
     day: '2-digit',
     month: 'long',
     year: 'numeric'
   });
 };
 
-const formatDateShort = (dateStr: string) => {
-  return new Date(dateStr).toLocaleDateString('pt-BR', {
+const formatDateShort = (dateStr: string, lang: Lang = 'pt') => {
+  return new Date(dateStr).toLocaleDateString(LOCALE_MAP[lang], {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric'
