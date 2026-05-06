@@ -50,7 +50,7 @@ const Auth = () => {
                 {t("auth.title")}
               </CardTitle>
               <CardDescription className="text-center">
-                {t("common.adminAccess")}
+                {t("admin.adminAccess")}
               </CardDescription>
             </CardHeader>
             <CardContent>
