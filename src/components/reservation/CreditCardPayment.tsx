@@ -12,6 +12,7 @@ import {
 import { CreditCard, Lock } from "lucide-react";
 import { validateCPF, maskCPF } from "@/lib/cpfValidator";
 import { maskCardNumber, maskExpiryDate, maskCVV, detectCardBrand, validateCardNumber, validateExpiryDate } from "@/lib/cardMasks";
+import { useTranslation } from "react-i18next";
 
 interface CreditCardPaymentProps {
   cardName: string;
