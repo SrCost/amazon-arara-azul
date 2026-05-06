@@ -471,106 +471,50 @@ const getPaymentSuccessEmailPremium = (data: {
 const getPaymentErrorEmailPremium = (data: {
   nome_cliente: string;
   erro: string;
-}) => `
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+  lang: Lang;
+}) => { const T = I18N[data.lang]; return `
+<!DOCTYPE html>
+<html lang="${LOCALE_MAP[data.lang]}">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Erro no Pagamento - Pousada Arara Azul</title>
+  <title>${T.errorTitle}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: ${COLORS.offWhite}; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-  
   <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.offWhite};">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        
-        <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          
-          <!-- Header -->
-          <tr>
-            <td align="center" style="background: linear-gradient(135deg, ${COLORS.azulPetroleo} 0%, #5a5a5a 100%); padding: 30px 40px; border-radius: 12px 12px 0 0;">
-              <img src="${LOGO_URL}" alt="Pousada Arara Azul" width="80" style="display: block; border: 0; border-radius: 50%;" />
-              <h1 style="color: #ffffff; font-size: 24px; margin: 15px 0 5px 0; font-weight: 600;">
-                Atenção: Erro no Pagamento
-              </h1>
-            </td>
-          </tr>
-
-          <!-- Conteúdo -->
-          <tr>
-            <td style="padding: 40px;">
-              
-              <p style="color: ${COLORS.azulPetroleo}; font-size: 18px; margin: 0 0 20px 0;">
-                Olá <strong>${data.nome_cliente}</strong>,
-              </p>
-              
-              <p style="color: ${COLORS.textoSecundario}; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">
-                Infelizmente ocorreu um problema ao processar seu pagamento. 
-                Não se preocupe, nenhum valor foi cobrado.
-              </p>
-
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FEF2F2; border-radius: 8px; border-left: 4px solid ${COLORS.errorRed};">
-                <tr>
-                  <td style="padding: 24px;">
-                    <h2 style="color: #991B1B; font-size: 16px; margin: 0 0 10px 0;">
-                      ⚠️ Motivo do Erro
-                    </h2>
-                    <p style="color: #7F1D1D; font-size: 14px; margin: 0;">
-                      ${data.erro || 'Erro desconhecido no processamento do pagamento'}
-                    </p>
-                  </td>
-                </tr>
-              </table>
-
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px;">
-                <tr>
-                  <td align="center">
-                    <span style="display: inline-block; background-color: ${COLORS.errorRed}; color: #ffffff; padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: 600;">
-                      ✗ Pagamento Não Processado
-                    </span>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="color: ${COLORS.textoSecundario}; font-size: 15px; line-height: 1.6; margin: 30px 0 0 0;">
-                <strong>O que fazer?</strong>
-              </p>
-              <ul style="color: ${COLORS.textoSecundario}; font-size: 14px; line-height: 1.8; padding-left: 20px;">
-                <li>Verifique os dados do cartão e tente novamente</li>
-                <li>Tente usar outro método de pagamento (PIX ou outro cartão)</li>
-                <li>Entre em contato conosco para assistência</li>
-              </ul>
-
-              <p style="color: ${COLORS.textoSecundario}; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">
-                Precisa de ajuda? Estamos aqui:
-              </p>
-              <p style="color: ${COLORS.textoSecundario}; font-size: 14px; margin: 10px 0;">
-                📱 <a href="https://wa.me/559284829983" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">WhatsApp: (92) 98482-9983</a><br/>
-                📧 <a href="mailto:reservas@pousadararazul.com" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">reservas@pousadararazul.com</a>
-              </p>
-
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td align="center" style="background-color: ${COLORS.azulPetroleo}; padding: 24px; border-radius: 0 0 12px 12px;">
-              <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0;">
-                © ${getCurrentYear()} Pousada Arara Azul - Todos os direitos reservados
-              </p>
-            </td>
-          </tr>
-
-        </table>
-        
-      </td>
-    </tr>
+    <tr><td align="center" style="padding: 40px 20px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <tr><td align="center" style="background: linear-gradient(135deg, ${COLORS.azulPetroleo} 0%, #5a5a5a 100%); padding: 30px 40px; border-radius: 12px 12px 0 0;">
+          <img src="${LOGO_URL}" alt="Pousada Arara Azul" width="80" style="display: block; border: 0; border-radius: 50%;" />
+          <h1 style="color: #ffffff; font-size: 24px; margin: 15px 0 5px 0; font-weight: 600;">${T.errorTitle}</h1>
+        </td></tr>
+        <tr><td style="padding: 40px;">
+          <p style="color: ${COLORS.azulPetroleo}; font-size: 18px; margin: 0 0 20px 0;">${T.hello} <strong>${data.nome_cliente}</strong>,</p>
+          <p style="color: ${COLORS.textoSecundario}; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">${T.errorIntro}</p>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #FEF2F2; border-radius: 8px; border-left: 4px solid ${COLORS.errorRed};"><tr><td style="padding: 24px;">
+            <h2 style="color: #991B1B; font-size: 16px; margin: 0 0 10px 0;">${T.errorReason}</h2>
+            <p style="color: #7F1D1D; font-size: 14px; margin: 0;">${data.erro || T.errorUnknown}</p>
+          </td></tr></table>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px;"><tr><td align="center">
+            <span style="display: inline-block; background-color: ${COLORS.errorRed}; color: #ffffff; padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: 600;">${T.notProcessed}</span>
+          </td></tr></table>
+          <p style="color: ${COLORS.textoSecundario}; font-size: 15px; line-height: 1.6; margin: 30px 0 0 0;"><strong>${T.whatToDo}</strong></p>
+          <ul style="color: ${COLORS.textoSecundario}; font-size: 14px; line-height: 1.8; padding-left: 20px;">
+            <li>${T.todo1}</li><li>${T.todo2}</li><li>${T.todo3}</li>
+          </ul>
+          <p style="color: ${COLORS.textoSecundario}; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">${T.needHelp}</p>
+          <p style="color: ${COLORS.textoSecundario}; font-size: 14px; margin: 10px 0;">
+            📱 <a href="https://wa.me/559284829983" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">WhatsApp: (92) 98482-9983</a><br/>
+            📧 <a href="mailto:reservas@pousadararazul.com" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">reservas@pousadararazul.com</a>
+          </p>
+        </td></tr>
+        <tr><td align="center" style="background-color: ${COLORS.azulPetroleo}; padding: 24px; border-radius: 0 0 12px 12px;">
+          <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0;">© ${getCurrentYear()} Pousada Arara Azul - ${T.rights}</p>
+        </td></tr>
+      </table>
+    </td></tr>
   </table>
-
-</body>
-</html>
-`;
+</body></html>`; };
 
 // Função para enviar email via Resend
 async function sendEmailViaResend(to: string, subject: string, html: string) {
