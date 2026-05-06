@@ -84,7 +84,9 @@
     "signupSuccess": "Sign up successful!",
     "loginError": "Login error",
     "signupError": "Sign up error",
-    "logoutSuccess": "Logout successful!"
+    "logoutSuccess": "Logout successful!",
+    "title": "Pousada Arara Azul",
+    "errorLogin": "Login error"
   },
   "contact": {
     "title": "Get in Touch",
@@ -662,5 +664,42 @@
     "title": "Share your experience",
     "subtitle": "Your review helps other travelers discover the magic of the Amazon. Tell us how your stay at Pousada Arara Azul was.",
     "cta": "Review on Google"
+  },
+  "pages": {
+    "indexTitle": "Pousada Arara Azul – Manacapuru, Amazon | Amazon Rainforest Lodge",
+    "indexDesc": "Sustainable bungalows in the heart of the Amazon rainforest. Book your stay at Pousada Arara Azul.",
+    "lodgesTitle": "Exclusive Bungalows | Pousada Arara Azul – Manacapuru, Amazon",
+    "lodgesDesc": "Discover our sustainable bungalows in the Amazon rainforest. Comfort, nature and unique experiences in Manacapuru, Amazonas.",
+    "packagesTitle": "Amazon Packages | Pousada Arara Azul – Manacapuru, Amazon",
+    "packagesDesc": "Complete packages with lodging, meals, transfer and Amazon experiences. Japiim, Uirapuru and Araraúna: choose your adventure.",
+    "experiencesTitle": "Amazon Experiences | Pousada Arara Azul – Manacapuru, Amazon",
+    "experiencesDesc": "Discover guided trails, birdwatching, canoe tours and Rio Negro sunsets. Authentic experiences in the Amazon rainforest.",
+    "faqTitle": "Frequently Asked Questions | Pousada Arara Azul – Manacapuru, Amazon",
+    "faqDesc": "Questions about reservations, check-in, transfer, payment and activities at Pousada Arara Azul. Plan your trip to the Amazon."
+  },
+  "lodgeDetail": {
+    "loading": "Loading...",
+    "notFound": "Bungalow not found",
+    "loadError": "Error loading bungalow details",
+    "clickToZoom": "Click to enlarge",
+    "viewAllPhotos": "View all photos",
+    "morePhotos": "+{{count}} photos",
+    "fromPrice": "From",
+    "reserveTitle": "Book {{name}}",
+    "location": "MANACAPURU, AMAZON - BRAZIL"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "back": "Return to home"
+  },
+  "reservationSuccess": {
+    "guest": "Guest",
+    "lodge": "Bungalow",
+    "person": "person",
+    "wpNumber": "Number",
+    "wpName": "Name",
+    "wpLodge": "Bungalow",
+    "wpCheckIn": "Check-in",
+    "wpCheckOut": "Check-out"
   }
 }

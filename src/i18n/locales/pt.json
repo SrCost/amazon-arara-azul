@@ -84,7 +84,9 @@
     "signupSuccess": "Cadastro realizado com sucesso!",
     "loginError": "Erro ao fazer login",
     "signupError": "Erro ao cadastrar",
-    "logoutSuccess": "Logout realizado com sucesso!"
+    "logoutSuccess": "Logout realizado com sucesso!",
+    "title": "Pousada Arara Azul",
+    "errorLogin": "Erro ao fazer login"
   },
   "contact": {
     "title": "Entre em Contato",
@@ -663,5 +665,42 @@
     "title": "Compartilhe sua experiência",
     "subtitle": "Sua avaliação ajuda outros viajantes a descobrirem a magia da Amazônia. Conte como foi sua estadia na Pousada Arara Azul.",
     "cta": "Avaliar no Google"
+  },
+  "pages": {
+    "indexTitle": "Pousada Arara Azul – Manacapuru, AM | Hospedagem na Amazônia",
+    "indexDesc": "Bangalôs sustentáveis em meio à floresta amazônica. Reserve sua estadia na Pousada Arara Azul.",
+    "lodgesTitle": "Bangalôs Exclusivos | Pousada Arara Azul – Manacapuru, AM",
+    "lodgesDesc": "Conheça nossos bangalôs sustentáveis em meio à floresta amazônica. Hospedagem com conforto, natureza e experiências únicas em Manacapuru, Amazonas.",
+    "packagesTitle": "Pacotes Amazônicos | Pousada Arara Azul – Manacapuru, AM",
+    "packagesDesc": "Pacotes completos com hospedagem, alimentação, transporte e experiências na Amazônia. Japiim, Uirapuru e Araraúna: escolha sua aventura.",
+    "experiencesTitle": "Experiências na Amazônia | Pousada Arara Azul – Manacapuru, AM",
+    "experiencesDesc": "Descubra trilhas guiadas, observação de aves, passeios de canoa e pôr do sol no Rio Negro. Experiências autênticas na floresta amazônica.",
+    "faqTitle": "Perguntas Frequentes | Pousada Arara Azul – Manacapuru, AM",
+    "faqDesc": "Dúvidas sobre reservas, check-in, transfer, pagamento e atividades na Pousada Arara Azul. Respostas para planejar sua viagem à Amazônia."
+  },
+  "lodgeDetail": {
+    "loading": "Carregando...",
+    "notFound": "Bangalô não encontrado",
+    "loadError": "Erro ao carregar detalhes do bangalô",
+    "clickToZoom": "Clique para ampliar",
+    "viewAllPhotos": "Ver todas as fotos",
+    "morePhotos": "+{{count}} fotos",
+    "fromPrice": "A partir de",
+    "reserveTitle": "Reservar {{name}}",
+    "location": "MANACAPURU, AMAZONIA - AM"
+  },
+  "notFound": {
+    "title": "Página não encontrada",
+    "back": "Voltar para o início"
+  },
+  "reservationSuccess": {
+    "guest": "Hóspede",
+    "lodge": "Bangalô",
+    "person": "pessoa",
+    "wpNumber": "Número",
+    "wpName": "Nome",
+    "wpLodge": "Bangalô",
+    "wpCheckIn": "Check-in",
+    "wpCheckOut": "Check-out"
   }
 }
