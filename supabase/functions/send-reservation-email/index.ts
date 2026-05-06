@@ -418,128 +418,52 @@ const getPaymentSuccessEmailPremium = (data: {
   valor: string;
   payment_id: string;
   data_pagamento: string;
-}) => `
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+  lang: Lang;
+}) => { const T = I18N[data.lang]; return `
+<!DOCTYPE html>
+<html lang="${LOCALE_MAP[data.lang]}">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Pagamento Aprovado - Pousada Arara Azul</title>
+  <title>${T.paidTitle}</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: ${COLORS.offWhite}; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
-  
   <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.offWhite};">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        
-        <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-          
-          <!-- Header -->
-          <tr>
-            <td align="center" style="background: linear-gradient(135deg, ${COLORS.azulPetroleo} 0%, ${COLORS.verdeAmazonia} 100%); padding: 30px 40px; border-radius: 12px 12px 0 0;">
-              <img src="${LOGO_URL}" alt="Pousada Arara Azul" width="80" style="display: block; border: 0; border-radius: 50%;" />
-              <h1 style="color: #ffffff; font-size: 24px; margin: 15px 0 5px 0; font-weight: 600;">
-                Pagamento Aprovado ✓
-              </h1>
-            </td>
-          </tr>
-
-          <!-- Conteúdo -->
-          <tr>
-            <td style="padding: 40px;">
-              
-              <p style="color: ${COLORS.azulPetroleo}; font-size: 18px; margin: 0 0 20px 0;">
-                Olá <strong>${data.nome_cliente}</strong>,
-              </p>
-              
-              <p style="color: ${COLORS.textoSecundario}; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">
-                Seu pagamento foi processado com sucesso! Em breve você receberá o email de confirmação 
-                da sua reserva com todos os detalhes.
-              </p>
-
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.offWhite}; border-radius: 8px; border-left: 4px solid ${COLORS.successGreen};">
-                <tr>
-                  <td style="padding: 24px;">
-                    <h2 style="color: ${COLORS.azulPetroleo}; font-size: 16px; margin: 0 0 16px 0;">
-                      💳 Detalhes do Pagamento
-                    </h2>
-                    
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                      <tr>
-                        <td style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};">
-                          <span style="color: ${COLORS.textoMuted}; font-size: 14px;">Método</span>
-                        </td>
-                        <td align="right" style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};">
-                          <strong style="color: ${COLORS.azulPetroleo}; font-size: 14px;">${data.metodo_pagamento === 'pix' ? 'PIX' : 'Cartão de Crédito'}</strong>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};">
-                          <span style="color: ${COLORS.textoMuted}; font-size: 14px;">Valor</span>
-                        </td>
-                        <td align="right" style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};">
-                          <strong style="color: ${COLORS.verdeAmazonia}; font-size: 16px;">${data.valor}</strong>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};">
-                          <span style="color: ${COLORS.textoMuted}; font-size: 14px;">ID da Transação</span>
-                        </td>
-                        <td align="right" style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};">
-                          <strong style="color: ${COLORS.azulPetroleo}; font-size: 12px;">${data.payment_id}</strong>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td style="padding: 8px 0;">
-                          <span style="color: ${COLORS.textoMuted}; font-size: 14px;">Data</span>
-                        </td>
-                        <td align="right" style="padding: 8px 0;">
-                          <strong style="color: ${COLORS.azulPetroleo}; font-size: 14px;">${data.data_pagamento}</strong>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
-
-              <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px;">
-                <tr>
-                  <td align="center">
-                    <span style="display: inline-block; background-color: ${COLORS.successGreen}; color: #ffffff; padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: 600;">
-                      ✓ Pagamento Aprovado
-                    </span>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="color: ${COLORS.textoSecundario}; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">
-                Em caso de dúvidas:
-              </p>
-              <p style="color: ${COLORS.textoSecundario}; font-size: 14px; margin: 10px 0;">
-                📱 <a href="https://wa.me/559284829983" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">WhatsApp: (92) 98482-9983</a>
-              </p>
-
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td align="center" style="background-color: ${COLORS.azulPetroleo}; padding: 24px; border-radius: 0 0 12px 12px;">
-              <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0;">
-                © ${getCurrentYear()} Pousada Arara Azul - Todos os direitos reservados
-              </p>
-            </td>
-          </tr>
-
-        </table>
-        
-      </td>
-    </tr>
+    <tr><td align="center" style="padding: 40px 20px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="600" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <tr><td align="center" style="background: linear-gradient(135deg, ${COLORS.azulPetroleo} 0%, ${COLORS.verdeAmazonia} 100%); padding: 30px 40px; border-radius: 12px 12px 0 0;">
+          <img src="${LOGO_URL}" alt="Pousada Arara Azul" width="80" style="display: block; border: 0; border-radius: 50%;" />
+          <h1 style="color: #ffffff; font-size: 24px; margin: 15px 0 5px 0; font-weight: 600;">${T.paidTitle}</h1>
+        </td></tr>
+        <tr><td style="padding: 40px;">
+          <p style="color: ${COLORS.azulPetroleo}; font-size: 18px; margin: 0 0 20px 0;">${T.hello} <strong>${data.nome_cliente}</strong>,</p>
+          <p style="color: ${COLORS.textoSecundario}; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">${T.paidIntro}</p>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${COLORS.offWhite}; border-radius: 8px; border-left: 4px solid ${COLORS.successGreen};"><tr><td style="padding: 24px;">
+            <h2 style="color: ${COLORS.azulPetroleo}; font-size: 16px; margin: 0 0 16px 0;">${T.paymentDetails}</h2>
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+              <tr><td style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};"><span style="color: ${COLORS.textoMuted}; font-size: 14px;">${T.method}</span></td>
+                  <td align="right" style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};"><strong style="color: ${COLORS.azulPetroleo}; font-size: 14px;">${data.metodo_pagamento === 'pix' ? T.methodPix : T.methodCard}</strong></td></tr>
+              <tr><td style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};"><span style="color: ${COLORS.textoMuted}; font-size: 14px;">${T.amount}</span></td>
+                  <td align="right" style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};"><strong style="color: ${COLORS.verdeAmazonia}; font-size: 16px;">${data.valor}</strong></td></tr>
+              <tr><td style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};"><span style="color: ${COLORS.textoMuted}; font-size: 14px;">${T.txId}</span></td>
+                  <td align="right" style="padding: 8px 0; border-bottom: 1px solid ${COLORS.borderLight};"><strong style="color: ${COLORS.azulPetroleo}; font-size: 12px;">${data.payment_id}</strong></td></tr>
+              <tr><td style="padding: 8px 0;"><span style="color: ${COLORS.textoMuted}; font-size: 14px;">${T.date}</span></td>
+                  <td align="right" style="padding: 8px 0;"><strong style="color: ${COLORS.azulPetroleo}; font-size: 14px;">${data.data_pagamento}</strong></td></tr>
+            </table>
+          </td></tr></table>
+          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 24px;"><tr><td align="center">
+            <span style="display: inline-block; background-color: ${COLORS.successGreen}; color: #ffffff; padding: 12px 24px; border-radius: 6px; font-size: 14px; font-weight: 600;">✓ ${T.paid}</span>
+          </td></tr></table>
+          <p style="color: ${COLORS.textoSecundario}; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0;">${T.helpQuestions}</p>
+          <p style="color: ${COLORS.textoSecundario}; font-size: 14px; margin: 10px 0;">📱 <a href="https://wa.me/559284829983" style="color: ${COLORS.verdeAmazonia}; text-decoration: none;">WhatsApp: (92) 98482-9983</a></p>
+        </td></tr>
+        <tr><td align="center" style="background-color: ${COLORS.azulPetroleo}; padding: 24px; border-radius: 0 0 12px 12px;">
+          <p style="color: rgba(255,255,255,0.7); font-size: 12px; margin: 0;">© ${getCurrentYear()} Pousada Arara Azul - ${T.rights}</p>
+        </td></tr>
+      </table>
+    </td></tr>
   </table>
-
-</body>
-</html>
-`;
+</body></html>`; };
 
 // ============================================
 // TEMPLATE PREMIUM: ERRO NO PAGAMENTO
