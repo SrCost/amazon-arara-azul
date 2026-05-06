@@ -644,5 +644,23 @@
     "yourComment": "Your comment:",
     "shareGoogle": "How about sharing on Google to help other travelers?",
     "reviewBtn": "Review on Google"
+  },
+  "globals": {
+    "location": "Manacapuru, AM, Brazil",
+    "prevImage": "Previous image",
+    "nextImage": "Next image",
+    "goToImage": "Go to image {{n}}",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "googleReviews": {
+    "title": "What our guests say",
+    "subtitle": "Real reviews from our guests on Google",
+    "attribution": "Google Reviews"
+  },
+  "leaveReview": {
+    "title": "Share your experience",
+    "subtitle": "Your review helps other travelers discover the magic of the Amazon. Tell us how your stay at Pousada Arara Azul was.",
+    "cta": "Review on Google"
   }
 }

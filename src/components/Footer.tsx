@@ -56,7 +56,7 @@ const Footer = () => {
             <h3 className="text-sm sm:text-lg font-display font-bold mb-2">Pousada Arara Azul</h3>
             <div className="flex items-start gap-1.5 text-xs sm:text-sm opacity-90 mb-2">
               <MapPin className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
-              <span>Manacapuru, AM, Brasil</span>
+              <span>{t("globals.location")}</span>
             </div>
             <div className="space-y-1 text-xs sm:text-sm">
               <a 

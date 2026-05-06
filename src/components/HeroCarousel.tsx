@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useHeroSlides, type HeroSlide } from "@/hooks/useHeroSlides";
 import heroBungalow1 from "@/assets/hero-bungalow-1.jpg";
@@ -18,6 +19,7 @@ type UnifiedSlide =
   | { type: "db"; slide: HeroSlide };
 
 const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
+  const { t } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
   const { slides: dbSlides, loading } = useHeroSlides();
 
@@ -184,14 +186,14 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
       <button
         onClick={goToPrevious}
         className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full p-2 sm:p-3 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-        aria-label="Imagem anterior"
+        aria-label={t("globals.prevImage")}
       >
         <ChevronLeft className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
       </button>
       <button
         onClick={goToNext}
         className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 bg-white/10 backdrop-blur-sm hover:bg-white/20 rounded-full p-2 sm:p-3 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
-        aria-label="Próxima imagem"
+        aria-label={t("globals.nextImage")}
       >
         <ChevronRight className="h-5 w-5 sm:h-8 sm:w-8 text-white" />
       </button>
@@ -206,7 +208,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
                 ? "bg-white w-8 sm:w-8"
                 : "bg-white/50 hover:bg-white/75"
             }`}
-            aria-label={`Ir para imagem ${index + 1}`}
+            aria-label={t("globals.goToImage", { n: index + 1 })}
           />
         ))}
       </div>
