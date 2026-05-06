@@ -1,4 +1,5 @@
 import { Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const GOOGLE_PLACE_ID = import.meta.env.VITE_GOOGLE_PLACE_ID || "ChIJIZ49U-RjbJIRfRcHewbwWdE";
 
@@ -12,6 +13,7 @@ const GoogleIcon = ({ className }: { className?: string }) => (
 );
 
 const LeaveReviewSection = () => {
+  const { t } = useTranslation();
   const reviewUrl = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`;
 
   return (
@@ -27,11 +29,10 @@ const LeaveReviewSection = () => {
             ))}
           </div>
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
-            Compartilhe sua experiência
+            {t("leaveReview.title")}
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground mb-6">
-            Sua avaliação ajuda outros viajantes a descobrirem a magia da
-            Amazônia. Conte como foi sua estadia na Pousada Arara Azul.
+            {t("leaveReview.subtitle")}
           </p>
           <button
             type="button"
@@ -42,7 +43,7 @@ const LeaveReviewSection = () => {
               transition-all duration-300 ease-out active:scale-[0.98] cursor-pointer"
           >
             <GoogleIcon className="h-5 w-5 shrink-0" />
-            Avaliar no Google
+            {t("leaveReview.cta")}
           </button>
         </div>
       </div>

@@ -62,10 +62,10 @@ const GoogleReviewsCarousel = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4">
-            O que nossos hóspedes dizem
+            {t("googleReviews.title")}
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Avaliações reais dos nossos hóspedes no Google
+            {t("googleReviews.subtitle")}
           </p>
         </div>
 
@@ -120,14 +120,14 @@ const GoogleReviewsCarousel = () => {
               <button
                 onClick={goPrev}
                 className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 sm:-translate-x-6 bg-card shadow-md rounded-full p-2 hover:bg-muted transition-colors"
-                aria-label="Anterior"
+                aria-label={t("globals.previous")}
               >
                 <ChevronLeft className="h-5 w-5 text-foreground" />
               </button>
               <button
                 onClick={goNext}
                 className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 sm:translate-x-6 bg-card shadow-md rounded-full p-2 hover:bg-muted transition-colors"
-                aria-label="Próximo"
+                aria-label={t("globals.next")}
               >
                 <ChevronRight className="h-5 w-5 text-foreground" />
               </button>
@@ -151,7 +151,7 @@ const GoogleReviewsCarousel = () => {
 
         {/* Google attribution */}
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Avaliações do Google
+          {t("googleReviews.attribution")}
         </p>
       </div>
     </section>
