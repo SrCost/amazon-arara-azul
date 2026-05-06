@@ -333,7 +333,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         total_amount: totalPrice,
         package_id: selectedPackage || null,
         accepted_terms: acceptedTerms,
-        accepted_at: acceptedTerms ? new Date().toISOString() : null
+        accepted_at: acceptedTerms ? new Date().toISOString() : null,
+        guest_language: guestLanguage
       };
 
       // Call dedicated PIX Edge Function
