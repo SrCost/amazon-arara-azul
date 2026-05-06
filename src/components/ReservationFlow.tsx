@@ -38,7 +38,8 @@ interface ReservationFlowProps {
 }
 
 const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: ReservationFlowProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const guestLanguage = (i18n.language || 'pt').split('-')[0];
   const { user } = useAuth();
   const navigate = useNavigate();
   const {
@@ -332,7 +333,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         total_amount: totalPrice,
         package_id: selectedPackage || null,
         accepted_terms: acceptedTerms,
-        accepted_at: acceptedTerms ? new Date().toISOString() : null
+        accepted_at: acceptedTerms ? new Date().toISOString() : null,
+        guest_language: guestLanguage
       };
 
       // Call dedicated PIX Edge Function
@@ -644,7 +646,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           installments: parseInt(installments),
           package_id: selectedPackage || null,
           accepted_terms: acceptedTerms,
-          accepted_at: acceptedTerms ? new Date().toISOString() : null
+          accepted_at: acceptedTerms ? new Date().toISOString() : null,
+          guest_language: guestLanguage
         };
 
         const { data: orderResult, error: orderError } = await supabase.functions.invoke(
