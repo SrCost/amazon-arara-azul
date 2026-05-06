@@ -123,8 +123,10 @@ serve(async (req) => {
       card_token,
       card_brand,
       installments = 1,
-      package_id
+      package_id,
+      guest_language
     } = body;
+    const lang = ['pt','en','es','fr','de'].includes(guest_language) ? guest_language : 'pt';
 
     // Validar campos obrigatórios
     if (!bungalow_id || !isValidUuid(bungalow_id)) {
