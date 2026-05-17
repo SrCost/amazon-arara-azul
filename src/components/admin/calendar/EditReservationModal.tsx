@@ -374,6 +374,7 @@ const EditReservationModal = ({
           reservationId: reservation.id,
           email: reservation.guest_email,
           name: reservation.guest_name,
+          lang: form.getValues("guest_language"),
           force: true,
         },
       });
