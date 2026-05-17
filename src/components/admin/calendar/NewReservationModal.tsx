@@ -537,7 +537,7 @@ const NewReservationModal = ({
                               "pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
-                            disabled={!!selectedPackage}
+                            disabled={lockedByPackage}
                           >
                             {field.value ? (
                               format(field.value, "dd/MM/yyyy", { locale: ptBR })
