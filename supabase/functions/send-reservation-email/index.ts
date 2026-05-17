@@ -519,7 +519,11 @@ const getPaymentErrorEmailPremium = (data: {
 // Função para enviar email via Resend
 async function sendEmailViaResend(to: string, subject: string, html: string) {
   console.log(`Enviando email para: ${to}, subject: ${subject}`);
-  
+
+  // List-Unsubscribe via mailto (RFC 8058) — boa prática anti-spam (Gmail/GMX/Outlook)
+  const unsubMailto = `mailto:reservas@pousadararazul.com?subject=${encodeURIComponent('Unsubscribe')}`;
+  const unsubUrl = 'https://pousadararazul.com/contato';
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -529,18 +533,23 @@ async function sendEmailViaResend(to: string, subject: string, html: string) {
     body: JSON.stringify({
       from: "Pousada Arara Azul <reservas@pousadararazul.com>",
       to: [to],
+      reply_to: "reservas@pousadararazul.com",
       subject,
       html,
+      headers: {
+        "List-Unsubscribe": `<${unsubMailto}>, <${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     }),
   });
-  
+
   const responseData = await response.json();
-  
+
   if (!response.ok) {
     console.error('Erro Resend:', responseData);
     throw new Error(responseData.message || "Failed to send email");
   }
-  
+
   console.log('Email enviado com sucesso:', responseData);
   return responseData;
 }
