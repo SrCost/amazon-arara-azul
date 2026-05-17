@@ -562,7 +562,7 @@ const EditReservationModal = ({
                           onSelect={(date) => {
                             field.onChange(date);
                             // Auto-adjust check-out if package is selected
-                            if (selectedPackage && date) {
+                            if (lockedByPackage && selectedPackage && date) {
                               const durationNights = selectedPackage.duration === "4 dias / 3 noites" ? 3 
                                 : selectedPackage.duration === "5 dias / 4 noites" ? 4
                                 : selectedPackage.duration === "6 dias / 5 noites" ? 5
