@@ -803,6 +803,58 @@ const NewReservationModal = ({
               />
             </div>
 
+            {/* Guest language + auto-send email */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
+              <FormField
+                control={form.control}
+                name="guest_language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Idioma do Hóspede *</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => { setLangTouched(true); field.onChange(v); }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                        <SelectItem value="en">🇬🇧 English</SelectItem>
+                        <SelectItem value="es">🇪🇸 Español</SelectItem>
+                        <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                        <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Detectado automaticamente pelo email. Ajuste se necessário.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="send_confirmation_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email de Confirmação</FormLabel>
+                    <label className="flex items-center gap-2 h-10 px-3 rounded-md border bg-background cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">Enviar automaticamente ao hóspede</span>
+                    </label>
+                  </FormItem>
+                )}
+              />
+            </div>
+
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-4 border-t">
               <Button
