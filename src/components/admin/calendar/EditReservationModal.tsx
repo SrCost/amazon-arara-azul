@@ -50,6 +50,7 @@ import { CalendarIcon, Loader2, ExternalLink, Trash2, Package, Pencil, Check, X,
 import { cn } from "@/lib/utils";
 import { parseDateOnly, formatDateOnly } from "@/lib/dateOnly";
 import type { CalendarReservation, Room } from "@/hooks/useCalendarReservations";
+import { detectGuestLanguage } from "@/lib/guestLanguage";
 
 interface PackageOption {
   id: string;
@@ -74,6 +75,7 @@ const formSchema = z.object({
   operational_notes: z.string().optional(),
   special_requests: z.string().optional(),
   package_id: z.string().optional(),
+  guest_language: z.enum(["pt", "en", "es", "fr", "de"]),
 });
 
 type FormData = z.infer<typeof formSchema>;
