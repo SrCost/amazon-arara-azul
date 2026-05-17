@@ -930,7 +930,44 @@ const EditReservationModal = ({
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                <FormField
+                  control={form.control}
+                  name="guest_language"
+                  render={({ field }) => (
+                    <FormItem className="m-0">
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="h-9 w-[140px]" title="Idioma do email enviado ao hóspede">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                          <SelectItem value="en">🇬🇧 English</SelectItem>
+                          <SelectItem value="es">🇪🇸 Español</SelectItem>
+                          <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                          <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                {lastEmailEvent && (
+                  <span
+                    className={cn(
+                      "text-xs px-2 py-1 rounded-md border",
+                      lastEmailEvent.last_event === "email.delivered" || lastEmailEvent.status === "delivered" ? "bg-green-50 text-green-700 border-green-200" :
+                      lastEmailEvent.last_event === "email.opened" || lastEmailEvent.status === "opened" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                      lastEmailEvent.last_event === "email.clicked" || lastEmailEvent.status === "clicked" ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
+                      lastEmailEvent.last_event === "email.bounced" || lastEmailEvent.status === "bounced" ? "bg-red-50 text-red-700 border-red-200" :
+                      "bg-amber-50 text-amber-700 border-amber-200"
+                    )}
+                    title={lastEmailEvent.sent_at || ""}
+                  >
+                    Email: {lastEmailEvent.last_event?.replace("email.", "") || lastEmailEvent.status}
+                  </span>
+                )}
                 {reservation?.guest_email && (
                   <Button
                     type="button"
