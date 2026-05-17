@@ -181,6 +181,8 @@ const EditReservationModal = ({
       setEditingDailyRate(false);
       setEditingTotal(false);
       
+      const resolvedLang = (reservation as any).guest_language
+        || detectGuestLanguage({ email: reservation.guest_email, country: (reservation as any).country, nationality: (reservation as any).nationality });
       form.reset({
         guest_name: reservation.guest_name,
         guest_email: reservation.guest_email,
@@ -196,7 +198,19 @@ const EditReservationModal = ({
         operational_notes: reservation.operational_notes || "",
         special_requests: reservation.special_requests || "",
         package_id: reservation.package_id || "",
+        guest_language: (["pt","en","es","fr","de"].includes(resolvedLang) ? resolvedLang : "pt") as any,
       });
+
+      // Fetch last email status for this reservation
+      supabase
+        .from("email_logs")
+        .select("status, last_event, sent_at")
+        .eq("reservation_id", reservation.id)
+        .eq("email_type", "reservation_confirmed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => setLastEmailEvent(data ?? null));
     }
   }, [open, reservation, rooms, packages]);
 
