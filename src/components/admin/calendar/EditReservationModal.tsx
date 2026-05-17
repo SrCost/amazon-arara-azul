@@ -292,6 +292,7 @@ const EditReservationModal = ({
           operational_notes: data.operational_notes || null,
           special_requests: data.special_requests || null,
           package_id: data.package_id && data.package_id !== "" ? data.package_id : null,
+          guest_language: data.guest_language,
         })
         .eq("id", reservation.id);
 
