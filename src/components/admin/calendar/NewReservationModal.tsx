@@ -504,8 +504,8 @@ const NewReservationModal = ({
                           selected={field.value}
                           onSelect={(date) => {
                             field.onChange(date);
-                            // If package selected, adjust checkout
-                            if (selectedPackage && date) {
+                            // If non-customizable package selected, adjust checkout
+                            if (lockedByPackage && selectedPackage && date) {
                               const durationMatch = selectedPackage.duration.match(/(\d+)\s*noite/i);
                               const pkgNights = durationMatch ? parseInt(durationMatch[1]) : 4;
                               form.setValue("check_out", addDays(date, pkgNights));
