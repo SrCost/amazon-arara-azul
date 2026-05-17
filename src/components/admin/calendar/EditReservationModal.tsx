@@ -195,6 +195,16 @@ const EditReservationModal = ({
     }
   }, [open, reservation, rooms, packages]);
 
+  // Detect customizable package (Gavião Panema): free dates and guests
+  const isCustomizablePkg = (pkg?: PackageOption | null) =>
+    !!pkg && (
+      Number(pkg.price) === 0 ||
+      pkg.name?.toLowerCase().includes("gavião") ||
+      pkg.name?.toLowerCase().includes("gaviao") ||
+      pkg.name?.toLowerCase().includes("panema")
+    );
+  const lockedByPackage = !!selectedPackage && !isCustomizablePkg(selectedPackage);
+
   // Handle package selection
   const handlePackageChange = (packageId: string) => {
     if (packageId === "none") {
@@ -207,6 +217,10 @@ const EditReservationModal = ({
     if (pkg) {
       setSelectedPackage(pkg);
       form.setValue("package_id", packageId);
+
+      // Skip auto date/guest adjust for customizable packages
+      if (isCustomizablePkg(pkg)) return;
+
       form.setValue("guests", pkg.people);
 
       // Auto-adjust check-out based on package duration
@@ -426,7 +440,7 @@ const EditReservationModal = ({
                     <Select
                       value={String(field.value)}
                       onValueChange={(v) => field.onChange(Number(v))}
-                      disabled={!!selectedPackage}
+                      disabled={lockedByPackage}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -478,7 +492,9 @@ const EditReservationModal = ({
                     </Select>
                     {selectedPackage && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Pacote selecionado: {selectedPackage.people} pessoa(s), {selectedPackage.duration}
+                        {isCustomizablePkg(selectedPackage)
+                          ? "Pacote personalizado — datas e tarifas livres"
+                          : `Pacote selecionado: ${selectedPackage.people} pessoa(s), ${selectedPackage.duration}`}
                       </p>
                     )}
                     <FormMessage />
@@ -546,7 +562,7 @@ const EditReservationModal = ({
                           onSelect={(date) => {
                             field.onChange(date);
                             // Auto-adjust check-out if package is selected
-                            if (selectedPackage && date) {
+                            if (lockedByPackage && selectedPackage && date) {
                               const durationNights = selectedPackage.duration === "4 dias / 3 noites" ? 3 
                                 : selectedPackage.duration === "5 dias / 4 noites" ? 4
                                 : selectedPackage.duration === "6 dias / 5 noites" ? 5
@@ -576,7 +592,7 @@ const EditReservationModal = ({
                         <FormControl>
                           <Button
                             variant="outline"
-                            disabled={!!selectedPackage}
+                            disabled={lockedByPackage}
                             className={cn(
                               "pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"

@@ -153,6 +153,16 @@ const NewReservationModal = ({
     fetchPackages();
   }, []);
 
+  // Detect customizable package (Gavião Panema): free dates and guests
+  const isCustomizablePkg = (pkg?: PackageOption | null) =>
+    !!pkg && (
+      Number(pkg.price) === 0 ||
+      pkg.name?.toLowerCase().includes("gavião") ||
+      pkg.name?.toLowerCase().includes("gaviao") ||
+      pkg.name?.toLowerCase().includes("panema")
+    );
+  const lockedByPackage = !!selectedPackage && !isCustomizablePkg(selectedPackage);
+
   // Handle package selection
   const handlePackageChange = (packageId: string) => {
     form.setValue("package_id", packageId);
@@ -163,6 +173,9 @@ const NewReservationModal = ({
       const pkg = packages.find((p) => p.id === packageId);
       if (pkg) {
         setSelectedPackage(pkg);
+        // Skip auto date/guest adjust for customizable packages
+        if (isCustomizablePkg(pkg)) return;
+
         form.setValue("guests", Math.min(pkg.people, 4));
         
         // Parse duration to get nights (e.g., "4 noites / 5 dias" -> 4)
@@ -491,8 +504,8 @@ const NewReservationModal = ({
                           selected={field.value}
                           onSelect={(date) => {
                             field.onChange(date);
-                            // If package selected, adjust checkout
-                            if (selectedPackage && date) {
+                            // If non-customizable package selected, adjust checkout
+                            if (lockedByPackage && selectedPackage && date) {
                               const durationMatch = selectedPackage.duration.match(/(\d+)\s*noite/i);
                               const pkgNights = durationMatch ? parseInt(durationMatch[1]) : 4;
                               form.setValue("check_out", addDays(date, pkgNights));
@@ -524,7 +537,7 @@ const NewReservationModal = ({
                               "pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
-                            disabled={!!selectedPackage}
+                            disabled={lockedByPackage}
                           >
                             {field.value ? (
                               format(field.value, "dd/MM/yyyy", { locale: ptBR })
