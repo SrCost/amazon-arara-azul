@@ -226,6 +226,7 @@ const NewReservationModal = ({
       setSelectedPackage(null);
       setIsManualDailyRate(false);
       setIsManualTotalPrice(false);
+      setLangTouched(false);
       form.reset({
         guest_name: "",
         guest_email: "",
@@ -243,6 +244,8 @@ const NewReservationModal = ({
         payment_status: "pending",
         operational_notes: "",
         special_requests: "",
+        guest_language: "pt",
+        send_confirmation_email: true,
       });
     }
   }, [open, initialRoomId, initialDate, rooms]);
@@ -294,9 +297,32 @@ const NewReservationModal = ({
         payment_status: data.payment_status,
         operational_notes: data.operational_notes || null,
         special_requests: data.special_requests || null,
+        guest_language: data.guest_language,
       }).select("id").single();
 
       if (error) throw error;
+
+      // Send confirmation email in the guest's language (best-effort, non-blocking)
+      if (data.send_confirmation_email && insertedReservation?.id) {
+        supabase.functions.invoke("send-reservation-email", {
+          body: {
+            type: "reservation_confirmed",
+            reservationId: insertedReservation.id,
+            email: data.guest_email,
+            name: data.guest_name,
+            lang: data.guest_language,
+            force: true,
+          },
+        })
+          .then(({ error: mailErr }) => {
+            if (mailErr) {
+              console.error("Confirmation email failed:", mailErr);
+              toast.warning("Reserva criada, mas o email de confirmação falhou. Tente reenviar pelo botão de email.");
+            } else {
+              toast.success(`Email de confirmação enviado em ${data.guest_language.toUpperCase()}.`);
+            }
+          });
+      }
 
       toast.success("Reserva criada com sucesso!");
 
