@@ -92,9 +92,14 @@ const CalendarGrid = ({
     }
 
     if (startCol === -1 || endCol === -1) return null;
-    if (endCol <= startCol) return null;
+    if (endCol < startCol) return null;
 
-    return { startCol: startCol + 1, span: endCol - startCol };
+    // Inclui visualmente o dia de check-out (mesmo span +1), respeitando o fim do mês
+    const rawSpan = endCol - startCol + 1;
+    const maxSpan = days.length - startCol;
+    const span = Math.min(rawSpan, maxSpan);
+
+    return { startCol: startCol + 1, span };
   };
 
   const handleDragStart = (event: DragStartEvent) => {
