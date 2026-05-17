@@ -195,6 +195,16 @@ const EditReservationModal = ({
     }
   }, [open, reservation, rooms, packages]);
 
+  // Detect customizable package (Gavião Panema): free dates and guests
+  const isCustomizablePkg = (pkg?: PackageOption | null) =>
+    !!pkg && (
+      Number(pkg.price) === 0 ||
+      pkg.name?.toLowerCase().includes("gavião") ||
+      pkg.name?.toLowerCase().includes("gaviao") ||
+      pkg.name?.toLowerCase().includes("panema")
+    );
+  const lockedByPackage = !!selectedPackage && !isCustomizablePkg(selectedPackage);
+
   // Handle package selection
   const handlePackageChange = (packageId: string) => {
     if (packageId === "none") {
@@ -207,6 +217,10 @@ const EditReservationModal = ({
     if (pkg) {
       setSelectedPackage(pkg);
       form.setValue("package_id", packageId);
+
+      // Skip auto date/guest adjust for customizable packages
+      if (isCustomizablePkg(pkg)) return;
+
       form.setValue("guests", pkg.people);
 
       // Auto-adjust check-out based on package duration
