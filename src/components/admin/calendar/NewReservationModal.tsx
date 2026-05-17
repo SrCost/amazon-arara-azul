@@ -36,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Loader2, Package, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/hooks/useCalendarReservations";
+import { detectGuestLanguage, type GuestLang } from "@/lib/guestLanguage";
 
 interface PackageOption {
   id: string;
@@ -62,6 +63,8 @@ const formSchema = z.object({
   payment_status: z.string(),
   operational_notes: z.string().optional(),
   special_requests: z.string().optional(),
+  guest_language: z.enum(["pt", "en", "es", "fr", "de"]),
+  send_confirmation_email: z.boolean(),
 });
 
 type FormData = z.infer<typeof formSchema>;
