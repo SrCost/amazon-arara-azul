@@ -119,10 +119,25 @@ const NewReservationModal = ({
       payment_status: "pending",
       operational_notes: "",
       special_requests: "",
+      guest_language: "pt",
+      send_confirmation_email: true,
     },
   });
 
   const watchedValues = form.watch();
+
+  // Auto-detect language from email TLD (only if user hasn't manually changed it)
+  const [langTouched, setLangTouched] = useState(false);
+  useEffect(() => {
+    if (langTouched) return;
+    const email = watchedValues.guest_email;
+    if (email && email.includes("@") && email.split("@")[1]?.includes(".")) {
+      const detected = detectGuestLanguage({ email });
+      if (detected !== form.getValues("guest_language")) {
+        form.setValue("guest_language", detected);
+      }
+    }
+  }, [watchedValues.guest_email, langTouched]);
   
   // Calculate pricing based on package or manual
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
