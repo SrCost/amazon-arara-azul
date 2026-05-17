@@ -36,6 +36,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon, Loader2, Package, Pencil } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/hooks/useCalendarReservations";
+import { detectGuestLanguage, type GuestLang } from "@/lib/guestLanguage";
 
 interface PackageOption {
   id: string;
@@ -62,6 +63,8 @@ const formSchema = z.object({
   payment_status: z.string(),
   operational_notes: z.string().optional(),
   special_requests: z.string().optional(),
+  guest_language: z.enum(["pt", "en", "es", "fr", "de"]),
+  send_confirmation_email: z.boolean(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -116,10 +119,25 @@ const NewReservationModal = ({
       payment_status: "pending",
       operational_notes: "",
       special_requests: "",
+      guest_language: "pt",
+      send_confirmation_email: true,
     },
   });
 
   const watchedValues = form.watch();
+
+  // Auto-detect language from email TLD (only if user hasn't manually changed it)
+  const [langTouched, setLangTouched] = useState(false);
+  useEffect(() => {
+    if (langTouched) return;
+    const email = watchedValues.guest_email;
+    if (email && email.includes("@") && email.split("@")[1]?.includes(".")) {
+      const detected = detectGuestLanguage({ email });
+      if (detected !== form.getValues("guest_language")) {
+        form.setValue("guest_language", detected);
+      }
+    }
+  }, [watchedValues.guest_email, langTouched]);
   
   // Calculate pricing based on package or manual
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
@@ -208,6 +226,7 @@ const NewReservationModal = ({
       setSelectedPackage(null);
       setIsManualDailyRate(false);
       setIsManualTotalPrice(false);
+      setLangTouched(false);
       form.reset({
         guest_name: "",
         guest_email: "",
@@ -225,6 +244,8 @@ const NewReservationModal = ({
         payment_status: "pending",
         operational_notes: "",
         special_requests: "",
+        guest_language: "pt",
+        send_confirmation_email: true,
       });
     }
   }, [open, initialRoomId, initialDate, rooms]);
@@ -276,9 +297,32 @@ const NewReservationModal = ({
         payment_status: data.payment_status,
         operational_notes: data.operational_notes || null,
         special_requests: data.special_requests || null,
+        guest_language: data.guest_language,
       }).select("id").single();
 
       if (error) throw error;
+
+      // Send confirmation email in the guest's language (best-effort, non-blocking)
+      if (data.send_confirmation_email && insertedReservation?.id) {
+        supabase.functions.invoke("send-reservation-email", {
+          body: {
+            type: "reservation_confirmed",
+            reservationId: insertedReservation.id,
+            email: data.guest_email,
+            name: data.guest_name,
+            lang: data.guest_language,
+            force: true,
+          },
+        })
+          .then(({ error: mailErr }) => {
+            if (mailErr) {
+              console.error("Confirmation email failed:", mailErr);
+              toast.warning("Reserva criada, mas o email de confirmação falhou. Tente reenviar pelo botão de email.");
+            } else {
+              toast.success(`Email de confirmação enviado em ${data.guest_language.toUpperCase()}.`);
+            }
+          });
+      }
 
       toast.success("Reserva criada com sucesso!");
 
@@ -754,6 +798,58 @@ const NewReservationModal = ({
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Guest language + auto-send email */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg border">
+              <FormField
+                control={form.control}
+                name="guest_language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Idioma do Hóspede *</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => { setLangTouched(true); field.onChange(v); }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                        <SelectItem value="en">🇬🇧 English</SelectItem>
+                        <SelectItem value="es">🇪🇸 Español</SelectItem>
+                        <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                        <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Detectado automaticamente pelo email. Ajuste se necessário.
+                    </p>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="send_confirmation_email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email de Confirmação</FormLabel>
+                    <label className="flex items-center gap-2 h-10 px-3 rounded-md border bg-background cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        className="h-4 w-4"
+                      />
+                      <span className="text-sm">Enviar automaticamente ao hóspede</span>
+                    </label>
                   </FormItem>
                 )}
               />

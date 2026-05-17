@@ -50,6 +50,7 @@ import { CalendarIcon, Loader2, ExternalLink, Trash2, Package, Pencil, Check, X,
 import { cn } from "@/lib/utils";
 import { parseDateOnly, formatDateOnly } from "@/lib/dateOnly";
 import type { CalendarReservation, Room } from "@/hooks/useCalendarReservations";
+import { detectGuestLanguage } from "@/lib/guestLanguage";
 
 interface PackageOption {
   id: string;
@@ -74,6 +75,7 @@ const formSchema = z.object({
   operational_notes: z.string().optional(),
   special_requests: z.string().optional(),
   package_id: z.string().optional(),
+  guest_language: z.enum(["pt", "en", "es", "fr", "de"]),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -126,8 +128,11 @@ const EditReservationModal = ({
       operational_notes: "",
       special_requests: "",
       package_id: "",
+      guest_language: "pt",
     },
   });
+
+  const [lastEmailEvent, setLastEmailEvent] = useState<{ status: string; last_event?: string | null; sent_at?: string | null } | null>(null);
 
   const watchedValues = form.watch();
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
@@ -176,6 +181,8 @@ const EditReservationModal = ({
       setEditingDailyRate(false);
       setEditingTotal(false);
       
+      const resolvedLang = (reservation as any).guest_language
+        || detectGuestLanguage({ email: reservation.guest_email, country: (reservation as any).country, nationality: (reservation as any).nationality });
       form.reset({
         guest_name: reservation.guest_name,
         guest_email: reservation.guest_email,
@@ -191,7 +198,19 @@ const EditReservationModal = ({
         operational_notes: reservation.operational_notes || "",
         special_requests: reservation.special_requests || "",
         package_id: reservation.package_id || "",
+        guest_language: (["pt","en","es","fr","de"].includes(resolvedLang) ? resolvedLang : "pt") as any,
       });
+
+      // Fetch last email status for this reservation
+      supabase
+        .from("email_logs")
+        .select("status, last_event, sent_at")
+        .eq("reservation_id", reservation.id)
+        .eq("email_type", "reservation_confirmed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => setLastEmailEvent(data ?? null));
     }
   }, [open, reservation, rooms, packages]);
 
@@ -273,6 +292,7 @@ const EditReservationModal = ({
           operational_notes: data.operational_notes || null,
           special_requests: data.special_requests || null,
           package_id: data.package_id && data.package_id !== "" ? data.package_id : null,
+          guest_language: data.guest_language,
         })
         .eq("id", reservation.id);
 
@@ -354,6 +374,7 @@ const EditReservationModal = ({
           reservationId: reservation.id,
           email: reservation.guest_email,
           name: reservation.guest_name,
+          lang: form.getValues("guest_language"),
           force: true,
         },
       });
@@ -909,7 +930,44 @@ const EditReservationModal = ({
                 )}
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
+                <FormField
+                  control={form.control}
+                  name="guest_language"
+                  render={({ field }) => (
+                    <FormItem className="m-0">
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger className="h-9 w-[140px]" title="Idioma do email enviado ao hóspede">
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                          <SelectItem value="en">🇬🇧 English</SelectItem>
+                          <SelectItem value="es">🇪🇸 Español</SelectItem>
+                          <SelectItem value="fr">🇫🇷 Français</SelectItem>
+                          <SelectItem value="de">🇩🇪 Deutsch</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+                {lastEmailEvent && (
+                  <span
+                    className={cn(
+                      "text-xs px-2 py-1 rounded-md border",
+                      lastEmailEvent.last_event === "email.delivered" || lastEmailEvent.status === "delivered" ? "bg-green-50 text-green-700 border-green-200" :
+                      lastEmailEvent.last_event === "email.opened" || lastEmailEvent.status === "opened" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                      lastEmailEvent.last_event === "email.clicked" || lastEmailEvent.status === "clicked" ? "bg-indigo-50 text-indigo-700 border-indigo-200" :
+                      lastEmailEvent.last_event === "email.bounced" || lastEmailEvent.status === "bounced" ? "bg-red-50 text-red-700 border-red-200" :
+                      "bg-amber-50 text-amber-700 border-amber-200"
+                    )}
+                    title={lastEmailEvent.sent_at || ""}
+                  >
+                    Email: {lastEmailEvent.last_event?.replace("email.", "") || lastEmailEvent.status}
+                  </span>
+                )}
                 {reservation?.guest_email && (
                   <Button
                     type="button"

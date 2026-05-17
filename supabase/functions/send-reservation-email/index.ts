@@ -87,8 +87,8 @@ const I18N = {
     waTeam: (c: string) => `Olá! Tenho a reserva ${c} e gostaria de mais informações.`,
   },
   en: {
-    subjectConfirmed: '🌿 Booking confirmed – Pousada Arara Azul',
-    subjectPaid: '✓ Payment Approved – Pousada Arara Azul',
+    subjectConfirmed: 'Booking confirmed – Pousada Arara Azul',
+    subjectPaid: 'Payment Approved – Pousada Arara Azul',
     subjectError: 'Attention: Payment Error – Pousada Arara Azul',
     confirmedTitle: 'Booking Confirmed',
     confirmedSubtitle: 'An exclusive experience awaits you',
@@ -225,8 +225,8 @@ const I18N = {
     waTeam: (c: string) => `Bonjour ! J'ai la réservation ${c} et j'aimerais plus d'informations.`,
   },
   de: {
-    subjectConfirmed: '🌿 Buchung bestätigt – Pousada Arara Azul',
-    subjectPaid: '✓ Zahlung Genehmigt – Pousada Arara Azul',
+    subjectConfirmed: 'Buchung bestätigt – Pousada Arara Azul',
+    subjectPaid: 'Zahlung genehmigt – Pousada Arara Azul',
     subjectError: 'Achtung: Zahlungsfehler – Pousada Arara Azul',
     confirmedTitle: 'Buchung Bestätigt',
     confirmedSubtitle: 'Ein exklusives Erlebnis erwartet Sie',
@@ -519,7 +519,11 @@ const getPaymentErrorEmailPremium = (data: {
 // Função para enviar email via Resend
 async function sendEmailViaResend(to: string, subject: string, html: string) {
   console.log(`Enviando email para: ${to}, subject: ${subject}`);
-  
+
+  // List-Unsubscribe via mailto (RFC 8058) — boa prática anti-spam (Gmail/GMX/Outlook)
+  const unsubMailto = `mailto:reservas@pousadararazul.com?subject=${encodeURIComponent('Unsubscribe')}`;
+  const unsubUrl = 'https://pousadararazul.com/contato';
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -529,18 +533,23 @@ async function sendEmailViaResend(to: string, subject: string, html: string) {
     body: JSON.stringify({
       from: "Pousada Arara Azul <reservas@pousadararazul.com>",
       to: [to],
+      reply_to: "reservas@pousadararazul.com",
       subject,
       html,
+      headers: {
+        "List-Unsubscribe": `<${unsubMailto}>, <${unsubUrl}>`,
+        "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+      },
     }),
   });
-  
+
   const responseData = await response.json();
-  
+
   if (!response.ok) {
     console.error('Erro Resend:', responseData);
     throw new Error(responseData.message || "Failed to send email");
   }
-  
+
   console.log('Email enviado com sucesso:', responseData);
   return responseData;
 }
