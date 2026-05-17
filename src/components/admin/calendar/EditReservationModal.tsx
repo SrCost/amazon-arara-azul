@@ -492,7 +492,9 @@ const EditReservationModal = ({
                     </Select>
                     {selectedPackage && (
                       <p className="text-xs text-muted-foreground mt-1">
-                        Pacote selecionado: {selectedPackage.people} pessoa(s), {selectedPackage.duration}
+                        {isCustomizablePkg(selectedPackage)
+                          ? "Pacote personalizado — datas e tarifas livres"
+                          : `Pacote selecionado: ${selectedPackage.people} pessoa(s), ${selectedPackage.duration}`}
                       </p>
                     )}
                     <FormMessage />
