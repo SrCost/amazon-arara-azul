@@ -440,7 +440,7 @@ const EditReservationModal = ({
                     <Select
                       value={String(field.value)}
                       onValueChange={(v) => field.onChange(Number(v))}
-                      disabled={!!selectedPackage}
+                      disabled={lockedByPackage}
                     >
                       <FormControl>
                         <SelectTrigger>
