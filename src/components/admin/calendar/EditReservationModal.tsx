@@ -592,7 +592,7 @@ const EditReservationModal = ({
                         <FormControl>
                           <Button
                             variant="outline"
-                            disabled={!!selectedPackage}
+                            disabled={lockedByPackage}
                             className={cn(
                               "pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
