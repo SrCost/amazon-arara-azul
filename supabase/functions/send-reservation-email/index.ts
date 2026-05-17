@@ -87,8 +87,8 @@ const I18N = {
     waTeam: (c: string) => `Olá! Tenho a reserva ${c} e gostaria de mais informações.`,
   },
   en: {
-    subjectConfirmed: '🌿 Booking confirmed – Pousada Arara Azul',
-    subjectPaid: '✓ Payment Approved – Pousada Arara Azul',
+    subjectConfirmed: 'Booking confirmed – Pousada Arara Azul',
+    subjectPaid: 'Payment Approved – Pousada Arara Azul',
     subjectError: 'Attention: Payment Error – Pousada Arara Azul',
     confirmedTitle: 'Booking Confirmed',
     confirmedSubtitle: 'An exclusive experience awaits you',
