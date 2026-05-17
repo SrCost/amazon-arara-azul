@@ -128,8 +128,11 @@ const EditReservationModal = ({
       operational_notes: "",
       special_requests: "",
       package_id: "",
+      guest_language: "pt",
     },
   });
+
+  const [lastEmailEvent, setLastEmailEvent] = useState<{ status: string; last_event?: string | null; sent_at?: string | null } | null>(null);
 
   const watchedValues = form.watch();
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
