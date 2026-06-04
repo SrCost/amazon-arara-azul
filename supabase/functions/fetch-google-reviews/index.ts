@@ -33,9 +33,9 @@ serve(async (req) => {
     const data = await response.json();
 
     if (data.status !== "OK" || !data.result?.reviews) {
-      console.error("Google API error:", data.status);
+      console.error("Google API error:", data.status, data.error_message);
       return new Response(
-        JSON.stringify({ message: "Using cached reviews", status: data.status }),
+        JSON.stringify({ message: "Using cached reviews", status: data.status, error_message: data.error_message }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
