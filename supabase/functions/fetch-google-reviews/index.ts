@@ -33,9 +33,9 @@ serve(async (req) => {
     const data = await response.json();
 
     if (data.status !== "OK" || !data.result?.reviews) {
-      console.error("Google API error:", data.status);
+      console.error("Google API error:", data.status, data.error_message);
       return new Response(
-        JSON.stringify({ message: "Using cached reviews", status: data.status }),
+        JSON.stringify({ message: "Using cached reviews", status: data.status, error_message: data.error_message }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -44,6 +44,15 @@ serve(async (req) => {
     const filtered = data.result.reviews
       .filter((r: any) => r.rating >= 4)
       .slice(0, 6);
+
+    // Safety: don't wipe cache if API returned no usable reviews
+    if (filtered.length === 0) {
+      console.warn("No reviews with rating >= 4 returned; keeping existing cache");
+      return new Response(
+        JSON.stringify({ success: true, count: 0, message: "cache preserved" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Clear old cache and insert new
     await supabase.from("google_reviews_cache").delete().neq("id", "00000000-0000-0000-0000-000000000000");
