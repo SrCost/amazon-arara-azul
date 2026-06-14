@@ -291,6 +291,26 @@ const LodgeDetail = () => {
                 <p className="text-lg text-foreground leading-relaxed">{lodge.description}</p>
               </div>
 
+              {/* Beds / Accommodation */}
+              {Array.isArray(lodge.beds) && lodge.beds.length > 0 && (
+                <Card>
+                  <CardContent className="p-6">
+                    <h2 className="text-2xl font-display font-semibold mb-4 flex items-center gap-2">
+                      <BedDouble className="h-6 w-6 text-primary" />
+                      {t("lodge.beds.title")}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {lodge.beds.map((bed: any, idx: number) => (
+                        <div key={idx} className="flex items-center space-x-3">
+                          <BedDouble className="h-5 w-5 text-primary flex-shrink-0" />
+                          <span className="text-foreground">{formatBed(bed, t)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Amenities */}
               <Card>
                 <CardContent className="p-6">
