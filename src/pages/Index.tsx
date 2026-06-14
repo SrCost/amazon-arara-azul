@@ -107,60 +107,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navigation />
-
-      {/* Hero Section with Carousel */}
-      <section className="relative">
-        <div className="relative w-full h-[400px] sm:h-[550px] md:h-[650px] lg:h-[700px] overflow-hidden">
-          <HeroCarousel onSlideChange={setHideHeroOverlay} />
-          
-          {/* Content Overlay */}
-          <div className={`absolute inset-0 z-10 transition-opacity duration-500 will-change-[opacity] ${
-            hideHeroOverlay ? "opacity-0 pointer-events-none" : "opacity-100"
-          }`}>
-            <div className="flex items-center justify-center h-full">
-            <div className="text-center px-6 max-w-4xl mx-auto pt-20 sm:pt-16 md:pt-8 lg:pt-0">
-                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-4xl lg:text-6xl xl:text-7xl font-display font-bold text-white mb-4 sm:mb-6 text-balance animate-fade-in-up drop-shadow-lg leading-snug">
-                  {t("home.heroTitle")}
-                </h1>
-                <p className="text-sm sm:text-base md:text-lg lg:text-xl text-white/95 mb-6 sm:mb-8 max-w-2xl mx-auto text-balance drop-shadow-md px-2 opacity-0 animate-fade-in-up [animation-delay:100ms]">
-                  {t("home.heroSubtitle")}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mb-6 px-4 opacity-0 animate-fade-in-up [animation-delay:200ms]">
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-secondary to-accent hover:opacity-90 text-white text-base sm:text-lg h-14 sm:h-16 px-8 sm:px-10 font-semibold shadow-lg hover:shadow-xl transition-all animate-glow-pulse" 
-                    asChild
-                  >
-                    <Link to="/bangalos">
-                      <Calendar className="mr-2 h-5 w-5" />
-                      {t("nav.bookNow")}
-                    </Link>
-                  </Button>
-                  <Button
-                    size="lg"
-                    variant="outline"
-                    className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white/20 text-base sm:text-lg h-14 sm:h-16 px-6 sm:px-8"
-                    asChild>
-                    <Link to="/sustentabilidade">{t("home.ourMission")}</Link>
-                  </Button>
-                </div>
-
-                {/* SearchBar - Desktop only */}
-                <div className="hidden sm:flex justify-center sm:-mb-10 lg:-mb-20 px-2">
-                  <SearchBar />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Hero with background video + integrated landing navbar */}
+      <HeroVideoSection />
 
       {/* SearchBar Mobile - Outside hero */}
       <div className="sm:hidden px-4 -mt-6 relative z-20">
         <SearchBar />
       </div>
+
+      {/* SearchBar Desktop */}
+      <div className="hidden sm:flex justify-center -mt-10 relative z-20 px-4">
+        <SearchBar />
+      </div>
+
 
       {/* Features Section */}
       <section className="py-12 sm:py-16 lg:py-24 bg-muted/30">
