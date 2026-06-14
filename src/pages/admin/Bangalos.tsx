@@ -147,6 +147,20 @@ const AdminBangalos = () => {
       return;
     }
 
+    if (
+      !Number.isFinite(formData.max_guests) ||
+      formData.max_guests < 1 ||
+      formData.max_guests > 10
+    ) {
+      toast.error("Capacidade deve ser um número inteiro entre 1 e 10");
+      return;
+    }
+
+    // Sanitiza camas: descarta linhas vazias ou com quantidade inválida
+    const sanitizedBeds: Bed[] = (formData.beds || [])
+      .map((b) => ({ type: (b.type || "").trim(), quantity: Math.floor(Number(b.quantity) || 0) }))
+      .filter((b) => b.type.length > 0 && b.quantity >= 1 && b.quantity <= 10);
+
     try {
       setSaving(true);
 
@@ -169,6 +183,7 @@ const AdminBangalos = () => {
             max_guests: formData.max_guests,
             slug: formData.slug,
             amenities: formData.amenities,
+            beds: sanitizedBeds,
             is_active: true,
           });
 
@@ -193,6 +208,7 @@ const AdminBangalos = () => {
             max_guests: formData.max_guests,
             slug: formData.slug,
             amenities: formData.amenities,
+            beds: sanitizedBeds,
             updated_at: new Date().toISOString(),
           })
           .eq("id", editingBangalo.id);
