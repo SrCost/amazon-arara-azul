@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon, Eye, Power } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon, Eye, Power, X, BedDouble } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BED_TYPE_OPTIONS, parseBeds, formatBedsShort, type Bed } from "@/lib/beds";
 import {
   Dialog,
   DialogContent,
