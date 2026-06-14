@@ -27,7 +27,6 @@ const fallbackCoverImages: Record<string, string> = {
 
 const Index = () => {
   const { t, i18n } = useTranslation();
-  const [hideHeroOverlay, setHideHeroOverlay] = useState(false);
   const [lodges, setLodges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
