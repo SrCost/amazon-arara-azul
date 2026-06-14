@@ -114,6 +114,7 @@ const AdminBangalos = () => {
       max_guests: bangalo.max_guests,
       slug: bangalo.slug,
       amenities: Array.isArray(bangalo.amenities) ? bangalo.amenities : [],
+      beds: parseBeds(bangalo.beds),
     });
     setIsDialogOpen(true);
   };
