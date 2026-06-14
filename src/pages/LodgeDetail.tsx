@@ -136,6 +136,7 @@ const LodgeDetail = () => {
           "Varanda privativa",
           "Energia solar",
         ],
+        beds: parseBeds(data.beds),
         experiences: [
           "Trilhas guiadas na floresta",
           "Observação de aves",
