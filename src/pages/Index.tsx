@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Leaf, Shield, Heart, Calendar } from "lucide-react";
-import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
@@ -10,9 +9,9 @@ import CTASection from "@/components/CTASection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import FindUsSection from "@/components/FindUsSection";
-import HeroCarousel from "@/components/HeroCarousel";
 import GoogleReviewsCarousel from "@/components/GoogleReviewsCarousel";
 import LeaveReviewSection from "@/components/LeaveReviewSection";
+import HeroVideoSection from "@/components/landing/HeroVideoSection";
 
 // Fallback cover images
 import tipitiExterior from "@/assets/tipiti-exterior.jpg";
