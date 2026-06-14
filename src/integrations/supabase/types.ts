@@ -973,6 +973,7 @@ export type Database = {
       rooms: {
         Row: {
           amenities: Json | null
+          beds: Json
           created_at: string | null
           description_de: string
           description_en: string
@@ -994,6 +995,7 @@ export type Database = {
         }
         Insert: {
           amenities?: Json | null
+          beds?: Json
           created_at?: string | null
           description_de: string
           description_en: string
@@ -1015,6 +1017,7 @@ export type Database = {
         }
         Update: {
           amenities?: Json | null
+          beds?: Json
           created_at?: string | null
           description_de?: string
           description_en?: string
