@@ -74,6 +74,7 @@ const AdminBangalos = () => {
     max_guests: 3,
     slug: "",
     amenities: [] as string[],
+    beds: [] as Bed[],
   });
 
   useEffect(() => {
