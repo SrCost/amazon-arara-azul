@@ -135,6 +135,7 @@ const AdminBangalos = () => {
       max_guests: 3,
       slug: "",
       amenities: [],
+      beds: [],
     });
     setIsDialogOpen(true);
   };
