@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Calendar, MessageCircle } from "lucide-react";
+import { Calendar, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { createWhatsAppLink } from "@/lib/whatsapp";
 import { useVideoMenuSync } from "@/hooks/useVideoMenuSync";
 import LandingNavbar from "./LandingNavbar";
 import heroBungalow1 from "@/assets/hero-bungalow-1.jpg";
+
+const clamp = (v: number, min = 0, max = 1) => Math.min(max, Math.max(min, v));
+const mapRange = (p: number, start: number, end: number) =>
+  clamp((p - start) / (end - start));
 
 const HeroVideoSection = () => {
   const { t } = useTranslation();
@@ -17,6 +20,7 @@ const HeroVideoSection = () => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [posterUrl, setPosterUrl] = useState<string>(heroBungalow1);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -27,9 +31,15 @@ const HeroVideoSection = () => {
   }, []);
 
   useEffect(() => {
+    const onScroll = () => setScrollY(window.scrollY || 0);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
-      // 1) Procura slide ativo de vídeo (menor display_order)
       const { data: videoSlide } = await supabase
         .from("hero_slides")
         .select("desktop_image_url, mobile_image_url")
@@ -40,11 +50,8 @@ const HeroVideoSection = () => {
         .maybeSingle();
 
       if (cancelled) return;
-      if (videoSlide?.desktop_image_url) {
-        setVideoUrl(videoSlide.desktop_image_url);
-      }
+      if (videoSlide?.desktop_image_url) setVideoUrl(videoSlide.desktop_image_url);
 
-      // 2) Poster: primeira imagem ativa
       const { data: imageSlide } = await supabase
         .from("hero_slides")
         .select("desktop_image_url")
@@ -55,20 +62,28 @@ const HeroVideoSection = () => {
         .maybeSingle();
 
       if (cancelled) return;
-      if (imageSlide?.desktop_image_url) {
-        setPosterUrl(imageSlide.desktop_image_url);
-      }
+      if (imageSlide?.desktop_image_url) setPosterUrl(imageSlide.desktop_image_url);
     })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  const whatsappHref = createWhatsAppLink(t("cta.whatsappMessage"));
+  // Scroll reveal progress 0..1 across ~280px of scroll
+  const progress = reducedMotion ? 1 : clamp(scrollY / 280);
+  const titleP = reducedMotion ? 1 : mapRange(progress, 0, 0.6);
+  const subP = reducedMotion ? 1 : mapRange(progress, 0.15, 0.75);
+  const ctaP = reducedMotion ? 1 : mapRange(progress, 0.3, 1);
+
+  const revealStyle = (p: number): React.CSSProperties => ({
+    opacity: p,
+    transform: `translateY(${(1 - p) * 24}px)`,
+    transition: "opacity 0.2s linear, transform 0.2s linear",
+    willChange: "opacity, transform",
+  });
 
   return (
     <section className="relative w-full h-screen min-h-[600px] overflow-hidden">
-      {/* Background: video ou poster */}
       {videoUrl && !reducedMotion ? (
         <video
           ref={videoRef}
@@ -91,29 +106,29 @@ const HeroVideoSection = () => {
         />
       )}
 
-      {/* Overlay escuro */}
       <div className="absolute inset-0 bg-black/45" />
 
-      {/* Navbar */}
       <LandingNavbar menuBgStyle={menuBgStyle} />
 
-      {/* Conteúdo central */}
       <div className="relative z-10 flex items-center justify-center h-full px-4">
         <div className="text-center max-w-3xl mx-auto">
           <h1
-            className="font-display font-bold text-white mb-4 sm:mb-6 opacity-0 animate-fade-in-up drop-shadow-lg leading-tight"
-            style={{ fontSize: "clamp(2rem, 6vw, 5rem)" }}
+            className="font-display font-bold text-white mb-4 sm:mb-6 drop-shadow-lg leading-tight"
+            style={{ fontSize: "clamp(2rem, 6vw, 5rem)", ...revealStyle(titleP) }}
           >
             {t("home.heroTitle")}
           </h1>
           <p
-            className="text-white/85 mb-8 max-w-2xl mx-auto opacity-0 animate-fade-in-up [animation-delay:120ms] drop-shadow"
-            style={{ fontSize: "clamp(1rem, 2vw, 1.35rem)" }}
+            className="text-white/85 mb-8 max-w-2xl mx-auto drop-shadow"
+            style={{ fontSize: "clamp(1rem, 2vw, 1.35rem)", ...revealStyle(subP) }}
           >
             {t("home.heroSubtitle")}
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center opacity-0 animate-fade-in-up [animation-delay:240ms]">
+          <div
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center"
+            style={revealStyle(ctaP)}
+          >
             <Button
               size="lg"
               className="bg-gradient-forest text-primary-foreground hover:opacity-90 h-14 px-8 text-base font-semibold rounded-lg shadow-lg"
@@ -131,10 +146,10 @@ const HeroVideoSection = () => {
               className="bg-white/10 backdrop-blur-sm border-white/60 text-white hover:bg-white/20 hover:text-white h-14 px-8 text-base font-semibold rounded-lg"
               asChild
             >
-              <a href={whatsappHref} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="mr-2 h-5 w-5" />
-                {t("cta.talkOnWhatsApp")}
-              </a>
+              <Link to="/sustentabilidade">
+                <Leaf className="mr-2 h-5 w-5" />
+                {t("home.ourMission")}
+              </Link>
             </Button>
           </div>
         </div>
