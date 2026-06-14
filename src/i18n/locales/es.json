@@ -56,7 +56,16 @@
     "notChargedYet": "No se le cobrará aún",
     "cancellationPolicy": "Política de Cancelación",
     "cancellationText": "Cancelación hasta 30 días: reembolso parcial según política. Menos de 7 días del check-in o no-show: sin reembolso.",
-    "cancellationLink": "Consulte los Términos y Política de Cancelación para más detalles."
+    "cancellationLink": "Consulte los Términos y Política de Cancelación para más detalles.",
+    "beds": {
+      "title": "Alojamiento",
+      "couple": "{{count}} cama de matrimonio",
+      "couplePlural": "{{count}} camas de matrimonio",
+      "single": "{{count}} cama individual",
+      "singlePlural": "{{count}} camas individuales",
+      "hammock": "{{count}} hamaca",
+      "hammockPlural": "{{count}} hamacas"
+    }
   },
   "footer": {
     "about": "Sobre Nosotros",
@@ -254,7 +263,15 @@
     "pendingPayments": "Pagos Pendientes",
     "newMessages": "Nuevos Mensajes",
     "recentReservations": "Reservas Recientes",
-    "adminAccess": "Acceso Administrativo"
+    "adminAccess": "Acceso Administrativo",
+    "bangalos": {
+      "bedsLabel": "Camas",
+      "addBed": "Agregar cama",
+      "bedType": "Tipo",
+      "quantity": "Cantidad",
+      "customType": "Personalizado",
+      "customPlaceholder": "Ej.: Litera"
+    }
   },
   "home": {
     "heroTitle": "Vive la Amazonía con Responsabilidad",

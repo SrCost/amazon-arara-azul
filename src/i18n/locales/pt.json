@@ -56,7 +56,16 @@
     "notChargedYet": "Você não será cobrado ainda",
     "cancellationPolicy": "Política de Cancelamento",
     "cancellationText": "Cancelamento com até 30 dias: reembolso parcial conforme política. Menos de 7 dias do check-in ou no-show: sem reembolso.",
-    "cancellationLink": "Consulte os Termos e Política de Cancelamento para detalhes completos."
+    "cancellationLink": "Consulte os Termos e Política de Cancelamento para detalhes completos.",
+    "beds": {
+      "title": "Acomodação",
+      "couple": "{{count}} cama de casal",
+      "couplePlural": "{{count}} camas de casal",
+      "single": "{{count}} cama de solteiro",
+      "singlePlural": "{{count}} camas de solteiro",
+      "hammock": "{{count}} rede",
+      "hammockPlural": "{{count}} redes"
+    }
   },
   "footer": {
     "about": "Sobre Nós",
@@ -254,7 +263,15 @@
     "pendingPayments": "Pagamentos Pendentes",
     "newMessages": "Novas Mensagens",
     "recentReservations": "Reservas Recentes",
-    "adminAccess": "Acesso Administrativo"
+    "adminAccess": "Acesso Administrativo",
+    "bangalos": {
+      "bedsLabel": "Camas",
+      "addBed": "Adicionar cama",
+      "bedType": "Tipo",
+      "quantity": "Quantidade",
+      "customType": "Personalizado",
+      "customPlaceholder": "Ex.: Beliche"
+    }
   },
   "home": {
     "heroTitle": "Viva a Amazônia com Responsabilidade",

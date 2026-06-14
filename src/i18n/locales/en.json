@@ -56,7 +56,16 @@
     "notChargedYet": "You won't be charged yet",
     "cancellationPolicy": "Cancellation Policy",
     "cancellationText": "Cancellation up to 30 days: partial refund per policy. Less than 7 days before check-in or no-show: no refund.",
-    "cancellationLink": "See Terms and Cancellation Policy for full details."
+    "cancellationLink": "See Terms and Cancellation Policy for full details.",
+    "beds": {
+      "title": "Accommodation",
+      "couple": "{{count}} double bed",
+      "couplePlural": "{{count}} double beds",
+      "single": "{{count}} single bed",
+      "singlePlural": "{{count}} single beds",
+      "hammock": "{{count}} hammock",
+      "hammockPlural": "{{count}} hammocks"
+    }
   },
   "footer": {
     "about": "About Us",
@@ -254,7 +263,15 @@
     "pendingPayments": "Pending Payments",
     "newMessages": "New Messages",
     "recentReservations": "Recent Reservations",
-    "adminAccess": "Admin Access"
+    "adminAccess": "Admin Access",
+    "bangalos": {
+      "bedsLabel": "Beds",
+      "addBed": "Add bed",
+      "bedType": "Type",
+      "quantity": "Quantity",
+      "customType": "Custom",
+      "customPlaceholder": "e.g. Bunk bed"
+    }
   },
   "home": {
     "heroTitle": "Experience the Amazon Responsibly",
