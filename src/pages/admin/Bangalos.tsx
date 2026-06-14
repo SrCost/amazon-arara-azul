@@ -325,6 +325,15 @@ const AdminBangalos = () => {
               </div>
 
               <div>
+                <p className="text-sm text-muted-foreground mb-1">Camas</p>
+                <p className="text-sm">
+                  {parseBeds(bangalo.beds).length > 0
+                    ? formatBedsShort(parseBeds(bangalo.beds), t)
+                    : "—"}
+                </p>
+              </div>
+
+              <div>
                 <p className="text-sm text-muted-foreground mb-1">Comodidades</p>
                 <p className="text-sm">
                   {Array.isArray(bangalo.amenities) ? bangalo.amenities.length : 0} itens
