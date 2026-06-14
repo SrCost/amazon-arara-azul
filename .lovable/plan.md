@@ -1,28 +1,69 @@
-## Mudanças em `src/components/landing/HeroVideoSection.tsx`
+## 1. Banco de dados (migration)
 
-### 1. Correção do segundo botão
-- Substituir botão WhatsApp por **"Nossa Missão"**.
-- Remover imports `MessageCircle` e `createWhatsAppLink` (não usados aqui).
-- Usar `<Link to="/sustentabilidade">` (rota interna existente) em vez do domínio absoluto — mantém SPA navigation e funciona em preview/produção. Ícone: `Leaf` ou `Sprout` do lucide-react (alinhado com tema Verde Bandeira).
-- Adicionar chaves i18n `hero.ourMission` em pt/en/es/fr (`Nossa Missão` / `Our Mission` / `Nuestra Misión` / `Notre Mission`).
+Adicionar coluna `beds` em `public.rooms`:
+- Tipo: `jsonb` `NOT NULL DEFAULT '[]'`
+- Estrutura: `[{ "type": "Casal" | "Solteiro" | "Rede" | string, "quantity": number }]`
+- Sem CHECK constraint (regra validada no app). RLS já existente cobre updates de admin.
 
-### 2. Revelação por scroll (texto + botões)
-- Remover as classes `animate-fade-in-up` do bloco de conteúdo (título, subtítulo, CTAs).
-- Adicionar `useState` para `scrollY` + listener `window.scroll` (passivo) com cleanup.
-- Calcular `progress = clamp(scrollY / 280, 0, 1)` (revela completa ao chegar ~280px de scroll, sensação suave em mobile e desktop).
-- Aplicar via `style`:
-  - Wrapper do conteúdo: `opacity: progress`, `transform: translateY(${(1 - progress) * 24}px)`, `transition: opacity 0.2s linear, transform 0.2s linear`.
-- Aplicar stagger leve usando multiplicadores por elemento:
-  - Título: revela a partir de `progress > 0` (mapeado 0→0.6).
-  - Subtítulo: 0.15→0.75.
-  - Botões: 0.3→1.0.
-- Respeitar `prefers-reduced-motion`: se ativo, mostrar tudo opaco sem transform (estado final estático).
-- Estado inicial (scroll = 0): conteúdo invisível, somente vídeo + overlay + navbar visíveis — combina com o pedido "ocultos enquanto o vídeo está rodando".
+Refinar `max_guests`:
+- Manter `integer NOT NULL`.
+- Adicionar `CHECK (max_guests BETWEEN 1 AND 10)` (limite estático, imutável → ok).
 
-### Arquivos
+## 2. Admin — `src/pages/admin/Bangalos.tsx`
+
+### Capacidade (max_guests)
+- Input `type="number"` com `min={1} max={10} step={1}`.
+- Validação no submit: número inteiro entre 1 e 10 (toast de erro caso contrário).
+
+### Camas (novo bloco no formulário)
+- Estado no formData: `beds: Array<{ type: string; quantity: number }>`.
+- UI: lista editável de linhas, cada linha com:
+  - `Select` de tipo (opções fixas: **Solteiro, Casal, Rede** + opção **"Personalizado"** que troca para um `Input` de texto livre).
+  - `Input number` quantidade (min 1, max 10).
+  - Botão remover (ícone X).
+- Botão "+ Adicionar cama" abaixo da lista.
+- Validação: tipo não vazio, qtd ≥ 1; permitido lista vazia.
+
+### Listagem (cards admin)
+- Mostrar resumo curto, ex.: "1 casal · 2 solteiros · 1 rede".
+- Manter contador de comodidades existente.
+
+## 3. Exibição pública
+
+### `src/pages/LodgeDetail.tsx`
+- Carregar `beds` do registro.
+- Nova seção "Acomodação" (acima de Comodidades ou ao lado de Capacidade) com ícone `BedDouble`/`Bed` da `lucide-react` e lista formatada usando i18n (pluralização simples: "1 cama de casal", "2 camas de solteiro", "1 rede").
+- Se `beds` vazio, ocultar seção.
+
+### `src/components/LodgeCard.tsx`
+- Adicionar prop `beds` opcional.
+- Linha compacta abaixo da capacidade: ícone + resumo curto (ex.: "1 casal, 2 solteiros").
+
+### `src/pages/Lodges.tsx`
+- Passar `beds` ao `LodgeCard` quando buscar bangalôs.
+
+## 4. i18n
+
+Novas chaves em `pt/en/es/fr`:
+- `lodge.beds.title` → "Acomodação" / "Accommodation" / "Alojamiento" / "Hébergement"
+- `lodge.beds.couple` / `single` / `hammock` (singular)
+- `lodge.beds.couplePlural` / `singlePlural` / `hammockPlural`
+- `admin.bangalos.beds.label` / `addBed` / `bedType` / `quantity` / `customType`
+
+## 5. Arquivos afetados
+
 | Arquivo | Ação |
 |---|---|
-| `src/components/landing/HeroVideoSection.tsx` | Editar: trocar CTA, adicionar scroll reveal |
-| `src/i18n/locales/{pt,en,es,fr}.json` | Adicionar chave `hero.ourMission` |
+| migration (nova) | adicionar `beds` jsonb + CHECK em `max_guests` |
+| `src/pages/admin/Bangalos.tsx` | UI editor de camas + validação capacidade |
+| `src/pages/LodgeDetail.tsx` | exibir seção Acomodação |
+| `src/components/LodgeCard.tsx` | exibir resumo de camas |
+| `src/pages/Lodges.tsx` | passar `beds` ao card |
+| `src/i18n/locales/{pt,en,es,fr}.json` | novas chaves |
 
-Sem alterações em `LandingNavbar`, `useVideoMenuSync`, `Index.tsx` ou outros componentes.
+Tipos do Supabase serão regenerados após a migration aprovada.
+
+## Fora de escopo
+- Reservas/PMS (não usam camas para lógica de disponibilidade).
+- Emails de confirmação (não mencionam camas).
+- Tradução do campo `type` salvo no banco (armazenado em PT; UI traduz quando bater com os 3 tipos canônicos, fallback exibe valor literal).

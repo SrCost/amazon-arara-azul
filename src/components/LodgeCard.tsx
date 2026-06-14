@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { MapPin, Users, Wifi, Coffee, Calendar } from "lucide-react";
+import { MapPin, Users, Wifi, Coffee, Calendar, BedDouble } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { parseBeds, formatBedsShort } from "@/lib/beds";
 
 interface LodgeCardProps {
   id: string;
@@ -14,6 +15,7 @@ interface LodgeCardProps {
   guests: number;
   description: string;
   amenities: string[];
+  beds?: unknown;
 }
 
 const LodgeCard = ({
@@ -26,12 +28,14 @@ const LodgeCard = ({
   guests,
   description,
   amenities,
+  beds,
 }: LodgeCardProps) => {
   const { t } = useTranslation();
   const amenityIcons: { [key: string]: any } = {
     wifi: Wifi,
     breakfast: Coffee,
   };
+  const parsedBeds = parseBeds(beds);
 
   return (
     <Card className="overflow-hidden group hover:shadow-[0_0_30px_hsl(var(--primary)/0.4)] hover:border-primary/30 transition-all duration-300">
@@ -71,7 +75,7 @@ const LodgeCard = ({
           {description}
         </p>
 
-        <div className="flex items-center flex-wrap gap-3 sm:gap-4 mb-4 text-sm text-muted-foreground">
+        <div className="flex items-center flex-wrap gap-3 sm:gap-4 mb-2 text-sm text-muted-foreground">
           <div className="flex items-center">
             <Users className="h-4 w-4 mr-1 text-accent" />
             {guests} {t("common.people")}
@@ -85,6 +89,13 @@ const LodgeCard = ({
             ) : null;
           })}
         </div>
+
+        {parsedBeds.length > 0 && (
+          <div className="flex items-start gap-2 mb-4 text-xs sm:text-sm text-muted-foreground">
+            <BedDouble className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+            <span>{formatBedsShort(parsedBeds, t)}</span>
+          </div>
+        )}
 
         <Button asChild className="w-full bg-gradient-to-r from-secondary to-accent hover:opacity-90 min-h-[48px] font-semibold">
           <Link to={`/bangalos/${slug || id}`}>

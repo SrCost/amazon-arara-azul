@@ -56,7 +56,16 @@
     "notChargedYet": "Vous ne serez pas encore facturé",
     "cancellationPolicy": "Politique d'Annulation",
     "cancellationText": "Annulation jusqu'à 30 jours: remboursement partiel selon politique. Moins de 7 jours avant l'arrivée ou no-show: aucun remboursement.",
-    "cancellationLink": "Consultez les Conditions et la Politique d'Annulation pour tous les détails."
+    "cancellationLink": "Consultez les Conditions et la Politique d'Annulation pour tous les détails.",
+    "beds": {
+      "title": "Hébergement",
+      "couple": "{{count}} lit double",
+      "couplePlural": "{{count}} lits doubles",
+      "single": "{{count}} lit simple",
+      "singlePlural": "{{count}} lits simples",
+      "hammock": "{{count}} hamac",
+      "hammockPlural": "{{count}} hamacs"
+    }
   },
   "footer": {
     "about": "À Propos",
@@ -254,7 +263,15 @@
     "pendingPayments": "Paiements en Attente",
     "newMessages": "Nouveaux Messages",
     "recentReservations": "Réservations Récentes",
-    "adminAccess": "Accès Administratif"
+    "adminAccess": "Accès Administratif",
+    "bangalos": {
+      "bedsLabel": "Lits",
+      "addBed": "Ajouter un lit",
+      "bedType": "Type",
+      "quantity": "Quantité",
+      "customType": "Personnalisé",
+      "customPlaceholder": "ex. Lit superposé"
+    }
   },
   "home": {
     "heroTitle": "Vivez l'Amazonie avec Responsabilité",

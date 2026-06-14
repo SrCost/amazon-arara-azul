@@ -97,6 +97,7 @@ const Lodges = () => {
             guests: room.max_guests,
             description: room[`description_${i18n.language}`] || room.description_pt,
             amenities: room.amenities || ["wifi", "breakfast"],
+            beds: room.beds,
           })) || [];
 
         setLodges(mappedLodges);

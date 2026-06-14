@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -6,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon, Eye, Power } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pencil, Trash2, Plus, Loader2, Image as ImageIcon, Eye, Power, X, BedDouble } from "lucide-react";
 import { Link } from "react-router-dom";
+import { BED_TYPE_OPTIONS, parseBeds, formatBedsShort, type Bed } from "@/lib/beds";
 import {
   Dialog,
   DialogContent,
@@ -42,10 +45,12 @@ interface Bangalo {
   max_guests: number;
   slug: string;
   amenities: any;
+  beds: any;
   is_active: boolean;
 }
 
 const AdminBangalos = () => {
+  const { t } = useTranslation();
   const [bangalos, setBangalos] = useState<Bangalo[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingBangalo, setEditingBangalo] = useState<Bangalo | null>(null);
@@ -69,6 +74,7 @@ const AdminBangalos = () => {
     max_guests: 3,
     slug: "",
     amenities: [] as string[],
+    beds: [] as Bed[],
   });
 
   useEffect(() => {
@@ -108,6 +114,7 @@ const AdminBangalos = () => {
       max_guests: bangalo.max_guests,
       slug: bangalo.slug,
       amenities: Array.isArray(bangalo.amenities) ? bangalo.amenities : [],
+      beds: parseBeds(bangalo.beds),
     });
     setIsDialogOpen(true);
   };
@@ -128,6 +135,7 @@ const AdminBangalos = () => {
       max_guests: 3,
       slug: "",
       amenities: [],
+      beds: [],
     });
     setIsDialogOpen(true);
   };
@@ -138,6 +146,20 @@ const AdminBangalos = () => {
       toast.error("Preencha ao menos o nome em português e o slug");
       return;
     }
+
+    if (
+      !Number.isFinite(formData.max_guests) ||
+      formData.max_guests < 1 ||
+      formData.max_guests > 10
+    ) {
+      toast.error("Capacidade deve ser um número inteiro entre 1 e 10");
+      return;
+    }
+
+    // Sanitiza camas: descarta linhas vazias ou com quantidade inválida
+    const sanitizedBeds: Bed[] = (formData.beds || [])
+      .map((b) => ({ type: (b.type || "").trim(), quantity: Math.floor(Number(b.quantity) || 0) }))
+      .filter((b) => b.type.length > 0 && b.quantity >= 1 && b.quantity <= 10);
 
     try {
       setSaving(true);
@@ -161,6 +183,7 @@ const AdminBangalos = () => {
             max_guests: formData.max_guests,
             slug: formData.slug,
             amenities: formData.amenities,
+            beds: sanitizedBeds,
             is_active: true,
           });
 
@@ -185,6 +208,7 @@ const AdminBangalos = () => {
             max_guests: formData.max_guests,
             slug: formData.slug,
             amenities: formData.amenities,
+            beds: sanitizedBeds,
             updated_at: new Date().toISOString(),
           })
           .eq("id", editingBangalo.id);
@@ -298,6 +322,15 @@ const AdminBangalos = () => {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Slug</p>
                 <p className="text-sm font-mono bg-muted px-2 py-1 rounded">{bangalo.slug}</p>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Camas</p>
+                <p className="text-sm">
+                  {parseBeds(bangalo.beds).length > 0
+                    ? formatBedsShort(parseBeds(bangalo.beds), t)
+                    : "—"}
+                </p>
               </div>
 
               <div>
@@ -512,6 +545,110 @@ const AdminBangalos = () => {
                 </p>
               </div>
 
+              {/* Beds */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="flex items-center gap-2">
+                    <BedDouble className="h-4 w-4" />
+                    {t("admin.bangalos.bedsLabel")}
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        beds: [...formData.beds, { type: "Casal", quantity: 1 }],
+                      })
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    {t("admin.bangalos.addBed")}
+                  </Button>
+                </div>
+
+                {formData.beds.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">—</p>
+                ) : (
+                  <div className="space-y-2">
+                    {formData.beds.map((bed, idx) => {
+                      const isPreset = (BED_TYPE_OPTIONS as readonly string[]).includes(bed.type);
+                      const selectValue = isPreset ? bed.type : "__custom__";
+                      return (
+                        <div key={idx} className="flex items-center gap-2">
+                          <Select
+                            value={selectValue}
+                            onValueChange={(val) => {
+                              const next = [...formData.beds];
+                              next[idx] = {
+                                ...next[idx],
+                                type: val === "__custom__" ? "" : val,
+                              };
+                              setFormData({ ...formData, beds: next });
+                            }}
+                          >
+                            <SelectTrigger className="w-[160px]">
+                              <SelectValue placeholder={t("admin.bangalos.bedType")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {BED_TYPE_OPTIONS.map((opt) => (
+                                <SelectItem key={opt} value={opt}>
+                                  {opt}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="__custom__">
+                                {t("admin.bangalos.customType")}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          {selectValue === "__custom__" && (
+                            <Input
+                              className="flex-1"
+                              value={bed.type}
+                              placeholder={t("admin.bangalos.customPlaceholder")}
+                              onChange={(e) => {
+                                const next = [...formData.beds];
+                                next[idx] = { ...next[idx], type: e.target.value };
+                                setFormData({ ...formData, beds: next });
+                              }}
+                            />
+                          )}
+
+                          <Input
+                            type="number"
+                            min={1}
+                            max={10}
+                            className="w-20"
+                            value={bed.quantity}
+                            onChange={(e) => {
+                              const next = [...formData.beds];
+                              next[idx] = { ...next[idx], quantity: parseInt(e.target.value) || 0 };
+                              setFormData({ ...formData, beds: next });
+                            }}
+                          />
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                beds: formData.beds.filter((_, i) => i !== idx),
+                              })
+                            }
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               {/* Amenities */}
               <div>
                 <Label htmlFor="amenities">Comodidades (uma por linha)</Label>
@@ -534,6 +671,7 @@ const AdminBangalos = () => {
                   <p><span className="font-medium">Nome:</span> {formData.name_pt || "Sem nome"}</p>
                   <p><span className="font-medium">Preço:</span> R$ {formData.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                   <p><span className="font-medium">Capacidade:</span> {formData.max_guests} hóspedes</p>
+                  <p><span className="font-medium">Camas:</span> {formData.beds.length > 0 ? formatBedsShort(formData.beds, t) : "—"}</p>
                   <p><span className="font-medium">URL:</span> /bangalos/{formData.slug || "seu-slug"}</p>
                 </div>
               </div>
