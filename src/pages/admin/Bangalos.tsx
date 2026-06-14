@@ -45,10 +45,12 @@ interface Bangalo {
   max_guests: number;
   slug: string;
   amenities: any;
+  beds: any;
   is_active: boolean;
 }
 
 const AdminBangalos = () => {
+  const { t } = useTranslation();
   const [bangalos, setBangalos] = useState<Bangalo[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingBangalo, setEditingBangalo] = useState<Bangalo | null>(null);
