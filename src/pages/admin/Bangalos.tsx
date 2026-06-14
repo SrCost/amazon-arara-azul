@@ -545,6 +545,110 @@ const AdminBangalos = () => {
                 </p>
               </div>
 
+              {/* Beds */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="flex items-center gap-2">
+                    <BedDouble className="h-4 w-4" />
+                    {t("admin.bangalos.bedsLabel")}
+                  </Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        beds: [...formData.beds, { type: "Casal", quantity: 1 }],
+                      })
+                    }
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    {t("admin.bangalos.addBed")}
+                  </Button>
+                </div>
+
+                {formData.beds.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">—</p>
+                ) : (
+                  <div className="space-y-2">
+                    {formData.beds.map((bed, idx) => {
+                      const isPreset = (BED_TYPE_OPTIONS as readonly string[]).includes(bed.type);
+                      const selectValue = isPreset ? bed.type : "__custom__";
+                      return (
+                        <div key={idx} className="flex items-center gap-2">
+                          <Select
+                            value={selectValue}
+                            onValueChange={(val) => {
+                              const next = [...formData.beds];
+                              next[idx] = {
+                                ...next[idx],
+                                type: val === "__custom__" ? "" : val,
+                              };
+                              setFormData({ ...formData, beds: next });
+                            }}
+                          >
+                            <SelectTrigger className="w-[160px]">
+                              <SelectValue placeholder={t("admin.bangalos.bedType")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {BED_TYPE_OPTIONS.map((opt) => (
+                                <SelectItem key={opt} value={opt}>
+                                  {opt}
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="__custom__">
+                                {t("admin.bangalos.customType")}
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+
+                          {selectValue === "__custom__" && (
+                            <Input
+                              className="flex-1"
+                              value={bed.type}
+                              placeholder={t("admin.bangalos.customPlaceholder")}
+                              onChange={(e) => {
+                                const next = [...formData.beds];
+                                next[idx] = { ...next[idx], type: e.target.value };
+                                setFormData({ ...formData, beds: next });
+                              }}
+                            />
+                          )}
+
+                          <Input
+                            type="number"
+                            min={1}
+                            max={10}
+                            className="w-20"
+                            value={bed.quantity}
+                            onChange={(e) => {
+                              const next = [...formData.beds];
+                              next[idx] = { ...next[idx], quantity: parseInt(e.target.value) || 0 };
+                              setFormData({ ...formData, beds: next });
+                            }}
+                          />
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              setFormData({
+                                ...formData,
+                                beds: formData.beds.filter((_, i) => i !== idx),
+                              })
+                            }
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
               {/* Amenities */}
               <div>
                 <Label htmlFor="amenities">Comodidades (uma por linha)</Label>
@@ -567,6 +671,7 @@ const AdminBangalos = () => {
                   <p><span className="font-medium">Nome:</span> {formData.name_pt || "Sem nome"}</p>
                   <p><span className="font-medium">Preço:</span> R$ {formData.price_per_night.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
                   <p><span className="font-medium">Capacidade:</span> {formData.max_guests} hóspedes</p>
+                  <p><span className="font-medium">Camas:</span> {formData.beds.length > 0 ? formatBedsShort(formData.beds, t) : "—"}</p>
                   <p><span className="font-medium">URL:</span> /bangalos/{formData.slug || "seu-slug"}</p>
                 </div>
               </div>
