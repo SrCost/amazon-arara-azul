@@ -1,15 +1,18 @@
 ## Problema
 
-Na home (`/`), o card do novo "Bangalô Abano" aparece sem foto pelo mesmo motivo já corrigido em `/bangalos`: a query filtra `display_order = 1`, e novos bangalôs salvam imagens com outros valores de ordem.
+No `SearchBar` (página inicial), o dropdown "Bangalôs" está com opções **hardcoded** (Peneira, Paneiro, Tipiti). Por isso novos bangalôs cadastrados no dashboard (ex: Abano) não aparecem.
 
 ## Correção
 
-Em `src/pages/Index.tsx`, na consulta de `gallery_images`:
+**Arquivo:** `src/components/SearchBar.tsx`
 
-1. Remover `.eq("display_order", 1)`.
-2. Adicionar `.order("display_order", { ascending: true })`.
-3. Manter o `find` por `bungalow_slug` — após ordenado, retornará a imagem de menor `display_order` como capa, funcionando para qualquer bangalô novo.
+1. Importar o hook existente `useRoomsList` (`src/hooks/useRoomsList.ts`), que já busca os rooms ativos do banco (id, slug, name_pt).
+2. Substituir os `<SelectItem>` fixos por um `map` sobre o resultado do hook, usando `slug` como `value` e `name_pt` como label.
+3. Manter a opção "Todos" (`value="all"`) como primeira opção.
+4. Enquanto carrega, manter "Todos" selecionável (sem skeleton extra — UX mínima).
 
-## Arquivos
+Assim, qualquer bangalô novo cadastrado no admin aparece automaticamente no dropdown, sem precisar editar código.
 
-- `src/pages/Index.tsx` — ajustar a query de `gallery_images`.
+## Observação
+
+A lógica de busca (`handleSearch`) já consulta a tabela `rooms` dinamicamente, então não precisa de ajuste — só o dropdown estava estático.
