@@ -49,7 +49,8 @@
   },
   "lodge": {
     "amenities": "Comodidades",
-    "experiences": "Experiencias Incluidas",
+    "experiences": "Experiencias exclusivas",
+    "experiencesSubtitle": "Selecciona las actividades deseadas durante la reserva.",
     "reviews": "reseñas",
     "backToLodges": "Volver a Posadas",
     "upTo": "Hasta",

@@ -49,7 +49,8 @@
   },
   "lodge": {
     "amenities": "Amenities",
-    "experiences": "Included Experiences",
+    "experiences": "Exclusive experiences",
+    "experiencesSubtitle": "Select your desired activities during booking.",
     "reviews": "reviews",
     "backToLodges": "Back to Lodges",
     "upTo": "Up to",
