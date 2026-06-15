@@ -171,9 +171,11 @@ const SearchBar = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("search.all", "Todos")}</SelectItem>
-              <SelectItem value="bangalo-peneira">Bangalô Peneira</SelectItem>
-              <SelectItem value="bangalo-paneiro">Bangalô Paneiro</SelectItem>
-              <SelectItem value="bangalo-tipiti">Bangalô Tipiti</SelectItem>
+              {roomsList.map((room) => (
+                <SelectItem key={room.id} value={room.slug}>
+                  {room.name_pt}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
