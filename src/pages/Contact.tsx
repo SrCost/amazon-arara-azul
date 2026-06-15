@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import DeveloperCreditModal from "@/components/DeveloperCreditModal";
-import { Code2 } from "lucide-react";
 
 const Contact = () => {
   const { t } = useTranslation();
@@ -217,40 +216,19 @@ const Contact = () => {
             </div>
           </div>
 
-          {/* Developer Credit Section */}
-          <div className="max-w-6xl mx-auto mt-10 sm:mt-14">
-            <Card className="border-border/60">
-              <CardContent className="p-5 sm:p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-5">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-forest flex items-center justify-center flex-shrink-0">
-                    <Code2 className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">
-                      {t("developer.sectionTitle")}
-                    </p>
-                    <DeveloperCreditModal>
-                      <button
-                        type="button"
-                        className="text-left group"
-                      >
-                        <h3 className="font-display font-semibold text-base sm:text-lg text-foreground group-hover:text-primary transition-colors">
-                          Flávio A. Costa
-                        </h3>
-                        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">
-                          {t("developer.shortDescription")}
-                        </p>
-                      </button>
-                    </DeveloperCreditModal>
-                  </div>
-                  <DeveloperCreditModal>
-                    <Button variant="outline" size="sm" className="flex-shrink-0 w-full sm:w-auto">
-                      {t("developer.learnMore")}
-                    </Button>
-                  </DeveloperCreditModal>
-                </div>
-              </CardContent>
-            </Card>
+          {/* Developer credit — minimalist */}
+          <div className="max-w-6xl mx-auto mt-6 text-center sm:text-right">
+            <p className="text-xs text-muted-foreground">
+              {t("developer.developedByPrefix")}{" "}
+              <DeveloperCreditModal>
+                <button
+                  type="button"
+                  className="font-medium text-foreground hover:text-primary underline-offset-2 hover:underline transition-colors"
+                >
+                  Flávio A. Costa
+                </button>
+              </DeveloperCreditModal>
+            </p>
           </div>
         </div>
       </section>

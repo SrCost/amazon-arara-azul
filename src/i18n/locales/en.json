@@ -730,6 +730,7 @@
     "linkedinLabel": "LinkedIn",
     "close": "Close",
     "learnMore": "Learn more",
-    "sectionTitle": "Site Developer"
+    "sectionTitle": "Site Developer",
+    "developedByPrefix": "Site developed by"
   }
 }
