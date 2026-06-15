@@ -131,9 +131,10 @@ const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditor
                   <SelectValue placeholder="Selecione o bangalô" />
                 </SelectTrigger>
                 <SelectContent>
-                  {BUNGALOW_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.slug} value={room.slug}>
+                      {room.name_pt}
                     </SelectItem>
                   ))}
                 </SelectContent>
