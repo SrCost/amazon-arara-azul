@@ -18,10 +18,12 @@ import Lightbox from "@/components/Lightbox";
 import { uploadPaneiroImagesToGallery } from "@/lib/uploadPaneiroImages";
 import { uploadPeneiraImagesToGallery } from "@/lib/uploadPeneiraImages";
 import { uploadTipitiImagesToGallery } from "@/lib/uploadTipitiImages";
+import { useRoomsList } from "@/hooks/useRoomsList";
 
 const Gallery = () => {
   const queryClient = useQueryClient();
   const { data: allImages = [], isLoading } = useAllGalleryImages();
+  const { data: rooms = [] } = useRoomsList();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<any>(null);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
@@ -202,12 +204,8 @@ const Gallery = () => {
 
   const getBungalowLabel = (slug: string | null) => {
     if (!slug) return null;
-    const labels: Record<string, string> = {
-      'bangalo-peneira': 'Bangalô Peneira',
-      'bangalo-paneiro': 'Bangalô Paneiro',
-      'bangalo-tipiti': 'Bangalô Tipiti',
-    };
-    return labels[slug] || slug;
+    const room = rooms.find((r) => r.slug === slug);
+    return room?.name_pt || slug;
   };
 
   const openLightbox = (index: number) => {
@@ -259,9 +257,11 @@ const Gallery = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os Bangalôs</SelectItem>
-                  <SelectItem value="bangalo-peneira">Bangalô Peneira</SelectItem>
-                  <SelectItem value="bangalo-paneiro">Bangalô Paneiro</SelectItem>
-                  <SelectItem value="bangalo-tipiti">Bangalô Tipiti</SelectItem>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.slug} value={room.slug}>
+                      {room.name_pt}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

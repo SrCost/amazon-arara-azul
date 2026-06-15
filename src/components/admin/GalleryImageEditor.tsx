@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { validateAltText } from "@/lib/galleryValidation";
+import { useRoomsList } from "@/hooks/useRoomsList";
 import type { GalleryImage } from "@/types/gallery";
 
 interface GalleryImageEditorProps {
@@ -18,14 +19,8 @@ interface GalleryImageEditorProps {
   onSave: () => void;
 }
 
-const BUNGALOW_OPTIONS = [
-  { value: "none", label: "Nenhum" },
-  { value: "bangalo-peneira", label: "Bangalô Peneira" },
-  { value: "bangalo-paneiro", label: "Bangalô Paneiro" },
-  { value: "bangalo-tipiti", label: "Bangalô Tipiti" },
-];
-
 const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditorProps) => {
+  const { data: rooms = [] } = useRoomsList();
   const [altText, setAltText] = useState(image.alt_text);
   const [category, setCategory] = useState<string>(image.category);
   const [bungalowSlug, setBungalowSlug] = useState<string>(image.bungalow_slug || "none");
@@ -136,9 +131,10 @@ const GalleryImageEditor = ({ image, open, onClose, onSave }: GalleryImageEditor
                   <SelectValue placeholder="Selecione o bangalô" />
                 </SelectTrigger>
                 <SelectContent>
-                  {BUNGALOW_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                  <SelectItem value="none">Nenhum</SelectItem>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.slug} value={room.slug}>
+                      {room.name_pt}
                     </SelectItem>
                   ))}
                 </SelectContent>
