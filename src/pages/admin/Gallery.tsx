@@ -18,10 +18,12 @@ import Lightbox from "@/components/Lightbox";
 import { uploadPaneiroImagesToGallery } from "@/lib/uploadPaneiroImages";
 import { uploadPeneiraImagesToGallery } from "@/lib/uploadPeneiraImages";
 import { uploadTipitiImagesToGallery } from "@/lib/uploadTipitiImages";
+import { useRoomsList } from "@/hooks/useRoomsList";
 
 const Gallery = () => {
   const queryClient = useQueryClient();
   const { data: allImages = [], isLoading } = useAllGalleryImages();
+  const { data: rooms = [] } = useRoomsList();
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [editingImage, setEditingImage] = useState<any>(null);
   const [deletingImageId, setDeletingImageId] = useState<string | null>(null);
@@ -202,10 +204,9 @@ const Gallery = () => {
 
   const getBungalowLabel = (slug: string | null) => {
     if (!slug) return null;
-    const labels: Record<string, string> = {
-      'bangalo-peneira': 'Bangalô Peneira',
-      'bangalo-paneiro': 'Bangalô Paneiro',
-      'bangalo-tipiti': 'Bangalô Tipiti',
+    const room = rooms.find((r) => r.slug === slug);
+    return room?.name_pt || slug;
+  };
     };
     return labels[slug] || slug;
   };
