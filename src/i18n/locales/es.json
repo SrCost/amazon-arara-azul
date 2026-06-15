@@ -78,7 +78,8 @@
     "allRightsReserved": "Todos los derechos reservados",
     "privacyPolicy": "Política de Privacidad",
     "termsOfUse": "Términos de Uso",
-    "cancellationPolicy": "Política de Cancelación"
+    "cancellationPolicy": "Política de Cancelación",
+    "developedBy": "Sitio desarrollado por {{name}}"
   },
   "auth": {
     "login": "Iniciar Sesión",
@@ -720,5 +721,15 @@
     "wpLodge": "Bungaló",
     "wpCheckIn": "Entrada",
     "wpCheckOut": "Salida"
+  },
+  "developer": {
+    "role": "Desarrollador del sitio",
+    "description": "Transformo ideas en experiencias digitales. De la planificación al lanzamiento, desarrollo sitios y soluciones web para negocios de todos los segmentos y nichos — con enfoque en rendimiento, diseño y resultados.",
+    "shortDescription": "Sitios y soluciones web con enfoque en rendimiento, diseño y resultados.",
+    "emailLabel": "Correo",
+    "linkedinLabel": "LinkedIn",
+    "close": "Cerrar",
+    "learnMore": "Saber más",
+    "sectionTitle": "Desarrollador del Sitio"
   }
 }
