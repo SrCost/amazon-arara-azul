@@ -72,7 +72,6 @@ const Lodges = () => {
           .select("*")
           .eq("category", "bungalows")
           .eq("is_active", true)
-          .eq("display_order", 1)
           .order("display_order", { ascending: true });
 
         // Create a map of bungalow_slug to cover image
