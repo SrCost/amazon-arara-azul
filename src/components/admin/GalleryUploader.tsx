@@ -12,6 +12,7 @@ import ImageDropZone from "./ImageDropZone";
 import { compressImage, formatFileSize } from "@/lib/imageCompression";
 import { COMPRESSION_PRESETS } from "@/lib/compressionPresets";
 import type { GalleryImageUpload, UploadProgress } from "@/types/gallery";
+import { useRoomsList } from "@/hooks/useRoomsList";
 
 interface GalleryUploaderProps {
   onUploadComplete: () => void;
@@ -19,6 +20,7 @@ interface GalleryUploaderProps {
 }
 
 const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) => {
+  const { data: rooms = [] } = useRoomsList();
   const [uploads, setUploads] = useState<GalleryImageUpload[]>([]);
   const [progress, setProgress] = useState<UploadProgress[]>([]);
   const [isUploading, setIsUploading] = useState(false);
