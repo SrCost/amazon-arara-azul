@@ -329,7 +329,8 @@ const LodgeDetail = () => {
               {/* Experiences */}
               <Card>
                 <CardContent className="p-6">
-                  <h2 className="text-2xl font-display font-semibold mb-4">{t("lodge.experiences")}</h2>
+                  <h2 className="text-2xl font-display font-semibold mb-1">{t("lodge.experiences")}</h2>
+                  <p className="text-sm text-muted-foreground mb-4">{t("lodge.experiencesSubtitle")}</p>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {lodge.experiences.map((exp: string, idx: number) => (
                       <div key={idx} className="flex items-center space-x-3">
