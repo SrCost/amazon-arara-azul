@@ -49,7 +49,8 @@
   },
   "lodge": {
     "amenities": "Équipements",
-    "experiences": "Expériences Incluses",
+    "experiences": "Expériences exclusives",
+    "experiencesSubtitle": "Sélectionnez les activités souhaitées lors de la réservation.",
     "reviews": "avis",
     "backToLodges": "Retour aux Lodges",
     "upTo": "Jusqu'à",
