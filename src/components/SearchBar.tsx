@@ -19,6 +19,7 @@ const SearchBar = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { data: roomsList = [] } = useRoomsList();
 
   const handleCheckInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCheckIn(e.target.value);
