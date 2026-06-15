@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useRoomsList } from "@/hooks/useRoomsList";
 
 const SearchBar = () => {
   const [checkIn, setCheckIn] = useState("");
@@ -18,6 +19,7 @@ const SearchBar = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { data: roomsList = [] } = useRoomsList();
 
   const handleCheckInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCheckIn(e.target.value);
@@ -169,9 +171,11 @@ const SearchBar = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("search.all", "Todos")}</SelectItem>
-              <SelectItem value="bangalo-peneira">Bangalô Peneira</SelectItem>
-              <SelectItem value="bangalo-paneiro">Bangalô Paneiro</SelectItem>
-              <SelectItem value="bangalo-tipiti">Bangalô Tipiti</SelectItem>
+              {roomsList.map((room) => (
+                <SelectItem key={room.id} value={room.slug}>
+                  {room.name_pt}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
