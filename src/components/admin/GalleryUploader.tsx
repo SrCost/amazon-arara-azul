@@ -344,9 +344,11 @@ const GalleryUploader = ({ onUploadComplete, onCancel }: GalleryUploaderProps) =
                                 <SelectValue placeholder="Selecione o bangalô" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="suite-peneira">Suíte Peneira</SelectItem>
-                                <SelectItem value="suite-paneiro">Suíte Paneiro</SelectItem>
-                                <SelectItem value="suite-tipiti">Suíte Tipiti</SelectItem>
+                                {rooms.map((room) => (
+                                  <SelectItem key={room.slug} value={room.slug}>
+                                    {room.name_pt}
+                                  </SelectItem>
+                                ))}
                               </SelectContent>
                             </Select>
                           </div>
