@@ -78,7 +78,8 @@
     "allRightsReserved": "All rights reserved",
     "privacyPolicy": "Privacy Policy",
     "termsOfUse": "Terms of Use",
-    "cancellationPolicy": "Cancellation Policy"
+    "cancellationPolicy": "Cancellation Policy",
+    "developedBy": "Site developed by {{name}}"
   },
   "auth": {
     "login": "Login",
@@ -720,5 +721,15 @@
     "wpLodge": "Bungalow",
     "wpCheckIn": "Check-in",
     "wpCheckOut": "Check-out"
+  },
+  "developer": {
+    "role": "Site developer",
+    "description": "I turn ideas into digital experiences. From planning to launch, I build websites and web solutions for businesses across every segment and niche — focused on performance, design and results.",
+    "shortDescription": "Websites and web solutions focused on performance, design and results.",
+    "emailLabel": "Email",
+    "linkedinLabel": "LinkedIn",
+    "close": "Close",
+    "learnMore": "Learn more",
+    "sectionTitle": "Site Developer"
   }
 }

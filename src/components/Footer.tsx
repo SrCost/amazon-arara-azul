@@ -5,6 +5,7 @@ import { Facebook, Instagram, Mail, Shield, LogIn, MessageCircle, MapPin, ArrowR
 import { Button } from "@/components/ui/button";
 import { SOCIAL_LINKS } from "@/config/socialLinks";
 import { createWhatsAppLink } from "@/lib/whatsapp";
+import DeveloperCreditModal from "@/components/DeveloperCreditModal";
 
 const Footer = () => {
   const { t } = useTranslation();
@@ -176,6 +177,18 @@ const Footer = () => {
                 </Button>
               </Link>
             )}
+          </div>
+
+          {/* Developer credit */}
+          <div className="mt-3 pt-3 border-t border-primary-foreground/10 text-center">
+            <DeveloperCreditModal>
+              <button
+                type="button"
+                className="text-[10px] sm:text-xs opacity-60 hover:opacity-100 transition-opacity underline-offset-2 hover:underline"
+              >
+                {t("footer.developedBy", { name: "Flávio A. Costa" })}
+              </button>
+            </DeveloperCreditModal>
           </div>
         </div>
       </div>

@@ -78,7 +78,8 @@
     "allRightsReserved": "Todos os direitos reservados",
     "privacyPolicy": "Política de Privacidade",
     "termsOfUse": "Termos de Uso",
-    "cancellationPolicy": "Política de Cancelamento"
+    "cancellationPolicy": "Política de Cancelamento",
+    "developedBy": "Site desenvolvido por {{name}}"
   },
   "auth": {
     "login": "Entrar",
@@ -720,5 +721,15 @@
     "wpLodge": "Bangalô",
     "wpCheckIn": "Check-in",
     "wpCheckOut": "Check-out"
+  },
+  "developer": {
+    "role": "Desenvolvedor do site",
+    "description": "Transformo ideias em experiências digitais. Do planejamento ao lançamento, desenvolvo sites e soluções web para negócios de todos os segmentos e nichos — com foco em performance, design e resultado.",
+    "shortDescription": "Sites e soluções web com foco em performance, design e resultado.",
+    "emailLabel": "E-mail",
+    "linkedinLabel": "LinkedIn",
+    "close": "Fechar",
+    "learnMore": "Saiba mais",
+    "sectionTitle": "Desenvolvedor do Site"
   }
 }

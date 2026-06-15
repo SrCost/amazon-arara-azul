@@ -68,7 +68,8 @@
     "allRightsReserved": "Alle Rechte vorbehalten",
     "privacyPolicy": "Datenschutz",
     "termsOfUse": "Nutzungsbedingungen",
-    "cancellationPolicy": "Stornierungsbedingungen"
+    "cancellationPolicy": "Stornierungsbedingungen",
+    "developedBy": "Website entwickelt von {{name}}"
   },
   "auth": {
     "login": "Anmelden",
@@ -702,5 +703,15 @@
     "wpLodge": "Bungalow",
     "wpCheckIn": "Check-in",
     "wpCheckOut": "Check-out"
+  },
+  "developer": {
+    "role": "Website-Entwickler",
+    "description": "Ich verwandle Ideen in digitale Erlebnisse. Von der Planung bis zum Launch entwickle ich Websites und Weblösungen für Unternehmen aller Branchen — mit Fokus auf Performance, Design und Ergebnisse.",
+    "shortDescription": "Websites und Weblösungen mit Fokus auf Performance, Design und Ergebnisse.",
+    "emailLabel": "E-Mail",
+    "linkedinLabel": "LinkedIn",
+    "close": "Schließen",
+    "learnMore": "Mehr erfahren",
+    "sectionTitle": "Website-Entwickler"
   }
 }
