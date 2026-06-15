@@ -257,9 +257,11 @@ const Gallery = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os Bangalôs</SelectItem>
-                  <SelectItem value="bangalo-peneira">Bangalô Peneira</SelectItem>
-                  <SelectItem value="bangalo-paneiro">Bangalô Paneiro</SelectItem>
-                  <SelectItem value="bangalo-tipiti">Bangalô Tipiti</SelectItem>
+                  {rooms.map((room) => (
+                    <SelectItem key={room.slug} value={room.slug}>
+                      {room.name_pt}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
