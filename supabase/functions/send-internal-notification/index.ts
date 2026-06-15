@@ -7,6 +7,13 @@ const corsHeaders = {
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const ADMIN_EMAIL = "adm@pousadararazul.com";
+const RESERVAS_EMAIL = "reservas@pousadararazul.com";
+
+const RECIPIENT_BY_TYPE: Record<string, string> = {
+  new_reservation: ADMIN_EMAIL,
+  cancellation: ADMIN_EMAIL,
+  new_message: RESERVAS_EMAIL,
+};
 
 interface NotificationRequest {
   type: "new_reservation" | "cancellation" | "new_message";
@@ -128,7 +135,7 @@ serve(async (req) => {
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({
         from: "Pousada Arara Azul <reservas@pousadararazul.com>",
-        to: [ADMIN_EMAIL],
+        to: [RECIPIENT_BY_TYPE[type] ?? ADMIN_EMAIL],
         subject: email.subject,
         html: email.html,
       }),
