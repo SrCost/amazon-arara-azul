@@ -207,9 +207,6 @@ const Gallery = () => {
     const room = rooms.find((r) => r.slug === slug);
     return room?.name_pt || slug;
   };
-    };
-    return labels[slug] || slug;
-  };
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
