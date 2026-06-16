@@ -51,9 +51,9 @@ const Footer = () => {
 
       {/* Main Footer — mobile: single column compact, desktop: 4 cols */}
       <div className="container mx-auto px-4 py-6 sm:py-10">
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
           {/* Brand + Contact merged on mobile */}
-          <div className="col-span-2 sm:col-span-1">
+          <div className="col-span-2 lg:col-span-1 min-w-0">
             <h3 className="text-sm sm:text-lg font-display font-bold mb-2">Pousada Arara Azul</h3>
             <div className="flex items-start gap-1.5 text-xs sm:text-sm opacity-90 mb-2">
               <MapPin className="h-3.5 w-3.5 mt-0.5 flex-shrink-0" />
@@ -66,11 +66,11 @@ const Footer = () => {
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 opacity-90 hover:opacity-100 transition-opacity py-0.5"
               >
-                <MessageCircle className="h-3.5 w-3.5" />
-                <span>{SOCIAL_LINKS.whatsappNumber}</span>
+                <MessageCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="truncate">{SOCIAL_LINKS.whatsappNumber}</span>
               </a>
               <div className="flex items-center gap-1.5 opacity-90 py-0.5">
-                <Mail className="h-3.5 w-3.5" />
+                <Mail className="h-3.5 w-3.5 flex-shrink-0" />
                 <span className="truncate">{SOCIAL_LINKS.email}</span>
               </div>
             </div>
@@ -98,7 +98,7 @@ const Footer = () => {
           </div>
 
           {/* Links rápidos */}
-          <div>
+          <div className="min-w-0">
             <h4 className="font-semibold text-xs sm:text-sm mb-2">{t("nav.home")}</h4>
             <ul className="space-y-0.5 text-xs sm:text-sm">
               {[
@@ -109,7 +109,7 @@ const Footer = () => {
                 { to: "/como-chegar", label: t("nav.howToGetThere") },
               ].map((link) => (
                 <li key={link.to}>
-                  <Link to={link.to} className="opacity-90 hover:opacity-100 transition-opacity inline-flex items-center py-1 min-h-[36px] sm:min-h-0">
+                  <Link to={link.to} className="opacity-90 hover:opacity-100 transition-opacity inline-flex items-center py-1 min-h-[36px] sm:min-h-0 break-words">
                     {link.label}
                   </Link>
                 </li>
@@ -118,7 +118,7 @@ const Footer = () => {
           </div>
 
           {/* Sobre / Legal */}
-          <div className="col-span-2 sm:col-span-1">
+          <div className="min-w-0">
             <h4 className="font-semibold text-xs sm:text-sm mb-2">{t("footer.about")}</h4>
             <ul className="space-y-0.5 text-xs sm:text-sm">
               {[
@@ -126,7 +126,7 @@ const Footer = () => {
                 { to: "/faq", label: t("footer.faq") },
               ].map((link) => (
                 <li key={link.to}>
-                  <Link to={link.to} className="opacity-90 hover:opacity-100 transition-opacity inline-flex items-center py-1 min-h-[36px] sm:min-h-0">
+                  <Link to={link.to} className="opacity-90 hover:opacity-100 transition-opacity inline-flex items-center py-1 min-h-[36px] sm:min-h-0 break-words">
                     {link.label}
                   </Link>
                 </li>
@@ -137,7 +137,7 @@ const Footer = () => {
                 { href: "/docs/politica-cancelamento.pdf", label: t("footer.cancellationPolicy") },
               ].map((link) => (
                 <li key={link.href}>
-                  <a href={link.href} download className="opacity-90 hover:opacity-100 transition-opacity inline-flex items-center py-1 min-h-[36px] sm:min-h-0">
+                  <a href={link.href} download className="opacity-90 hover:opacity-100 transition-opacity inline-flex items-center py-1 min-h-[36px] sm:min-h-0 break-words">
                     {link.label}
                   </a>
                 </li>
@@ -145,6 +145,7 @@ const Footer = () => {
             </ul>
           </div>
         </div>
+
 
         {/* Bottom Bar */}
         <div className="border-t border-primary-foreground/20 mt-4 sm:mt-6 pt-4 sm:pt-6">
