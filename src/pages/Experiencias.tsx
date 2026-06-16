@@ -222,23 +222,15 @@ const Experiencias = () => {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {galleryImages.map((image, index) => (
-                <div
+                <GalleryItem
                   key={index}
-                  className="aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:scale-[1.02] sm:hover:scale-105 cursor-pointer group"
+                  image={image}
+                  index={index}
                   onClick={() => openLightbox(index)}
-                >
-                  <img
-                    src={image.src}
-                    alt={image.alt}
-                    width={640}
-                    height={360}
-                    decoding="async"
-                    className="w-full h-full object-cover group-hover:brightness-110 transition-all"
-                    loading="lazy"
-                  />
-                </div>
+                />
               ))}
             </div>
+
           )}
         </div>
       </section>
