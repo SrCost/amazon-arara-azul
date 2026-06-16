@@ -10,15 +10,30 @@ import { useIsMobile } from "@/hooks/use-mobile";
  * - Hidden on /admin routes.
  */
 const LEAVES_DESKTOP = [
-  { left: "8%",  size: 28, dur: 26, delay: -2,  sway: 60,  shape: "a", color: "text-primary" },
-  { left: "32%", size: 22, dur: 32, delay: -14, sway: -50, shape: "b", color: "text-secondary" },
-  { left: "60%", size: 30, dur: 22, delay: -8,  sway: 45,  shape: "a", color: "text-secondary" },
-  { left: "85%", size: 24, dur: 28, delay: -20, sway: -65, shape: "b", color: "text-primary" },
+  { left: "4%",  size: 28, dur: 26, delay: -2,  sway: 60,  shape: "a", color: "text-primary" },
+  { left: "11%", size: 20, dur: 30, delay: -18, sway: -40, shape: "b", color: "text-secondary" },
+  { left: "19%", size: 26, dur: 24, delay: -6,  sway: 55,  shape: "a", color: "text-secondary" },
+  { left: "27%", size: 22, dur: 32, delay: -14, sway: -50, shape: "b", color: "text-primary" },
+  { left: "35%", size: 30, dur: 28, delay: -10, sway: 70,  shape: "a", color: "text-primary" },
+  { left: "43%", size: 18, dur: 22, delay: -4,  sway: -35, shape: "b", color: "text-secondary" },
+  { left: "51%", size: 24, dur: 30, delay: -22, sway: 50,  shape: "a", color: "text-secondary" },
+  { left: "59%", size: 28, dur: 26, delay: -12, sway: -60, shape: "b", color: "text-primary" },
+  { left: "67%", size: 20, dur: 34, delay: -8,  sway: 45,  shape: "a", color: "text-primary" },
+  { left: "74%", size: 26, dur: 24, delay: -16, sway: -55, shape: "b", color: "text-secondary" },
+  { left: "81%", size: 22, dur: 28, delay: -3,  sway: 40,  shape: "a", color: "text-secondary" },
+  { left: "87%", size: 30, dur: 32, delay: -20, sway: -70, shape: "b", color: "text-primary" },
+  { left: "93%", size: 18, dur: 26, delay: -11, sway: 35,  shape: "a", color: "text-primary" },
+  { left: "97%", size: 24, dur: 30, delay: -5,  sway: -50, shape: "b", color: "text-secondary" },
 ];
 
 const LEAVES_MOBILE = [
-  { left: "20%", size: 18, dur: 28, delay: -3,  sway: 35,  shape: "a", color: "text-primary" },
-  { left: "75%", size: 16, dur: 32, delay: -15, sway: -30, shape: "b", color: "text-secondary" },
+  { left: "8%",  size: 18, dur: 28, delay: -3,  sway: 35,  shape: "a", color: "text-primary" },
+  { left: "22%", size: 14, dur: 32, delay: -15, sway: -28, shape: "b", color: "text-secondary" },
+  { left: "36%", size: 20, dur: 26, delay: -8,  sway: 30,  shape: "a", color: "text-secondary" },
+  { left: "50%", size: 16, dur: 30, delay: -20, sway: -32, shape: "b", color: "text-primary" },
+  { left: "64%", size: 18, dur: 24, delay: -5,  sway: 38,  shape: "a", color: "text-primary" },
+  { left: "78%", size: 14, dur: 32, delay: -12, sway: -25, shape: "b", color: "text-secondary" },
+  { left: "92%", size: 20, dur: 28, delay: -18, sway: 33,  shape: "a", color: "text-secondary" },
 ];
 
 const FallingLeaves = () => {
