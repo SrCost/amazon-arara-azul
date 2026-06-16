@@ -151,23 +151,15 @@ const Experiencias = () => {
             <>
               <div className="grid grid-cols-2 gap-2 sm:gap-3">
                 {previewImages.map((image, index) => (
-                  <div
+                  <GalleryItem
                     key={index}
-                    className="aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                    image={image}
+                    index={index}
                     onClick={() => openLightbox(index)}
-                  >
-                    <img
-                      src={image.src}
-                      alt={image.alt}
-                      width={400}
-                      height={225}
-                      decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                      loading="lazy"
-                    />
-                  </div>
+                  />
                 ))}
               </div>
+
               {galleryImages.length > 4 && (
                 <div className="text-center mt-4">
                   <Button 
