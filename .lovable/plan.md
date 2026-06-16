@@ -1,43 +1,34 @@
-# Plano: Melhorias visuais (Galeria + Background Amazônia)
+## Objetivo
+Deixar a silhueta de arara realmente visível no fundo do site, mantendo a animação em todas as páginas públicas e ocultando-a em qualquer rota administrativa (`/admin/*`).
 
-## 1. Galeria animada em /experiencias
+## Mudanças
 
-**Arquivo: `src/pages/Experiencias.tsx`**
-- Na Full Gallery, envolver cada `<div>` da foto com animação de entrada via IntersectionObserver (hook novo `useInViewAnimation`) que adiciona classe `animate-fade-in` + translateY com `delay` escalonado (index * 80ms).
-- Hover: adicionar overlay escuro (`bg-black/0 group-hover:bg-black/40 transition`) + ícone `Search` (lupa, lucide-react) centralizado aparecendo no hover (`opacity-0 group-hover:opacity-100`). Manter `group-hover:scale-105` já existente.
-- Aplicar o mesmo tratamento à Preview Gallery (mobile).
-- Grid 2 col mobile / 3 col desktop já existente — preservado.
+### 1. `src/components/FlyingMacaw.tsx`
+- Remover `-z-10` do wrapper (estava atrás do `body`, que tem `bg-background` opaco e escondia o SVG). Usar `z-0` + `isolate`.
+- Detectar a rota com `useLocation()` do `react-router-dom`. Se `pathname` começar com `/admin`, retornar `null` (não renderiza).
+- Aumentar visibilidade da silhueta:
+  - Opacidade: `0.13` → `0.22`.
+  - Tamanho: `w-[110px] md:w-[160px]`.
+  - Gradiente com mais contraste: verde escuro `hsl(145 63% 18%)` → azul `hsl(200 80% 35%)`.
+  - Adicionar `drop-shadow` sutil para destacar do fundo claro.
+- Melhorar o SVG: substituir o path atual por uma silhueta de arara reconhecível em voo (corpo + duas asas abertas + cauda longa).
+- Adicionar grupo `<g class="wings">` para uma animação leve de bater de asas.
 
-**Arquivo: `src/components/Lightbox.tsx`** (já existe, já tem prev/next/close/teclado)
-- Sem mudanças funcionais. Apenas garantir uso consistente.
+### 2. `src/index.css`
+- Manter `macaw-fly-across` (55s linear infinite), porém:
+  - Ampliar oscilação vertical (`-40px` ↔ `+25px`) para movimento mais orgânico.
+  - Posição inicial: `top-[15vh]` no componente.
+- Adicionar `@keyframes macaw-wing-flap` (`scaleY` 1 → 0.85 → 1, ~1.4s ease-in-out infinite) aplicado a `.macaw-wings`.
+- Manter o respeito a `prefers-reduced-motion`.
 
-**Novo: `src/hooks/useInViewAnimation.ts`**
-- Hook simples com IntersectionObserver retornando `ref` + `isInView` para disparar animações ao rolar.
-
-**`tailwind.config.ts`**
-- Já há `fade-in`. Adicionar keyframe `slide-up-fade` (translateY 20px → 0 + opacity 0 → 1, 600ms ease-out) se necessário.
-
-## 2. Background animado — Arara voando
-
-**Novo: `src/components/FlyingMacaw.tsx`**
-- Componente fixo (`fixed inset-0 pointer-events-none -z-10 overflow-hidden`) com SVG inline de silhueta de arara estilizada (asas em pose de voo).
-- Cor: gradiente do verde primário (`hsl(var(--primary))`) ao azul/accent existente. Opacidade 0.12.
-- Animação CSS `@keyframes fly-across`: translateX de 110vw → -20vw, com leve oscilação vertical (translateY senoidal via keyframes intermediários) e rotação sutil das asas. Duração ~45s, `infinite linear`.
-- Tamanho ~80px (mobile) / 120px (desktop).
-
-**`src/index.css`**
-- Adicionar keyframes `fly-across` com waypoints em 0%, 25%, 50%, 75%, 100% para movimento orgânico (não puramente reto).
-
-**`src/App.tsx`**
-- Montar `<FlyingMacaw />` uma vez no topo da árvore (todas as páginas), antes das rotas. Performance: apenas transform/opacity (GPU), sem reflow, sem JS no loop.
+### 3. Sem alterações em `src/App.tsx`
+- O componente continua montado uma única vez no topo da árvore; o próprio `FlyingMacaw` decide quando se ocultar via `useLocation`.
 
 ## Detalhes técnicos
-- IntersectionObserver com `threshold: 0.15`, `triggerOnce: true` para não re-animar no scroll up.
-- Lightbox já gerencia `body.overflow = hidden` e teclas — sem retrabalho.
-- Arara: respeitar `prefers-reduced-motion` (pausar animação via media query no CSS).
-- Sem novas dependências.
+- `useLocation` está disponível porque `FlyingMacaw` é renderizado dentro do `<BrowserRouter>` em `App.tsx`.
+- Stacking: wrapper `fixed inset-0 z-0 isolate pointer-events-none` — fica acima do `body` mas abaixo de qualquer conteúdo em fluxo normal (que naturalmente fica em `z-auto` sobre `z-0`). Seções com background sólido continuam cobrindo o macaw, então ele aparece nos "respiros" da página — comportamento desejado de fundo ambiente.
+- Nenhuma mudança em dados, RLS, edge functions, i18n ou lógica de negócio.
 
-## Escopo fora
-- Sem mudanças em outras páginas além de injetar o background global.
-- Sem alteração nos dados/RLS/edge functions.
-- Sem novas traduções (ícone de lupa é puramente visual; manter `aria-label` traduzido reusando chave existente `experiences.viewPhoto` — criar nas 5 línguas se inexistente).
+## Fora de escopo
+- Alterar fundos de seções para deixar o macaw visível por trás delas.
+- Adicionar múltiplas araras ou trajetórias variadas.
