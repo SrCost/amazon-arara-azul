@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { Compass, Bird, Droplets, Users, Sunset, Camera, ChevronDown } from "lucide-react";
+import { Compass, Bird, Droplets, Users, Sunset, Camera, ChevronDown, Search } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useInViewAnimation } from "@/hooks/useInViewAnimation";
+
 import Lightbox from "@/components/Lightbox";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
 import { usePageMeta } from "@/hooks/usePageMeta";
