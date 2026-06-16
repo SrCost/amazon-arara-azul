@@ -116,6 +116,37 @@ All colors MUST be HSL.
   animation: slide-in-down 0.3s ease-out;
 }
 
+/* Ambient flying macaw across the page background */
+@keyframes macaw-fly-across {
+  0% {
+    transform: translateX(110vw) translateY(0) rotate(-2deg);
+  }
+  25% {
+    transform: translateX(75vw) translateY(-30px) rotate(1deg);
+  }
+  50% {
+    transform: translateX(45vw) translateY(20px) rotate(-1deg);
+  }
+  75% {
+    transform: translateX(20vw) translateY(-15px) rotate(2deg);
+  }
+  100% {
+    transform: translateX(-20vw) translateY(10px) rotate(-2deg);
+  }
+}
+
+.macaw-fly {
+  animation: macaw-fly-across 55s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .macaw-fly {
+    animation: none;
+    display: none;
+  }
+}
+
+
 @layer base {
   * {
     @apply border-border;
