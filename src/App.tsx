@@ -22,6 +22,8 @@ import Checkin from "./pages/Checkin";
 import Checkout from "./pages/Checkout";
 import FloatingSupportButton from "./components/FloatingSupportButton";
 import LanguageSuggestionBanner from "./components/LanguageSuggestionBanner";
+import FlyingMacaw from "./components/FlyingMacaw";
+
 import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Reservations from "./pages/admin/Reservations";
@@ -45,7 +47,9 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <FlyingMacaw />
           <Routes>
+
             <Route path="/" element={<Index />} />
             <Route path="/bangalos" element={<Lodges />} />
             <Route path="/bangalos/:id" element={<LodgeDetail />} />

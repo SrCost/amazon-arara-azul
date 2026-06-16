@@ -1,36 +1,43 @@
-# Rodapé compacto em 2 colunas (mobile/tablet)
+# Plano: Melhorias visuais (Galeria + Background Amazônia)
 
-## Objetivo
-Reduzir a altura do rodapé em mobile/tablet exibindo os blocos de links lado a lado, em vez de empilhados em coluna única.
+## 1. Galeria animada em /experiencias
 
-## Mudanças em `src/components/Footer.tsx`
+**Arquivo: `src/pages/Experiencias.tsx`**
+- Na Full Gallery, envolver cada `<div>` da foto com animação de entrada via IntersectionObserver (hook novo `useInViewAnimation`) que adiciona classe `animate-fade-in` + translateY com `delay` escalonado (index * 80ms).
+- Hover: adicionar overlay escuro (`bg-black/0 group-hover:bg-black/40 transition`) + ícone `Search` (lupa, lucide-react) centralizado aparecendo no hover (`opacity-0 group-hover:opacity-100`). Manter `group-hover:scale-105` já existente.
+- Aplicar o mesmo tratamento à Preview Gallery (mobile).
+- Grid 2 col mobile / 3 col desktop já existente — preservado.
 
-1. **Grid principal**
-   - Atual: `grid-cols-2 sm:grid-cols-2 lg:grid-cols-4` com o bloco "Brand + Contato" ocupando `col-span-2` no mobile e o bloco "Sobre/Legal" também `col-span-2` no mobile — o que faz tudo empilhar.
-   - Novo: manter `grid-cols-2 lg:grid-cols-4`, mas **remover** os `col-span-2` dos blocos de links, para que "Links rápidos" (Início, Bangalôs, Pacotes, Experiências, Como Chegar) e "Sobre Nós" (Contato, FAQ, Privacidade, Termos, Cancelamento) fiquem **lado a lado** no mobile/tablet.
-   - Bloco "Brand + Contato" continua em `col-span-2` (largura total) ficando acima das duas colunas de links.
+**Arquivo: `src/components/Lightbox.tsx`** (já existe, já tem prev/next/close/teclado)
+- Sem mudanças funcionais. Apenas garantir uso consistente.
 
-2. **Alinhamento e espaçamento**
-   - Reduzir `gap` em mobile (`gap-3`) para encaixar duas colunas em telas de 360–390px sem overflow.
-   - Garantir `min-w-0` e `break-words` nos itens para evitar quebra de layout em strings longas (ex.: "Política de Cancelamento").
-   - Manter tamanhos de fonte `text-xs sm:text-sm` e área de toque `min-h-[36px]`.
+**Novo: `src/hooks/useInViewAnimation.ts`**
+- Hook simples com IntersectionObserver retornando `ref` + `isInView` para disparar animações ao rolar.
 
-3. **Sem mudanças** em: CTA superior, redes sociais, bottom bar (copyright/admin/credit do desenvolvedor), traduções, ou em qualquer outra página.
+**`tailwind.config.ts`**
+- Já há `fade-in`. Adicionar keyframe `slide-up-fade` (translateY 20px → 0 + opacity 0 → 1, 600ms ease-out) se necessário.
 
-## Resultado esperado
-```text
-Mobile/Tablet:
-┌─────────────────────────────┐
-│ Pousada Arara Azul          │  ← brand + contato (col-span-2)
-│ 📍 ☎ ✉  IG FB              │
-├──────────────┬──────────────┤
-│ Início       │ Sobre Nós    │
-│ • Início     │ • Contato    │
-│ • Bangalôs   │ • FAQ        │
-│ • Pacotes    │ • Privacid.  │
-│ • Experiênc. │ • Termos     │
-│ • Como Chegar│ • Cancelam.  │
-└──────────────┴──────────────┘
+## 2. Background animado — Arara voando
 
-Desktop (lg): 4 colunas como hoje.
-```
+**Novo: `src/components/FlyingMacaw.tsx`**
+- Componente fixo (`fixed inset-0 pointer-events-none -z-10 overflow-hidden`) com SVG inline de silhueta de arara estilizada (asas em pose de voo).
+- Cor: gradiente do verde primário (`hsl(var(--primary))`) ao azul/accent existente. Opacidade 0.12.
+- Animação CSS `@keyframes fly-across`: translateX de 110vw → -20vw, com leve oscilação vertical (translateY senoidal via keyframes intermediários) e rotação sutil das asas. Duração ~45s, `infinite linear`.
+- Tamanho ~80px (mobile) / 120px (desktop).
+
+**`src/index.css`**
+- Adicionar keyframes `fly-across` com waypoints em 0%, 25%, 50%, 75%, 100% para movimento orgânico (não puramente reto).
+
+**`src/App.tsx`**
+- Montar `<FlyingMacaw />` uma vez no topo da árvore (todas as páginas), antes das rotas. Performance: apenas transform/opacity (GPU), sem reflow, sem JS no loop.
+
+## Detalhes técnicos
+- IntersectionObserver com `threshold: 0.15`, `triggerOnce: true` para não re-animar no scroll up.
+- Lightbox já gerencia `body.overflow = hidden` e teclas — sem retrabalho.
+- Arara: respeitar `prefers-reduced-motion` (pausar animação via media query no CSS).
+- Sem novas dependências.
+
+## Escopo fora
+- Sem mudanças em outras páginas além de injetar o background global.
+- Sem alteração nos dados/RLS/edge functions.
+- Sem novas traduções (ícone de lupa é puramente visual; manter `aria-label` traduzido reusando chave existente `experiences.viewPhoto` — criar nas 5 línguas se inexistente).
