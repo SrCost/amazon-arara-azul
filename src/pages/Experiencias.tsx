@@ -12,8 +12,50 @@ import { useGalleryImages } from "@/hooks/useGalleryImages";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Button } from "@/components/ui/button";
 
+const GalleryItem = ({
+  image,
+  index,
+  onClick,
+}: {
+  image: { src: string; alt: string };
+  index: number;
+  onClick: () => void;
+}) => {
+  const { ref, inView } = useInViewAnimation<HTMLDivElement>();
+  return (
+    <div
+      ref={ref}
+      onClick={onClick}
+      style={{
+        animationDelay: inView ? `${(index % 9) * 80}ms` : undefined,
+        opacity: inView ? undefined : 0,
+      }}
+      className={`relative aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group ${
+        inView ? "animate-fade-in-up" : ""
+      }`}
+    >
+      <img
+        src={image.src}
+        alt={image.alt}
+        width={640}
+        height={360}
+        decoding="async"
+        loading="lazy"
+        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      />
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3 shadow-strong">
+          <Search className="h-5 w-5 text-foreground" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Experiencias = () => {
   const { t } = useTranslation();
+
+
   
   usePageMeta({
     title: t('pages.experiencesTitle'),
