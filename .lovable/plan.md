@@ -1,49 +1,63 @@
-## Objetivo
-Substituir a silhueta de arara por **folhas caindo** (tema amazônico) e otimizar para reduzir impacto de carregamento e FPS, especialmente em mobile.
+# Redesign /experiencias — Imersão Amazônica
 
-## Mudanças
+Reformulação visual completa da página `src/pages/Experiencias.tsx` em 3 seções encadeadas, mantendo conteúdo, fotos, cards, traduções e Lightbox existentes. Apenas layout/animação/visual mudam. Tokens semânticos do projeto (verde-floresta, primary) serão reutilizados; nada hardcoded fora os tons profundos de fundo para slides.
 
-### 1. Renomear `src/components/FlyingMacaw.tsx` → `src/components/FallingLeaves.tsx`
-- Remover SVG de arara e animação horizontal.
-- Renderizar **4 folhas no desktop / 2 no mobile** (via `useIsMobile`) — número fixo, não dinâmico, para não inflar DOM.
-- Cada folha é um SVG inline pequeno (~24×24 viewBox), reutilizando 2 paths de folha simples (formatos diferentes: folha lanceolada e folha oval) via `<defs><symbol>` + `<use>` — só um `<svg>` raiz na página, evitando múltiplas árvores DOM.
-- Cores derivadas dos tokens (verde primário e verde-esmeralda), opacidade `0.18` desktop / `0.12` mobile.
-- Tamanhos: `14–20px` mobile, `22–32px` desktop.
-- Atualizar import em `src/App.tsx`.
-- Continuar ocultando em `/admin/*` via `useLocation`.
+## 1. Hero Imersivo (substitui hero + preview)
 
-### 2. `src/index.css` — animações otimizadas
-- Remover `@keyframes macaw-fly-across` e `@keyframes macaw-wing-flap` e as classes `.macaw-*`.
-- Adicionar **uma única keyframe** `leaf-fall` que combina queda + rotação + leve sway:
-  ```
-  0%   { transform: translate3d(0, -10vh, 0) rotate(0deg); }
-  100% { transform: translate3d(var(--sway, 40px), 110vh, 0) rotate(360deg); }
-  ```
-- Classe `.leaf` usa `animation: leaf-fall var(--dur) linear infinite; animation-delay: var(--delay);` com `will-change: transform` e `transform: translateZ(0)` para forçar camada GPU.
-- Cada folha recebe via `style` inline: `--sway`, `--dur` (18s–32s), `--delay` (negativo, para começar em fase distinta), `left: X%`.
-- Manter `@media (prefers-reduced-motion: reduce) { .leaf { animation: none; display: none; } }`.
-- Pausar animação quando aba não está visível, via `@media (prefers-reduced-motion)` já cobre; adicionar também `body:not(:focus-within) .leaf` não é confiável — em vez disso, usar `animation-play-state` controlada por classe `.leaves-paused` aplicada via `document.addEventListener('visibilitychange')` no componente.
+Slider fullwidth de 400px (320px mobile) com as **4 primeiras fotos** de `galleryImages`.
 
-### 3. Otimizações de performance
-- **Sem filtros caros**: remover `drop-shadow` (era custoso em mobile). Substituir por leve `opacity` apenas.
-- **SVG inline minimizado**: 2 paths reutilizáveis via `<symbol>`, sem gradientes (cor sólida via `fill="currentColor"`), reduzindo bytes e custo de pintura.
-- **GPU-only**: animar apenas `transform` (translate3d + rotate). Nada de `top/left` animados, nada de `filter`, nada de `box-shadow`.
-- **Pintura isolada**: wrapper com `contain: layout paint style` + `isolation: isolate`.
-- **Mobile-first**: menos folhas (2 vs 4), tamanhos menores, opacidade menor — reduz overdraw.
-- **pointer-events-none** + `aria-hidden` mantidos.
-- **`prefers-reduced-motion`** desabilita totalmente.
-- **Pausa em background tab** via `visibilitychange` listener evita ciclos desnecessários.
+- Container com `perspective: 1200px`; slide interno com `rotateX/Y` reagindo à posição do mouse (tilt 3D suave, ease-out).
+- Background paralaxe: imagem com `translateX/Y` proporcional ao mouse (`mousemove` no container, intensidade ~12px).
+- Cursor personalizado: div fixo seguindo o cursor, `border: 2px solid white`, mix-blend-mode difference, ocultado em touch.
+- Swipe touch (touchstart/move/end) + drag mouse (pointer events) para trocar slide.
+- Autoplay 5,5s com `setInterval`, pausado em hover/interação/drag e retomado após 8s ocioso.
+- Dots animados na parte inferior: dot ativo expande para barra (`width: 32px` com transição).
+- Tira de thumbnails abaixo do hero (4 miniaturas 64x40), thumbnail ativa com `border-2 border-primary` e leve scale.
+- Cada slide:
+  - Background colorido profundo amazônico rotativo: verde-negro, âmbar-escuro, azul-água, verde-musgo (definidos via CSS var por slide).
+  - Imagem em `object-cover` com `mix-blend-mode: luminosity` opcional para integrar à cor.
+  - Gradiente vignette de baixo para cima (`from-black/70 via-black/20 to-transparent`).
+  - Tag de categoria flutuante: `bg-[rgba(45,106,79,0.12)] text-[#0F6E56] backdrop-blur` border sutil.
+  - Título display + descrição curta sobrepostos no canto inferior esquerdo, com animação fade-up ao trocar slide.
 
-### 4. Tokens / breakpoints
-- Usar hook existente `src/hooks/use-mobile.tsx` (`useIsMobile`) para decidir contagem/tamanho.
-- Cores via classes Tailwind (`text-primary`, `text-secondary`) — sem hardcode.
+Mantém `h1` e `subtitle` atuais (de `t("experiences.title/subtitle")`) acima do slider, mas mais compactos.
 
-## Detalhes técnicos
-- Sem dependências novas. Sem mudanças em rotas, dados, RLS ou edge functions.
-- Tamanho do bundle: o componente novo é menor que o atual (SVG menor, sem gradientes complexos).
-- Custo de animação: 2–4 elementos animando apenas `transform` em camada própria = praticamente zero impacto no FPS, mesmo em mobile baixo.
+## 2. Cards de Experiências
+
+Grid `grid-cols-2 lg:grid-cols-3` com os 6 cards existentes (preserva `experiences[]` e ícones lucide).
+
+- Reestrutura cada card: imagem no topo (usar imagem da galeria correspondente por índice, fallback gradiente forest + ícone grande), tag de categoria verde (`bg-[rgba(45,106,79,0.12)] text-primary`), título display, descrição curta.
+- Hover: `translateY(-4px)` + sombra forte, transição 300ms. Imagem com leve `scale-105`.
+- Clique abre o `Lightbox` no índice correspondente (reuso da galeria).
+- Stagger fade-in via `useInViewAnimation` (já existente).
+
+## 3. Galeria Completa — grade irregular
+
+Mantém id `gallery-full` e botão de scroll.
+
+- Grid CSS irregular: `grid-cols-2 lg:grid-cols-4` com `grid-auto-rows: 200px`. Itens nas posições `0, 3, 6, 9...` recebem `lg:col-span-2` (algumas fotos span 2 colunas), gerando ritmo visual.
+- Hover overlay escuro `bg-black/45` + ícone `Search` ampliado (reusa o `GalleryItem` adaptado).
+- Clique abre Lightbox (já existente) com animação `animate-scale-in` (já no projeto).
+
+## Divisores SVG em ondas
+
+Componente novo `src/components/WaveDivider.tsx`:
+- SVG inline path de onda fluida, `fill="#2d6a4f"`, `opacity: 0.35`.
+- Variantes `top` e `bottom` (flip via `transform: scaleY(-1)`).
+- Aplicado entre Hero ↔ Cards e Cards ↔ Galeria.
+
+## Arquivos afetados
+
+- **Editar** `src/pages/Experiencias.tsx` — nova composição das 3 seções, mantendo dados/traduções/Lightbox.
+- **Criar** `src/components/experiences/ImmersiveHero.tsx` — slider 3D, paralaxe, cursor, swipe, autoplay, dots, thumbs.
+- **Criar** `src/components/experiences/ExperienceCard.tsx` — card visual (imagem + tag + título + descrição + hover lift).
+- **Criar** `src/components/experiences/IrregularGallery.tsx` — grid irregular com span variável.
+- **Criar** `src/components/WaveDivider.tsx` — divisor SVG de onda.
+- **Editar** `src/index.css` — keyframes auxiliares (`slide-fade-up`, `dot-expand`) e classe `.amazon-cursor` se necessário; tokens de cores de slide via CSS vars.
 
 ## Fora de escopo
-- Sons, parallax, interatividade ao passar o mouse.
-- Variações por estação ou geração procedural de novas folhas em runtime.
-- Trocar o nome do arquivo via histórico do git (apenas renomear arquivo + atualizar import).
+
+- Não alterar traduções, conteúdo, `useGalleryImages`, `Lightbox`, Navigation/Footer.
+- Não tocar em outras páginas, nem nas folhas caindo (`FallingLeaves`).
+- Sem novas dependências (sem framer-motion novo se não estiver instalado — usar CSS transitions/transforms puros).
+- Cursor personalizado e tilt 3D desativados em dispositivos touch / `prefers-reduced-motion`.

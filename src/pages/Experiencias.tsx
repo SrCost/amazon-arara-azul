@@ -2,64 +2,23 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Compass, Bird, Droplets, Users, Sunset, Camera, ChevronDown, Search } from "lucide-react";
+import { Compass, Bird, Droplets, Users, Sunset, Camera } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInViewAnimation } from "@/hooks/useInViewAnimation";
 
 import Lightbox from "@/components/Lightbox";
 import { useGalleryImages } from "@/hooks/useGalleryImages";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { Button } from "@/components/ui/button";
-
-const GalleryItem = ({
-  image,
-  index,
-  onClick,
-}: {
-  image: { src: string; alt: string };
-  index: number;
-  onClick: () => void;
-}) => {
-  const { ref, inView } = useInViewAnimation<HTMLDivElement>();
-  return (
-    <div
-      ref={ref}
-      onClick={onClick}
-      style={{
-        animationDelay: inView ? `${(index % 9) * 80}ms` : undefined,
-        opacity: inView ? undefined : 0,
-      }}
-      className={`relative aspect-video rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group ${
-        inView ? "animate-fade-in-up" : ""
-      }`}
-    >
-      <img
-        src={image.src}
-        alt={image.alt}
-        width={640}
-        height={360}
-        decoding="async"
-        loading="lazy"
-        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-      />
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors duration-300 flex items-center justify-center">
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 rounded-full p-3 shadow-strong">
-          <Search className="h-5 w-5 text-foreground" />
-        </div>
-      </div>
-    </div>
-  );
-};
+import ImmersiveHero from "@/components/experiences/ImmersiveHero";
+import ExperienceCard from "@/components/experiences/ExperienceCard";
+import IrregularGallery from "@/components/experiences/IrregularGallery";
+import WaveDivider from "@/components/WaveDivider";
 
 const Experiencias = () => {
   const { t } = useTranslation();
 
-
-  
   usePageMeta({
-    title: t('pages.experiencesTitle'),
-    description: t('pages.experiencesDesc'),
+    title: t("pages.experiencesTitle"),
+    description: t("pages.experiencesDesc"),
   });
 
   const { data: galleryImages = [], isLoading } = useGalleryImages("experiences");
@@ -71,148 +30,126 @@ const Experiencias = () => {
     setLightboxOpen(true);
   };
 
-  const scrollToGallery = () => {
-    document.getElementById('gallery-full')?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   const experiences = [
     {
       icon: Compass,
+      category: "Aventura",
       title: t("experiences.guidedTrails"),
       description: t("experiences.guidedTrailsDesc"),
     },
     {
       icon: Bird,
+      category: "Fauna",
       title: t("experiences.birdWatching"),
       description: t("experiences.birdWatchingDesc"),
     },
     {
       icon: Droplets,
+      category: "Águas",
       title: t("experiences.canoeTrips"),
       description: t("experiences.canoeTripsDesc"),
     },
     {
       icon: Users,
+      category: "Cultura",
       title: t("experiences.communityVisits"),
       description: t("experiences.communityVisitsDesc"),
     },
     {
       icon: Sunset,
+      category: "Natureza",
       title: t("experiences.riverSunset"),
       description: t("experiences.riverSunsetDesc"),
     },
     {
       icon: Camera,
+      category: "Momentos",
       title: t("experiences.naturePhotography"),
       description: t("experiences.naturePhotographyDesc"),
     },
   ];
 
-  // Preview images for mobile (first 4 images)
-  const previewImages = galleryImages.slice(0, 4);
+  const heroImages = galleryImages.slice(0, 4);
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="pt-24 sm:pt-32 pb-4 sm:pb-16 bg-gradient-to-b from-muted/50 to-background">
+      {/* Section 1 — Immersive Hero */}
+      <section className="pt-24 sm:pt-28 pb-8 sm:pb-12 bg-gradient-to-b from-muted/40 to-background">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-4 sm:mb-12">
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-display font-bold text-foreground mb-4 sm:mb-6">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl font-display font-bold text-foreground mb-3 sm:mb-4">
               {t("experiences.title")}
             </h1>
-            <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               {t("experiences.subtitle")}
             </p>
           </div>
+
+          {isLoading ? (
+            <Skeleton className="w-full h-[320px] sm:h-[400px] rounded-2xl" />
+          ) : (
+            <ImmersiveHero
+              images={heroImages}
+              onSlideClick={(i) => openLightbox(i)}
+            />
+          )}
         </div>
       </section>
 
-      {/* Gallery Preview - Mobile First */}
-      <section className="py-3 sm:py-8 bg-muted/20">
+      <WaveDivider />
+
+      {/* Section 2 — Experience Cards */}
+      <section className="py-12 sm:py-20 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-4">
-            <h2 className="text-xl sm:text-2xl font-display font-bold text-foreground mb-2">
-              📸 {t("experiences.galleryTitle")}
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
+              {t("experiences.galleryTitle")}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               {t("experiences.gallerySubtitle")}
             </p>
           </div>
-          
-          {isLoading ? (
-            <div className="grid grid-cols-2 gap-2 sm:gap-3">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="aspect-video rounded-lg" />
-              ))}
-            </div>
-          ) : previewImages.length > 0 ? (
-            <>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                {previewImages.map((image, index) => (
-                  <GalleryItem
-                    key={index}
-                    image={image}
-                    index={index}
-                    onClick={() => openLightbox(index)}
-                  />
-                ))}
-              </div>
 
-              {galleryImages.length > 4 && (
-                <div className="text-center mt-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={scrollToGallery}
-                    className="gap-2"
-                  >
-                    <span>{t("experiences.viewAllPhotos", { count: galleryImages.length })}</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-            </>
-          ) : null}
-        </div>
-      </section>
-
-      {/* Experiences Grid */}
-      <section className="py-12 sm:py-16">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
-            {experiences.map((experience, index) => (
-              <Card key={index} className="hover:shadow-medium transition-shadow">
-                <CardContent className="p-5 sm:p-8">
-                  <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-forest mb-4 sm:mb-6">
-                    <experience.icon className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-display font-semibold mb-2 sm:mb-3 text-foreground">
-                    {experience.title}
-                  </h3>
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{experience.description}</p>
-                </CardContent>
-              </Card>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+            {experiences.map((exp, index) => (
+              <ExperienceCard
+                key={index}
+                icon={exp.icon}
+                title={exp.title}
+                description={exp.description}
+                category={exp.category}
+                image={galleryImages[index] || galleryImages[index % Math.max(galleryImages.length, 1)]}
+                index={index}
+                onClick={() =>
+                  galleryImages.length > 0 &&
+                  openLightbox(index % galleryImages.length)
+                }
+              />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Full Gallery */}
-      <section id="gallery-full" className="py-12 sm:py-16 bg-muted/30">
+      <WaveDivider flip />
+
+      {/* Section 3 — Full Gallery (irregular grid) */}
+      <section id="gallery-full" className="py-12 sm:py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3 sm:mb-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
               {t("experiences.fullGalleryTitle")}
             </h2>
             <p className="text-base sm:text-lg text-muted-foreground">
               {t("experiences.fullGallerySubtitle")}
             </p>
           </div>
+
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="aspect-video rounded-lg" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 auto-rows-[200px]">
+              {[...Array(8)].map((_, i) => (
+                <Skeleton key={i} className="w-full h-full rounded-xl" />
               ))}
             </div>
           ) : galleryImages.length === 0 ? (
@@ -220,22 +157,11 @@ const Experiencias = () => {
               <p className="text-muted-foreground">{t("experiences.noPhotos")}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {galleryImages.map((image, index) => (
-                <GalleryItem
-                  key={index}
-                  image={image}
-                  index={index}
-                  onClick={() => openLightbox(index)}
-                />
-              ))}
-            </div>
-
+            <IrregularGallery images={galleryImages} onOpen={openLightbox} />
           )}
         </div>
       </section>
 
-      {/* Lightbox Modal */}
       {lightboxOpen && (
         <Lightbox
           images={galleryImages}
