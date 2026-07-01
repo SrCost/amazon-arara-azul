@@ -12,6 +12,12 @@ import ImmersiveHero from "@/components/experiences/ImmersiveHero";
 import ExperienceCard from "@/components/experiences/ExperienceCard";
 import IrregularGallery from "@/components/experiences/IrregularGallery";
 import WaveDivider from "@/components/WaveDivider";
+import trilhasGuiadas from "@/assets/experiences/trilhas_guiadas.jpg.asset.json";
+import observacaoAves from "@/assets/experiences/observacao_de_aves.jpeg.asset.json";
+import passeioCanoa from "@/assets/experiences/passeio_de_canoa.png.asset.json";
+import visitasComunidades from "@/assets/experiences/visitas_as_comunidades.jpg.asset.json";
+import porDoSol from "@/assets/experiences/por_do_sol.jpeg.asset.json";
+import fotografiasNatureza from "@/assets/experiences/fotografias_de_natureza.jpg.asset.json";
 
 const Experiencias = () => {
   const { t } = useTranslation();
