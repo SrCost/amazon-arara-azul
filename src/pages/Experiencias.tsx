@@ -132,12 +132,8 @@ const Experiencias = () => {
                 title={exp.title}
                 description={exp.description}
                 category={exp.category}
-                image={galleryImages[index] || galleryImages[index % Math.max(galleryImages.length, 1)]}
+                image={exp.image}
                 index={index}
-                onClick={() =>
-                  galleryImages.length > 0 &&
-                  openLightbox(index % galleryImages.length)
-                }
               />
             ))}
           </div>
