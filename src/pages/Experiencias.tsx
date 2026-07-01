@@ -12,6 +12,12 @@ import ImmersiveHero from "@/components/experiences/ImmersiveHero";
 import ExperienceCard from "@/components/experiences/ExperienceCard";
 import IrregularGallery from "@/components/experiences/IrregularGallery";
 import WaveDivider from "@/components/WaveDivider";
+import trilhasGuiadas from "@/assets/experiences/trilhas_guiadas.jpg.asset.json";
+import observacaoAves from "@/assets/experiences/observacao_de_aves.jpeg.asset.json";
+import passeioCanoa from "@/assets/experiences/passeio_de_canoa.png.asset.json";
+import visitasComunidades from "@/assets/experiences/visitas_as_comunidades.jpg.asset.json";
+import porDoSol from "@/assets/experiences/por_do_sol.jpeg.asset.json";
+import fotografiasNatureza from "@/assets/experiences/fotografias_de_natureza.jpg.asset.json";
 
 const Experiencias = () => {
   const { t } = useTranslation();
@@ -36,36 +42,42 @@ const Experiencias = () => {
       category: "Aventura",
       title: t("experiences.guidedTrails"),
       description: t("experiences.guidedTrailsDesc"),
+      image: { src: trilhasGuiadas.url, alt: t("experiences.guidedTrails") },
     },
     {
       icon: Bird,
       category: "Fauna",
       title: t("experiences.birdWatching"),
       description: t("experiences.birdWatchingDesc"),
+      image: { src: observacaoAves.url, alt: t("experiences.birdWatching") },
     },
     {
       icon: Droplets,
       category: "Águas",
       title: t("experiences.canoeTrips"),
       description: t("experiences.canoeTripsDesc"),
+      image: { src: passeioCanoa.url, alt: t("experiences.canoeTrips") },
     },
     {
       icon: Users,
       category: "Cultura",
       title: t("experiences.communityVisits"),
       description: t("experiences.communityVisitsDesc"),
+      image: { src: visitasComunidades.url, alt: t("experiences.communityVisits") },
     },
     {
       icon: Sunset,
       category: "Natureza",
       title: t("experiences.riverSunset"),
       description: t("experiences.riverSunsetDesc"),
+      image: { src: porDoSol.url, alt: t("experiences.riverSunset") },
     },
     {
       icon: Camera,
       category: "Momentos",
       title: t("experiences.naturePhotography"),
       description: t("experiences.naturePhotographyDesc"),
+      image: { src: fotografiasNatureza.url, alt: t("experiences.naturePhotography") },
     },
   ];
 
@@ -120,12 +132,8 @@ const Experiencias = () => {
                 title={exp.title}
                 description={exp.description}
                 category={exp.category}
-                image={galleryImages[index] || galleryImages[index % Math.max(galleryImages.length, 1)]}
+                image={exp.image}
                 index={index}
-                onClick={() =>
-                  galleryImages.length > 0 &&
-                  openLightbox(index % galleryImages.length)
-                }
               />
             ))}
           </div>
