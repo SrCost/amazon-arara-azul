@@ -42,36 +42,42 @@ const Experiencias = () => {
       category: "Aventura",
       title: t("experiences.guidedTrails"),
       description: t("experiences.guidedTrailsDesc"),
+      image: { src: trilhasGuiadas.url, alt: t("experiences.guidedTrails") },
     },
     {
       icon: Bird,
       category: "Fauna",
       title: t("experiences.birdWatching"),
       description: t("experiences.birdWatchingDesc"),
+      image: { src: observacaoAves.url, alt: t("experiences.birdWatching") },
     },
     {
       icon: Droplets,
       category: "Águas",
       title: t("experiences.canoeTrips"),
       description: t("experiences.canoeTripsDesc"),
+      image: { src: passeioCanoa.url, alt: t("experiences.canoeTrips") },
     },
     {
       icon: Users,
       category: "Cultura",
       title: t("experiences.communityVisits"),
       description: t("experiences.communityVisitsDesc"),
+      image: { src: visitasComunidades.url, alt: t("experiences.communityVisits") },
     },
     {
       icon: Sunset,
       category: "Natureza",
       title: t("experiences.riverSunset"),
       description: t("experiences.riverSunsetDesc"),
+      image: { src: porDoSol.url, alt: t("experiences.riverSunset") },
     },
     {
       icon: Camera,
       category: "Momentos",
       title: t("experiences.naturePhotography"),
       description: t("experiences.naturePhotographyDesc"),
+      image: { src: fotografiasNatureza.url, alt: t("experiences.naturePhotography") },
     },
   ];
 
