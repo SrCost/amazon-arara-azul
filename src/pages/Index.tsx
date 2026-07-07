@@ -5,6 +5,7 @@ import { ArrowRight, Leaf, Shield, Heart, Calendar } from "lucide-react";
 import Footer from "@/components/Footer";
 import SearchBar from "@/components/SearchBar";
 import LodgeCard from "@/components/LodgeCard";
+import BungalowCarousel from "@/components/home/BungalowCarousel";
 import CTASection from "@/components/CTASection";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
