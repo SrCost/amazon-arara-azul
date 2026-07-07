@@ -144,12 +144,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Google Reviews */}
-      <GoogleReviewsCarousel />
-
-      {/* CTA after Features */}
-      <CTASection variant="secondary" buttonText={t("home.viewAvailableLodges")} buttonLink="/bangalos" />
-
       {/* Lodges Section */}
       <section className="py-12 sm:py-16 lg:py-24">
         <div className="container mx-auto px-4">
@@ -190,6 +184,12 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Google Reviews */}
+      <GoogleReviewsCarousel />
+
+      {/* CTA after Features */}
+      <CTASection variant="secondary" buttonText={t("home.viewAvailableLodges")} buttonLink="/bangalos" />
 
       {/* WhatsApp CTA */}
       <CTASection variant="whatsapp" description={t("home.preferDirectContact")} />
