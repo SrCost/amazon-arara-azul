@@ -171,10 +171,8 @@ const Index = () => {
               <p className="text-base sm:text-lg text-muted-foreground">{t("home.noLodgesAvailable")}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-              {lodges.map((lodge) => (
-                <LodgeCard key={lodge.id} {...lodge} />
-              ))}
+            <div className="mb-6 sm:mb-8">
+              <BungalowCarousel lodges={lodges} />
             </div>
           )}
 
