@@ -433,7 +433,15 @@ const Reservations = () => {
                         guestName={reservation.guest_name}
                         guestEmail={reservation.guest_email}
                         preArrival={reservation.pre_arrival}
+                        reservation={{
+                          guest_name: reservation.guest_name,
+                          rooms_summary: reservation.rooms_summary || reservation.room_name,
+                          check_in: reservation.check_in,
+                          check_out: reservation.check_out,
+                          guests: reservation.guests,
+                        }}
                       />
+
 
                     </TableCell>
 
