@@ -540,6 +540,44 @@ const Reservations = () => {
                   <p className="font-medium text-lg">R$ {selectedReservation.total_price.toLocaleString()}</p>
                 </div>
               </div>
+
+              {/* Acomodações da reserva */}
+              {(selectedReservation.rooms_items?.length || 0) > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-2">Acomodações</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-muted-foreground">
+                          <th className="py-1 pr-4 font-medium">Bangalô</th>
+                          <th className="py-1 pr-4 font-medium">Hóspedes</th>
+                          <th className="py-1 pr-4 font-medium">Diária</th>
+                          <th className="py-1 font-medium">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedReservation.rooms_items!.map((item, index) => (
+                          <tr key={item.id || `${item.room_id}-${index}`} className="border-t">
+                            <td className="py-1 pr-4 font-medium">{item.room_name || "Bangalô"}</td>
+                            <td className="py-1 pr-4">{item.guests}</td>
+                            <td className="py-1 pr-4">
+                              {item.daily_rate ? `R$ ${Number(item.daily_rate).toLocaleString('pt-BR')}` : "-"}
+                            </td>
+                            <td className="py-1">
+                              {item.subtotal ? `R$ ${Number(item.subtotal).toLocaleString('pt-BR')}` : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold">
+                    Total da reserva: R$ {selectedReservation.total_price.toLocaleString('pt-BR')}
+                  </p>
+                </div>
+              )}
+
+              
               
               {/* Payment Transaction Info */}
               <div className="border-t pt-4">
