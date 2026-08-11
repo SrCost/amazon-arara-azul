@@ -144,10 +144,13 @@ const Reservations = () => {
       
       setTotalCount(count || 0);
       
-      // Map the data to include package_name
+      const roomsMap = await fetchReservationRoomsMap((data || []).map((r) => r.id));
+
+      // Map the data to include package_name e resumo das acomodações
       const mappedData = (data || []).map(reservation => ({
         ...reservation,
         package_name: reservation.packages?.name || null,
+        rooms_summary: formatRoomsSummary(roomsMap[reservation.id], reservation.room_name),
       }));
       
       setReservations(mappedData as Reservation[]);
