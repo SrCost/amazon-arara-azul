@@ -324,6 +324,18 @@ const NewReservationModal = ({
           });
       }
 
+      // Sincroniza a ficha na FNRH (best-effort, não bloqueia a reserva)
+      if (insertedReservation?.id) {
+        supabase.functions
+          .invoke("fnrh-criar-reserva", { body: { reservation_id: insertedReservation.id } })
+          .then(({ data: fnrhData, error: fnrhErr }) => {
+            if (fnrhErr || fnrhData?.error) {
+              console.error("FNRH sync failed:", fnrhErr ?? fnrhData?.error);
+              toast.warning("Reserva criada, mas a ficha FNRH ficou pendente. Verifique em Admin > FNRH.");
+            }
+          });
+      }
+
       toast.success("Reserva criada com sucesso!");
 
       onSuccess();

@@ -24,6 +24,7 @@ import {
   Menu,
   SlidersHorizontal,
   ClipboardCheck,
+  FileCheck2,
 } from "lucide-react";
 import logoArara from "@/assets/logo-arara-azul.jpg";
 
@@ -59,6 +60,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const adminItems = isAdmin || isSuperAdmin
     ? [
         { icon: ClipboardCheck, label: "Automação", path: "/admin/guest-automation" },
+        { icon: FileCheck2, label: "FNRH", path: "/admin/fnrh" },
         { icon: Package, label: "Pacotes", path: "/admin/packages" },
         { icon: Building2, label: "Bangalôs", path: "/admin/bangalos" },
         { icon: DollarSign, label: "Pagamentos", path: "/admin/payments" },

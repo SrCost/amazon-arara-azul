@@ -37,6 +37,7 @@ import AdminBangalos from "./pages/admin/Bangalos";
 import CalendarReservations from "./pages/admin/CalendarReservations";
 import HeroCarouselAdmin from "./pages/admin/HeroCarousel";
 import GuestAutomation from "./pages/admin/GuestAutomation";
+import AdminFnrh from "./pages/admin/Fnrh";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,16 @@ const App = () => (
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout>
                     <AdminBangalos />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/fnrh"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <AdminFnrh />
                   </AdminLayout>
                 </ProtectedRoute>
               }
