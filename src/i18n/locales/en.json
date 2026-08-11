@@ -290,6 +290,29 @@
       "quantity": "Quantity",
       "customType": "Custom",
       "customPlaceholder": "e.g. Bunk bed"
+    },
+    "preArrival": {
+      "column": "Pré-Chegada",
+      "send": "Enviar Pré-Chegada",
+      "view": "Ver respostas",
+      "status": {
+        "pending": "Pendente",
+        "sent": "Enviado",
+        "answered": "Respondido",
+        "updated": "Atualizado",
+        "none": "Não enviado"
+      },
+      "confirmTitle": "Enviar Pré-Chegada",
+      "confirmText": "Enviar o formulário de Pré-Chegada para {{name}}?",
+      "confirmEmail": "E-mail de destino: {{email}}",
+      "confirmAnswered": "Este questionário já foi respondido. Deseja realmente reenviar o acesso?",
+      "sent": "Formulário de Pré-Chegada enviado",
+      "sendError": "Não foi possível enviar o formulário",
+      "answersTitle": "Respostas de Pré-Chegada",
+      "noAnswers": "Ainda sem respostas para esta reserva.",
+      "firstAnswer": "Primeira resposta",
+      "lastUpdate": "Última atualização",
+      "healthRestricted": "As informações de saúde são visíveis apenas para o administrador principal."
     }
   },
   "home": {
@@ -749,5 +772,93 @@
     "learnMore": "Learn more",
     "sectionTitle": "Site Developer",
     "developedByPrefix": "Site developed by"
+  },
+  "preArrival": {
+    "title": "Pre-Arrival",
+    "subtitle": "Let's prepare everything your way",
+    "intro": "We are delighted to welcome you to Pousada Rará Azul! Tell us a little about your preferences so we can take care of every detail of your stay. All questions are optional.",
+    "closing": "Thank you for sharing. We can't wait to welcome you to Rará Azul.",
+    "reservation": "Reservation",
+    "guestName": "Main guest",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Guests",
+    "bungalows": "Bungalows",
+    "food": {
+      "title": "Meals",
+      "desc": "This helps us adapt our menu for you.",
+      "restrictions": "Dietary restrictions",
+      "avoid": "Foods you prefer to avoid",
+      "avoidPh": "E.g. seafood, spicy food..."
+    },
+    "diet": {
+      "vegetarian": "Vegetarian",
+      "vegan": "Vegan",
+      "glutenFree": "Gluten-free",
+      "lactoseFree": "Lactose-free",
+      "diabetic": "Diabetic",
+      "other": "Other"
+    },
+    "health": {
+      "title": "Health & Wellbeing",
+      "notice": "This information is completely optional and used only for your comfort and safety during the stay. We treat it confidentially.",
+      "condition": "Any health condition we should consider?",
+      "mobility": "Mobility limitations",
+      "medication": "Ongoing medication"
+    },
+    "kids": {
+      "title": "Children",
+      "info": "Travelling with children? Tell us their ages and what they need (crib, car seat, activities).",
+      "infoPh": "E.g. one 4-year-old, needs an extra bed"
+    },
+    "occasion": {
+      "title": "Special Occasion",
+      "select": "Are you celebrating something?",
+      "detail": "Tell us more so we can prepare a surprise",
+      "detailPh": "E.g. wedding anniversary on the 12th"
+    },
+    "occasionOpts": {
+      "none": "None",
+      "honeymoon": "Honeymoon",
+      "birthday": "Birthday",
+      "anniversary": "Wedding anniversary",
+      "proposal": "Marriage proposal",
+      "other": "Other"
+    },
+    "transport": {
+      "title": "Transport & Arrival",
+      "mode": "How do you plan to arrive?",
+      "time": "Estimated arrival time",
+      "needs": "Do you need transport support?",
+      "needsPh": "E.g. transfer from Manacapuru"
+    },
+    "arrivalOpts": {
+      "car": "Own car",
+      "bus": "Bus",
+      "boat": "Boat",
+      "plane": "Plane",
+      "transfer": "Transfer",
+      "other": "Other"
+    },
+    "additional": {
+      "title": "Additional Information",
+      "info": "Anything else you would like to share?",
+      "infoPh": "Feel free to tell us anything"
+    },
+    "submit": "Send answers",
+    "update": "Update answers",
+    "submitting": "Sending...",
+    "successTitle": "We received your answers!",
+    "successDesc": "Thank you! Our team will prepare everything with care for your arrival.",
+    "successUpdate": "You can update your answers at any time using this same link.",
+    "answeredBadge": "You have already answered — feel free to review and update below.",
+    "invalidTitle": "Link not found",
+    "invalidDesc": "This pre-arrival link is not valid. Contact our team and we'll send a new one.",
+    "expiredTitle": "Link expired",
+    "expiredDesc": "This link is no longer available. Contact our team and we'll gladly send a new one.",
+    "whatsappBtn": "Chat on WhatsApp",
+    "whatsappMsg": "Hello! I need help with the pre-arrival form.",
+    "loading": "Loading...",
+    "errorSave": "We couldn't save your answers. Please try again."
   }
 }
