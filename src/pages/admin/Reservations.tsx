@@ -432,7 +432,9 @@ const Reservations = () => {
                         reservationId={reservation.id}
                         guestName={reservation.guest_name}
                         guestEmail={reservation.guest_email}
+                        preArrival={reservation.pre_arrival}
                       />
+
                     </TableCell>
 
                     <TableCell className="text-xs hidden xl:table-cell">
