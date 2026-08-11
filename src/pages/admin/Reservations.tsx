@@ -537,7 +537,6 @@ const Reservations = () => {
                 </div>
                 <div>
 
-                <div>
                   <Label className="text-muted-foreground">Check-in</Label>
                   <p className="font-medium">{new Date(selectedReservation.check_in).toLocaleDateString()}</p>
                 </div>
