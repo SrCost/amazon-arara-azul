@@ -405,6 +405,17 @@ const Fnrh = () => {
                             Check-out
                           </Button>
                         )}
+                        {ficha.situacao_fnrh === "DADOS_INCOMPLETOS" && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={isBusy}
+                            onClick={() => setCompletar({ ficha, fields: [] })}
+                          >
+                            <PencilLine className="h-4 w-4 mr-1" />
+                            Completar dados
+                          </Button>
+                        )}
                         {ficha.situacao_fnrh === "ERRO_SINCRONIZACAO" && (
                           <Button
                             size="sm"
@@ -427,7 +438,29 @@ const Fnrh = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {completar && (
+        <CompletarDadosFnrhModal
+          open
+          onOpenChange={(open) => !open && setCompletar(null)}
+          guestName={completar.ficha.guest_name}
+          guests={completar.ficha.guests}
+          pendingFields={completar.fields}
+          submitting={busy === `fnrh-criar-reserva:${completar.ficha.id}`}
+          onSubmit={async (hospede) => {
+            const ficha = completar.ficha;
+            const success = await runAction(
+              "fnrh-criar-reserva",
+              ficha.id,
+              "Ficha enviada à FNRH",
+              { hospede },
+            );
+            if (success) setCompletar(null);
+          }}
+        />
+      )}
     </div>
+
   );
 };
 
