@@ -228,6 +228,20 @@ serve(async (req) => {
       resend_id: emailData.id || null,
     });
 
+    // Auditoria reaproveitando o registro de atividades existente
+    await supabase.from("activity_log").insert({
+      user_email: sendOrigin === "auto" ? "system" : "admin_panel",
+      action: sendOrigin === "auto" ? "pre_arrival_reminder_sent" : "pre_arrival_sent_manual",
+      description:
+        sendOrigin === "auto"
+          ? "Lembrete de Pre-Chegada enviado automaticamente"
+          : "Formulario de Pre-Chegada enviado manualmente pelo painel",
+      entity_type: "pre_arrival_responses",
+      entity_id: reservationId,
+      metadata: { origin: sendOrigin, language: lang, recipient: reservation.guest_email },
+    });
+
+
     return new Response(JSON.stringify({ success: true, link }), {
       status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
