@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import CompletarDadosFnrhModal from "@/components/admin/fnrh/CompletarDadosFnrhModal";
 import {
   Search,
   RefreshCw,
@@ -29,7 +30,9 @@ import {
   Copy,
   AlertTriangle,
   ShieldCheck,
+  PencilLine,
 } from "lucide-react";
+
 
 type Situacao =
   | "PRECHECKIN_PENDENTE"
