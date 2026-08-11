@@ -237,7 +237,24 @@
       "cash": "One payment - {{amount}}",
       "installmentOption": "{{n}}× of {{amount}} interest-free"
     },
-    "loginRequired": "You must be logged in to make a reservation"
+    "loginRequired": "You must be logged in to make a reservation",
+    "extraRooms": {
+      "title": "Additional accommodations",
+      "subtitle": "Need more than one bungalow? Add other accommodations to the same booking.",
+      "loading": "Loading bungalows...",
+      "guests": "Guests",
+      "guest_one": "{{count}} guest",
+      "guest_other": "{{count}} guests",
+      "night_one": "{{count}} night",
+      "night_other": "{{count}} nights",
+      "remove": "Remove {{name}}",
+      "selectDates": "Select your dates to see the available bungalows.",
+      "limitReached": "Limit of {{count}} accommodations per booking reached.",
+      "addPlaceholder": "+ Add another bungalow",
+      "unavailable": "unavailable on the selected dates",
+      "alreadyAdded": "already added",
+      "noneAvailable": "No other bungalow available on the selected dates."
+    }
   },
   "admin": {
     "dashboard": "Dashboard",

@@ -227,6 +227,23 @@
       "selectInstallments": "Raten auswählen",
       "cash": "Einmalzahlung - {{amount}}",
       "installmentOption": "{{n}}× {{amount}} zinsfrei"
+    },
+    "extraRooms": {
+      "title": "Zusätzliche Unterkünfte",
+      "subtitle": "Brauchen Sie mehr als einen Bungalow? Fügen Sie weitere Unterkünfte zur gleichen Buchung hinzu.",
+      "loading": "Bungalows werden geladen...",
+      "guests": "Gäste",
+      "guest_one": "{{count}} Gast",
+      "guest_other": "{{count}} Gäste",
+      "night_one": "{{count}} Nacht",
+      "night_other": "{{count}} Nächte",
+      "remove": "{{name}} entfernen",
+      "selectDates": "Wählen Sie Ihre Daten, um verfügbare Bungalows zu sehen.",
+      "limitReached": "Limit von {{count}} Unterkünften pro Buchung erreicht.",
+      "addPlaceholder": "+ Weiteren Bungalow hinzufügen",
+      "unavailable": "an den gewählten Daten nicht verfügbar",
+      "alreadyAdded": "bereits hinzugefügt",
+      "noneAvailable": "Kein weiterer Bungalow an den gewählten Daten verfügbar."
     }
   },
   "admin": {
