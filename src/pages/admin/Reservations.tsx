@@ -42,7 +42,7 @@ import { Search, Eye, Edit, X, Mail, MessageCircle, ChevronLeft, ChevronRight } 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchReservationRoomsMap, formatRoomsSummary, type ReservationRoomItem } from "@/lib/reservationRooms";
-import PreArrivalCell from "@/components/admin/PreArrivalCell";
+import PreArrivalCell, { type PreArrivalStatusRow } from "@/components/admin/PreArrivalCell";
 
 
 interface Reservation {
@@ -68,7 +68,9 @@ interface Reservation {
   special_requests?: string;
   created_at: string;
   updated_at?: string;
+  pre_arrival?: PreArrivalStatusRow | null;
 }
+
 
 const Reservations = () => {
   const { t } = useTranslation();
@@ -149,7 +151,20 @@ const Reservations = () => {
       
       setTotalCount(count || 0);
       
-      const roomsMap = await fetchReservationRoomsMap((data || []).map((r) => r.id));
+      const ids = (data || []).map((r) => r.id);
+      const roomsMap = await fetchReservationRoomsMap(ids);
+
+      // Status de Pré-Chegada em uma única consulta agregada por página
+      const preArrivalMap: Record<string, PreArrivalStatusRow> = {};
+      if (ids.length > 0) {
+        const { data: preArrivalRows } = await supabase
+          .from("pre_arrival_responses")
+          .select("reservation_id, status, last_sent_at, answered_at, reminders_sent, last_send_origin")
+          .in("reservation_id", ids);
+        (preArrivalRows || []).forEach((row) => {
+          preArrivalMap[row.reservation_id] = row as PreArrivalStatusRow;
+        });
+      }
 
       // Map the data to include package_name e resumo das acomodações
       const mappedData = (data || []).map(reservation => ({
@@ -157,7 +172,9 @@ const Reservations = () => {
         package_name: reservation.packages?.name || null,
         rooms_summary: formatRoomsSummary(roomsMap[reservation.id], reservation.room_name),
         rooms_items: roomsMap[reservation.id] || [],
+        pre_arrival: preArrivalMap[reservation.id] || null,
       }));
+
       
       setReservations(mappedData as Reservation[]);
     } catch (error) {
@@ -415,7 +432,9 @@ const Reservations = () => {
                         reservationId={reservation.id}
                         guestName={reservation.guest_name}
                         guestEmail={reservation.guest_email}
+                        preArrival={reservation.pre_arrival}
                       />
+
                     </TableCell>
 
                     <TableCell className="text-xs hidden xl:table-cell">
@@ -517,10 +536,7 @@ const Reservations = () => {
                   <p className="font-medium">{selectedReservation.guests}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Pré-Chegada</Label>
-                  <p className="font-medium text-muted-foreground">—</p>
-                </div>
-                <div>
+
                   <Label className="text-muted-foreground">Check-in</Label>
                   <p className="font-medium">{new Date(selectedReservation.check_in).toLocaleDateString()}</p>
                 </div>
@@ -586,8 +602,26 @@ const Reservations = () => {
                 </div>
               )}
 
-              
-              
+              {/* Pré-Chegada */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold text-muted-foreground mb-3">Pré-Chegada</h4>
+                <PreArrivalCell
+                  variant="panel"
+                  reservationId={selectedReservation.id}
+                  guestName={selectedReservation.guest_name}
+                  guestEmail={selectedReservation.guest_email}
+                  preArrival={selectedReservation.pre_arrival}
+                  reservation={{
+                    guest_name: selectedReservation.guest_name,
+                    rooms_summary: selectedReservation.rooms_summary || selectedReservation.room_name,
+                    check_in: selectedReservation.check_in,
+                    check_out: selectedReservation.check_out,
+                    guests: selectedReservation.guests,
+                  }}
+                />
+              </div>
+
+
               {/* Payment Transaction Info */}
               <div className="border-t pt-4">
                 <h4 className="text-sm font-semibold text-muted-foreground mb-2">Dados da Transação</h4>

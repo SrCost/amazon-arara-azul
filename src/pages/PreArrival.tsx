@@ -87,6 +87,8 @@ const PreArrival = () => {
   const [data, setData] = useState<PreArrivalData | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [step, setStep] = useState(0);
+
 
   const [diet, setDiet] = useState<string[]>([]);
   const [foodsToAvoid, setFoodsToAvoid] = useState("");
@@ -250,6 +252,215 @@ const PreArrival = () => {
 
   const alreadyAnswered = Boolean(data.answered_at);
 
+  const steps = [
+
+    {
+      key: "food",
+      node: (
+        <Section icon={Utensils} title={t("preArrival.food.title")} description={t("preArrival.food.desc")}>
+          <div>
+            <Label className="mb-3 block">{t("preArrival.food.restrictions")}</Label>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {DIET_KEYS.map((key) => (
+                <label key={key} className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={diet.includes(key)} onCheckedChange={() => toggleDiet(key)} />
+                  {t(`preArrival.diet.${key}`)}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <Label htmlFor="foods-avoid">{t("preArrival.food.avoid")}</Label>
+            <Textarea
+              id="foods-avoid"
+              value={foodsToAvoid}
+              maxLength={500}
+              placeholder={t("preArrival.food.avoidPh")}
+              onChange={(e) => setFoodsToAvoid(e.target.value)}
+            />
+          </div>
+        </Section>
+      ),
+    },
+    {
+      key: "health",
+      node: (
+        <Section
+          icon={HeartPulse}
+          title={t("preArrival.health.title")}
+          description={t("preArrival.health.notice")}
+        >
+          <div>
+            <Label htmlFor="health-condition">{t("preArrival.health.condition")}</Label>
+            <Textarea
+              id="health-condition"
+              value={healthCondition}
+              maxLength={500}
+              onChange={(e) => setHealthCondition(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="mobility">{t("preArrival.health.mobility")}</Label>
+            <Input id="mobility" value={mobility} maxLength={500} onChange={(e) => setMobility(e.target.value)} />
+          </div>
+          <div>
+            <Label htmlFor="medication">{t("preArrival.health.medication")}</Label>
+            <Input id="medication" value={medication} maxLength={500} onChange={(e) => setMedication(e.target.value)} />
+          </div>
+        </Section>
+      ),
+    },
+    {
+      key: "kids",
+      node: (
+        <Section icon={Baby} title={t("preArrival.kids.title")}>
+          <div>
+            <Label htmlFor="children">{t("preArrival.kids.info")}</Label>
+            <Textarea
+              id="children"
+              value={childrenInfo}
+              maxLength={500}
+              placeholder={t("preArrival.kids.infoPh")}
+              onChange={(e) => setChildrenInfo(e.target.value)}
+            />
+          </div>
+        </Section>
+      ),
+    },
+    {
+      key: "occasion",
+      node: (
+        <Section icon={Gift} title={t("preArrival.occasion.title")}>
+          <div>
+            <Label>{t("preArrival.occasion.select")}</Label>
+            <Select value={occasion} onValueChange={setOccasion}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("preArrival.occasionOpts.none")} />
+              </SelectTrigger>
+              <SelectContent>
+                {OCCASION_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {t(`preArrival.occasionOpts.${key}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="occasion-detail">{t("preArrival.occasion.detail")}</Label>
+            <Textarea
+              id="occasion-detail"
+              value={occasionDetail}
+              maxLength={500}
+              placeholder={t("preArrival.occasion.detailPh")}
+              onChange={(e) => setOccasionDetail(e.target.value)}
+            />
+          </div>
+        </Section>
+      ),
+    },
+    {
+      key: "transport",
+      node: (
+        <Section icon={Car} title={t("preArrival.transport.title")}>
+          <div>
+            <Label>{t("preArrival.transport.mode")}</Label>
+            <Select value={arrivalMode} onValueChange={setArrivalMode}>
+              <SelectTrigger>
+                <SelectValue placeholder={t("preArrival.arrivalOpts.car")} />
+              </SelectTrigger>
+              <SelectContent>
+                {ARRIVAL_KEYS.map((key) => (
+                  <SelectItem key={key} value={key}>
+                    {t(`preArrival.arrivalOpts.${key}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="arrival-time">{t("preArrival.transport.time")}</Label>
+            <Input
+              id="arrival-time"
+              value={arrivalTime}
+              maxLength={100}
+              placeholder="14:00"
+              onChange={(e) => setArrivalTime(e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="transport-needs">{t("preArrival.transport.needs")}</Label>
+            <Textarea
+              id="transport-needs"
+              value={transportNeeds}
+              maxLength={500}
+              placeholder={t("preArrival.transport.needsPh")}
+              onChange={(e) => setTransportNeeds(e.target.value)}
+            />
+          </div>
+        </Section>
+      ),
+    },
+    {
+      key: "additional",
+      node: (
+        <Section icon={Info} title={t("preArrival.additional.title")}>
+          <div>
+            <Label htmlFor="additional">{t("preArrival.additional.info")}</Label>
+            <Textarea
+              id="additional"
+              value={additionalInfo}
+              maxLength={1000}
+              placeholder={t("preArrival.additional.infoPh")}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+            />
+          </div>
+        </Section>
+      ),
+    },
+  ];
+
+  const reviewIndex = steps.length;
+  const totalSteps = steps.length + 1;
+  const isReview = step === reviewIndex;
+
+  const reviewItems: { step: number; title: string; lines: string[] }[] = [
+    {
+      step: 0,
+      title: t("preArrival.food.title"),
+      lines: [
+        diet.length ? diet.map((k) => t(`preArrival.diet.${k}`)).join(", ") : "",
+        foodsToAvoid,
+      ].filter(Boolean),
+    },
+    {
+      step: 1,
+      title: t("preArrival.health.title"),
+      lines: [healthCondition, mobility, medication].filter(Boolean),
+    },
+    { step: 2, title: t("preArrival.kids.title"), lines: [childrenInfo].filter(Boolean) },
+    {
+      step: 3,
+      title: t("preArrival.occasion.title"),
+      lines: [occasion ? t(`preArrival.occasionOpts.${occasion}`) : "", occasionDetail].filter(Boolean),
+    },
+    {
+      step: 4,
+      title: t("preArrival.transport.title"),
+      lines: [
+        arrivalMode ? t(`preArrival.arrivalOpts.${arrivalMode}`) : "",
+        arrivalTime,
+        transportNeeds,
+      ].filter(Boolean),
+    },
+    { step: 5, title: t("preArrival.additional.title"), lines: [additionalInfo].filter(Boolean) },
+  ];
+
+  const goTo = (next: number) => {
+    setStep(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <Shell>
       <header className="mb-8 text-center">
@@ -288,169 +499,92 @@ const PreArrival = () => {
         </dl>
       </div>
 
-      <p className="mb-6 text-muted-foreground leading-relaxed">{t("preArrival.intro")}</p>
+      {step === 0 && (
+        <p className="mb-6 text-muted-foreground leading-relaxed">{t("preArrival.intro")}</p>
+      )}
 
-      {alreadyAnswered && (
+      {alreadyAnswered && step === 0 && (
         <p className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm text-primary">
           {t("preArrival.answeredBadge")}
         </p>
       )}
 
-      <div className="space-y-5">
-        <Section icon={Utensils} title={t("preArrival.food.title")} description={t("preArrival.food.desc")}>
-          <div>
-            <Label className="mb-3 block">{t("preArrival.food.restrictions")}</Label>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {DIET_KEYS.map((key) => (
-                <label key={key} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={diet.includes(key)} onCheckedChange={() => toggleDiet(key)} />
-                  {t(`preArrival.diet.${key}`)}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="foods-avoid">{t("preArrival.food.avoid")}</Label>
-            <Textarea
-              id="foods-avoid"
-              value={foodsToAvoid}
-              maxLength={500}
-              placeholder={t("preArrival.food.avoidPh")}
-              onChange={(e) => setFoodsToAvoid(e.target.value)}
-            />
-          </div>
-        </Section>
-
-        <Section
-          icon={HeartPulse}
-          title={t("preArrival.health.title")}
-          description={t("preArrival.health.notice")}
-        >
-          <div>
-            <Label htmlFor="health-condition">{t("preArrival.health.condition")}</Label>
-            <Textarea
-              id="health-condition"
-              value={healthCondition}
-              maxLength={500}
-              onChange={(e) => setHealthCondition(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="mobility">{t("preArrival.health.mobility")}</Label>
-            <Input id="mobility" value={mobility} maxLength={500} onChange={(e) => setMobility(e.target.value)} />
-          </div>
-          <div>
-            <Label htmlFor="medication">{t("preArrival.health.medication")}</Label>
-            <Input id="medication" value={medication} maxLength={500} onChange={(e) => setMedication(e.target.value)} />
-          </div>
-        </Section>
-
-        <Section icon={Baby} title={t("preArrival.kids.title")}>
-          <div>
-            <Label htmlFor="children">{t("preArrival.kids.info")}</Label>
-            <Textarea
-              id="children"
-              value={childrenInfo}
-              maxLength={500}
-              placeholder={t("preArrival.kids.infoPh")}
-              onChange={(e) => setChildrenInfo(e.target.value)}
-            />
-          </div>
-        </Section>
-
-        <Section icon={Gift} title={t("preArrival.occasion.title")}>
-          <div>
-            <Label>{t("preArrival.occasion.select")}</Label>
-            <Select value={occasion} onValueChange={setOccasion}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("preArrival.occasionOpts.none")} />
-              </SelectTrigger>
-              <SelectContent>
-                {OCCASION_KEYS.map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {t(`preArrival.occasionOpts.${key}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="occasion-detail">{t("preArrival.occasion.detail")}</Label>
-            <Textarea
-              id="occasion-detail"
-              value={occasionDetail}
-              maxLength={500}
-              placeholder={t("preArrival.occasion.detailPh")}
-              onChange={(e) => setOccasionDetail(e.target.value)}
-            />
-          </div>
-        </Section>
-
-        <Section icon={Car} title={t("preArrival.transport.title")}>
-          <div>
-            <Label>{t("preArrival.transport.mode")}</Label>
-            <Select value={arrivalMode} onValueChange={setArrivalMode}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("preArrival.arrivalOpts.car")} />
-              </SelectTrigger>
-              <SelectContent>
-                {ARRIVAL_KEYS.map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {t(`preArrival.arrivalOpts.${key}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="arrival-time">{t("preArrival.transport.time")}</Label>
-            <Input
-              id="arrival-time"
-              value={arrivalTime}
-              maxLength={100}
-              placeholder="14:00"
-              onChange={(e) => setArrivalTime(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="transport-needs">{t("preArrival.transport.needs")}</Label>
-            <Textarea
-              id="transport-needs"
-              value={transportNeeds}
-              maxLength={500}
-              placeholder={t("preArrival.transport.needsPh")}
-              onChange={(e) => setTransportNeeds(e.target.value)}
-            />
-          </div>
-        </Section>
-
-        <Section icon={Info} title={t("preArrival.additional.title")}>
-          <div>
-            <Label htmlFor="additional">{t("preArrival.additional.info")}</Label>
-            <Textarea
-              id="additional"
-              value={additionalInfo}
-              maxLength={1000}
-              placeholder={t("preArrival.additional.infoPh")}
-              onChange={(e) => setAdditionalInfo(e.target.value)}
-            />
-          </div>
-        </Section>
+      {/* Progresso */}
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
+          <span>{t("preArrival.nav.step", { current: step + 1, total: totalSteps })}</span>
+          <span>{Math.round(((step + 1) / totalSteps) * 100)}%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+          />
+        </div>
       </div>
 
-      <p className="mt-8 text-center text-muted-foreground">{t("preArrival.closing")}</p>
+      <div key={step} className="animate-fade-in">
+        {isReview ? (
+          <Section icon={CheckCircle} title={t("preArrival.review.title")} description={t("preArrival.review.desc")}>
+            <div className="space-y-4">
+              {reviewItems.map((item) => (
+                <div key={item.title} className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                    <Button variant="ghost" size="sm" onClick={() => goTo(item.step)}>
+                      {t("preArrival.review.edit")}
+                    </Button>
+                  </div>
+                  {item.lines.length ? (
+                    <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
+                      {item.lines.map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">{t("preArrival.review.empty")}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+        ) : (
+          steps[step].node
+        )}
+      </div>
 
-      <div className="mt-6 flex justify-center">
-        <Button size="lg" onClick={handleSubmit} disabled={submitting}>
-          {submitting
-            ? t("preArrival.submitting")
-            : alreadyAnswered
-              ? t("preArrival.update")
-              : t("preArrival.submit")}
+      {isReview && (
+        <p className="mt-8 text-center text-muted-foreground">{t("preArrival.closing")}</p>
+      )}
+
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => goTo(step - 1)}
+          disabled={step === 0 || submitting}
+          className={step === 0 ? "invisible" : ""}
+        >
+          {t("preArrival.nav.back")}
         </Button>
+
+        {isReview ? (
+          <Button size="lg" onClick={handleSubmit} disabled={submitting}>
+            {submitting
+              ? t("preArrival.submitting")
+              : alreadyAnswered
+                ? t("preArrival.update")
+                : t("preArrival.submit")}
+          </Button>
+        ) : (
+          <Button size="lg" onClick={() => goTo(step + 1)}>
+            {step === steps.length - 1 ? t("preArrival.nav.review") : t("preArrival.nav.next")}
+          </Button>
+        )}
       </div>
     </Shell>
   );
 };
+
 
 export default PreArrival;

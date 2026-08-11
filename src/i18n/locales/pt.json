@@ -859,6 +859,18 @@
     "whatsappBtn": "Falar no WhatsApp",
     "whatsappMsg": "Olá! Preciso de ajuda com o formulário de pré-chegada.",
     "loading": "Carregando...",
-    "errorSave": "Não foi possível salvar suas respostas. Tente novamente."
+    "errorSave": "Não foi possível salvar suas respostas. Tente novamente.",
+    "nav": {
+      "step": "Etapa {{current}} de {{total}}",
+      "back": "Voltar",
+      "next": "Continuar",
+      "review": "Revisar"
+    },
+    "review": {
+      "title": "Revise suas respostas",
+      "desc": "Confira tudo antes de enviar. Você pode editar qualquer seção.",
+      "edit": "Editar",
+      "empty": "Não informado"
+    }
   }
 }

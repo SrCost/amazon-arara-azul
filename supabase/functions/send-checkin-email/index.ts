@@ -78,6 +78,18 @@ serve(async (req) => {
       });
     }
 
+    // Auditoria reaproveitando o registro de atividades existente
+    await supabase.from("activity_log").insert({
+      user_email: "system",
+      action: "pre_arrival_sent_auto",
+      description: "Link de Pre-Chegada enviado automaticamente junto ao e-mail de check-in",
+      entity_type: "pre_arrival_responses",
+      entity_id: reservationId,
+      metadata: { origin: "auto", trigger: "send-checkin-email" },
+    });
+
+
+
 
     const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 

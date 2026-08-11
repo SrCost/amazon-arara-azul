@@ -859,6 +859,18 @@
     "whatsappBtn": "Hablar por WhatsApp",
     "whatsappMsg": "¡Hola! Necesito ayuda con el formulario de pre-llegada.",
     "loading": "Cargando...",
-    "errorSave": "No pudimos guardar sus respuestas. Inténtelo de nuevo."
+    "errorSave": "No pudimos guardar sus respuestas. Inténtelo de nuevo.",
+    "nav": {
+      "step": "Paso {{current}} de {{total}}",
+      "back": "Volver",
+      "next": "Continuar",
+      "review": "Revisar"
+    },
+    "review": {
+      "title": "Revisa tus respuestas",
+      "desc": "Verifica todo antes de enviar. Puedes editar cualquier sección.",
+      "edit": "Editar",
+      "empty": "No informado"
+    }
   }
 }
