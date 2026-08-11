@@ -9,7 +9,7 @@ const BASE_URLS = {
 export type FnrhEnv = keyof typeof BASE_URLS;
 
 export function getFnrhEnv(): FnrhEnv {
-  const raw = (Deno.env.get("FNRH_ENV") || "homologacao").trim().toLowerCase();
+  const raw = (Deno.env.get("FNRH_ENV") || "producao").trim().toLowerCase();
   return raw === "producao" ? "producao" : "homologacao";
 }
 
@@ -203,7 +203,7 @@ export async function fnrhFetch<T = unknown>(opts: FnrhRequestOptions): Promise<
     throw new FnrhError(
       502,
       "FNRH_INDISPONIVEL",
-      "Não foi possível conectar à API da FNRH.",
+      `Não foi possível conectar à API da FNRH no ambiente de ${env}. Verifique a disponibilidade do serviço oficial e tente novamente.`,
       (error as Error)?.message,
     );
   }

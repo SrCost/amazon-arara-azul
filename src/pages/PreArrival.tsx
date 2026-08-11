@@ -6,10 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Leaf, MessageCircle, HeartPulse, Utensils, Baby, Gift, Car, Info } from "lucide-react";
+import { CheckCircle, Leaf, MessageCircle, HeartPulse, Utensils, Baby, Gift, Info } from "lucide-react";
 import { createWhatsAppLink } from "@/lib/whatsapp";
 
 interface PreArrivalData {
@@ -50,9 +50,8 @@ const localeMap: Record<string, string> = {
   pt: "pt-BR", en: "en-US", es: "es-ES", fr: "fr-FR", de: "de-DE",
 };
 
-const DIET_KEYS = ["vegetarian", "vegan", "glutenFree", "lactoseFree", "diabetic", "other"];
-const OCCASION_KEYS = ["none", "honeymoon", "birthday", "anniversary", "proposal", "other"];
-const ARRIVAL_KEYS = ["car", "bus", "boat", "plane", "transfer", "other"];
+const DIET_KEYS = ["none", "vegetarian", "vegan", "lactoseIntolerance", "celiac", "foodAllergy", "diabetic", "other"];
+const OCCASION_KEYS = ["none", "birthday", "honeymoon", "anniversary", "other"];
 
 const Section = ({
   icon: Icon,
@@ -77,6 +76,61 @@ const Section = ({
   </section>
 );
 
+const Shell = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen bg-background">
+    <Navigation />
+    <main className="container mx-auto max-w-3xl px-4 py-24 md:py-28">{children}</main>
+    <Footer />
+  </div>
+);
+
+const ChoiceWithDetail = ({
+  name,
+  value,
+  onValueChange,
+  detail,
+  onDetailChange,
+  yesLabel,
+  noLabel,
+  detailLabel,
+  detailPlaceholder,
+}: {
+  name: string;
+  value: "yes" | "no" | "";
+  onValueChange: (value: "yes" | "no") => void;
+  detail: string;
+  onDetailChange: (value: string) => void;
+  yesLabel: string;
+  noLabel: string;
+  detailLabel: string;
+  detailPlaceholder: string;
+}) => (
+  <div className="space-y-3">
+    <RadioGroup value={value} onValueChange={(next) => onValueChange(next as "yes" | "no")} className="flex gap-6">
+      <label className="flex items-center gap-2 text-sm" htmlFor={`${name}-no`}>
+        <RadioGroupItem id={`${name}-no`} value="no" />
+        {noLabel}
+      </label>
+      <label className="flex items-center gap-2 text-sm" htmlFor={`${name}-yes`}>
+        <RadioGroupItem id={`${name}-yes`} value="yes" />
+        {yesLabel}
+      </label>
+    </RadioGroup>
+    {value === "yes" && (
+      <div>
+        <Label htmlFor={`${name}-detail`}>{detailLabel}</Label>
+        <Textarea
+          id={`${name}-detail`}
+          value={detail}
+          maxLength={500}
+          placeholder={detailPlaceholder}
+          onChange={(event) => onDetailChange(event.target.value)}
+        />
+      </div>
+    )}
+  </div>
+);
+
 const PreArrival = () => {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
@@ -95,16 +149,15 @@ const PreArrival = () => {
   const [childrenInfo, setChildrenInfo] = useState("");
   const [occasion, setOccasion] = useState("");
   const [occasionDetail, setOccasionDetail] = useState("");
-  const [arrivalMode, setArrivalMode] = useState("");
-  const [arrivalTime, setArrivalTime] = useState("");
-  const [transportNeeds, setTransportNeeds] = useState("");
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [healthCondition, setHealthCondition] = useState("");
-  const [mobility, setMobility] = useState("");
-  const [medication, setMedication] = useState("");
+  const [mobilityChoice, setMobilityChoice] = useState<"yes" | "no" | "">("");
+  const [mobilityDetail, setMobilityDetail] = useState("");
+  const [medicationChoice, setMedicationChoice] = useState<"yes" | "no" | "">("");
+  const [medicationDetail, setMedicationDetail] = useState("");
 
   useEffect(() => {
-    document.title = "Pré-Chegada — Pousada Rará Azul";
+    document.title = "Questionário de Pré-Chegada — Pousada Arara Azul";
     let meta = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null;
     const created = !meta;
     if (!meta) {
@@ -135,18 +188,27 @@ const PreArrival = () => {
         if (row.guest_language && localeMap[row.guest_language]) {
           i18n.changeLanguage(row.guest_language);
         }
-        setDiet(row.dietary_restrictions || []);
+        setDiet((row.dietary_restrictions || []).map((item) => {
+          if (item === "glutenFree") return "celiac";
+          if (item === "lactoseFree") return "lactoseIntolerance";
+          return item;
+        }));
         setFoodsToAvoid(row.foods_to_avoid || "");
         setChildrenInfo(row.children_info || "");
         setOccasion(row.special_occasion || "");
         setOccasionDetail(row.special_occasion_detail || "");
-        setArrivalMode(row.arrival_mode || "");
-        setArrivalTime(row.estimated_arrival_time || "");
-        setTransportNeeds(row.transport_needs || "");
         setAdditionalInfo(row.additional_info || "");
         setHealthCondition(row.health_condition || "");
-        setMobility(row.mobility_limitations || "");
-        setMedication(row.continuous_medication || "");
+        if (row.mobility_limitations) {
+          const isNo = row.mobility_limitations.trim().toLowerCase() === "não";
+          setMobilityChoice(isNo ? "no" : "yes");
+          setMobilityDetail(isNo ? "" : row.mobility_limitations.replace(/^sim\s*[—:-]?\s*/i, ""));
+        }
+        if (row.continuous_medication) {
+          const isNo = row.continuous_medication.trim().toLowerCase() === "não";
+          setMedicationChoice(isNo ? "no" : "yes");
+          setMedicationDetail(isNo ? "" : row.continuous_medication.replace(/^sim\s*[—:-]?\s*/i, ""));
+        }
       }
       setLoading(false);
     };
@@ -159,7 +221,22 @@ const PreArrival = () => {
     });
 
   const toggleDiet = (key: string) =>
-    setDiet((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+    setDiet((prev) => {
+      if (key === "none") return prev.includes("none") ? [] : ["none"];
+      const withoutNone = prev.filter((item) => item !== "none");
+      return withoutNone.includes(key) ? withoutNone.filter((item) => item !== key) : [...withoutNone, key];
+    });
+
+  const normalizedMobility = mobilityChoice === "no"
+    ? "Não"
+    : mobilityChoice === "yes"
+      ? `Sim${mobilityDetail.trim() ? ` — ${mobilityDetail.trim()}` : ""}`
+      : "";
+  const normalizedMedication = medicationChoice === "no"
+    ? "Não"
+    : medicationChoice === "yes"
+      ? `Sim${medicationDetail.trim() ? ` — ${medicationDetail.trim()}` : ""}`
+      : "";
 
   const handleSubmit = async () => {
     if (!token) return;
@@ -172,13 +249,13 @@ const PreArrival = () => {
       _children_info: childrenInfo.trim().slice(0, 500) || null,
       _special_occasion: occasion || null,
       _special_occasion_detail: occasionDetail.trim().slice(0, 500) || null,
-      _arrival_mode: arrivalMode || null,
-      _estimated_arrival_time: arrivalTime.trim().slice(0, 100) || null,
-      _transport_needs: transportNeeds.trim().slice(0, 500) || null,
+      _arrival_mode: null,
+      _estimated_arrival_time: null,
+      _transport_needs: null,
       _additional_info: additionalInfo.trim().slice(0, 1000) || null,
       _health_condition: healthCondition.trim().slice(0, 500) || null,
-      _mobility_limitations: mobility.trim().slice(0, 500) || null,
-      _continuous_medication: medication.trim().slice(0, 500) || null,
+      _mobility_limitations: normalizedMobility.slice(0, 500) || null,
+      _continuous_medication: normalizedMedication.slice(0, 500) || null,
     });
     setSubmitting(false);
 
@@ -197,14 +274,6 @@ const PreArrival = () => {
   };
 
   const whatsappLink = createWhatsAppLink(t("preArrival.whatsappMsg"));
-
-  const Shell = ({ children }: { children: React.ReactNode }) => (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="container mx-auto max-w-3xl px-4 py-24 md:py-28">{children}</main>
-      <Footer />
-    </div>
-  );
 
   if (loading) {
     return (
@@ -301,11 +370,37 @@ const PreArrival = () => {
           </div>
           <div>
             <Label htmlFor="mobility">{t("preArrival.health.mobility")}</Label>
-            <Input id="mobility" value={mobility} maxLength={500} onChange={(e) => setMobility(e.target.value)} />
+            <ChoiceWithDetail
+              name="mobility"
+              value={mobilityChoice}
+              onValueChange={(value) => {
+                setMobilityChoice(value);
+                if (value === "no") setMobilityDetail("");
+              }}
+              detail={mobilityDetail}
+              onDetailChange={setMobilityDetail}
+              yesLabel={t("preArrival.health.yes")}
+              noLabel={t("preArrival.health.no")}
+              detailLabel={t("preArrival.health.mobilityDetail")}
+              detailPlaceholder={t("preArrival.health.mobilityPh")}
+            />
           </div>
           <div>
             <Label htmlFor="medication">{t("preArrival.health.medication")}</Label>
-            <Input id="medication" value={medication} maxLength={500} onChange={(e) => setMedication(e.target.value)} />
+            <ChoiceWithDetail
+              name="medication"
+              value={medicationChoice}
+              onValueChange={(value) => {
+                setMedicationChoice(value);
+                if (value === "no") setMedicationDetail("");
+              }}
+              detail={medicationDetail}
+              onDetailChange={setMedicationDetail}
+              yesLabel={t("preArrival.health.yes")}
+              noLabel={t("preArrival.health.no")}
+              detailLabel={t("preArrival.health.medicationDetail")}
+              detailPlaceholder={t("preArrival.health.medicationPh")}
+            />
           </div>
         </Section>
       ),
@@ -346,7 +441,7 @@ const PreArrival = () => {
               </SelectContent>
             </Select>
           </div>
-          <div>
+          {occasion && occasion !== "none" && <div>
             <Label htmlFor="occasion-detail">{t("preArrival.occasion.detail")}</Label>
             <Textarea
               id="occasion-detail"
@@ -355,49 +450,7 @@ const PreArrival = () => {
               placeholder={t("preArrival.occasion.detailPh")}
               onChange={(e) => setOccasionDetail(e.target.value)}
             />
-          </div>
-        </Section>
-      ),
-    },
-    {
-      key: "transport",
-      node: (
-        <Section icon={Car} title={t("preArrival.transport.title")}>
-          <div>
-            <Label>{t("preArrival.transport.mode")}</Label>
-            <Select value={arrivalMode} onValueChange={setArrivalMode}>
-              <SelectTrigger>
-                <SelectValue placeholder={t("preArrival.arrivalOpts.car")} />
-              </SelectTrigger>
-              <SelectContent>
-                {ARRIVAL_KEYS.map((key) => (
-                  <SelectItem key={key} value={key}>
-                    {t(`preArrival.arrivalOpts.${key}`)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="arrival-time">{t("preArrival.transport.time")}</Label>
-            <Input
-              id="arrival-time"
-              value={arrivalTime}
-              maxLength={100}
-              placeholder="14:00"
-              onChange={(e) => setArrivalTime(e.target.value)}
-            />
-          </div>
-          <div>
-            <Label htmlFor="transport-needs">{t("preArrival.transport.needs")}</Label>
-            <Textarea
-              id="transport-needs"
-              value={transportNeeds}
-              maxLength={500}
-              placeholder={t("preArrival.transport.needsPh")}
-              onChange={(e) => setTransportNeeds(e.target.value)}
-            />
-          </div>
+          </div>}
         </Section>
       ),
     },
@@ -436,7 +489,7 @@ const PreArrival = () => {
     {
       step: 1,
       title: t("preArrival.health.title"),
-      lines: [healthCondition, mobility, medication].filter(Boolean),
+      lines: [healthCondition, normalizedMobility, normalizedMedication].filter(Boolean),
     },
     { step: 2, title: t("preArrival.kids.title"), lines: [childrenInfo].filter(Boolean) },
     {
@@ -444,16 +497,7 @@ const PreArrival = () => {
       title: t("preArrival.occasion.title"),
       lines: [occasion ? t(`preArrival.occasionOpts.${occasion}`) : "", occasionDetail].filter(Boolean),
     },
-    {
-      step: 4,
-      title: t("preArrival.transport.title"),
-      lines: [
-        arrivalMode ? t(`preArrival.arrivalOpts.${arrivalMode}`) : "",
-        arrivalTime,
-        transportNeeds,
-      ].filter(Boolean),
-    },
-    { step: 5, title: t("preArrival.additional.title"), lines: [additionalInfo].filter(Boolean) },
+    { step: 4, title: t("preArrival.additional.title"), lines: [additionalInfo].filter(Boolean) },
   ];
 
   const goTo = (next: number) => {
@@ -469,9 +513,9 @@ const PreArrival = () => {
           {t("preArrival.title")}
         </span>
         <h1 className="mt-4 text-3xl md:text-4xl font-semibold text-foreground">
-          {data.guest_name}
+          {t("preArrival.pageTitle")}
         </h1>
-        <p className="mt-2 text-muted-foreground">{t("preArrival.subtitle")}</p>
+        <p className="mt-2 text-muted-foreground">{data.guest_name} · {t("preArrival.subtitle")}</p>
       </header>
 
       <div className="rounded-2xl border border-border bg-muted/40 p-5 mb-6">

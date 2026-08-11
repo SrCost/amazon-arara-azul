@@ -775,9 +775,10 @@
   },
   "preArrival": {
     "title": "Pre-Arrival",
+    "pageTitle": "Pre-Arrival Questionnaire — Pousada Arara Azul",
     "subtitle": "Let's prepare everything your way",
-    "intro": "We are delighted to welcome you to Pousada Rará Azul! Tell us a little about your preferences so we can take care of every detail of your stay. All questions are optional.",
-    "closing": "Thank you for sharing. We can't wait to welcome you to Rará Azul.",
+    "intro": "We are delighted to welcome you to Pousada Arara Azul! Tell us a little about your preferences so we can take care of every detail of your stay. All questions are optional.",
+    "closing": "Thank you for sharing. We can't wait to welcome you to Pousada Arara Azul.",
     "reservation": "Reservation",
     "guestName": "Main guest",
     "checkIn": "Check-in",
@@ -792,10 +793,12 @@
       "avoidPh": "E.g. seafood, spicy food..."
     },
     "diet": {
+      "none": "No dietary restrictions",
       "vegetarian": "Vegetarian",
       "vegan": "Vegan",
-      "glutenFree": "Gluten-free",
-      "lactoseFree": "Lactose-free",
+      "lactoseIntolerance": "Lactose intolerance",
+      "celiac": "Celiac disease / gluten",
+      "foodAllergy": "Food allergy",
       "diabetic": "Diabetic",
       "other": "Other"
     },
@@ -803,13 +806,19 @@
       "title": "Health & Wellbeing",
       "notice": "This information is completely optional and used only for your comfort and safety during the stay. We treat it confidentially.",
       "condition": "Any health condition we should consider?",
-      "mobility": "Mobility limitations",
-      "medication": "Ongoing medication"
+      "mobility": "Do you have any physical or mobility limitations?",
+      "medication": "Do you take ongoing medication?",
+      "yes": "Yes",
+      "no": "No",
+      "mobilityDetail": "Tell us how we can help",
+      "mobilityPh": "Describe the limitation or support needed",
+      "medicationDetail": "Which medication?",
+      "medicationPh": "Share the medication and relevant care"
     },
     "kids": {
       "title": "Children",
-      "info": "Travelling with children? Tell us their ages and what they need (crib, car seat, activities).",
-      "infoPh": "E.g. one 4-year-old, needs an extra bed"
+      "info": "Is there anything relevant about the children our team should know?",
+      "infoPh": "E.g. ages, crib, meals or special care"
     },
     "occasion": {
       "title": "Special Occasion",
@@ -822,7 +831,6 @@
       "honeymoon": "Honeymoon",
       "birthday": "Birthday",
       "anniversary": "Wedding anniversary",
-      "proposal": "Marriage proposal",
       "other": "Other"
     },
     "transport": {

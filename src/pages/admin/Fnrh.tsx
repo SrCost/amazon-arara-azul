@@ -112,6 +112,13 @@ const readErrorBody = async (error: unknown): Promise<ErrorBody | null> => {
   }
 };
 
+const formatSyncError = (message: string) => {
+  if (message.includes("não respondeu")) return `Tempo limite da API oficial: ${message}`;
+  if (message.includes("conectar à API")) return `Conectividade com a API oficial: ${message}`;
+  if (message.includes("credenciais") || message.includes("401")) return `Autenticação recusada pela API oficial: ${message}`;
+  return message;
+};
+
 const Fnrh = () => {
   const { toast } = useToast();
   const [fichas, setFichas] = useState<Ficha[]>([]);
@@ -353,7 +360,7 @@ const Fnrh = () => {
                       </Badge>
                       {ficha.erro_sincronizacao_fnrh && (
                         <p className="text-xs text-destructive mt-1 max-w-[280px]">
-                          {ficha.erro_sincronizacao_fnrh}
+                          {formatSyncError(ficha.erro_sincronizacao_fnrh)}
                         </p>
                       )}
                     </TableCell>

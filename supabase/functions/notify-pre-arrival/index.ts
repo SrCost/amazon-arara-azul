@@ -94,7 +94,7 @@ ${row("Respondido em", answeredAt)}
 </td></tr></table>
 </td></tr>
 <tr><td style="padding:16px 28px;background:#f8f9fa;font-size:11px;color:#999;text-align:center;">
-Notificação interna — Pousada Rará Azul
+Notificação interna — Pousada Arara Azul
 </td></tr></table></td></tr></table></body></html>`;
 
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
@@ -103,7 +103,7 @@ Notificação interna — Pousada Rará Azul
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({
-        from: "Pousada Rará Azul <reservas@pousadararazul.com>",
+        from: "Pousada Arara Azul <reservas@pousadararazul.com>",
         to: [RESERVAS_EMAIL],
         subject: `Novo questionário de pré-chegada — Reserva #${code}`,
         html,

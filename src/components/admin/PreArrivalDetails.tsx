@@ -17,9 +17,6 @@ export interface AdminPreArrivalAnswers {
   children_info: string | null;
   special_occasion: string | null;
   special_occasion_detail: string | null;
-  arrival_mode: string | null;
-  estimated_arrival_time: string | null;
-  transport_needs: string | null;
   additional_info: string | null;
   can_view_health: boolean;
   health_condition: string | null;
@@ -139,12 +136,6 @@ const PreArrivalDetails = ({ reservationId, reservation }: Props) => {
       <Group title="Ocasião Especial">
         <Field label="Ocasião" value={answers.special_occasion} />
         <Field label="Detalhes" value={answers.special_occasion_detail} />
-      </Group>
-
-      <Group title="Transporte e Chegada">
-        <Field label="Meio de chegada" value={answers.arrival_mode} />
-        <Field label="Horário estimado" value={answers.estimated_arrival_time} />
-        <Field label="Necessidades de transporte" value={answers.transport_needs} />
       </Group>
 
       <Group title="Informações Adicionais">

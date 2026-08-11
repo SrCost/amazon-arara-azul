@@ -13,11 +13,11 @@ type Lang = "pt" | "en" | "es" | "fr" | "de";
 
 const COPY: Record<Lang, Record<string, string>> = {
   pt: {
-    subject: "Podemos preparar sua chegada à Pousada Rará Azul? 🌿",
+    subject: "Podemos preparar sua chegada à Pousada Arara Azul? 🌿",
     header: "Prepare sua chegada",
     tagline: "Vamos deixar tudo do seu jeito",
     hello: "Olá",
-    intro: "Faltam poucos dias para a sua estadia na Pousada Rará Azul. Para que possamos preparar tudo do seu jeito — alimentação, chegada e detalhes especiais — reserve dois minutinhos e conte um pouco sobre você.",
+    intro: "Faltam poucos dias para a sua estadia na Pousada Arara Azul. Para que possamos preparar tudo do seu jeito — alimentação, saúde e detalhes especiais — reserve dois minutinhos e conte um pouco sobre você.",
     checkin: "Check-in",
     checkout: "Check-out",
     cta: "PREPARAR MINHA CHEGADA",
@@ -25,11 +25,11 @@ const COPY: Record<Lang, Record<string, string>> = {
     already: "Caso você já tenha preenchido o formulário, pode desconsiderar este e-mail.",
   },
   en: {
-    subject: "May we prepare your arrival at Pousada Rará Azul? 🌿",
+    subject: "May we prepare your arrival at Pousada Arara Azul? 🌿",
     header: "Prepare your arrival",
     tagline: "Let's tailor everything for you",
     hello: "Hello",
-    intro: "Your stay at Pousada Rará Azul is coming up. So we can prepare everything just the way you like — meals, arrival and special details — please take two minutes to tell us a bit about you.",
+    intro: "Your stay at Pousada Arara Azul is coming up. So we can prepare everything just the way you like — meals, wellbeing and special details — please take two minutes to tell us a bit about you.",
     checkin: "Check-in",
     checkout: "Check-out",
     cta: "PREPARE MY ARRIVAL",
@@ -37,11 +37,11 @@ const COPY: Record<Lang, Record<string, string>> = {
     already: "If you have already filled in the form, please disregard this email.",
   },
   es: {
-    subject: "¿Podemos preparar su llegada a Pousada Rará Azul? 🌿",
+    subject: "¿Podemos preparar su llegada a Pousada Arara Azul? 🌿",
     header: "Prepare su llegada",
     tagline: "Dejaremos todo a su gusto",
     hello: "Hola",
-    intro: "Su estadía en Pousada Rará Azul está cerca. Para que podamos preparar todo a su gusto — alimentación, llegada y detalles especiales — dedique dos minutos a contarnos un poco sobre usted.",
+    intro: "Su estadía en Pousada Arara Azul está cerca. Para que podamos preparar todo a su gusto — alimentación, bienestar y detalles especiales — dedique dos minutos a contarnos un poco sobre usted.",
     checkin: "Check-in",
     checkout: "Check-out",
     cta: "PREPARAR MI LLEGADA",
@@ -49,11 +49,11 @@ const COPY: Record<Lang, Record<string, string>> = {
     already: "Si ya completó el formulario, puede ignorar este correo.",
   },
   fr: {
-    subject: "Pouvons-nous préparer votre arrivée à la Pousada Rará Azul ? 🌿",
+    subject: "Pouvons-nous préparer votre arrivée à la Pousada Arara Azul ? 🌿",
     header: "Préparez votre arrivée",
     tagline: "Tout sera à votre goût",
     hello: "Bonjour",
-    intro: "Votre séjour à la Pousada Rará Azul approche. Pour que nous puissions tout préparer selon vos préférences — repas, arrivée et détails particuliers — prenez deux minutes pour nous parler de vous.",
+    intro: "Votre séjour à la Pousada Arara Azul approche. Pour que nous puissions tout préparer selon vos préférences — repas, bien-être et détails particuliers — prenez deux minutes pour nous parler de vous.",
     checkin: "Arrivée",
     checkout: "Départ",
     cta: "PRÉPARER MON ARRIVÉE",
@@ -61,11 +61,11 @@ const COPY: Record<Lang, Record<string, string>> = {
     already: "Si vous avez déjà rempli le formulaire, vous pouvez ignorer cet e-mail.",
   },
   de: {
-    subject: "Dürfen wir Ihre Ankunft in der Pousada Rará Azul vorbereiten? 🌿",
+    subject: "Dürfen wir Ihre Ankunft in der Pousada Arara Azul vorbereiten? 🌿",
     header: "Ankunft vorbereiten",
     tagline: "Alles nach Ihren Wünschen",
     hello: "Hallo",
-    intro: "Ihr Aufenthalt in der Pousada Rará Azul steht bevor. Damit wir alles nach Ihren Wünschen vorbereiten können — Verpflegung, Ankunft und besondere Details — nehmen Sie sich zwei Minuten Zeit und erzählen Sie uns etwas über sich.",
+    intro: "Ihr Aufenthalt in der Pousada Arara Azul steht bevor. Damit wir alles nach Ihren Wünschen vorbereiten können — Verpflegung, Wohlbefinden und besondere Details — nehmen Sie sich zwei Minuten Zeit und erzählen Sie uns etwas über sich.",
     checkin: "Check-in",
     checkout: "Check-out",
     cta: "MEINE ANKUNFT VORBEREITEN",
@@ -138,7 +138,7 @@ serve(async (req) => {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 20px;">
 <table width="600" style="max-width:600px;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.08);">
 <tr><td align="center" style="background:linear-gradient(135deg,#0B3A66,#0F6B4D);padding:40px 30px;color:#fff;">
-<img src="${LOGO_URL}" width="100" style="border-radius:50%;margin-bottom:16px;" alt="Pousada Rará Azul">
+<img src="${LOGO_URL}" width="100" style="border-radius:50%;margin-bottom:16px;" alt="Pousada Arara Azul">
 <h1 style="margin:0;font-size:24px;">${c.header}</h1>
 <p style="margin:8px 0 0;opacity:0.9;font-size:14px;">${c.tagline}</p>
 </td></tr>
@@ -158,7 +158,7 @@ serve(async (req) => {
 <p style="margin:8px 0 0;color:#9AA5B1;font-size:12px;">${c.already}</p>
 </td></tr>
 <tr><td align="center" style="background:#0B3A66;padding:20px;color:rgba(255,255,255,0.7);font-size:12px;">
-© ${new Date().getFullYear()} Pousada Rará Azul — Manacapuru, AM
+© ${new Date().getFullYear()} Pousada Arara Azul — Manacapuru, AM
 </td></tr></table></td></tr></table></body></html>`;
 
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
@@ -167,7 +167,7 @@ serve(async (req) => {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_API_KEY}` },
       body: JSON.stringify({
-        from: "Pousada Rará Azul <reservas@pousadararazul.com>",
+        from: "Pousada Arara Azul <reservas@pousadararazul.com>",
         to: [reservation.guest_email],
         subject: c.subject,
         html,
