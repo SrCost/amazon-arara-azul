@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ export const ExtraRoomsSelector = ({
   onChange,
   disabled,
 }: ExtraRoomsSelectorProps) => {
+  const { t } = useTranslation();
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [unavailableRooms, setUnavailableRooms] = useState<Set<string>>(new Set());
@@ -179,7 +181,7 @@ export const ExtraRoomsSelector = ({
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Loader2 className="h-4 w-4 animate-spin" />
-        Carregando bangalôs...
+        {t("reservation.extraRooms.loading")}
       </div>
     );
   }
@@ -190,9 +192,9 @@ export const ExtraRoomsSelector = ({
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <Label className="text-base">Acomodações adicionais</Label>
+          <Label className="text-base">{t("reservation.extraRooms.title")}</Label>
           <p className="text-sm text-muted-foreground">
-            Precisa de mais de um bangalô? Adicione outras acomodações na mesma reserva.
+            {t("reservation.extraRooms.subtitle")}
           </p>
         </div>
         {checkingAvailability && (
@@ -217,8 +219,7 @@ export const ExtraRoomsSelector = ({
                       <p className="font-medium">{entry.roomName}</p>
                       {subtotal > 0 && (
                         <p className="text-sm text-muted-foreground">
-                          R$ {subtotal.toLocaleString("pt-BR")} ({nights}{" "}
-                          {nights === 1 ? "noite" : "noites"})
+                          R$ {subtotal.toLocaleString("pt-BR")} ({t("reservation.extraRooms.night", { count: nights })})
                         </p>
                       )}
                     </div>
@@ -226,7 +227,7 @@ export const ExtraRoomsSelector = ({
 
                   <div className="flex items-end gap-2">
                     <div className="w-32">
-                      <Label className="text-xs">Hóspedes</Label>
+                      <Label className="text-xs">{t("reservation.extraRooms.guests")}</Label>
                       <Select
                         value={String(entry.guests)}
                         onValueChange={(v) =>
@@ -243,7 +244,7 @@ export const ExtraRoomsSelector = ({
                             (_, i) => i + 1
                           ).map((n) => (
                             <SelectItem key={n} value={String(n)}>
-                              {n} {n === 1 ? "hóspede" : "hóspedes"}
+                              {t("reservation.extraRooms.guest", { count: n })}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -255,7 +256,7 @@ export const ExtraRoomsSelector = ({
                       size="icon"
                       onClick={() => handleRemove(entry.roomId)}
                       disabled={disabled}
-                      aria-label={`Remover ${entry.roomName}`}
+                      aria-label={t("reservation.extraRooms.remove", { name: entry.roomName })}
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -269,17 +270,17 @@ export const ExtraRoomsSelector = ({
 
       {!checkIn || !checkOut ? (
         <p className="text-sm text-muted-foreground">
-          Selecione as datas para ver os bangalôs disponíveis.
+          {t("reservation.extraRooms.selectDates")}
         </p>
       ) : !canAddMore ? (
         <p className="text-sm text-muted-foreground">
-          Limite de {MAX_ACCOMMODATIONS} acomodações por reserva atingido.
+          {t("reservation.extraRooms.limitReached", { count: MAX_ACCOMMODATIONS })}
         </p>
       ) : (
         <div className="space-y-2">
           <Select value="" onValueChange={handleAdd} disabled={disabled}>
             <SelectTrigger className="w-full sm:w-72">
-              <SelectValue placeholder="+ Adicionar outro bangalô" />
+              <SelectValue placeholder={t("reservation.extraRooms.addPlaceholder")} />
             </SelectTrigger>
             <SelectContent>
               {rooms.map((room) => {
@@ -293,9 +294,9 @@ export const ExtraRoomsSelector = ({
                   >
                     {room.name}
                     {busy
-                      ? " — indisponível nas datas selecionadas"
+                      ? ` — ${t("reservation.extraRooms.unavailable")}`
                       : already
-                      ? " — já adicionado"
+                      ? ` — ${t("reservation.extraRooms.alreadyAdded")}`
                       : ""}
                   </SelectItem>
                 );
@@ -304,7 +305,7 @@ export const ExtraRoomsSelector = ({
           </Select>
           {availableToAdd.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Nenhum outro bangalô disponível nas datas selecionadas.
+              {t("reservation.extraRooms.noneAvailable")}
             </p>
           )}
         </div>
