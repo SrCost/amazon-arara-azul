@@ -192,6 +192,12 @@ export async function registrarHospedagem(r: ReservationRow): Promise<RegistrarR
   };
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Colunas de id da FNRH são uuid no banco: só grava se o formato bater. */
+function asUuid(value: string | null): string | null {
+  return value && UUID_RE.test(value) ? value : null;
+}
+
 /** Persiste sucesso da sincronização na reserva local. */
 export async function saveSyncSuccess(
   admin: SupabaseClient,
@@ -201,9 +207,9 @@ export async function saveSyncSuccess(
   await admin
     .from("reservations")
     .update({
-      reserva_id_fnrh: result.reserva_id_fnrh,
-      hospede_id_fnrh: result.hospede_id_fnrh,
-      pessoa_id_fnrh: result.pessoa_id_fnrh,
+      reserva_id_fnrh: asUuid(result.reserva_id_fnrh),
+      hospede_id_fnrh: asUuid(result.hospede_id_fnrh),
+      pessoa_id_fnrh: asUuid(result.pessoa_id_fnrh),
       link_precheckin: result.link_precheckin,
       situacao_fnrh: result.situacao_fnrh,
       erro_sincronizacao_fnrh: null,
