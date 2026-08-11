@@ -391,7 +391,7 @@ const Reservations = () => {
               <TableBody>
                 {filteredReservations.map((reservation) => (
                   <TableRow key={reservation.id}>
-                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">{reservation.room_name || "N/A"}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">{reservation.rooms_summary || reservation.room_name || "N/A"}</TableCell>
                     <TableCell className="text-xs sm:text-sm text-muted-foreground hidden md:table-cell">
                       {reservation.package_name || "-"}
                     </TableCell>
