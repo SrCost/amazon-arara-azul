@@ -102,7 +102,7 @@ const HeroVideoSection = () => {
           alt={t("home.heroTitle")}
           className="absolute inset-0 w-full h-full object-cover"
           loading="eager"
-          fetchPriority="high"
+          {...{ fetchpriority: "high" }}
         />
       )}
 

@@ -71,7 +71,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
             height={1080}
             loading={idx === 0 ? "eager" : "lazy"}
             decoding={idx === 0 ? "sync" : "async"}
-            fetchPriority={idx === 0 ? "high" : "auto"}
+            {...{ fetchpriority: idx === 0 ? "high" : "auto" }}
             className="absolute inset-0 w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/20" />
@@ -136,7 +136,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
             alt={slide.alt_text}
             loading={index === 0 ? "eager" : "lazy"}
             decoding={index === 0 ? "sync" : "async"}
-            fetchPriority={index === 0 ? "high" : "auto"}
+            {...{ fetchpriority: index === 0 ? "high" : "auto" }}
             className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"} lg:hidden`}
           />
           <img
@@ -144,7 +144,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
             alt={slide.alt_text}
             loading={index === 0 ? "eager" : "lazy"}
             decoding={index === 0 ? "sync" : "async"}
-            fetchPriority={index === 0 ? "high" : "auto"}
+            {...{ fetchpriority: index === 0 ? "high" : "auto" }}
             className="absolute inset-0 w-full h-full object-contain hidden lg:block"
           />
         </>
@@ -161,7 +161,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
           height={1080}
           loading={index === 0 ? "eager" : "lazy"}
           decoding={index === 0 ? "sync" : "async"}
-          fetchPriority={index === 0 ? "high" : "auto"}
+          {...{ fetchpriority: index === 0 ? "high" : "auto" }}
           className={`absolute inset-0 w-full h-full ${slide.object_fit === "cover" ? "object-cover" : "object-contain"} lg:hidden`}
         />
         {/* Desktop: always object-contain to avoid cropping */}
@@ -172,7 +172,7 @@ const HeroCarousel = ({ onSlideChange }: HeroCarouselProps) => {
           height={1080}
           loading={index === 0 ? "eager" : "lazy"}
           decoding={index === 0 ? "sync" : "async"}
-          fetchPriority={index === 0 ? "high" : "auto"}
+          {...{ fetchpriority: index === 0 ? "high" : "auto" }}
           className="absolute inset-0 w-full h-full object-contain hidden lg:block"
         />
       </>
