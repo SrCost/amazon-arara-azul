@@ -85,7 +85,9 @@ const SITUACAO_VARIANT: Record<Situacao, "default" | "secondary" | "outline" | "
   NOSHOW: "outline",
   CANCELADO: "outline",
   ERRO_SINCRONIZACAO: "destructive",
+  DADOS_INCOMPLETOS: "destructive",
 };
+
 
 const formatDate = (value: string | null) =>
   value ? new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR") : "—";
