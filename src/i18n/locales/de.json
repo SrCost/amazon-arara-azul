@@ -841,6 +841,18 @@
     "whatsappBtn": "Über WhatsApp schreiben",
     "whatsappMsg": "Hallo! Ich brauche Hilfe mit dem Formular vor der Ankunft.",
     "loading": "Laden...",
-    "errorSave": "Ihre Antworten konnten nicht gespeichert werden. Bitte erneut versuchen."
+    "errorSave": "Ihre Antworten konnten nicht gespeichert werden. Bitte erneut versuchen.",
+    "nav": {
+      "step": "Schritt {{current}} von {{total}}",
+      "back": "Zurück",
+      "next": "Weiter",
+      "review": "Überprüfen"
+    },
+    "review": {
+      "title": "Überprüfen Sie Ihre Angaben",
+      "desc": "Prüfen Sie alles vor dem Absenden. Sie können jeden Abschnitt bearbeiten.",
+      "edit": "Bearbeiten",
+      "empty": "Nicht angegeben"
+    }
   }
 }

@@ -859,6 +859,18 @@
     "whatsappBtn": "Chat on WhatsApp",
     "whatsappMsg": "Hello! I need help with the pre-arrival form.",
     "loading": "Loading...",
-    "errorSave": "We couldn't save your answers. Please try again."
+    "errorSave": "We couldn't save your answers. Please try again.",
+    "nav": {
+      "step": "Step {{current}} of {{total}}",
+      "back": "Back",
+      "next": "Continue",
+      "review": "Review"
+    },
+    "review": {
+      "title": "Review your answers",
+      "desc": "Check everything before sending. You can edit any section.",
+      "edit": "Edit",
+      "empty": "Not provided"
+    }
   }
 }

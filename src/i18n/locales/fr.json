@@ -859,6 +859,18 @@
     "whatsappBtn": "Discuter sur WhatsApp",
     "whatsappMsg": "Bonjour ! J'ai besoin d'aide avec le formulaire de pré-arrivée.",
     "loading": "Chargement...",
-    "errorSave": "Impossible d'enregistrer vos réponses. Veuillez réessayer."
+    "errorSave": "Impossible d'enregistrer vos réponses. Veuillez réessayer.",
+    "nav": {
+      "step": "Étape {{current}} sur {{total}}",
+      "back": "Retour",
+      "next": "Continuer",
+      "review": "Vérifier"
+    },
+    "review": {
+      "title": "Vérifiez vos réponses",
+      "desc": "Vérifiez tout avant d'envoyer. Vous pouvez modifier chaque section.",
+      "edit": "Modifier",
+      "empty": "Non renseigné"
+    }
   }
 }
