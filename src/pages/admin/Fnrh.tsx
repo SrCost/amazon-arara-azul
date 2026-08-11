@@ -72,7 +72,9 @@ const SITUACAO_LABEL: Record<Situacao, string> = {
   NOSHOW: "No-show",
   CANCELADO: "Cancelado",
   ERRO_SINCRONIZACAO: "Erro de sincronização",
+  DADOS_INCOMPLETOS: "Dados incompletos",
 };
+
 
 const SITUACAO_VARIANT: Record<Situacao, "default" | "secondary" | "outline" | "destructive"> = {
   NAO_SINCRONIZADA: "outline",
