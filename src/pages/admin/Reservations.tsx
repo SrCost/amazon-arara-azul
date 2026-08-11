@@ -42,7 +42,7 @@ import { Search, Eye, Edit, X, Mail, MessageCircle, ChevronLeft, ChevronRight } 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchReservationRoomsMap, formatRoomsSummary, type ReservationRoomItem } from "@/lib/reservationRooms";
-import PreArrivalCell from "@/components/admin/PreArrivalCell";
+import PreArrivalCell, { type PreArrivalStatusRow } from "@/components/admin/PreArrivalCell";
 
 
 interface Reservation {
