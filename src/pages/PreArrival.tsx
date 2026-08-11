@@ -87,6 +87,8 @@ const PreArrival = () => {
   const [data, setData] = useState<PreArrivalData | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [step, setStep] = useState(0);
+
 
   const [diet, setDiet] = useState<string[]>([]);
   const [foodsToAvoid, setFoodsToAvoid] = useState("");
