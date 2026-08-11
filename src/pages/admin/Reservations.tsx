@@ -151,7 +151,20 @@ const Reservations = () => {
       
       setTotalCount(count || 0);
       
-      const roomsMap = await fetchReservationRoomsMap((data || []).map((r) => r.id));
+      const ids = (data || []).map((r) => r.id);
+      const roomsMap = await fetchReservationRoomsMap(ids);
+
+      // Status de Pré-Chegada em uma única consulta agregada por página
+      const preArrivalMap: Record<string, PreArrivalStatusRow> = {};
+      if (ids.length > 0) {
+        const { data: preArrivalRows } = await supabase
+          .from("pre_arrival_responses")
+          .select("reservation_id, status, last_sent_at, answered_at, reminders_sent, last_send_origin")
+          .in("reservation_id", ids);
+        (preArrivalRows || []).forEach((row) => {
+          preArrivalMap[row.reservation_id] = row as PreArrivalStatusRow;
+        });
+      }
 
       // Map the data to include package_name e resumo das acomodações
       const mappedData = (data || []).map(reservation => ({
@@ -159,7 +172,9 @@ const Reservations = () => {
         package_name: reservation.packages?.name || null,
         rooms_summary: formatRoomsSummary(roomsMap[reservation.id], reservation.room_name),
         rooms_items: roomsMap[reservation.id] || [],
+        pre_arrival: preArrivalMap[reservation.id] || null,
       }));
+
       
       setReservations(mappedData as Reservation[]);
     } catch (error) {
