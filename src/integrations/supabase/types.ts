@@ -684,6 +684,99 @@ export type Database = {
           },
         ]
       }
+      pre_arrival_responses: {
+        Row: {
+          additional_info: string | null
+          answered_at: string | null
+          arrival_mode: string | null
+          children_info: string | null
+          continuous_medication: string | null
+          created_at: string
+          dietary_restrictions: string[]
+          estimated_arrival_time: string | null
+          first_sent_at: string | null
+          foods_to_avoid: string | null
+          health_condition: string | null
+          id: string
+          language: string
+          last_send_origin: string | null
+          last_sent_at: string | null
+          mobility_limitations: string | null
+          reminders_sent: number
+          reservation_id: string
+          special_occasion: string | null
+          special_occasion_detail: string | null
+          status: string
+          transport_needs: string | null
+          updated_at: string
+        }
+        Insert: {
+          additional_info?: string | null
+          answered_at?: string | null
+          arrival_mode?: string | null
+          children_info?: string | null
+          continuous_medication?: string | null
+          created_at?: string
+          dietary_restrictions?: string[]
+          estimated_arrival_time?: string | null
+          first_sent_at?: string | null
+          foods_to_avoid?: string | null
+          health_condition?: string | null
+          id?: string
+          language?: string
+          last_send_origin?: string | null
+          last_sent_at?: string | null
+          mobility_limitations?: string | null
+          reminders_sent?: number
+          reservation_id: string
+          special_occasion?: string | null
+          special_occasion_detail?: string | null
+          status?: string
+          transport_needs?: string | null
+          updated_at?: string
+        }
+        Update: {
+          additional_info?: string | null
+          answered_at?: string | null
+          arrival_mode?: string | null
+          children_info?: string | null
+          continuous_medication?: string | null
+          created_at?: string
+          dietary_restrictions?: string[]
+          estimated_arrival_time?: string | null
+          first_sent_at?: string | null
+          foods_to_avoid?: string | null
+          health_condition?: string | null
+          id?: string
+          language?: string
+          last_send_origin?: string | null
+          last_sent_at?: string | null
+          mobility_limitations?: string | null
+          reminders_sent?: number
+          reservation_id?: string
+          special_occasion?: string | null
+          special_occasion_detail?: string | null
+          status?: string
+          transport_needs?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pre_arrival_responses_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pre_arrival_responses_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: true
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null
@@ -1338,6 +1431,60 @@ export type Database = {
         Returns: string
       }
       get_current_user_email: { Args: never; Returns: string }
+      get_pre_arrival_admin: {
+        Args: { _reservation_id: string }
+        Returns: {
+          additional_info: string
+          answered_at: string
+          arrival_mode: string
+          can_view_health: boolean
+          children_info: string
+          continuous_medication: string
+          dietary_restrictions: string[]
+          estimated_arrival_time: string
+          first_sent_at: string
+          foods_to_avoid: string
+          health_condition: string
+          language: string
+          last_send_origin: string
+          last_sent_at: string
+          mobility_limitations: string
+          reminders_sent: number
+          reservation_id: string
+          special_occasion: string
+          special_occasion_detail: string
+          status: string
+          transport_needs: string
+          updated_at: string
+        }[]
+      }
+      get_pre_arrival_by_token: {
+        Args: { _token: string }
+        Returns: {
+          additional_info: string
+          answered_at: string
+          arrival_mode: string
+          check_in: string
+          check_out: string
+          children_info: string
+          continuous_medication: string
+          dietary_restrictions: string[]
+          estimated_arrival_time: string
+          foods_to_avoid: string
+          guest_language: string
+          guest_name: string
+          guests: number
+          health_condition: string
+          mobility_limitations: string
+          reservation_code: string
+          reservation_id: string
+          rooms_summary: string
+          special_occasion: string
+          special_occasion_detail: string
+          status: string
+          transport_needs: string
+        }[]
+      }
       get_public_reservation_summary: {
         Args: { p_room_id?: string }
         Returns: {
@@ -1446,6 +1593,29 @@ export type Database = {
           p_token?: string
         }
         Returns: boolean
+      }
+      submit_pre_arrival: {
+        Args: {
+          _additional_info?: string
+          _arrival_mode?: string
+          _children_info?: string
+          _continuous_medication?: string
+          _dietary_restrictions?: string[]
+          _estimated_arrival_time?: string
+          _foods_to_avoid?: string
+          _health_condition?: string
+          _language?: string
+          _mobility_limitations?: string
+          _special_occasion?: string
+          _special_occasion_detail?: string
+          _token: string
+          _transport_needs?: string
+        }
+        Returns: {
+          is_update: boolean
+          reservation_id: string
+          status: string
+        }[]
       }
       validate_booking_token: {
         Args: { p_token: string; p_type: string }
