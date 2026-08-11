@@ -252,8 +252,8 @@ const PreArrival = () => {
 
   const alreadyAnswered = Boolean(data.answered_at);
 
-  return (
   const steps = [
+
     {
       key: "food",
       node: (
