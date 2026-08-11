@@ -13,7 +13,9 @@ const SITUACOES = [
   "NOSHOW",
   "CANCELADO",
   "ERRO_SINCRONIZACAO",
+  "DADOS_INCOMPLETOS",
   "NAO_SINCRONIZADA",
+
 ] as const;
 
 const FiltersSchema = z.object({

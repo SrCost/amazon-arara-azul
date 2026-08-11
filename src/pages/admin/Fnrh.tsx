@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import CompletarDadosFnrhModal from "@/components/admin/fnrh/CompletarDadosFnrhModal";
 import {
   Search,
   RefreshCw,
@@ -29,7 +30,9 @@ import {
   Copy,
   AlertTriangle,
   ShieldCheck,
+  PencilLine,
 } from "lucide-react";
+
 
 type Situacao =
   | "PRECHECKIN_PENDENTE"
@@ -39,7 +42,9 @@ type Situacao =
   | "NOSHOW"
   | "CANCELADO"
   | "ERRO_SINCRONIZACAO"
+  | "DADOS_INCOMPLETOS"
   | "NAO_SINCRONIZADA";
+
 
 interface Ficha {
   id: string;
@@ -70,7 +75,9 @@ const SITUACAO_LABEL: Record<Situacao, string> = {
   NOSHOW: "No-show",
   CANCELADO: "Cancelado",
   ERRO_SINCRONIZACAO: "Erro de sincronização",
+  DADOS_INCOMPLETOS: "Dados incompletos",
 };
+
 
 const SITUACAO_VARIANT: Record<Situacao, "default" | "secondary" | "outline" | "destructive"> = {
   NAO_SINCRONIZADA: "outline",
@@ -81,10 +88,29 @@ const SITUACAO_VARIANT: Record<Situacao, "default" | "secondary" | "outline" | "
   NOSHOW: "outline",
   CANCELADO: "outline",
   ERRO_SINCRONIZACAO: "destructive",
+  DADOS_INCOMPLETOS: "destructive",
 };
+
 
 const formatDate = (value: string | null) =>
   value ? new Date(`${value}T12:00:00`).toLocaleDateString("pt-BR") : "—";
+
+interface ErrorBody {
+  error?: string;
+  code?: string;
+  details?: Array<{ field: string; message: string }> | unknown;
+}
+
+/** Lê o corpo JSON de uma resposta 4xx/5xx da Edge Function. */
+const readErrorBody = async (error: unknown): Promise<ErrorBody | null> => {
+  const ctx = (error as { context?: Response })?.context;
+  if (!ctx || typeof ctx.json !== "function") return null;
+  try {
+    return (await ctx.clone().json()) as ErrorBody;
+  } catch {
+    return null;
+  }
+};
 
 const Fnrh = () => {
   const { toast } = useToast();
@@ -96,6 +122,7 @@ const Fnrh = () => {
   const [situacao, setSituacao] = useState<string>("todas");
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
+  const [completar, setCompletar] = useState<{ ficha: Ficha; fields: string[] } | null>(null);
 
   const loadFichas = useCallback(async () => {
     setLoading(true);
@@ -109,9 +136,10 @@ const Fnrh = () => {
     setLoading(false);
 
     if (error) {
+      const parsed = await readErrorBody(error);
       toast({
         title: "Erro ao carregar fichas",
-        description: error.message,
+        description: parsed?.error ?? error.message,
         variant: "destructive",
       });
       return;
@@ -129,25 +157,54 @@ const Fnrh = () => {
     fn: "fnrh-criar-reserva" | "fnrh-checkin" | "fnrh-checkout" | "fnrh-reprocessar-reserva",
     reservationId: string,
     successMessage: string,
-  ) => {
+    extraBody?: Record<string, unknown>,
+  ): Promise<boolean> => {
     setBusy(`${fn}:${reservationId}`);
     const { data, error } = await supabase.functions.invoke(fn, {
-      body: { reservation_id: reservationId },
+      body: { reservation_id: reservationId, ...(extraBody ?? {}) },
     });
     setBusy(null);
 
     if (error) {
-      toast({ title: "Falha na operação", description: error.message, variant: "destructive" });
-      return;
+      const parsed = await readErrorBody(error);
+      const issues = Array.isArray(parsed?.details)
+        ? (parsed!.details as Array<{ field: string; message: string }>)
+        : [];
+
+      if (parsed?.code === "VALIDACAO_FNRH" && issues.length > 0) {
+        const ficha = fichas.find((f) => f.id === reservationId);
+        if (ficha) {
+          setCompletar({ ficha, fields: issues.map((i) => i.field) });
+        }
+        toast({
+          title: "Dados obrigatórios faltando",
+          description: issues.map((i) => i.message).join(" "),
+          variant: "destructive",
+        });
+        await loadFichas();
+        return false;
+      }
+
+      toast({
+        title: "Falha na operação",
+        description:
+          parsed?.error ??
+          (issues.length > 0 ? issues.map((i) => i.message).join(" ") : error.message),
+        variant: "destructive",
+      });
+      await loadFichas();
+      return false;
     }
     if (data?.error) {
       toast({ title: "FNRH retornou erro", description: String(data.error), variant: "destructive" });
       await loadFichas();
-      return;
+      return false;
     }
     toast({ title: successMessage });
     await loadFichas();
+    return true;
   };
+
 
   const reprocessarLote = async () => {
     setBusy("lote");
@@ -351,6 +408,17 @@ const Fnrh = () => {
                             Check-out
                           </Button>
                         )}
+                        {ficha.situacao_fnrh === "DADOS_INCOMPLETOS" && (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            disabled={isBusy}
+                            onClick={() => setCompletar({ ficha, fields: [] })}
+                          >
+                            <PencilLine className="h-4 w-4 mr-1" />
+                            Completar dados
+                          </Button>
+                        )}
                         {ficha.situacao_fnrh === "ERRO_SINCRONIZACAO" && (
                           <Button
                             size="sm"
@@ -373,7 +441,29 @@ const Fnrh = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {completar && (
+        <CompletarDadosFnrhModal
+          open
+          onOpenChange={(open) => !open && setCompletar(null)}
+          guestName={completar.ficha.guest_name}
+          guests={completar.ficha.guests}
+          pendingFields={completar.fields}
+          submitting={busy === `fnrh-criar-reserva:${completar.ficha.id}`}
+          onSubmit={async (hospede) => {
+            const ficha = completar.ficha;
+            const success = await runAction(
+              "fnrh-criar-reserva",
+              ficha.id,
+              "Ficha enviada à FNRH",
+              { hospede },
+            );
+            if (success) setCompletar(null);
+          }}
+        />
+      )}
     </div>
+
   );
 };
 
