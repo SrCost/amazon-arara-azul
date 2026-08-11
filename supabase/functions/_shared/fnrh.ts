@@ -53,8 +53,8 @@ export interface FnrhRequestOptions {
 }
 
 function authHeader(): string {
-  const user = Deno.env.get("FNRH_API_USER");
-  const password = Deno.env.get("FNRH_API_PASSWORD");
+  const user = Deno.env.get("FNRH_API_USER")?.trim();
+  const password = Deno.env.get("FNRH_API_PASSWORD")?.trim();
   if (!user || !password) {
     throw new FnrhError(
       500,
