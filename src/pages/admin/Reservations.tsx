@@ -68,7 +68,9 @@ interface Reservation {
   special_requests?: string;
   created_at: string;
   updated_at?: string;
+  pre_arrival?: PreArrivalStatusRow | null;
 }
+
 
 const Reservations = () => {
   const { t } = useTranslation();
