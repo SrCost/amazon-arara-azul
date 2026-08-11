@@ -39,7 +39,9 @@ type Situacao =
   | "NOSHOW"
   | "CANCELADO"
   | "ERRO_SINCRONIZACAO"
+  | "DADOS_INCOMPLETOS"
   | "NAO_SINCRONIZADA";
+
 
 interface Ficha {
   id: string;
