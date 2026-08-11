@@ -56,17 +56,18 @@ export const ExtraRoomsSelector = ({
   onChange,
   disabled,
 }: ExtraRoomsSelectorProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [rooms, setRooms] = useState<RoomOption[]>([]);
   const [loadingRooms, setLoadingRooms] = useState(true);
   const [unavailableRooms, setUnavailableRooms] = useState<Set<string>>(new Set());
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   useEffect(() => {
+    const lang = (i18n.language || "pt").split("-")[0];
     const fetchRooms = async () => {
       const { data, error } = await supabase
         .from("rooms")
-        .select("id, name_pt, price_per_night, max_guests")
+        .select("id, name_pt, name_en, name_es, name_fr, name_de, price_per_night, max_guests")
         .eq("is_active", true)
         .order("name_pt");
 
@@ -76,7 +77,8 @@ export const ExtraRoomsSelector = ({
             .filter((r) => r.id !== mainRoomId)
             .map((r) => ({
               id: r.id,
-              name: r.name_pt,
+              name:
+                (r as Record<string, string>)[`name_${lang}`] || r.name_pt,
               pricePerNight: Number(r.price_per_night) || 0,
               maxGuests: Number(r.max_guests) || 2,
             }))
@@ -86,7 +88,7 @@ export const ExtraRoomsSelector = ({
     };
 
     fetchRooms();
-  }, [mainRoomId]);
+  }, [mainRoomId, i18n.language]);
 
   // Disponibilidade por bangalô nas datas selecionadas
   useEffect(() => {
