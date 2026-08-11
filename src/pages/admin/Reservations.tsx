@@ -41,12 +41,13 @@ import { Label } from "@/components/ui/label";
 import { Search, Eye, Edit, X, Mail, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { fetchReservationRoomsMap, formatRoomsSummary } from "@/lib/reservationRooms";
+import { fetchReservationRoomsMap, formatRoomsSummary, type ReservationRoomItem } from "@/lib/reservationRooms";
 
 interface Reservation {
   id: string;
   room_name: string;
   rooms_summary?: string;
+  rooms_items?: ReservationRoomItem[];
   package_id?: string;
   package_name?: string;
   guest_name: string;
@@ -153,6 +154,7 @@ const Reservations = () => {
         ...reservation,
         package_name: reservation.packages?.name || null,
         rooms_summary: formatRoomsSummary(roomsMap[reservation.id], reservation.room_name),
+        rooms_items: roomsMap[reservation.id] || [],
       }));
       
       setReservations(mappedData as Reservation[]);
@@ -375,13 +377,14 @@ const Reservations = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">Pousada</TableHead>
+                  <TableHead className="whitespace-nowrap">Acomodações</TableHead>
                   <TableHead className="whitespace-nowrap hidden md:table-cell">Pacote</TableHead>
                   <TableHead className="whitespace-nowrap">Hóspede</TableHead>
                   <TableHead className="whitespace-nowrap hidden sm:table-cell">Check-in</TableHead>
                   <TableHead className="whitespace-nowrap hidden sm:table-cell">Check-out</TableHead>
                   <TableHead className="whitespace-nowrap">Status</TableHead>
                   <TableHead className="whitespace-nowrap hidden lg:table-cell">Pagamento</TableHead>
+                  <TableHead className="whitespace-nowrap hidden xl:table-cell">Pré-Chegada</TableHead>
                   <TableHead className="whitespace-nowrap hidden xl:table-cell">Método</TableHead>
                   <TableHead className="whitespace-nowrap hidden xl:table-cell">ID MP</TableHead>
                   <TableHead className="whitespace-nowrap">Valor</TableHead>
@@ -391,7 +394,12 @@ const Reservations = () => {
               <TableBody>
                 {filteredReservations.map((reservation) => (
                   <TableRow key={reservation.id}>
-                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">{reservation.rooms_summary || reservation.room_name || "N/A"}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm">
+                      <span className="whitespace-nowrap">{reservation.rooms_summary || reservation.room_name || "N/A"}</span>
+                      <span className="block text-xs font-normal text-muted-foreground">
+                        {(reservation.rooms_items?.length || 1)} acomodação(ões) · {reservation.guests} hóspede(s)
+                      </span>
+                    </TableCell>
                     <TableCell className="text-xs sm:text-sm text-muted-foreground hidden md:table-cell">
                       {reservation.package_name || "-"}
                     </TableCell>
@@ -400,6 +408,7 @@ const Reservations = () => {
                     <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{new Date(reservation.check_out).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(reservation.status)}</TableCell>
                     <TableCell className="hidden lg:table-cell">{getPaymentStatusBadge(reservation.payment_status)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground hidden xl:table-cell">—</TableCell>
                     <TableCell className="text-xs hidden xl:table-cell">
                       {reservation.payment_method === 'pix' ? 'PIX' : 
                        reservation.payment_method === 'credit_card' ? 'Cartão' : 
@@ -479,8 +488,8 @@ const Reservations = () => {
             <div className="space-y-3 sm:space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Pousada</Label>
-                  <p className="font-medium">{selectedReservation.room_name || "N/A"}</p>
+                  <Label className="text-muted-foreground">Acomodações</Label>
+                  <p className="font-medium">{selectedReservation.rooms_summary || selectedReservation.room_name || "N/A"}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Hóspede</Label>
@@ -497,6 +506,10 @@ const Reservations = () => {
                 <div>
                   <Label className="text-muted-foreground">Número de hóspedes</Label>
                   <p className="font-medium">{selectedReservation.guests}</p>
+                </div>
+                <div>
+                  <Label className="text-muted-foreground">Pré-Chegada</Label>
+                  <p className="font-medium text-muted-foreground">—</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Check-in</Label>
@@ -527,6 +540,44 @@ const Reservations = () => {
                   <p className="font-medium text-lg">R$ {selectedReservation.total_price.toLocaleString()}</p>
                 </div>
               </div>
+
+              {/* Acomodações da reserva */}
+              {(selectedReservation.rooms_items?.length || 0) > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-2">Acomodações</h4>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="text-left text-muted-foreground">
+                          <th className="py-1 pr-4 font-medium">Bangalô</th>
+                          <th className="py-1 pr-4 font-medium">Hóspedes</th>
+                          <th className="py-1 pr-4 font-medium">Diária</th>
+                          <th className="py-1 font-medium">Subtotal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedReservation.rooms_items!.map((item, index) => (
+                          <tr key={item.id || `${item.room_id}-${index}`} className="border-t">
+                            <td className="py-1 pr-4 font-medium">{item.room_name || "Bangalô"}</td>
+                            <td className="py-1 pr-4">{item.guests}</td>
+                            <td className="py-1 pr-4">
+                              {item.daily_rate ? `R$ ${Number(item.daily_rate).toLocaleString('pt-BR')}` : "-"}
+                            </td>
+                            <td className="py-1">
+                              {item.subtotal ? `R$ ${Number(item.subtotal).toLocaleString('pt-BR')}` : "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-sm font-semibold">
+                    Total da reserva: R$ {selectedReservation.total_price.toLocaleString('pt-BR')}
+                  </p>
+                </div>
+              )}
+
+              
               
               {/* Payment Transaction Info */}
               <div className="border-t pt-4">

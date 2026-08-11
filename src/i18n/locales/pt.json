@@ -237,6 +237,23 @@
       "selectInstallments": "Selecione as parcelas",
       "cash": "À vista - {{amount}}",
       "installmentOption": "{{n}}x de {{amount}} sem juros"
+    },
+    "extraRooms": {
+      "title": "Acomodações adicionais",
+      "subtitle": "Precisa de mais de um bangalô? Adicione outras acomodações na mesma reserva.",
+      "loading": "Carregando bangalôs...",
+      "guests": "Hóspedes",
+      "guest_one": "{{count}} hóspede",
+      "guest_other": "{{count}} hóspedes",
+      "night_one": "{{count}} noite",
+      "night_other": "{{count}} noites",
+      "remove": "Remover {{name}}",
+      "selectDates": "Selecione as datas para ver os bangalôs disponíveis.",
+      "limitReached": "Limite de {{count}} acomodações por reserva atingido.",
+      "addPlaceholder": "+ Adicionar outro bangalô",
+      "unavailable": "indisponível nas datas selecionadas",
+      "alreadyAdded": "já adicionado",
+      "noneAvailable": "Nenhum outro bangalô disponível nas datas selecionadas."
     }
   },
   "admin": {

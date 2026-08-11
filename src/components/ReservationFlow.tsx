@@ -29,6 +29,7 @@ import { DateSelection } from "@/components/reservation/DateSelection";
 import { GuestInfoForm } from "@/components/reservation/GuestInfoForm";
 import { PaymentStep } from "@/components/reservation/PaymentStep";
 import { ReviewStep } from "@/components/reservation/ReviewStep";
+import { ExtraRoomsSelector, type ExtraRoomEntry } from "@/components/reservation/ExtraRoomsSelector";
 
 interface ReservationFlowProps {
   lodgeName: string;
@@ -64,6 +65,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
   const [guests, setGuests] = useState("2");
+
+  // Acomodações adicionais (múltiplos bangalôs na mesma reserva)
+  const [extraRooms, setExtraRooms] = useState<ExtraRoomEntry[]>([]);
   
   // Guest info state
   const [guestName, setGuestName] = useState("");
@@ -236,23 +240,34 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     return pkg?.price === 0 || pkg?.name?.toLowerCase().includes('gavião') || pkg?.name?.toLowerCase().includes('panema');
   }, []);
 
+  // Soma das acomodações adicionais (diária por bangalô x noites)
+  const calculateExtraRoomsTotal = useCallback(() => {
+    if (!checkIn || !checkOut || extraRooms.length === 0) return 0;
+    const n = calculateNights(checkIn, checkOut);
+    return extraRooms.reduce(
+      (sum, room) => sum + getDailyRate(room.guests, room.pricePerNight) * n,
+      0
+    );
+  }, [checkIn, checkOut, extraRooms]);
+
   const calculateTotal = useCallback(() => {
     if (!checkIn || !checkOut) return 0;
     const nights = calculateNights(checkIn, checkOut);
     const guestsNum = parseInt(guests) || 2;
+    const extrasTotal = calculateExtraRoomsTotal();
     
     if (selectedPackage) {
       const pkg = packages.find(p => p.id === selectedPackage);
       // If customizable package (price 0), only charge for accommodation with dynamic pricing
       if (pkg && isCustomizablePackage(pkg)) {
-        return getDailyRate(guestsNum, pricePerNight) * nights;
+        return getDailyRate(guestsNum, pricePerNight) * nights + extrasTotal;
       }
-      if (pkg) return Number(pkg.price) || 0;
+      if (pkg) return (Number(pkg.price) || 0) + extrasTotal;
     }
-    
+
     // Dynamic pricing based on number of guests, using database pricePerNight
-    return getDailyRate(guestsNum, pricePerNight) * nights;
-  }, [checkIn, checkOut, guests, selectedPackage, packages, isCustomizablePackage, pricePerNight]);
+    return getDailyRate(guestsNum, pricePerNight) * nights + extrasTotal;
+  }, [checkIn, checkOut, guests, selectedPackage, packages, isCustomizablePackage, pricePerNight, calculateExtraRoomsTotal]);
 
   // Manual check payment status (fallback)
   const checkPaymentStatus = useCallback(async (paymentIdToCheck: string, resId: string) => {
@@ -322,6 +337,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         checkin: checkIn!.toISOString().split('T')[0],
         checkout: checkOut!.toISOString().split('T')[0],
         guests: parseInt(guests),
+        extra_rooms: extraRooms.map((room) => ({ room_id: room.roomId, guests: room.guests })),
         full_name: guestName,
         email: guestEmail,
         phone: guestPhone || null,
@@ -632,6 +648,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           checkin: checkIn!.toISOString().split('T')[0],
           checkout: checkOut!.toISOString().split('T')[0],
           guests: parseInt(guests),
+        extra_rooms: extraRooms.map((room) => ({ room_id: room.roomId, guests: room.guests })),
           full_name: guestName,
           email: guestEmail,
           phone: guestPhone || null,
@@ -806,6 +823,24 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             />
           )}
 
+          {step === 2 && (
+            <div className="mt-8 pt-6 border-t">
+              <ExtraRoomsSelector
+                mainRoomId={roomId}
+                checkIn={checkIn}
+                checkOut={checkOut}
+                value={extraRooms}
+                onChange={setExtraRooms}
+                disabled={!!selectedPackage}
+              />
+              {!!selectedPackage && (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Para pacotes com mais de um bangalô, fale com nosso consultor pelo WhatsApp.
+                </p>
+              )}
+            </div>
+          )}
+
           {step === 3 && (
             <GuestInfoForm
               isForeign={isForeign}
@@ -883,6 +918,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               guestEmail={guestEmail}
               guestPhone={guestPhone}
               guests={guests}
+              extraRooms={extraRooms}
               checkIn={checkIn}
               checkOut={checkOut}
               paymentMethod={paymentMethod}
