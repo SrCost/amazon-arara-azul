@@ -46,6 +46,7 @@ import { fetchReservationRoomsMap, formatRoomsSummary } from "@/lib/reservationR
 interface Reservation {
   id: string;
   room_name: string;
+  rooms_summary?: string;
   package_id?: string;
   package_name?: string;
   guest_name: string;
