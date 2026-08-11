@@ -605,8 +605,26 @@ const Reservations = () => {
                 </div>
               )}
 
-              
-              
+              {/* Pré-Chegada */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold text-muted-foreground mb-3">Pré-Chegada</h4>
+                <PreArrivalCell
+                  variant="panel"
+                  reservationId={selectedReservation.id}
+                  guestName={selectedReservation.guest_name}
+                  guestEmail={selectedReservation.guest_email}
+                  preArrival={selectedReservation.pre_arrival}
+                  reservation={{
+                    guest_name: selectedReservation.guest_name,
+                    rooms_summary: selectedReservation.rooms_summary || selectedReservation.room_name,
+                    check_in: selectedReservation.check_in,
+                    check_out: selectedReservation.check_out,
+                    guests: selectedReservation.guests,
+                  }}
+                />
+              </div>
+
+
               {/* Payment Transaction Info */}
               <div className="border-t pt-4">
                 <h4 className="text-sm font-semibold text-muted-foreground mb-2">Dados da Transação</h4>
