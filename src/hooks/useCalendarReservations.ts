@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { startOfMonth, endOfMonth, format, addMonths, subMonths } from "date-fns";
+import { fetchReservationRoomsMap, type ReservationRoomItem } from "@/lib/reservationRooms";
 
 export interface CalendarReservation {
   id: string;
@@ -23,7 +24,18 @@ export interface CalendarReservation {
   special_requests: string | null;
   created_at: string | null;
   package_id: string | null;
+  /** Acomodações da reserva (1..N bangalôs) */
+  items?: ReservationRoomItem[];
 }
+
+/** Ids dos bangalôs de uma reserva (fallback para room_id em reservas antigas) */
+export const getReservationRoomIds = (res: CalendarReservation): string[] => {
+  if (res.items && res.items.length > 0) {
+    return Array.from(new Set(res.items.map((i) => i.room_id)));
+  }
+  return res.room_id ? [res.room_id] : [];
+};
+
 
 export interface BlockedDate {
   id: string;
@@ -103,7 +115,26 @@ export const useCalendarReservations = (initialDate?: Date) => {
         .order("check_in");
 
       if (reservationsError) throw reservationsError;
-      setReservations(reservationsData || []);
+      const baseReservations = (reservationsData || []) as CalendarReservation[];
+      const itemsMap = await fetchReservationRoomsMap(baseReservations.map((r) => r.id));
+      setReservations(
+        baseReservations.map((r) => ({
+          ...r,
+          items:
+            itemsMap[r.id] && itemsMap[r.id].length > 0
+              ? itemsMap[r.id]
+              : [
+                  {
+                    room_id: r.room_id,
+                    room_name: r.room_name,
+                    guests: r.guests,
+                    daily_rate: r.daily_rate,
+                    subtotal: r.total_price,
+                    position: 0,
+                  },
+                ],
+        }))
+      );
 
       // Fetch blocked dates
       const { data: blockedData, error: blockedError } = await supabase
@@ -174,7 +205,7 @@ export const useCalendarReservations = (initialDate?: Date) => {
       }
 
       // Room filter
-      if (roomFilter !== "all" && res.room_id !== roomFilter) {
+      if (roomFilter !== "all" && !getReservationRoomIds(res).includes(roomFilter)) {
         return false;
       }
 
@@ -186,7 +217,9 @@ export const useCalendarReservations = (initialDate?: Date) => {
   const reservationsByRoom = useMemo(() => {
     const grouped: Record<string, CalendarReservation[]> = {};
     rooms.forEach((room) => {
-      grouped[room.id] = filteredReservations.filter((res) => res.room_id === room.id);
+      grouped[room.id] = filteredReservations.filter((res) =>
+        getReservationRoomIds(res).includes(room.id)
+      );
     });
     return grouped;
   }, [rooms, filteredReservations]);
@@ -222,7 +255,7 @@ export const useCalendarReservations = (initialDate?: Date) => {
     });
 
     const roomReservations = reservations.filter(
-      (r) => r.room_id === roomId && r.id !== excludeReservationId
+      (r) => getReservationRoomIds(r).includes(roomId) && r.id !== excludeReservationId
     );
 
     console.log("📋 Reservas no mesmo quarto:", roomReservations.map(r => ({

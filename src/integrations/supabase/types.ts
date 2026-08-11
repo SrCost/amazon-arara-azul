@@ -786,6 +786,67 @@ export type Database = {
           },
         ]
       }
+      reservation_rooms: {
+        Row: {
+          created_at: string
+          daily_rate: number | null
+          guests: number
+          id: string
+          position: number
+          reservation_id: string
+          room_id: string
+          room_name: string | null
+          subtotal: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          daily_rate?: number | null
+          guests?: number
+          id?: string
+          position?: number
+          reservation_id: string
+          room_id: string
+          room_name?: string | null
+          subtotal?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          daily_rate?: number | null
+          guests?: number
+          id?: string
+          position?: number
+          reservation_id?: string
+          room_id?: string
+          room_name?: string | null
+          subtotal?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_rooms_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_rooms_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_rooms_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations: {
         Row: {
           accepted_at: string | null

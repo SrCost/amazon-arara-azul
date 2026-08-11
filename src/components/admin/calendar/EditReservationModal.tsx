@@ -51,6 +51,12 @@ import { cn } from "@/lib/utils";
 import { parseDateOnly, formatDateOnly } from "@/lib/dateOnly";
 import type { CalendarReservation, Room } from "@/hooks/useCalendarReservations";
 import { detectGuestLanguage } from "@/lib/guestLanguage";
+import {
+  MAX_RESERVATION_ROOMS,
+  saveReservationRooms,
+  type ReservationRoomItem,
+} from "@/lib/reservationRooms";
+import { Plus } from "lucide-react";
 
 interface PackageOption {
   id: string;
@@ -76,6 +82,14 @@ const formSchema = z.object({
   special_requests: z.string().optional(),
   package_id: z.string().optional(),
   guest_language: z.enum(["pt", "en", "es", "fr", "de"]),
+  extra_rooms: z
+    .array(
+      z.object({
+        room_id: z.string().uuid("Selecione um bangalô"),
+        guests: z.number().min(1).max(4),
+      })
+    )
+    .max(MAX_RESERVATION_ROOMS - 1, `Máximo de ${MAX_RESERVATION_ROOMS} acomodações por reserva`),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -129,6 +143,7 @@ const EditReservationModal = ({
       special_requests: "",
       package_id: "",
       guest_language: "pt",
+      extra_rooms: [],
     },
   });
 
@@ -136,6 +151,8 @@ const EditReservationModal = ({
 
   const watchedValues = form.watch();
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
+  const extraRooms = watchedValues.extra_rooms || [];
+  const totalGuests = (watchedValues.guests || 0) + extraRooms.reduce((sum, r) => sum + (r.guests || 0), 0);
   
   // Calculate price - use manual overrides if set, otherwise calculate
   const rawDailyRate = selectedPackage ? 0 : getDailyRate(watchedValues.guests, watchedValues.daily_rate);
@@ -183,11 +200,18 @@ const EditReservationModal = ({
       
       const resolvedLang = (reservation as any).guest_language
         || detectGuestLanguage({ email: reservation.guest_email, country: (reservation as any).country, nationality: (reservation as any).nationality });
+      const items = reservation.items || [];
+      const primaryItem = items[0];
+      const extraItems = items.slice(1).map((item) => ({
+        room_id: item.room_id,
+        guests: Math.min(Math.max(item.guests || 1, 1), 4),
+      }));
+
       form.reset({
         guest_name: reservation.guest_name,
         guest_email: reservation.guest_email,
         guest_phone: reservation.guest_phone || "",
-        guests: reservation.guests,
+        guests: Math.min(Math.max(primaryItem?.guests ?? reservation.guests, 1), 10),
          check_in: parseDateOnly(reservation.check_in),
          check_out: parseDateOnly(reservation.check_out),
         room_id: reservation.room_id,
@@ -199,6 +223,7 @@ const EditReservationModal = ({
         special_requests: reservation.special_requests || "",
         package_id: reservation.package_id || "",
         guest_language: (["pt","en","es","fr","de"].includes(resolvedLang) ? resolvedLang : "pt") as any,
+        extra_rooms: extraItems,
       });
 
       // Fetch last email status for this reservation
@@ -262,15 +287,45 @@ const EditReservationModal = ({
       return;
     }
 
-    // Check for conflicts
-    if (checkConflict(data.room_id, data.check_in, data.check_out, reservation.id)) {
-      toast.error("Conflito de datas! O período selecionado já está ocupado.");
+    const allRoomIds = [data.room_id, ...(data.extra_rooms || []).map((r) => r.room_id)];
+    if (new Set(allRoomIds).size !== allRoomIds.length) {
+      toast.error("Há bangalôs repetidos na reserva. Selecione acomodações diferentes.");
       return;
+    }
+
+    // Check for conflicts (todas as acomodações da reserva)
+    for (const roomId of allRoomIds) {
+      if (checkConflict(roomId, data.check_in, data.check_out, reservation.id)) {
+        const conflictRoom = rooms.find((r) => r.id === roomId);
+        toast.error(
+          `Conflito de datas em ${conflictRoom?.name_pt || "bangalô"}! O período selecionado já está ocupado.`
+        );
+        return;
+      }
     }
 
     setIsSubmitting(true);
     try {
       const room = rooms.find((r) => r.id === data.room_id);
+      const items: ReservationRoomItem[] = [
+        {
+          room_id: data.room_id,
+          room_name: room?.name_pt || null,
+          guests: data.guests,
+          daily_rate: dailyRate,
+        },
+        ...(data.extra_rooms || []).map((extra) => {
+          const extraRoom = rooms.find((r) => r.id === extra.room_id);
+          return {
+            room_id: extra.room_id,
+            room_name: extraRoom?.name_pt || null,
+            guests: extra.guests,
+            daily_rate: extraRoom
+              ? Math.round(getDailyRate(extra.guests, extraRoom.price_per_night) * 100) / 100
+              : null,
+          };
+        }),
+      ];
 
       const { error } = await supabase
         .from("reservations")
@@ -278,7 +333,7 @@ const EditReservationModal = ({
           guest_name: data.guest_name,
           guest_email: data.guest_email,
           guest_phone: data.guest_phone || null,
-          guests: data.guests,
+          guests: totalGuests,
           check_in: formatDateOnly(data.check_in),
           check_out: formatDateOnly(data.check_out),
           room_id: data.room_id,
@@ -297,6 +352,9 @@ const EditReservationModal = ({
         .eq("id", reservation.id);
 
       if (error) throw error;
+
+      await saveReservationRooms(reservation.id, items);
+
 
       // Send internal cancellation notification if status changed to cancelled
       if (data.operational_status === "cancelled" && reservation.operational_status !== "cancelled") {
@@ -644,6 +702,108 @@ const EditReservationModal = ({
                 )}
               />
             </div>
+
+            {/* Acomodações adicionais */}
+            <div className="p-4 rounded-lg border border-border space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium">Acomodações adicionais</p>
+                  <p className="text-xs text-muted-foreground">
+                    Total de hóspedes na reserva: {totalGuests}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={extraRooms.length >= MAX_RESERVATION_ROOMS - 1}
+                  onClick={() => {
+                    const used = new Set([watchedValues.room_id, ...extraRooms.map((r) => r.room_id)]);
+                    const nextRoom = rooms.find((r) => !used.has(r.id));
+                    if (!nextRoom) {
+                      toast.error("Não há outros bangalôs disponíveis para adicionar.");
+                      return;
+                    }
+                    form.setValue("extra_rooms", [...extraRooms, { room_id: nextRoom.id, guests: 2 }]);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar bangalô
+                </Button>
+              </div>
+
+              {extraRooms.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma acomodação adicional nesta reserva.
+                </p>
+              )}
+
+              {extraRooms.map((extra, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_140px_auto] gap-2 items-end">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Bangalô</label>
+                    <Select
+                      value={extra.room_id}
+                      onValueChange={(v) => {
+                        const updated = [...extraRooms];
+                        updated[index] = { ...updated[index], room_id: v };
+                        form.setValue("extra_rooms", updated);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rooms.map((room) => (
+                          <SelectItem key={room.id} value={room.id}>
+                            {room.name_pt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Hóspedes</label>
+                    <Select
+                      value={String(extra.guests)}
+                      onValueChange={(v) => {
+                        const updated = [...extraRooms];
+                        updated[index] = { ...updated[index], guests: Number(v) };
+                        form.setValue("extra_rooms", updated);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4].map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n} pessoa{n > 1 ? "s" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      form.setValue(
+                        "extra_rooms",
+                        extraRooms.filter((_, i) => i !== index)
+                      )
+                    }
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+
 
             {/* Pricing */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
