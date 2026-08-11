@@ -33,9 +33,14 @@ import {
 } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2, Package, Pencil } from "lucide-react";
+import { CalendarIcon, Loader2, Package, Pencil, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/hooks/useCalendarReservations";
+import {
+  MAX_RESERVATION_ROOMS,
+  saveReservationRooms,
+  type ReservationRoomItem,
+} from "@/lib/reservationRooms";
 import { detectGuestLanguage, type GuestLang } from "@/lib/guestLanguage";
 
 interface PackageOption {
@@ -65,6 +70,14 @@ const formSchema = z.object({
   special_requests: z.string().optional(),
   guest_language: z.enum(["pt", "en", "es", "fr", "de"]),
   send_confirmation_email: z.boolean(),
+  extra_rooms: z
+    .array(
+      z.object({
+        room_id: z.string().uuid("Selecione um bangalô"),
+        guests: z.number().min(1).max(4),
+      })
+    )
+    .max(MAX_RESERVATION_ROOMS - 1, `Máximo de ${MAX_RESERVATION_ROOMS} acomodações por reserva`),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -121,6 +134,7 @@ const NewReservationModal = ({
       special_requests: "",
       guest_language: "pt",
       send_confirmation_email: true,
+      extra_rooms: [],
     },
   });
 
@@ -138,7 +152,11 @@ const NewReservationModal = ({
       }
     }
   }, [watchedValues.guest_email, langTouched]);
-  
+
+  // Acomodações extras (reserva com múltiplos bangalôs)
+  const extraRooms = watchedValues.extra_rooms || [];
+  const totalGuests = (watchedValues.guests || 0) + extraRooms.reduce((sum, r) => sum + (r.guests || 0), 0);
+
   // Calculate pricing based on package or manual
   const nights = calculateNights(watchedValues.check_in, watchedValues.check_out);
   const calculatedDailyRate = Math.round(
@@ -146,14 +164,26 @@ const NewReservationModal = ({
       ? selectedPackage.price / nights 
       : getDailyRate(watchedValues.guests, watchedValues.daily_rate)) * 100
   ) / 100;
+
+  // Diária de cada acomodação extra, conforme a tarifa do bangalô e nº de hóspedes
+  const extraRoomsDaily = extraRooms.map((extra) => {
+    const room = rooms.find((r) => r.id === extra.room_id);
+    if (!room) return 0;
+    return Math.round(getDailyRate(extra.guests || 1, room.price_per_night) * 100) / 100;
+  });
+  const extrasDailyTotal = Math.round(extraRoomsDaily.reduce((a, b) => a + b, 0) * 100) / 100;
+
   const calculatedTotalPrice = Math.round(
-    (selectedPackage 
+    ((selectedPackage 
       ? selectedPackage.price 
-      : calculatedDailyRate * nights) * 100
+      : calculatedDailyRate * nights) + extrasDailyTotal * nights) * 100
   ) / 100;
   
-  const dailyRate = isManualDailyRate ? manualDailyRateValue : calculatedDailyRate;
+  const dailyRate = isManualDailyRate
+    ? manualDailyRateValue
+    : Math.round((calculatedDailyRate + extrasDailyTotal) * 100) / 100;
   const totalPrice = isManualTotalPrice ? manualTotalPriceValue : calculatedTotalPrice;
+
 
   // Fetch packages
   useEffect(() => {
@@ -246,6 +276,7 @@ const NewReservationModal = ({
         special_requests: "",
         guest_language: "pt",
         send_confirmation_email: true,
+        extra_rooms: [],
       });
     }
   }, [open, initialRoomId, initialDate, rooms]);
@@ -257,11 +288,30 @@ const NewReservationModal = ({
       return;
     }
 
-    // Check for conflicts
-    if (checkConflict(data.room_id, data.check_in, data.check_out)) {
-      toast.error("Conflito de datas! O período selecionado já está ocupado.");
+    // Acomodações da reserva (primeiro item + extras)
+    const selectedRoomIds = [data.room_id, ...(data.extra_rooms || []).map((r) => r.room_id)];
+
+    if (new Set(selectedRoomIds).size !== selectedRoomIds.length) {
+      toast.error("O mesmo bangalô foi selecionado mais de uma vez.");
       return;
     }
+
+    if (selectedRoomIds.length > MAX_RESERVATION_ROOMS) {
+      toast.error(`Máximo de ${MAX_RESERVATION_ROOMS} acomodações por reserva.`);
+      return;
+    }
+
+    // Check for conflicts (todas as acomodações)
+    for (const roomId of selectedRoomIds) {
+      if (checkConflict(roomId, data.check_in, data.check_out)) {
+        const conflictRoom = rooms.find((r) => r.id === roomId);
+        toast.error(
+          `Conflito de datas! O período selecionado já está ocupado${conflictRoom ? ` em ${conflictRoom.name_pt}` : ""}.`
+        );
+        return;
+      }
+    }
+
 
     setIsSubmitting(true);
     try {
@@ -281,7 +331,7 @@ const NewReservationModal = ({
         guest_name: data.guest_name,
         guest_email: data.guest_email,
         guest_phone: data.guest_phone || null,
-        guests: data.guests,
+        guests: totalGuests,
         check_in: format(data.check_in, "yyyy-MM-dd"),
         check_out: format(data.check_out, "yyyy-MM-dd"),
         room_id: data.room_id,
@@ -301,6 +351,37 @@ const NewReservationModal = ({
       }).select("id").single();
 
       if (error) throw error;
+
+      // Persiste as acomodações da reserva (1..N bangalôs)
+      if (insertedReservation?.id) {
+        const items: ReservationRoomItem[] = [
+          {
+            room_id: data.room_id,
+            room_name: room?.name_pt || null,
+            guests: data.guests,
+            daily_rate: calculatedDailyRate,
+            subtotal: Math.round(calculatedDailyRate * nights * 100) / 100,
+          },
+          ...(data.extra_rooms || []).map((extra, index) => {
+            const extraRoom = rooms.find((r) => r.id === extra.room_id);
+            const extraDaily = extraRoomsDaily[index] ?? 0;
+            return {
+              room_id: extra.room_id,
+              room_name: extraRoom?.name_pt || null,
+              guests: extra.guests,
+              daily_rate: extraDaily,
+              subtotal: Math.round(extraDaily * nights * 100) / 100,
+            };
+          }),
+        ];
+
+        try {
+          await saveReservationRooms(insertedReservation.id, items);
+        } catch (itemsError) {
+          console.error("Erro ao salvar acomodações:", itemsError);
+          toast.warning("Reserva criada, mas houve falha ao registrar as acomodações extras.");
+        }
+      }
 
       // Send confirmation email in the guest's language (best-effort, non-blocking)
       if (data.send_confirmation_email && insertedReservation?.id) {
@@ -324,7 +405,8 @@ const NewReservationModal = ({
           });
       }
 
-      // Sincroniza a ficha na FNRH (best-effort, não bloqueia a reserva)
+      // Sincroniza a ficha na FNRH — UMA ÚNICA chamada por reserva,
+      // após a reserva e todas as suas acomodações estarem gravadas.
       if (insertedReservation?.id) {
         supabase.functions
           .invoke("fnrh-criar-reserva", { body: { reservation_id: insertedReservation.id } })
@@ -335,6 +417,7 @@ const NewReservationModal = ({
             }
           });
       }
+
 
       toast.success("Reserva criada com sucesso!");
 
@@ -621,6 +704,111 @@ const NewReservationModal = ({
                 )}
               />
             </div>
+
+            {/* Acomodações adicionais (reserva com múltiplos bangalôs) */}
+            <div className="p-4 rounded-lg border border-border space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-medium">Acomodações adicionais</p>
+                  <p className="text-xs text-muted-foreground">
+                    Uma única reserva pode incluir vários bangalôs. Total de hóspedes: {totalGuests}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={extraRooms.length >= MAX_RESERVATION_ROOMS - 1}
+                  onClick={() => {
+                    const used = new Set([watchedValues.room_id, ...extraRooms.map((r) => r.room_id)]);
+                    const nextRoom = rooms.find((r) => !used.has(r.id));
+                    if (!nextRoom) {
+                      toast.error("Não há outros bangalôs disponíveis para adicionar.");
+                      return;
+                    }
+                    form.setValue("extra_rooms", [
+                      ...extraRooms,
+                      { room_id: nextRoom.id, guests: 2 },
+                    ]);
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adicionar bangalô
+                </Button>
+              </div>
+
+              {extraRooms.length === 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma acomodação adicional. A reserva possui apenas o bangalô selecionado acima.
+                </p>
+              )}
+
+              {extraRooms.map((extra, index) => (
+                <div key={index} className="grid grid-cols-1 md:grid-cols-[1fr_140px_auto] gap-2 items-end">
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Bangalô</label>
+                    <Select
+                      value={extra.room_id}
+                      onValueChange={(v) => {
+                        const updated = [...extraRooms];
+                        updated[index] = { ...updated[index], room_id: v };
+                        form.setValue("extra_rooms", updated);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rooms.map((room) => (
+                          <SelectItem key={room.id} value={room.id}>
+                            {room.name_pt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs text-muted-foreground">Hóspedes</label>
+                    <Select
+                      value={String(extra.guests)}
+                      onValueChange={(v) => {
+                        const updated = [...extraRooms];
+                        updated[index] = { ...updated[index], guests: Number(v) };
+                        form.setValue("extra_rooms", updated);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4].map((n) => (
+                          <SelectItem key={n} value={String(n)}>
+                            {n} pessoa{n > 1 ? "s" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      form.setValue(
+                        "extra_rooms",
+                        extraRooms.filter((_, i) => i !== index)
+                      )
+                    }
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+
 
             {/* Pricing */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">

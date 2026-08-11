@@ -41,10 +41,12 @@ import { Label } from "@/components/ui/label";
 import { Search, Eye, Edit, X, Mail, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchReservationRoomsMap, formatRoomsSummary } from "@/lib/reservationRooms";
 
 interface Reservation {
   id: string;
   room_name: string;
+  rooms_summary?: string;
   package_id?: string;
   package_name?: string;
   guest_name: string;
@@ -144,10 +146,13 @@ const Reservations = () => {
       
       setTotalCount(count || 0);
       
-      // Map the data to include package_name
+      const roomsMap = await fetchReservationRoomsMap((data || []).map((r) => r.id));
+
+      // Map the data to include package_name e resumo das acomodações
       const mappedData = (data || []).map(reservation => ({
         ...reservation,
         package_name: reservation.packages?.name || null,
+        rooms_summary: formatRoomsSummary(roomsMap[reservation.id], reservation.room_name),
       }));
       
       setReservations(mappedData as Reservation[]);
@@ -386,7 +391,7 @@ const Reservations = () => {
               <TableBody>
                 {filteredReservations.map((reservation) => (
                   <TableRow key={reservation.id}>
-                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">{reservation.room_name || "N/A"}</TableCell>
+                    <TableCell className="font-medium text-xs sm:text-sm whitespace-nowrap">{reservation.rooms_summary || reservation.room_name || "N/A"}</TableCell>
                     <TableCell className="text-xs sm:text-sm text-muted-foreground hidden md:table-cell">
                       {reservation.package_name || "-"}
                     </TableCell>
