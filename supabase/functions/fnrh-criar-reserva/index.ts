@@ -84,6 +84,16 @@ serve(async (req) => {
 
     const issues = validateForFnrh(current);
     if (issues.length > 0) {
+      await admin
+        .from("reservations")
+        .update({
+          situacao_fnrh: "DADOS_INCOMPLETOS",
+          erro_sincronizacao_fnrh: `Dados obrigatórios ausentes: ${issues
+            .map((i) => i.message)
+            .join(" ")}`.slice(0, 1000),
+        })
+        .eq("id", reservation_id);
+
       return jsonResponse(
         {
           error: "Dados incompletos para abrir a ficha na FNRH.",
@@ -93,6 +103,7 @@ serve(async (req) => {
         400,
       );
     }
+
 
     try {
       const result = await registrarHospedagem(current);
