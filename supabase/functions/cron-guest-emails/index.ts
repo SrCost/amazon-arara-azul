@@ -99,16 +99,58 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Cron complete: ${checkinSent} checkin emails, ${checkoutSent} checkout emails sent`);
+    // 3. Lembrete de Pré-Chegada: 3 dias antes do check-in, apenas 1 envio
+    const inThreeDays = new Date(today);
+    inThreeDays.setDate(today.getDate() + 3);
+
+    const { data: preArrivalReservations } = await supabase
+      .from("reservations")
+      .select("id, guest_name, guest_email")
+      .eq("check_in", fmt(inThreeDays))
+      .in("status", ["pending", "confirmed"]);
+
+    let preArrivalSent = 0;
+
+    for (const r of preArrivalReservations || []) {
+      if (!r.guest_email) continue;
+
+      // Trava 1: status/contagem de lembretes na tabela de pré-chegada
+      const { data: pa } = await supabase
+        .from("pre_arrival_responses")
+        .select("status, reminders_sent")
+        .eq("reservation_id", r.id)
+        .maybeSingle();
+
+      if (pa && (pa.status !== "pending" || (pa.reminders_sent || 0) > 0)) continue;
+
+      // Trava 2: log de e-mails
+      const { data: existing } = await supabase
+        .from("email_logs")
+        .select("id")
+        .eq("reservation_id", r.id)
+        .eq("email_type", "pre_arrival_reminder")
+        .maybeSingle();
+
+      if (existing) continue;
+
+      const { error } = await supabase.functions.invoke("send-pre-arrival-email", {
+        body: { reservationId: r.id, origin: "auto" },
+      });
+      if (!error) preArrivalSent++;
+    }
+
+    console.log(`Cron complete: ${checkinSent} checkin, ${checkoutSent} checkout, ${preArrivalSent} pre-arrival emails sent`);
 
     return new Response(
       JSON.stringify({
         success: true,
         checkin_sent: checkinSent,
         checkout_sent: checkoutSent,
+        pre_arrival_sent: preArrivalSent,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     console.error("Cron error:", error);
     return new Response(
