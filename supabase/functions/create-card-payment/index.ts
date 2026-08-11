@@ -1,5 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
+import {
+  parseExtraRooms,
+  buildAccommodations,
+  findUnavailableRooms,
+  persistReservationRooms,
+  computeServerTotal,
+} from "../_shared/multi-rooms.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -124,7 +131,8 @@ serve(async (req) => {
       card_brand,
       installments = 1,
       package_id,
-      guest_language
+      guest_language,
+      extra_rooms
     } = body;
     const lang = ['pt','en','es','fr','de'].includes(guest_language) ? guest_language : 'pt';
 
@@ -208,6 +216,9 @@ serve(async (req) => {
     // Validar guests
     const validGuests = Math.min(Math.max(parseInt(String(guests)) || 1, 1), 10);
 
+    // Acomodações adicionais (múltiplos bangalôs na mesma reserva)
+    const extraRoomsInput = parseExtraRooms(extra_rooms, bungalow_id);
+
     // Validar amount
     const rawAmount = parseFloat(total_amount);
     if (isNaN(rawAmount) || rawAmount <= 0 || rawAmount > 1000000) {
@@ -238,45 +249,53 @@ serve(async (req) => {
 
     console.log('Validação de entrada concluída com sucesso');
 
-    // 1. Buscar nome do bangalô
-    console.log('=== BUSCANDO NOME DO BANGALÔ ===');
-    const { data: roomData, error: roomError } = await supabase
-      .from('rooms')
-      .select('name_pt')
-      .eq('id', bungalow_id)
-      .single();
-    
-    if (roomError || !roomData) {
-      throw new Error('Bangalô não encontrado');
-    }
-    
-    const roomName = roomData.name_pt;
-    console.log('Room name:', roomName);
+    // 1. Montar acomodações (bangalô principal + adicionais) com preços do banco
+    console.log('=== MONTANDO ACOMODAÇÕES ===');
+    const { accommodations, totalGuests } = await buildAccommodations(supabase, {
+      mainRoomId: bungalow_id,
+      mainGuests: validGuests,
+      extraRooms: extraRoomsInput,
+      checkin,
+      checkout,
+    });
+    const roomName = accommodations[0].room_name;
+    console.log('Acomodações:', accommodations.map(a => `${a.room_name}(${a.guests})`).join(', '));
 
-    // 2. VALIDAR DISPONIBILIDADE DAS DATAS
+    // 1b. Recalcular o total no servidor (ignora valor enviado pelo cliente)
+    let packagePrice: number | null = null;
+    if (package_id) {
+      const { data: pkg } = await supabase
+        .from('packages')
+        .select('price')
+        .eq('id', package_id)
+        .maybeSingle();
+      const price = Number(pkg?.price) || 0;
+      packagePrice = price > 0 ? price : null;
+    }
+    const serverTotal = computeServerTotal(accommodations, packagePrice);
+    if (serverTotal > 0) {
+      if (Math.abs(serverTotal - amount) > 0.5) {
+        console.warn('Total do cliente divergente. Cliente:', amount, 'Servidor:', serverTotal);
+      }
+      amount = Math.max(serverTotal, MIN_AMOUNT);
+    }
+
+    // 2. VALIDAR DISPONIBILIDADE DE TODAS AS ACOMODAÇÕES
     console.log('=== VERIFICANDO DISPONIBILIDADE DAS DATAS ===');
-    const { data: conflictingReservations, error: conflictError } = await supabase
-      .from('reservations')
-      .select('id, check_in, check_out, guest_name, status')
-      .eq('room_id', bungalow_id)
-      .in('status', ['pending', 'confirmed'])
-      .neq('guest_email', email)
-      .or(`and(check_in.lte.${checkin},check_out.gt.${checkin}),and(check_in.lt.${checkout},check_out.gte.${checkout}),and(check_in.gte.${checkin},check_out.lte.${checkout})`);
+    const unavailable = await findUnavailableRooms(supabase, {
+      accommodations,
+      checkin,
+      checkout,
+      excludeEmail: email,
+    });
 
-    if (conflictError) {
-      console.error('Erro ao verificar conflitos:', conflictError);
-    }
-
-    if (conflictingReservations && conflictingReservations.length > 0) {
-      console.error('Datas conflitantes encontradas:', conflictingReservations);
+    if (unavailable.length > 0) {
+      console.error('Bangalôs indisponíveis:', unavailable);
       return new Response(JSON.stringify({
         success: false,
         error: 'dates_unavailable',
-        message: 'As datas selecionadas já estão reservadas. Por favor, escolha outras datas.',
-        conflicting_dates: conflictingReservations.map(r => ({
-          check_in: r.check_in,
-          check_out: r.check_out
-        }))
+        message: `Indisponível nas datas selecionadas: ${unavailable.map(u => u.room_name).join(', ')}. Por favor, escolha outras datas.`,
+        unavailable_rooms: unavailable
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 409
@@ -294,15 +313,20 @@ serve(async (req) => {
       .eq('check_out', checkout)
       .eq('guest_email', email)
       .eq('status', 'pending')
-      .single();
+      .maybeSingle();
 
     let reservationId: string;
 
     if (existingReservation) {
       console.log('Reserva existente encontrada:', existingReservation.id);
       reservationId = existingReservation.id;
+      await supabase
+        .from('reservations')
+        .update({ guests: totalGuests, total_price: amount })
+        .eq('id', reservationId);
+      await persistReservationRooms(supabase, reservationId, accommodations);
     } else {
-      // 3. Criar pré-reserva
+      // 3b. Criar pré-reserva
       console.log('=== CRIANDO PRÉ-RESERVA ===');
       const { data: reservation, error: reservationError } = await supabase
         .from('reservations')
@@ -311,7 +335,7 @@ serve(async (req) => {
           room_name: roomName,
           check_in: checkin,
           check_out: checkout,
-          guests: validGuests,
+          guests: totalGuests,
           guest_name: sanitizedName,
           guest_email: email,
           guest_phone: sanitizedPhone,
@@ -337,6 +361,8 @@ serve(async (req) => {
         console.error('Erro ao criar reserva:', reservationError);
         throw new Error('Falha ao criar pré-reserva: ' + reservationError.message);
       }
+
+      await persistReservationRooms(supabase, reservation.id, accommodations);
 
       reservationId = reservation.id;
       console.log('Reserva criada:', reservationId);
