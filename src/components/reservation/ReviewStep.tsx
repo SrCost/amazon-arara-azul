@@ -1,12 +1,19 @@
 import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
+interface ReviewExtraRoom {
+  roomId: string;
+  roomName: string;
+  guests: number;
+}
+
 interface ReviewStepProps {
   lodgeName: string;
   guestName: string;
   guestEmail: string;
   guestPhone: string;
   guests: string;
+  extraRooms?: ReviewExtraRoom[];
   checkIn?: Date;
   checkOut?: Date;
   paymentMethod: string;
@@ -29,6 +36,7 @@ export const ReviewStep = ({
   guestEmail,
   guestPhone,
   guests,
+  extraRooms = [],
   checkIn,
   checkOut,
   paymentMethod,
@@ -45,7 +53,8 @@ export const ReviewStep = ({
       ? Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24))
       : 0;
 
-  const guestCount = parseInt(guests) || 0;
+  const guestCount =
+    (parseInt(guests) || 0) + extraRooms.reduce((sum, room) => sum + room.guests, 0);
 
   const getPaymentMethodLabel = (method: string) => {
     switch (method) {
@@ -74,6 +83,19 @@ export const ReviewStep = ({
           <span className="text-muted-foreground">{t("reservation.review.lodge")}</span>
           <span className="font-medium">{lodgeName}</span>
         </div>
+
+        {extraRooms.length > 0 && (
+          <div className="space-y-1">
+            {extraRooms.map((room) => (
+              <div key={room.roomId} className="flex justify-between">
+                <span className="text-muted-foreground">Bangalô adicional</span>
+                <span className="font-medium">
+                  {room.roomName} · {t("reservation.summary.guest", { count: room.guests })}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {selectedPackage && (
           <div className="flex justify-between">
