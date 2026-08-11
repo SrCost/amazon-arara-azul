@@ -10,6 +10,7 @@ Disallow: /auth
 Disallow: /auth/
 Disallow: /checkin
 Disallow: /checkout
+Disallow: /pre-chegada
 
 # Block API endpoints if any
 Disallow: /api/

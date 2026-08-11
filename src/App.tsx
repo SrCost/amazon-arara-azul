@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import Experiencias from "./pages/Experiencias";
 import Checkin from "./pages/Checkin";
 import Checkout from "./pages/Checkout";
+import PreArrival from "./pages/PreArrival";
 import FloatingSupportButton from "./components/FloatingSupportButton";
 import LanguageSuggestionBanner from "./components/LanguageSuggestionBanner";
 import FallingLeaves from "./components/FallingLeaves";
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/reserva/sucesso" element={<ReservationSuccess />} />
             <Route path="/checkin" element={<Checkin />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/pre-chegada" element={<PreArrival />} />
             <Route
               path="/admin"
               element={
