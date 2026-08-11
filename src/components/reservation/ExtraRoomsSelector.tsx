@@ -78,7 +78,7 @@ export const ExtraRoomsSelector = ({
             .map((r) => ({
               id: r.id,
               name:
-                (r as Record<string, string>)[`name_${lang}`] || r.name_pt,
+                (r as unknown as Record<string, string>)[`name_${lang}`] || r.name_pt,
               pricePerNight: Number(r.price_per_night) || 0,
               maxGuests: Number(r.max_guests) || 2,
             }))
