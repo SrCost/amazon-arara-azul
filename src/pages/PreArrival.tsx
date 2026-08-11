@@ -426,7 +426,7 @@ const PreArrival = () => {
       key: "occasion",
       node: (
         <Section icon={Gift} title={t("preArrival.occasion.title")}>
-          {occasion && occasion !== "none" && <div>
+          <div>
             <Label>{t("preArrival.occasion.select")}</Label>
             <Select value={occasion} onValueChange={setOccasion}>
               <SelectTrigger>
@@ -440,8 +440,8 @@ const PreArrival = () => {
                 ))}
               </SelectContent>
             </Select>
-          </div>}
-          <div>
+          </div>
+          {occasion && occasion !== "none" && <div>
             <Label htmlFor="occasion-detail">{t("preArrival.occasion.detail")}</Label>
             <Textarea
               id="occasion-detail"
@@ -450,7 +450,7 @@ const PreArrival = () => {
               placeholder={t("preArrival.occasion.detailPh")}
               onChange={(e) => setOccasionDetail(e.target.value)}
             />
-          </div>
+          </div>}
         </Section>
       ),
     },
