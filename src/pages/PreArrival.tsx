@@ -253,52 +253,10 @@ const PreArrival = () => {
   const alreadyAnswered = Boolean(data.answered_at);
 
   return (
-    <Shell>
-      <header className="mb-8 text-center">
-        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-          <Leaf className="h-4 w-4" />
-          {t("preArrival.title")}
-        </span>
-        <h1 className="mt-4 text-3xl md:text-4xl font-semibold text-foreground">
-          {data.guest_name}
-        </h1>
-        <p className="mt-2 text-muted-foreground">{t("preArrival.subtitle")}</p>
-      </header>
-
-      <div className="rounded-2xl border border-border bg-muted/40 p-5 mb-6">
-        <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
-          <div>
-            <dt className="text-muted-foreground">{t("preArrival.reservation")}</dt>
-            <dd className="font-medium text-foreground">{data.reservation_code}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{t("preArrival.guests")}</dt>
-            <dd className="font-medium text-foreground">{data.guests}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{t("preArrival.bungalows")}</dt>
-            <dd className="font-medium text-foreground">{data.rooms_summary || "—"}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{t("preArrival.checkIn")}</dt>
-            <dd className="font-medium text-foreground">{formatDate(data.check_in)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">{t("preArrival.checkOut")}</dt>
-            <dd className="font-medium text-foreground">{formatDate(data.check_out)}</dd>
-          </div>
-        </dl>
-      </div>
-
-      <p className="mb-6 text-muted-foreground leading-relaxed">{t("preArrival.intro")}</p>
-
-      {alreadyAnswered && (
-        <p className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm text-primary">
-          {t("preArrival.answeredBadge")}
-        </p>
-      )}
-
-      <div className="space-y-5">
+  const steps = [
+    {
+      key: "food",
+      node: (
         <Section icon={Utensils} title={t("preArrival.food.title")} description={t("preArrival.food.desc")}>
           <div>
             <Label className="mb-3 block">{t("preArrival.food.restrictions")}</Label>
@@ -322,7 +280,11 @@ const PreArrival = () => {
             />
           </div>
         </Section>
-
+      ),
+    },
+    {
+      key: "health",
+      node: (
         <Section
           icon={HeartPulse}
           title={t("preArrival.health.title")}
@@ -346,7 +308,11 @@ const PreArrival = () => {
             <Input id="medication" value={medication} maxLength={500} onChange={(e) => setMedication(e.target.value)} />
           </div>
         </Section>
-
+      ),
+    },
+    {
+      key: "kids",
+      node: (
         <Section icon={Baby} title={t("preArrival.kids.title")}>
           <div>
             <Label htmlFor="children">{t("preArrival.kids.info")}</Label>
@@ -359,7 +325,11 @@ const PreArrival = () => {
             />
           </div>
         </Section>
-
+      ),
+    },
+    {
+      key: "occasion",
+      node: (
         <Section icon={Gift} title={t("preArrival.occasion.title")}>
           <div>
             <Label>{t("preArrival.occasion.select")}</Label>
@@ -387,7 +357,11 @@ const PreArrival = () => {
             />
           </div>
         </Section>
-
+      ),
+    },
+    {
+      key: "transport",
+      node: (
         <Section icon={Car} title={t("preArrival.transport.title")}>
           <div>
             <Label>{t("preArrival.transport.mode")}</Label>
@@ -425,7 +399,11 @@ const PreArrival = () => {
             />
           </div>
         </Section>
-
+      ),
+    },
+    {
+      key: "additional",
+      node: (
         <Section icon={Info} title={t("preArrival.additional.title")}>
           <div>
             <Label htmlFor="additional">{t("preArrival.additional.info")}</Label>
@@ -438,21 +416,175 @@ const PreArrival = () => {
             />
           </div>
         </Section>
+      ),
+    },
+  ];
+
+  const reviewIndex = steps.length;
+  const totalSteps = steps.length + 1;
+  const isReview = step === reviewIndex;
+
+  const reviewItems: { step: number; title: string; lines: string[] }[] = [
+    {
+      step: 0,
+      title: t("preArrival.food.title"),
+      lines: [
+        diet.length ? diet.map((k) => t(`preArrival.diet.${k}`)).join(", ") : "",
+        foodsToAvoid,
+      ].filter(Boolean),
+    },
+    {
+      step: 1,
+      title: t("preArrival.health.title"),
+      lines: [healthCondition, mobility, medication].filter(Boolean),
+    },
+    { step: 2, title: t("preArrival.kids.title"), lines: [childrenInfo].filter(Boolean) },
+    {
+      step: 3,
+      title: t("preArrival.occasion.title"),
+      lines: [occasion ? t(`preArrival.occasionOpts.${occasion}`) : "", occasionDetail].filter(Boolean),
+    },
+    {
+      step: 4,
+      title: t("preArrival.transport.title"),
+      lines: [
+        arrivalMode ? t(`preArrival.arrivalOpts.${arrivalMode}`) : "",
+        arrivalTime,
+        transportNeeds,
+      ].filter(Boolean),
+    },
+    { step: 5, title: t("preArrival.additional.title"), lines: [additionalInfo].filter(Boolean) },
+  ];
+
+  const goTo = (next: number) => {
+    setStep(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <Shell>
+      <header className="mb-8 text-center">
+        <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
+          <Leaf className="h-4 w-4" />
+          {t("preArrival.title")}
+        </span>
+        <h1 className="mt-4 text-3xl md:text-4xl font-semibold text-foreground">
+          {data.guest_name}
+        </h1>
+        <p className="mt-2 text-muted-foreground">{t("preArrival.subtitle")}</p>
+      </header>
+
+      <div className="rounded-2xl border border-border bg-muted/40 p-5 mb-6">
+        <dl className="grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
+          <div>
+            <dt className="text-muted-foreground">{t("preArrival.reservation")}</dt>
+            <dd className="font-medium text-foreground">{data.reservation_code}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t("preArrival.guests")}</dt>
+            <dd className="font-medium text-foreground">{data.guests}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t("preArrival.bungalows")}</dt>
+            <dd className="font-medium text-foreground">{data.rooms_summary || "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t("preArrival.checkIn")}</dt>
+            <dd className="font-medium text-foreground">{formatDate(data.check_in)}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">{t("preArrival.checkOut")}</dt>
+            <dd className="font-medium text-foreground">{formatDate(data.check_out)}</dd>
+          </div>
+        </dl>
       </div>
 
-      <p className="mt-8 text-center text-muted-foreground">{t("preArrival.closing")}</p>
+      {step === 0 && (
+        <p className="mb-6 text-muted-foreground leading-relaxed">{t("preArrival.intro")}</p>
+      )}
 
-      <div className="mt-6 flex justify-center">
-        <Button size="lg" onClick={handleSubmit} disabled={submitting}>
-          {submitting
-            ? t("preArrival.submitting")
-            : alreadyAnswered
-              ? t("preArrival.update")
-              : t("preArrival.submit")}
+      {alreadyAnswered && step === 0 && (
+        <p className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm text-primary">
+          {t("preArrival.answeredBadge")}
+        </p>
+      )}
+
+      {/* Progresso */}
+      <div className="mb-6">
+        <div className="mb-2 flex items-center justify-between text-sm text-muted-foreground">
+          <span>{t("preArrival.nav.step", { current: step + 1, total: totalSteps })}</span>
+          <span>{Math.round(((step + 1) / totalSteps) * 100)}%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-500"
+            style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      <div key={step} className="animate-fade-in">
+        {isReview ? (
+          <Section icon={CheckCircle} title={t("preArrival.review.title")} description={t("preArrival.review.desc")}>
+            <div className="space-y-4">
+              {reviewItems.map((item) => (
+                <div key={item.title} className="rounded-xl border border-border bg-muted/30 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <h3 className="text-sm font-semibold text-foreground">{item.title}</h3>
+                    <Button variant="ghost" size="sm" onClick={() => goTo(item.step)}>
+                      {t("preArrival.review.edit")}
+                    </Button>
+                  </div>
+                  {item.lines.length ? (
+                    <ul className="mt-1 space-y-1 text-sm text-muted-foreground">
+                      {item.lines.map((line, i) => (
+                        <li key={i}>{line}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1 text-sm text-muted-foreground">{t("preArrival.review.empty")}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Section>
+        ) : (
+          steps[step].node
+        )}
+      </div>
+
+      {isReview && (
+        <p className="mt-8 text-center text-muted-foreground">{t("preArrival.closing")}</p>
+      )}
+
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+        <Button
+          variant="outline"
+          size="lg"
+          onClick={() => goTo(step - 1)}
+          disabled={step === 0 || submitting}
+          className={step === 0 ? "invisible" : ""}
+        >
+          {t("preArrival.nav.back")}
         </Button>
+
+        {isReview ? (
+          <Button size="lg" onClick={handleSubmit} disabled={submitting}>
+            {submitting
+              ? t("preArrival.submitting")
+              : alreadyAnswered
+                ? t("preArrival.update")
+                : t("preArrival.submit")}
+          </Button>
+        ) : (
+          <Button size="lg" onClick={() => goTo(step + 1)}>
+            {step === steps.length - 1 ? t("preArrival.nav.review") : t("preArrival.nav.next")}
+          </Button>
+        )}
       </div>
     </Shell>
   );
 };
+
 
 export default PreArrival;
