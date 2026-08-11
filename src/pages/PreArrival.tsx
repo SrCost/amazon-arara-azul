@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -410,7 +409,7 @@ const PreArrival = () => {
       key: "kids",
       node: (
         <Section icon={Baby} title={t("preArrival.kids.title")}>
-          {occasion && occasion !== "none" && <div>
+          <div>
             <Label htmlFor="children">{t("preArrival.kids.info")}</Label>
             <Textarea
               id="children"
@@ -419,7 +418,7 @@ const PreArrival = () => {
               placeholder={t("preArrival.kids.infoPh")}
               onChange={(e) => setChildrenInfo(e.target.value)}
             />
-          </div>}
+          </div>
         </Section>
       ),
     },
@@ -427,7 +426,7 @@ const PreArrival = () => {
       key: "occasion",
       node: (
         <Section icon={Gift} title={t("preArrival.occasion.title")}>
-          <div>
+          {occasion && occasion !== "none" && <div>
             <Label>{t("preArrival.occasion.select")}</Label>
             <Select value={occasion} onValueChange={setOccasion}>
               <SelectTrigger>
@@ -441,7 +440,7 @@ const PreArrival = () => {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </div>}
           <div>
             <Label htmlFor="occasion-detail">{t("preArrival.occasion.detail")}</Label>
             <Textarea

@@ -775,9 +775,10 @@
   },
   "preArrival": {
     "title": "Pré-Chegada",
+    "pageTitle": "Questionário de Pré-Chegada — Pousada Arara Azul",
     "subtitle": "Vamos preparar tudo do seu jeito",
-    "intro": "Que alegria receber você na Pousada Rará Azul! Conte um pouco sobre suas preferências para que possamos cuidar de cada detalhe da sua estadia. Todas as perguntas são opcionais.",
-    "closing": "Obrigado por compartilhar. Estamos ansiosos para receber você na Rará Azul.",
+    "intro": "Que alegria receber você na Pousada Arara Azul! Conte um pouco sobre suas preferências para que possamos cuidar de cada detalhe da sua estadia. Todas as perguntas são opcionais.",
+    "closing": "Obrigado por compartilhar. Estamos ansiosos para receber você na Pousada Arara Azul.",
     "reservation": "Reserva",
     "guestName": "Responsável",
     "checkIn": "Check-in",
@@ -792,10 +793,12 @@
       "avoidPh": "Ex.: frutos do mar, pimenta..."
     },
     "diet": {
+      "none": "Não possuo restrição",
       "vegetarian": "Vegetariano",
       "vegan": "Vegano",
-      "glutenFree": "Sem glúten",
-      "lactoseFree": "Sem lactose",
+      "lactoseIntolerance": "Intolerância à lactose",
+      "celiac": "Doença celíaca / glúten",
+      "foodAllergy": "Alergia alimentar",
       "diabetic": "Diabético",
       "other": "Outro"
     },
@@ -803,18 +806,24 @@
       "title": "Saúde e Bem-Estar",
       "notice": "Estas informações são totalmente opcionais e usadas apenas para o seu conforto e segurança durante a estadia. Tratamos esses dados com sigilo.",
       "condition": "Alguma condição de saúde que devemos considerar?",
-      "mobility": "Limitações de mobilidade",
-      "medication": "Medicação de uso contínuo"
+      "mobility": "Possui limitação física ou de mobilidade?",
+      "medication": "Faz uso de medicação contínua?",
+      "yes": "Sim",
+      "no": "Não",
+      "mobilityDetail": "Conte como podemos ajudar",
+      "mobilityPh": "Descreva a limitação ou apoio necessário",
+      "medicationDetail": "Qual medicação?",
+      "medicationPh": "Informe a medicação e cuidados relevantes"
     },
     "kids": {
       "title": "Crianças",
-      "info": "Vai viajar com crianças? Conte as idades e o que precisam (berço, cadeirinha, atividades).",
-      "infoPh": "Ex.: 1 criança de 4 anos, precisa de cama extra"
+      "info": "Há alguma informação relevante sobre as crianças para nossa equipe?",
+      "infoPh": "Ex.: idades, berço, alimentação ou cuidados especiais"
     },
     "occasion": {
       "title": "Ocasião Especial",
       "select": "Está comemorando algo?",
-      "detail": "Conte mais para prepararmos uma surpresa",
+      "detail": "Conte os detalhes para prepararmos algo especial",
       "detailPh": "Ex.: aniversário de casamento no dia 12"
     },
     "occasionOpts": {
@@ -822,7 +831,6 @@
       "honeymoon": "Lua de mel",
       "birthday": "Aniversário",
       "anniversary": "Aniversário de casamento",
-      "proposal": "Pedido de casamento",
       "other": "Outra"
     },
     "transport": {
