@@ -44,6 +44,41 @@ serve(async (req) => {
     const siteUrl = (Deno.env.get("SITE_URL") || "https://pousadararazul.com").replace(/\/+$/, "");
     const checkinLink = `${siteUrl}/checkin?token=${token}`;
 
+    // Token independente para o questionário de Pré-Chegada (sem relação com a FNRH)
+    const preArrivalToken = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+    await supabase.from("booking_tokens").insert({
+      reservation_id: reservationId,
+      token: preArrivalToken,
+      type: "pre_arrival",
+      expires_at: new Date(new Date(reservation.check_out + "T12:00:00Z").getTime() + 24 * 60 * 60 * 1000).toISOString(),
+    });
+    const preArrivalLink = `${siteUrl}/pre-chegada?token=${preArrivalToken}`;
+
+    const { data: existingPreArrival } = await supabase
+      .from("pre_arrival_responses")
+      .select("id, status, first_sent_at")
+      .eq("reservation_id", reservationId)
+      .maybeSingle();
+
+    const nowIso = new Date().toISOString();
+    if (existingPreArrival) {
+      await supabase.from("pre_arrival_responses").update({
+        status: existingPreArrival.status === "pending" ? "sent" : existingPreArrival.status,
+        first_sent_at: existingPreArrival.first_sent_at || nowIso,
+        last_sent_at: nowIso,
+        last_send_origin: "auto",
+      }).eq("id", existingPreArrival.id);
+    } else {
+      await supabase.from("pre_arrival_responses").insert({
+        reservation_id: reservationId,
+        status: "sent",
+        first_sent_at: nowIso,
+        last_sent_at: nowIso,
+        last_send_origin: "auto",
+      });
+    }
+
+
     const formatDate = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
     const html = `<!DOCTYPE html>
@@ -69,6 +104,13 @@ serve(async (req) => {
 <a href="${checkinLink}" style="background:#0B3A66;color:#fff;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;font-size:16px;">
 Fazer Check-in Agora
 </a></td></tr></table>
+<table width="100%" style="background:#F6FBF9;border-radius:12px;border:1px solid #E4EFEA;margin:24px 0 0;">
+<tr><td style="padding:20px 22px;" align="center">
+<p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#0F6B4D;">🌿 Prepare sua chegada</p>
+<p style="margin:0 0 16px;font-size:13px;color:#4A5568;line-height:1.6;">Conte suas preferências de alimentação, horário de chegada e detalhes especiais para deixarmos tudo do seu jeito.</p>
+<a href="${preArrivalLink}" style="background:#0F6B4D;color:#fff;padding:14px 26px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block;font-size:14px;letter-spacing:0.5px;">PREPARAR MINHA CHEGADA</a>
+</td></tr></table>
+
 <table width="100%" style="background:#FFF9F0;border-radius:12px;border:1px solid #F0E4D0;margin:24px 0 0;">
 <tr><td style="padding:18px 22px;">
 <p style="margin:0 0 8px;font-size:13px;font-weight:700;color:#7A4A00;">📋 Política de Cancelamento</p>

@@ -42,6 +42,8 @@ import { Search, Eye, Edit, X, Mail, MessageCircle, ChevronLeft, ChevronRight } 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { fetchReservationRoomsMap, formatRoomsSummary, type ReservationRoomItem } from "@/lib/reservationRooms";
+import PreArrivalCell from "@/components/admin/PreArrivalCell";
+
 
 interface Reservation {
   id: string;
@@ -408,7 +410,14 @@ const Reservations = () => {
                     <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{new Date(reservation.check_out).toLocaleDateString()}</TableCell>
                     <TableCell>{getStatusBadge(reservation.status)}</TableCell>
                     <TableCell className="hidden lg:table-cell">{getPaymentStatusBadge(reservation.payment_status)}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground hidden xl:table-cell">—</TableCell>
+                    <TableCell className="hidden xl:table-cell">
+                      <PreArrivalCell
+                        reservationId={reservation.id}
+                        guestName={reservation.guest_name}
+                        guestEmail={reservation.guest_email}
+                      />
+                    </TableCell>
+
                     <TableCell className="text-xs hidden xl:table-cell">
                       {reservation.payment_method === 'pix' ? 'PIX' : 
                        reservation.payment_method === 'credit_card' ? 'Cartão' : 

@@ -272,7 +272,30 @@
     "pendingPayments": "Ausstehende Zahlungen",
     "newMessages": "Neue Nachrichten",
     "recentReservations": "Neueste Reservierungen",
-    "adminAccess": "Admin-Zugang"
+    "adminAccess": "Admin-Zugang",
+    "preArrival": {
+      "column": "Pré-Chegada",
+      "send": "Enviar Pré-Chegada",
+      "view": "Ver respostas",
+      "status": {
+        "pending": "Pendente",
+        "sent": "Enviado",
+        "answered": "Respondido",
+        "updated": "Atualizado",
+        "none": "Não enviado"
+      },
+      "confirmTitle": "Enviar Pré-Chegada",
+      "confirmText": "Enviar o formulário de Pré-Chegada para {{name}}?",
+      "confirmEmail": "E-mail de destino: {{email}}",
+      "confirmAnswered": "Este questionário já foi respondido. Deseja realmente reenviar o acesso?",
+      "sent": "Formulário de Pré-Chegada enviado",
+      "sendError": "Não foi possível enviar o formulário",
+      "answersTitle": "Respostas de Pré-Chegada",
+      "noAnswers": "Ainda sem respostas para esta reserva.",
+      "firstAnswer": "Primeira resposta",
+      "lastUpdate": "Última atualização",
+      "healthRestricted": "As informações de saúde são visíveis apenas para o administrador principal."
+    }
   },
   "home": {
     "heroTitle": "Erleben Sie das Amazonasgebiet verantwortungsvoll",
@@ -731,5 +754,93 @@
     "learnMore": "Mehr erfahren",
     "sectionTitle": "Website-Entwickler",
     "developedByPrefix": "Website entwickelt von"
+  },
+  "preArrival": {
+    "title": "Vor der Ankunft",
+    "subtitle": "Wir bereiten alles nach Ihren Wünschen vor",
+    "intro": "Wir freuen uns sehr, Sie in der Pousada Rará Azul zu begrüßen! Erzählen Sie uns von Ihren Vorlieben, damit wir jedes Detail Ihres Aufenthalts planen können. Alle Fragen sind freiwillig.",
+    "closing": "Vielen Dank für Ihre Angaben. Wir freuen uns auf Ihren Besuch in der Rará Azul.",
+    "reservation": "Reservierung",
+    "guestName": "Hauptgast",
+    "checkIn": "Check-in",
+    "checkOut": "Check-out",
+    "guests": "Gäste",
+    "bungalows": "Bungalows",
+    "food": {
+      "title": "Verpflegung",
+      "desc": "So passen wir unser Menü für Sie an.",
+      "restrictions": "Ernährungseinschränkungen",
+      "avoid": "Lebensmittel, die Sie meiden möchten",
+      "avoidPh": "z. B. Meeresfrüchte, scharfe Gerichte..."
+    },
+    "diet": {
+      "vegetarian": "Vegetarisch",
+      "vegan": "Vegan",
+      "glutenFree": "Glutenfrei",
+      "lactoseFree": "Laktosefrei",
+      "diabetic": "Diabetiker",
+      "other": "Andere"
+    },
+    "health": {
+      "title": "Gesundheit & Wohlbefinden",
+      "notice": "Diese Angaben sind vollkommen freiwillig und dienen nur Ihrem Komfort und Ihrer Sicherheit während des Aufenthalts. Wir behandeln sie vertraulich.",
+      "condition": "Gibt es gesundheitliche Aspekte, die wir beachten sollten?",
+      "mobility": "Mobilitätseinschränkungen",
+      "medication": "Dauermedikation"
+    },
+    "kids": {
+      "title": "Kinder",
+      "info": "Reisen Sie mit Kindern? Nennen Sie Alter und Bedarf (Babybett, Kindersitz, Aktivitäten).",
+      "infoPh": "z. B. ein Kind, 4 Jahre, benötigt Zusatzbett"
+    },
+    "occasion": {
+      "title": "Besonderer Anlass",
+      "select": "Feiern Sie etwas?",
+      "detail": "Erzählen Sie mehr, damit wir eine Überraschung vorbereiten",
+      "detailPh": "z. B. Hochzeitstag am 12."
+    },
+    "occasionOpts": {
+      "none": "Keiner",
+      "honeymoon": "Honeymoon",
+      "birthday": "Geburtstag",
+      "anniversary": "Hochzeitstag",
+      "proposal": "Heiratsantrag",
+      "other": "Anderer"
+    },
+    "transport": {
+      "title": "Transport & Ankunft",
+      "mode": "Wie möchten Sie anreisen?",
+      "time": "Voraussichtliche Ankunftszeit",
+      "needs": "Benötigen Sie Unterstützung beim Transport?",
+      "needsPh": "z. B. Transfer von Manacapuru"
+    },
+    "arrivalOpts": {
+      "car": "Eigenes Auto",
+      "bus": "Bus",
+      "boat": "Boot",
+      "plane": "Flugzeug",
+      "transfer": "Transfer",
+      "other": "Andere"
+    },
+    "additional": {
+      "title": "Weitere Informationen",
+      "info": "Möchten Sie uns noch etwas mitteilen?",
+      "infoPh": "Teilen Sie uns gern alles mit"
+    },
+    "submit": "Antworten senden",
+    "update": "Antworten aktualisieren",
+    "submitting": "Senden...",
+    "successTitle": "Wir haben Ihre Antworten erhalten!",
+    "successDesc": "Vielen Dank! Unser Team bereitet alles liebevoll für Ihre Ankunft vor.",
+    "successUpdate": "Sie können Ihre Antworten jederzeit über denselben Link aktualisieren.",
+    "answeredBadge": "Sie haben bereits geantwortet — Sie können unten prüfen und aktualisieren.",
+    "invalidTitle": "Link nicht gefunden",
+    "invalidDesc": "Dieser Link ist nicht gültig. Kontaktieren Sie unser Team, wir senden Ihnen einen neuen.",
+    "expiredTitle": "Link abgelaufen",
+    "expiredDesc": "Dieser Link ist nicht mehr verfügbar. Kontaktieren Sie unser Team, wir senden gern einen neuen.",
+    "whatsappBtn": "Über WhatsApp schreiben",
+    "whatsappMsg": "Hallo! Ich brauche Hilfe mit dem Formular vor der Ankunft.",
+    "loading": "Laden...",
+    "errorSave": "Ihre Antworten konnten nicht gespeichert werden. Bitte erneut versuchen."
   }
 }
