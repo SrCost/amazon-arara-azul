@@ -802,15 +802,22 @@ export type Database = {
           created_at: string | null
           daily_rate: number | null
           dietary_restrictions: string | null
+          documento_tipo: string | null
           emergency_contact: string | null
+          erro_sincronizacao_fnrh: string | null
+          fnrh_checkin_em: string | null
+          fnrh_checkout_em: string | null
+          genero: string | null
           guest_email: string
           guest_language: string
           guest_name: string
           guest_phone: string | null
           guests: number
+          hospede_id_fnrh: string | null
           id: string
           is_foreign: boolean | null
           is_test: boolean | null
+          link_precheckin: string | null
           mp_order_id: string | null
           mp_transaction_id: string | null
           nationality: string | null
@@ -829,9 +836,14 @@ export type Database = {
           payment_reference: string | null
           payment_status: string | null
           payment_ticket_url: string | null
+          pessoa_id_fnrh: string | null
+          quantidade_hospede_adulto: number | null
+          quantidade_hospede_menor: number | null
+          reserva_id_fnrh: string | null
           reservation_source: string | null
           room_id: string
           room_name: string | null
+          situacao_fnrh: string | null
           special_requests: string | null
           status: string | null
           total_price: number
@@ -855,15 +867,22 @@ export type Database = {
           created_at?: string | null
           daily_rate?: number | null
           dietary_restrictions?: string | null
+          documento_tipo?: string | null
           emergency_contact?: string | null
+          erro_sincronizacao_fnrh?: string | null
+          fnrh_checkin_em?: string | null
+          fnrh_checkout_em?: string | null
+          genero?: string | null
           guest_email: string
           guest_language?: string
           guest_name: string
           guest_phone?: string | null
           guests: number
+          hospede_id_fnrh?: string | null
           id?: string
           is_foreign?: boolean | null
           is_test?: boolean | null
+          link_precheckin?: string | null
           mp_order_id?: string | null
           mp_transaction_id?: string | null
           nationality?: string | null
@@ -882,9 +901,14 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: string | null
           payment_ticket_url?: string | null
+          pessoa_id_fnrh?: string | null
+          quantidade_hospede_adulto?: number | null
+          quantidade_hospede_menor?: number | null
+          reserva_id_fnrh?: string | null
           reservation_source?: string | null
           room_id: string
           room_name?: string | null
+          situacao_fnrh?: string | null
           special_requests?: string | null
           status?: string | null
           total_price: number
@@ -908,15 +932,22 @@ export type Database = {
           created_at?: string | null
           daily_rate?: number | null
           dietary_restrictions?: string | null
+          documento_tipo?: string | null
           emergency_contact?: string | null
+          erro_sincronizacao_fnrh?: string | null
+          fnrh_checkin_em?: string | null
+          fnrh_checkout_em?: string | null
+          genero?: string | null
           guest_email?: string
           guest_language?: string
           guest_name?: string
           guest_phone?: string | null
           guests?: number
+          hospede_id_fnrh?: string | null
           id?: string
           is_foreign?: boolean | null
           is_test?: boolean | null
+          link_precheckin?: string | null
           mp_order_id?: string | null
           mp_transaction_id?: string | null
           nationality?: string | null
@@ -935,9 +966,14 @@ export type Database = {
           payment_reference?: string | null
           payment_status?: string | null
           payment_ticket_url?: string | null
+          pessoa_id_fnrh?: string | null
+          quantidade_hospede_adulto?: number | null
+          quantidade_hospede_menor?: number | null
+          reserva_id_fnrh?: string | null
           reservation_source?: string | null
           room_id?: string
           room_name?: string | null
+          situacao_fnrh?: string | null
           special_requests?: string | null
           status?: string | null
           total_price?: number
