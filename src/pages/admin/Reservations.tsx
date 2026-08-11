@@ -41,6 +41,7 @@ import { Label } from "@/components/ui/label";
 import { Search, Eye, Edit, X, Mail, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { fetchReservationRoomsMap, formatRoomsSummary } from "@/lib/reservationRooms";
 
 interface Reservation {
   id: string;
