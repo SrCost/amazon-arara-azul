@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2, Loader2, BedDouble } from "lucide-react";
+import { Trash2, Loader2, BedDouble } from "lucide-react";
 import { getDailyRate, calculateNights } from "@/lib/pricing";
 
 export interface ExtraRoomEntry {
