@@ -261,9 +261,15 @@ const PreArrival = () => {
 
     if (error) {
       console.error("submit_pre_arrival", error);
+      if (/JA_RESPONDIDO/i.test(error.message || "")) {
+        setData((prev) => (prev ? { ...prev, answered_at: new Date().toISOString() } : prev));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
       toast({ title: t("preArrival.errorSave"), variant: "destructive" });
       return;
     }
+
 
     supabase.functions
       .invoke("notify-pre-arrival", { body: { token } })
