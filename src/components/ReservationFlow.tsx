@@ -419,17 +419,24 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       );
 
       if (orderError || !orderData?.success) {
+        const info = await parseFunctionError(orderError, orderData);
+
         // Verificar se é erro de conflito de datas (409)
-        if (orderData?.error === 'dates_unavailable') {
-          toast.error("❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas.");
+        if (info.code === 'dates_unavailable') {
+          const names = info.unavailableRooms.join(', ');
+          toast.error(
+            names
+              ? `❌ ${names} já está reservado nessas datas. Escolha outras datas.`
+              : "❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas."
+          );
           await refreshAvailability();
           setStep(2); // Voltar para seleção de datas
           setCheckIn(undefined);
           setCheckOut(undefined);
           return;
         }
-        
-        const errorMsg = orderData?.error || "Falha ao criar pedido PIX";
+
+        const errorMsg = info.message || info.code || "Falha ao criar pedido PIX";
         setErrorType("order");
         setErrorMessage(errorMsg);
         setCanRetry(true);
@@ -437,6 +444,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         logErrorToAudit("pix_order_error", errorMsg);
         return;
       }
+
 
       // Store reservation and payment IDs (triggers Realtime subscription)
       if (orderData.reservation_id) setReservationId(orderData.reservation_id);
