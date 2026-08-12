@@ -740,9 +740,16 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         );
 
         if (orderError || !orderResult?.success) {
+          const info = await parseFunctionError(orderError, orderResult);
+
           // Verificar se é erro de conflito de datas (409)
-          if (orderResult?.error === 'dates_unavailable') {
-            toast.error("❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas.");
+          if (info.code === 'dates_unavailable') {
+            const names = info.unavailableRooms.join(', ');
+            toast.error(
+              names
+                ? `❌ ${names} já está reservado nessas datas. Escolha outras datas.`
+                : "❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas."
+            );
             await refreshAvailability();
             setStep(2); // Voltar para seleção de datas
             setCheckIn(undefined);
@@ -750,14 +757,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             setIsSubmitting(false);
             return;
           }
-          
-          const errorMsg = orderResult?.error_message || orderResult?.error || "Erro ao processar pagamento";
+
+          const errorMsg = info.message || info.code || "Erro ao processar pagamento";
           setErrorType("card_failed");
           setErrorMessage(`Pagamento recusado: ${errorMsg}`);
           setCanRetry(true);
           setErrorDialogOpen(true);
           logErrorToAudit("card_payment_failed", errorMsg);
           setIsSubmitting(false);
+
           return;
         }
 
