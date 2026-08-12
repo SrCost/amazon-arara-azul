@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { fnrhFetch, getCpfSolicitante, getFnrhEnv, toErrorBody, FnrhError } from "../_shared/fnrh.ts";
-import { corsHeaders, jsonResponse, requireInternalUser, serviceClient } from "../_shared/internal.ts";
+import { corsHeaders, jsonResponse, getInternalAuth, unauthorizedResponse, serviceClient } from "../_shared/internal.ts";
 
 const BodySchema = z.object({
   reservation_id: z.string().uuid(),
@@ -13,8 +13,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const user = await requireInternalUser(req);
-    if (!user) return jsonResponse({ error: "Não autorizado", code: "NAO_AUTORIZADO" }, 401);
+    const { user, reason } = await getInternalAuth(req);
+    if (!user) return unauthorizedResponse(reason);
 
     const parsed = BodySchema.safeParse(await req.json());
     if (!parsed.success) {

@@ -854,12 +854,9 @@
       "infoPh": "N'hésitez pas à nous en dire plus"
     },
     "submit": "Envoyer les réponses",
-    "update": "Mettre à jour",
     "submitting": "Envoi...",
     "successTitle": "Nous avons reçu vos réponses !",
     "successDesc": "Merci ! Notre équipe préparera tout avec soin pour votre arrivée.",
-    "successUpdate": "Vous pouvez mettre à jour vos réponses à tout moment via ce même lien.",
-    "answeredBadge": "Vous avez déjà répondu — vous pouvez revoir et mettre à jour ci-dessous.",
     "invalidTitle": "Lien introuvable",
     "invalidDesc": "Ce lien de pré-arrivée n'est pas valide. Contactez notre équipe, nous vous en enverrons un nouveau.",
     "expiredTitle": "Lien expiré",
@@ -879,6 +876,11 @@
       "desc": "Vérifiez tout avant d'envoyer. Vous pouvez modifier chaque section.",
       "edit": "Modifier",
       "empty": "Non renseigné"
+    },
+    "locked": {
+      "title": "Vos réponses ont déjà été envoyées",
+      "desc": "Merci ! Nous avons déjà reçu les informations de cette réservation et elles ne peuvent plus être modifiées via ce lien.",
+      "answeredOn": "Envoyé le {{date}}. Besoin d’un ajustement ? Contactez notre équipe."
     }
   }
 }

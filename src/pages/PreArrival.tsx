@@ -261,9 +261,15 @@ const PreArrival = () => {
 
     if (error) {
       console.error("submit_pre_arrival", error);
+      if (/JA_RESPONDIDO/i.test(error.message || "")) {
+        setData((prev) => (prev ? { ...prev, answered_at: new Date().toISOString() } : prev));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
       toast({ title: t("preArrival.errorSave"), variant: "destructive" });
       return;
     }
+
 
     supabase.functions
       .invoke("notify-pre-arrival", { body: { token } })
@@ -312,14 +318,38 @@ const PreArrival = () => {
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <CheckCircle className="mx-auto mb-4 h-12 w-12 text-primary" />
           <h1 className="text-2xl font-semibold text-foreground mb-2">{t("preArrival.successTitle")}</h1>
-          <p className="text-muted-foreground mb-2">{t("preArrival.successDesc")}</p>
-          <p className="text-sm text-muted-foreground">{t("preArrival.successUpdate")}</p>
+          <p className="text-muted-foreground">{t("preArrival.successDesc")}</p>
         </div>
       </Shell>
     );
   }
 
-  const alreadyAnswered = Boolean(data.answered_at);
+  // Resposta única: link já utilizado não pode ser reenviado nem editado
+  if (data.answered_at) {
+    return (
+      <Shell>
+        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <CheckCircle className="mx-auto mb-4 h-12 w-12 text-primary" />
+          <h1 className="text-2xl font-semibold text-foreground mb-2">{t("preArrival.locked.title")}</h1>
+          <p className="text-muted-foreground mb-2">{t("preArrival.locked.desc")}</p>
+          <p className="mb-6 text-sm text-muted-foreground">
+            {t("preArrival.locked.answeredOn", {
+              date: new Date(data.answered_at).toLocaleDateString(localeMap[i18n.language] || "pt-BR", {
+                day: "2-digit", month: "long", year: "numeric",
+              }),
+            })}
+          </p>
+          <Button asChild>
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {t("preArrival.whatsappBtn")}
+            </a>
+          </Button>
+        </div>
+      </Shell>
+    );
+  }
+
 
   const steps = [
 
@@ -547,11 +577,8 @@ const PreArrival = () => {
         <p className="mb-6 text-muted-foreground leading-relaxed">{t("preArrival.intro")}</p>
       )}
 
-      {alreadyAnswered && step === 0 && (
-        <p className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm text-primary">
-          {t("preArrival.answeredBadge")}
-        </p>
-      )}
+
+
 
       {/* Progresso */}
       <div className="mb-6">
@@ -614,12 +641,9 @@ const PreArrival = () => {
 
         {isReview ? (
           <Button size="lg" onClick={handleSubmit} disabled={submitting}>
-            {submitting
-              ? t("preArrival.submitting")
-              : alreadyAnswered
-                ? t("preArrival.update")
-                : t("preArrival.submit")}
+            {submitting ? t("preArrival.submitting") : t("preArrival.submit")}
           </Button>
+
         ) : (
           <Button size="lg" onClick={() => goTo(step + 1)}>
             {step === steps.length - 1 ? t("preArrival.nav.review") : t("preArrival.nav.next")}

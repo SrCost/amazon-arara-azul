@@ -130,9 +130,29 @@ const Fnrh = () => {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [completar, setCompletar] = useState<{ ficha: Ficha; fields: string[] } | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
 
   const loadFichas = useCallback(async () => {
     setLoading(true);
+
+    // Garante uma sessão válida antes de chamar a função protegida
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      if (!refreshed.session) {
+        setLoading(false);
+        setSessionExpired(true);
+        toast({
+          title: "Sessão expirada",
+          description: "Entre novamente no painel para carregar as fichas do FNRH.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    setSessionExpired(false);
+
     const body: Record<string, unknown> = { limit: 150 };
     if (busca.trim()) body.busca = busca.trim();
     if (situacao !== "todas") body.situacao = situacao;
@@ -144,8 +164,10 @@ const Fnrh = () => {
 
     if (error) {
       const parsed = await readErrorBody(error);
+      const expired = parsed?.code === "SEM_SESSAO" || parsed?.code === "SESSAO_EXPIRADA";
+      if (expired) setSessionExpired(true);
       toast({
-        title: "Erro ao carregar fichas",
+        title: expired ? "Sessão expirada" : "Erro ao carregar fichas",
         description: parsed?.error ?? error.message,
         variant: "destructive",
       });
@@ -154,6 +176,7 @@ const Fnrh = () => {
     setEnv(data?.env ?? "");
     setFichas((data?.fichas ?? []) as Ficha[]);
   }, [busca, situacao, dataInicio, dataFim, toast]);
+
 
   useEffect(() => {
     loadFichas();
@@ -242,6 +265,18 @@ const Fnrh = () => {
 
   return (
     <div className="space-y-6">
+      {sessionExpired && (
+        <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-destructive">
+            Sua sessão administrativa expirou, por isso as fichas não puderam ser carregadas. Entre novamente para continuar.
+          </p>
+          <Button variant="outline" onClick={() => (window.location.href = "/auth")}>
+            <LogIn className="mr-2 h-4 w-4" />
+            Entrar novamente
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">FNRH</h1>
