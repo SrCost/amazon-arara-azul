@@ -130,6 +130,8 @@ const Fnrh = () => {
   const [dataInicio, setDataInicio] = useState("");
   const [dataFim, setDataFim] = useState("");
   const [completar, setCompletar] = useState<{ ficha: Ficha; fields: string[] } | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
 
   const loadFichas = useCallback(async () => {
     setLoading(true);
