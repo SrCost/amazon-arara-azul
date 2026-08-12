@@ -591,7 +591,23 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           return;
         }
       }
+
+      // Revalidar disponibilidade antes de ir para o pagamento
+      const busy = await findBusyRooms();
+      if (busy.length > 0) {
+        toast.error(
+          busy.includes(roomId)
+            ? `${lodgeName} já está reservado nessas datas. Escolha outras datas.`
+            : "Um dos bangalôs adicionais já foi reservado nessas datas. Revise sua seleção."
+        );
+        await refreshAvailability();
+        setStep(2);
+        setCheckIn(undefined);
+        setCheckOut(undefined);
+        return;
+      }
     }
+
     
     if (step === 4) {
       if (!paymentMethod) {
