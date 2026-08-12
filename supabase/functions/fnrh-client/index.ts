@@ -22,10 +22,11 @@ serve(async (req) => {
   }
 
   try {
-    const user = await requireInternalUser(req);
+    const { user, reason } = await getInternalAuth(req);
     if (!user) {
-      return jsonResponse({ error: "Não autorizado", code: "NAO_AUTORIZADO" }, 401);
+      return unauthorizedResponse(reason);
     }
+
 
     // GET simples: devolve o ambiente atual (para o indicador do painel)
     if (req.method === "GET") {
