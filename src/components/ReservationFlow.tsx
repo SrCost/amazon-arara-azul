@@ -38,6 +38,65 @@ interface ReservationFlowProps {
   onClose: () => void;
 }
 
+type FunctionErrorInfo = {
+  code: string | null;
+  message: string | null;
+  unavailableRooms: string[];
+};
+
+/**
+ * Edge Functions que respondem com status != 2xx fazem o supabase-js devolver
+ * `data = null` e um FunctionsHttpError genérico. Aqui lemos o corpo real da
+ * resposta para recuperar o código (`error`) e a mensagem enviada pelo servidor.
+ */
+const parseFunctionError = async (
+  error: any,
+  data: any
+): Promise<FunctionErrorInfo> => {
+  let body: any = data && typeof data === "object" ? data : null;
+
+  if (!body && error?.context) {
+    try {
+      const ctx = error.context;
+      if (typeof ctx.json === "function") {
+        body = await ctx.clone().json();
+      } else if (typeof ctx.text === "function") {
+        body = JSON.parse(await ctx.clone().text());
+      }
+    } catch {
+      body = null;
+    }
+  }
+
+  const unavailableRooms = Array.isArray(body?.unavailable_rooms)
+    ? body.unavailable_rooms
+        .map((room: any) => room?.room_name)
+        .filter((name: any): name is string => Boolean(name))
+    : [];
+
+  return {
+    code: typeof body?.error === "string" ? body.error : null,
+    message:
+      (typeof body?.message === "string" && body.message) ||
+      (typeof body?.error_message === "string" && body.error_message) ||
+      null,
+    unavailableRooms,
+  };
+};
+
+const overlapsRange = (
+  startA: Date,
+  endA: Date,
+  startB: Date,
+  endB: Date
+) => startA < endB && endA > startB;
+
+const parseIsoDate = (value: string) => {
+  const [y, m, d] = value.split("T")[0].split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+};
+
+
 const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: ReservationFlowProps) => {
   const { t, i18n } = useTranslation();
   const guestLanguage = (i18n.language || 'pt').split('-')[0];
@@ -360,17 +419,24 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       );
 
       if (orderError || !orderData?.success) {
+        const info = await parseFunctionError(orderError, orderData);
+
         // Verificar se é erro de conflito de datas (409)
-        if (orderData?.error === 'dates_unavailable') {
-          toast.error("❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas.");
+        if (info.code === 'dates_unavailable') {
+          const names = info.unavailableRooms.join(', ');
+          toast.error(
+            names
+              ? `❌ ${names} já está reservado nessas datas. Escolha outras datas.`
+              : "❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas."
+          );
           await refreshAvailability();
           setStep(2); // Voltar para seleção de datas
           setCheckIn(undefined);
           setCheckOut(undefined);
           return;
         }
-        
-        const errorMsg = orderData?.error || "Falha ao criar pedido PIX";
+
+        const errorMsg = info.message || info.code || "Falha ao criar pedido PIX";
         setErrorType("order");
         setErrorMessage(errorMsg);
         setCanRetry(true);
@@ -378,6 +444,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         logErrorToAudit("pix_order_error", errorMsg);
         return;
       }
+
 
       // Store reservation and payment IDs (triggers Realtime subscription)
       if (orderData.reservation_id) setReservationId(orderData.reservation_id);
@@ -426,7 +493,37 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     return emailRegex.test(email);
   };
 
-  const handleNext = () => {
+  // Revalida disponibilidade do bangalô principal e dos adicionais
+  const findBusyRooms = async (): Promise<string[]> => {
+    if (!checkIn || !checkOut) return [];
+    const ids = [roomId, ...extraRooms.map((r) => r.roomId)];
+    const busy: string[] = [];
+
+    await Promise.all(
+      ids.map(async (id) => {
+        const { data, error } = await supabase.rpc(
+          "get_room_availability_with_blocks",
+          { p_room_id: id }
+        );
+        if (error || !data) return;
+
+        const conflict = (data as any[]).some((entry) => {
+          const start = parseIsoDate(String(entry.check_in));
+          const end = parseIsoDate(String(entry.check_out));
+          // Bloqueios têm data final inclusiva
+          if (entry.is_blocked) end.setDate(end.getDate() + 1);
+          return overlapsRange(checkIn, checkOut, start, end);
+        });
+
+        if (conflict) busy.push(id);
+      })
+    );
+
+    return busy;
+  };
+
+  const handleNext = async () => {
+
     if (step === 2) {
       if (!checkIn || !checkOut) {
         toast.error("Selecione as datas de check-in e check-out");
@@ -494,7 +591,23 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           return;
         }
       }
+
+      // Revalidar disponibilidade antes de ir para o pagamento
+      const busy = await findBusyRooms();
+      if (busy.length > 0) {
+        toast.error(
+          busy.includes(roomId)
+            ? `${lodgeName} já está reservado nessas datas. Escolha outras datas.`
+            : "Um dos bangalôs adicionais já foi reservado nessas datas. Revise sua seleção."
+        );
+        await refreshAvailability();
+        setStep(2);
+        setCheckIn(undefined);
+        setCheckOut(undefined);
+        return;
+      }
     }
+
     
     if (step === 4) {
       if (!paymentMethod) {
@@ -673,9 +786,16 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         );
 
         if (orderError || !orderResult?.success) {
+          const info = await parseFunctionError(orderError, orderResult);
+
           // Verificar se é erro de conflito de datas (409)
-          if (orderResult?.error === 'dates_unavailable') {
-            toast.error("❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas.");
+          if (info.code === 'dates_unavailable') {
+            const names = info.unavailableRooms.join(', ');
+            toast.error(
+              names
+                ? `❌ ${names} já está reservado nessas datas. Escolha outras datas.`
+                : "❌ Datas indisponíveis! Alguém reservou antes de você. Por favor, escolha outras datas."
+            );
             await refreshAvailability();
             setStep(2); // Voltar para seleção de datas
             setCheckIn(undefined);
@@ -683,14 +803,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             setIsSubmitting(false);
             return;
           }
-          
-          const errorMsg = orderResult?.error_message || orderResult?.error || "Erro ao processar pagamento";
+
+          const errorMsg = info.message || info.code || "Erro ao processar pagamento";
           setErrorType("card_failed");
           setErrorMessage(`Pagamento recusado: ${errorMsg}`);
           setCanRetry(true);
           setErrorDialogOpen(true);
           logErrorToAudit("card_payment_failed", errorMsg);
           setIsSubmitting(false);
+
           return;
         }
 
