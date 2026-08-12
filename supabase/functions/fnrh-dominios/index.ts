@@ -2,7 +2,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { fnrhFetch, getFnrhEnv, toErrorBody } from "../_shared/fnrh.ts";
-import { corsHeaders, jsonResponse, requireInternalUser } from "../_shared/internal.ts";
+import { corsHeaders, jsonResponse, getInternalAuth, unauthorizedResponse } from "../_shared/internal.ts";
 
 const PATHS: Record<string, string> = {
   transporte: "/dominios/meios-transporte",
@@ -31,8 +31,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const user = await requireInternalUser(req);
-    if (!user) return jsonResponse({ error: "Não autorizado", code: "NAO_AUTORIZADO" }, 401);
+    const { user, reason } = await getInternalAuth(req);
+    if (!user) return unauthorizedResponse(reason);
 
     const url = new URL(req.url);
     let tipo = url.searchParams.get("tipo");

@@ -5,7 +5,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { fnrhFetch, getFnrhEnv, getCpfSolicitante, toErrorBody } from "../_shared/fnrh.ts";
-import { corsHeaders, jsonResponse, requireInternalUser } from "../_shared/internal.ts";
+import { corsHeaders, jsonResponse, getInternalAuth, unauthorizedResponse } from "../_shared/internal.ts";
 
 const BodySchema = z.object({
   method: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]).default("GET"),
