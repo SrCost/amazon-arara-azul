@@ -133,6 +133,24 @@ const Fnrh = () => {
 
   const loadFichas = useCallback(async () => {
     setLoading(true);
+
+    // Garante uma sessão válida antes de chamar a função protegida
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      if (!refreshed.session) {
+        setLoading(false);
+        setSessionExpired(true);
+        toast({
+          title: "Sessão expirada",
+          description: "Entre novamente no painel para carregar as fichas do FNRH.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    setSessionExpired(false);
+
     const body: Record<string, unknown> = { limit: 150 };
     if (busca.trim()) body.busca = busca.trim();
     if (situacao !== "todas") body.situacao = situacao;
@@ -144,8 +162,10 @@ const Fnrh = () => {
 
     if (error) {
       const parsed = await readErrorBody(error);
+      const expired = parsed?.code === "SEM_SESSAO" || parsed?.code === "SESSAO_EXPIRADA";
+      if (expired) setSessionExpired(true);
       toast({
-        title: "Erro ao carregar fichas",
+        title: expired ? "Sessão expirada" : "Erro ao carregar fichas",
         description: parsed?.error ?? error.message,
         variant: "destructive",
       });
@@ -154,6 +174,7 @@ const Fnrh = () => {
     setEnv(data?.env ?? "");
     setFichas((data?.fichas ?? []) as Ficha[]);
   }, [busca, situacao, dataInicio, dataFim, toast]);
+
 
   useEffect(() => {
     loadFichas();
