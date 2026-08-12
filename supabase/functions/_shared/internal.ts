@@ -28,18 +28,31 @@ export interface InternalUser {
   role: string;
 }
 
+export type AuthFailureReason = "SEM_SESSAO" | "SESSAO_EXPIRADA" | "SEM_PERMISSAO";
+
+export interface InternalAuthResult {
+  user: InternalUser | null;
+  reason?: AuthFailureReason;
+}
+
 /**
- * Valida o JWT do chamador e garante que ele tenha papel administrativo.
- * Retorna null quando não autorizado.
+ * Valida o JWT do chamador e garante que ele tenha papel administrativo,
+ * informando o motivo exato da recusa (sem expor tokens nos logs).
  */
-export async function requireInternalUser(req: Request): Promise<InternalUser | null> {
+export async function getInternalAuth(req: Request): Promise<InternalAuthResult> {
   const authHeader = req.headers.get("Authorization") || req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) return null;
+  if (!authHeader?.startsWith("Bearer ")) {
+    console.log("auth: requisição sem cabeçalho Bearer");
+    return { user: null, reason: "SEM_SESSAO" };
+  }
 
   const token = authHeader.replace("Bearer ", "");
   const admin = serviceClient();
   const { data: userData, error } = await admin.auth.getUser(token);
-  if (error || !userData?.user) return null;
+  if (error || !userData?.user) {
+    console.log("auth: token inválido ou sessão expirada", error?.message ?? "sem usuário");
+    return { user: null, reason: "SESSAO_EXPIRADA" };
+  }
 
   const { data: roles } = await admin
     .from("user_roles")
@@ -48,7 +61,29 @@ export async function requireInternalUser(req: Request): Promise<InternalUser | 
 
   const allowed = ["admin", "super_admin"];
   const role = (roles || []).map((r) => r.role as string).find((r) => allowed.includes(r));
-  if (!role) return null;
+  if (!role) {
+    console.log("auth: usuário autenticado sem papel administrativo", userData.user.id);
+    return { user: null, reason: "SEM_PERMISSAO" };
+  }
 
-  return { id: userData.user.id, email: userData.user.email ?? null, role };
+  return { user: { id: userData.user.id, email: userData.user.email ?? null, role } };
 }
+
+/**
+ * Versão simplificada mantida para compatibilidade: retorna null quando não autorizado.
+ */
+export async function requireInternalUser(req: Request): Promise<InternalUser | null> {
+  const { user } = await getInternalAuth(req);
+  return user;
+}
+
+/** Resposta 401 padronizada com mensagem amigável por motivo. */
+export function unauthorizedResponse(reason: AuthFailureReason = "SEM_SESSAO") {
+  const messages: Record<AuthFailureReason, string> = {
+    SEM_SESSAO: "Sua sessão expirou. Entre novamente para continuar.",
+    SESSAO_EXPIRADA: "Sua sessão expirou. Entre novamente para continuar.",
+    SEM_PERMISSAO: "Seu usuário não tem permissão administrativa para esta ação.",
+  };
+  return jsonResponse({ error: messages[reason], code: reason }, reason === "SEM_PERMISSAO" ? 403 : 401);
+}
+
