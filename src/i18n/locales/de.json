@@ -836,12 +836,9 @@
       "infoPh": "Teilen Sie uns gern alles mit"
     },
     "submit": "Antworten senden",
-    "update": "Antworten aktualisieren",
     "submitting": "Senden...",
     "successTitle": "Wir haben Ihre Antworten erhalten!",
     "successDesc": "Vielen Dank! Unser Team bereitet alles liebevoll für Ihre Ankunft vor.",
-    "successUpdate": "Sie können Ihre Antworten jederzeit über denselben Link aktualisieren.",
-    "answeredBadge": "Sie haben bereits geantwortet — Sie können unten prüfen und aktualisieren.",
     "invalidTitle": "Link nicht gefunden",
     "invalidDesc": "Dieser Link ist nicht gültig. Kontaktieren Sie unser Team, wir senden Ihnen einen neuen.",
     "expiredTitle": "Link abgelaufen",
@@ -861,6 +858,11 @@
       "desc": "Prüfen Sie alles vor dem Absenden. Sie können jeden Abschnitt bearbeiten.",
       "edit": "Bearbeiten",
       "empty": "Nicht angegeben"
+    },
+    "locked": {
+      "title": "Ihre Antworten wurden bereits gesendet",
+      "desc": "Vielen Dank! Wir haben die Informationen zu dieser Reservierung erhalten; sie können über diesen Link nicht mehr geändert werden.",
+      "answeredOn": "Gesendet am {{date}}. Möchten Sie etwas ändern? Sprechen Sie mit unserem Team."
     }
   }
 }

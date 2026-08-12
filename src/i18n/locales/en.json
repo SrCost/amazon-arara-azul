@@ -854,12 +854,9 @@
       "infoPh": "Feel free to tell us anything"
     },
     "submit": "Send answers",
-    "update": "Update answers",
     "submitting": "Sending...",
     "successTitle": "We received your answers!",
     "successDesc": "Thank you! Our team will prepare everything with care for your arrival.",
-    "successUpdate": "You can update your answers at any time using this same link.",
-    "answeredBadge": "You have already answered — feel free to review and update below.",
     "invalidTitle": "Link not found",
     "invalidDesc": "This pre-arrival link is not valid. Contact our team and we'll send a new one.",
     "expiredTitle": "Link expired",
@@ -879,6 +876,11 @@
       "desc": "Check everything before sending. You can edit any section.",
       "edit": "Edit",
       "empty": "Not provided"
+    },
+    "locked": {
+      "title": "Your answers have already been submitted",
+      "desc": "Thank you! We already received the information for this reservation and it can no longer be changed through this link.",
+      "answeredOn": "Submitted on {{date}}. Need to adjust something? Talk to our team."
     }
   }
 }

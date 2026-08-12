@@ -854,12 +854,9 @@
       "infoPh": "Cuéntenos lo que desee"
     },
     "submit": "Enviar respuestas",
-    "update": "Actualizar respuestas",
     "submitting": "Enviando...",
     "successTitle": "¡Recibimos sus respuestas!",
     "successDesc": "¡Gracias! Nuestro equipo preparará todo con cariño para su llegada.",
-    "successUpdate": "Puede actualizar sus respuestas en cualquier momento con este mismo enlace.",
-    "answeredBadge": "Ya respondió — puede revisar y actualizar abajo.",
     "invalidTitle": "Enlace no encontrado",
     "invalidDesc": "Este enlace de pre-llegada no es válido. Contacte a nuestro equipo y le enviamos uno nuevo.",
     "expiredTitle": "Enlace expirado",
@@ -879,6 +876,11 @@
       "desc": "Verifica todo antes de enviar. Puedes editar cualquier sección.",
       "edit": "Editar",
       "empty": "No informado"
+    },
+    "locked": {
+      "title": "Sus respuestas ya fueron enviadas",
+      "desc": "¡Gracias! Ya recibimos la información de esta reserva y no puede modificarse por este enlace.",
+      "answeredOn": "Enviado el {{date}}. ¿Necesita ajustar algo? Hable con nuestro equipo."
     }
   }
 }
