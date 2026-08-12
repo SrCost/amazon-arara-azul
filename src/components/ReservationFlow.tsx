@@ -38,6 +38,65 @@ interface ReservationFlowProps {
   onClose: () => void;
 }
 
+type FunctionErrorInfo = {
+  code: string | null;
+  message: string | null;
+  unavailableRooms: string[];
+};
+
+/**
+ * Edge Functions que respondem com status != 2xx fazem o supabase-js devolver
+ * `data = null` e um FunctionsHttpError genérico. Aqui lemos o corpo real da
+ * resposta para recuperar o código (`error`) e a mensagem enviada pelo servidor.
+ */
+const parseFunctionError = async (
+  error: any,
+  data: any
+): Promise<FunctionErrorInfo> => {
+  let body: any = data && typeof data === "object" ? data : null;
+
+  if (!body && error?.context) {
+    try {
+      const ctx = error.context;
+      if (typeof ctx.json === "function") {
+        body = await ctx.clone().json();
+      } else if (typeof ctx.text === "function") {
+        body = JSON.parse(await ctx.clone().text());
+      }
+    } catch {
+      body = null;
+    }
+  }
+
+  const unavailableRooms = Array.isArray(body?.unavailable_rooms)
+    ? body.unavailable_rooms
+        .map((room: any) => room?.room_name)
+        .filter((name: any): name is string => Boolean(name))
+    : [];
+
+  return {
+    code: typeof body?.error === "string" ? body.error : null,
+    message:
+      (typeof body?.message === "string" && body.message) ||
+      (typeof body?.error_message === "string" && body.error_message) ||
+      null,
+    unavailableRooms,
+  };
+};
+
+const overlapsRange = (
+  startA: Date,
+  endA: Date,
+  startB: Date,
+  endB: Date
+) => startA < endB && endA > startB;
+
+const parseIsoDate = (value: string) => {
+  const [y, m, d] = value.split("T")[0].split("-").map(Number);
+  return new Date(y, (m || 1) - 1, d || 1);
+};
+
+
 const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: ReservationFlowProps) => {
   const { t, i18n } = useTranslation();
   const guestLanguage = (i18n.language || 'pt').split('-')[0];
