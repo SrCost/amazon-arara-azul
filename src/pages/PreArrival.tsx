@@ -571,11 +571,8 @@ const PreArrival = () => {
         <p className="mb-6 text-muted-foreground leading-relaxed">{t("preArrival.intro")}</p>
       )}
 
-      {alreadyAnswered && step === 0 && (
-        <p className="mb-6 rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm text-primary">
-          {t("preArrival.answeredBadge")}
-        </p>
-      )}
+
+
 
       {/* Progresso */}
       <div className="mb-6">
