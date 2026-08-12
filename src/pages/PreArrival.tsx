@@ -635,12 +635,9 @@ const PreArrival = () => {
 
         {isReview ? (
           <Button size="lg" onClick={handleSubmit} disabled={submitting}>
-            {submitting
-              ? t("preArrival.submitting")
-              : alreadyAnswered
-                ? t("preArrival.update")
-                : t("preArrival.submit")}
+            {submitting ? t("preArrival.submitting") : t("preArrival.submit")}
           </Button>
+
         ) : (
           <Button size="lg" onClick={() => goTo(step + 1)}>
             {step === steps.length - 1 ? t("preArrival.nav.review") : t("preArrival.nav.next")}
