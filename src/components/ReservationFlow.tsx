@@ -493,7 +493,37 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     return emailRegex.test(email);
   };
 
-  const handleNext = () => {
+  // Revalida disponibilidade do bangalô principal e dos adicionais
+  const findBusyRooms = async (): Promise<string[]> => {
+    if (!checkIn || !checkOut) return [];
+    const ids = [roomId, ...extraRooms.map((r) => r.roomId)];
+    const busy: string[] = [];
+
+    await Promise.all(
+      ids.map(async (id) => {
+        const { data, error } = await supabase.rpc(
+          "get_room_availability_with_blocks",
+          { p_room_id: id }
+        );
+        if (error || !data) return;
+
+        const conflict = (data as any[]).some((entry) => {
+          const start = parseIsoDate(String(entry.check_in));
+          const end = parseIsoDate(String(entry.check_out));
+          // Bloqueios têm data final inclusiva
+          if (entry.is_blocked) end.setDate(end.getDate() + 1);
+          return overlapsRange(checkIn, checkOut, start, end);
+        });
+
+        if (conflict) busy.push(id);
+      })
+    );
+
+    return busy;
+  };
+
+  const handleNext = async () => {
+
     if (step === 2) {
       if (!checkIn || !checkOut) {
         toast.error("Selecione as datas de check-in e check-out");
