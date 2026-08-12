@@ -312,14 +312,38 @@ const PreArrival = () => {
         <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
           <CheckCircle className="mx-auto mb-4 h-12 w-12 text-primary" />
           <h1 className="text-2xl font-semibold text-foreground mb-2">{t("preArrival.successTitle")}</h1>
-          <p className="text-muted-foreground mb-2">{t("preArrival.successDesc")}</p>
-          <p className="text-sm text-muted-foreground">{t("preArrival.successUpdate")}</p>
+          <p className="text-muted-foreground">{t("preArrival.successDesc")}</p>
         </div>
       </Shell>
     );
   }
 
-  const alreadyAnswered = Boolean(data.answered_at);
+  // Resposta única: link já utilizado não pode ser reenviado nem editado
+  if (data.answered_at) {
+    return (
+      <Shell>
+        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-sm">
+          <CheckCircle className="mx-auto mb-4 h-12 w-12 text-primary" />
+          <h1 className="text-2xl font-semibold text-foreground mb-2">{t("preArrival.locked.title")}</h1>
+          <p className="text-muted-foreground mb-2">{t("preArrival.locked.desc")}</p>
+          <p className="mb-6 text-sm text-muted-foreground">
+            {t("preArrival.locked.answeredOn", {
+              date: new Date(data.answered_at).toLocaleDateString(localeMap[i18n.language] || "pt-BR", {
+                day: "2-digit", month: "long", year: "numeric",
+              }),
+            })}
+          </p>
+          <Button asChild>
+            <a href={whatsappLink} target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              {t("preArrival.whatsappBtn")}
+            </a>
+          </Button>
+        </div>
+      </Shell>
+    );
+  }
+
 
   const steps = [
 
