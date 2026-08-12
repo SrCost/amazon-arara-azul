@@ -265,6 +265,18 @@ const Fnrh = () => {
 
   return (
     <div className="space-y-6">
+      {sessionExpired && (
+        <div className="flex flex-col gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-destructive">
+            Sua sessão administrativa expirou, por isso as fichas não puderam ser carregadas. Entre novamente para continuar.
+          </p>
+          <Button variant="outline" onClick={() => (window.location.href = "/auth")}>
+            <LogIn className="mr-2 h-4 w-4" />
+            Entrar novamente
+          </Button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-foreground">FNRH</h1>
