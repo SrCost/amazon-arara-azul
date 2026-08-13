@@ -139,7 +139,27 @@ Deno.serve(async (req) => {
       if (!error) preArrivalSent++;
     }
 
-    console.log(`Cron complete: ${checkinSent} checkin, ${checkoutSent} checkout, ${preArrivalSent} pre-arrival emails sent`);
+    // 4. Rede de segurança: e-mail de Pré Check-in (FNRH) para reservas confirmadas
+    //    que ainda não receberam o link (a função de envio tem trava própria)
+    const { data: preCheckinReservations } = await supabase
+      .from("reservations")
+      .select("id, guest_email")
+      .eq("status", "confirmed")
+      .eq("pre_checkin_email_sent", false)
+      .gte("check_out", fmt(today))
+      .limit(50);
+
+    let preCheckinSent = 0;
+
+    for (const r of preCheckinReservations || []) {
+      if (!r.guest_email) continue;
+      const { error } = await supabase.functions.invoke("send-pre-checkin-email", {
+        body: { reservationId: r.id },
+      });
+      if (!error) preCheckinSent++;
+    }
+
+    console.log(`Cron complete: ${checkinSent} checkin, ${checkoutSent} checkout, ${preArrivalSent} pre-arrival, ${preCheckinSent} pre-checkin emails sent`);
 
     return new Response(
       JSON.stringify({
@@ -147,6 +167,7 @@ Deno.serve(async (req) => {
         checkin_sent: checkinSent,
         checkout_sent: checkoutSent,
         pre_arrival_sent: preArrivalSent,
+        pre_checkin_sent: preCheckinSent,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

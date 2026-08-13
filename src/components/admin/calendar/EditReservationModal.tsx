@@ -437,6 +437,14 @@ const EditReservationModal = ({
         },
       });
       if (error) throw error;
+
+      // E-mail de Pré Check-in (FNRH) — adição pontual, best-effort
+      supabase.functions
+        .invoke("send-pre-checkin-email", { body: { reservationId: reservation.id } })
+        .then(({ error: preErr }) => {
+          if (preErr) console.error("Pre check-in email failed:", preErr);
+        });
+
       toast.success("E-mail de confirmação enviado ao hóspede!");
     } catch (err: any) {
       console.error("Email send failed:", err);

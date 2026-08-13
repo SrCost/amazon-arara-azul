@@ -991,6 +991,8 @@ export type Database = {
           payment_status: string | null
           payment_ticket_url: string | null
           pessoa_id_fnrh: string | null
+          pre_checkin_email_sent: boolean
+          pre_checkin_email_sent_at: string | null
           quantidade_hospede_adulto: number | null
           quantidade_hospede_menor: number | null
           reserva_id_fnrh: string | null
@@ -1056,6 +1058,8 @@ export type Database = {
           payment_status?: string | null
           payment_ticket_url?: string | null
           pessoa_id_fnrh?: string | null
+          pre_checkin_email_sent?: boolean
+          pre_checkin_email_sent_at?: string | null
           quantidade_hospede_adulto?: number | null
           quantidade_hospede_menor?: number | null
           reserva_id_fnrh?: string | null
@@ -1121,6 +1125,8 @@ export type Database = {
           payment_status?: string | null
           payment_ticket_url?: string | null
           pessoa_id_fnrh?: string | null
+          pre_checkin_email_sent?: boolean
+          pre_checkin_email_sent_at?: string | null
           quantidade_hospede_adulto?: number | null
           quantidade_hospede_menor?: number | null
           reserva_id_fnrh?: string | null
