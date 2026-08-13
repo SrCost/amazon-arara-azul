@@ -43,13 +43,18 @@ function extractMessage(raw: string): string | null {
 }
 
 function veredictFor(status: number): { veredito: Veredito; mensagem: string } {
-  if (status >= 200 && status < 300) {
-    return { veredito: "OK", mensagem: "Credenciais aceitas pela API oficial." };
+  if (status === 400 || status === 422 || (status >= 200 && status < 300)) {
+    return {
+      veredito: "OK",
+      mensagem:
+        "Credenciais aceitas pela API oficial (a recusa foi apenas de dados do teste, não de autenticação).",
+    };
   }
   if (status === 401) {
     return {
       veredito: "CREDENCIAL_RECUSADA",
-      mensagem: "A FNRH recusou usuário/senha (401). Confirme se é a senha de API e se o usuário está habilitado neste ambiente.",
+      mensagem:
+        "A FNRH recusou usuário/senha (401 - \"Usuário ou senha inválidos\"). Confirme se é a senha de API e se o usuário está habilitado neste ambiente.",
     };
   }
   if (status === 403) {
@@ -66,20 +71,25 @@ function veredictFor(status: number): { veredito: Veredito; mensagem: string } {
 
 async function testarEnv(env: Env, user: string, password: string): Promise<TesteResultado> {
   const baseUrl = BASE_URLS[env];
-  const url = `${baseUrl}/dominios/tipos-documento`;
+  // Endpoint que efetivamente valida o Basic Auth (um POST vazio: 401 = credencial recusada,
+  // 400/422 = credencial aceita e apenas o corpo de teste foi rejeitado).
+  const url = `${baseUrl}/hospedagem/registrar`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   const startedAt = Date.now();
 
   try {
     const response = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: {
         Authorization: `Basic ${btoa(`${user}:${password}`)}`,
         Accept: "application/json",
+        "Content-Type": "application/json",
       },
+      body: "{}",
       signal: controller.signal,
     });
+
     const raw = await response.text();
     const duration = Date.now() - startedAt;
     const { veredito, mensagem } = veredictFor(response.status);
