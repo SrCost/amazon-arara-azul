@@ -246,7 +246,9 @@ serve(async (req) => {
 
     const testes: TesteResultado[] = [];
     for (const env of envs) {
-      testes.push(await testarEnv(env, user, password, rawCpf.replace(/\D/g, ""), base64Esperado));
+      testes.push(
+        await testarEnv(env, user, password, rawCpf.replace(/\D/g, ""), base64Esperado, debugVerbose),
+      );
     }
 
 
