@@ -74,7 +74,13 @@ function veredictFor(status: number): { veredito: Veredito; mensagem: string } {
   return { veredito: "ERRO", mensagem: `Resposta inesperada da API oficial (HTTP ${status}).` };
 }
 
-async function testarEnv(env: Env, user: string, password: string): Promise<TesteResultado> {
+async function testarEnv(
+  env: Env,
+  user: string,
+  password: string,
+  cpfSolicitante: string,
+  base64Esperado?: string,
+): Promise<TesteResultado> {
   const baseUrl = BASE_URLS[env];
   // Endpoint que efetivamente valida o Basic Auth (um POST vazio: 401 = credencial recusada,
   // 400/422 = credencial aceita e apenas o corpo de teste foi rejeitado).
@@ -82,15 +88,20 @@ async function testarEnv(env: Env, user: string, password: string): Promise<Test
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   const startedAt = Date.now();
+  const base64 = btoa(`${user}:${password}`);
+  const base64Confere = base64Esperado ? base64 === base64Esperado.trim() : null;
 
   try {
+    const headers: Record<string, string> = {
+      Authorization: `Basic ${base64}`,
+      Accept: "application/json",
+      "Content-Type": "application/json",
+    };
+    if (cpfSolicitante) headers["cpf_solicitante"] = cpfSolicitante;
+
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Basic ${btoa(`${user}:${password}`)}`,
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
+      headers,
       body: "{}",
       signal: controller.signal,
     });
@@ -106,6 +117,11 @@ async function testarEnv(env: Env, user: string, password: string): Promise<Test
         status: response.status,
         duration_ms: duration,
         veredito,
+        // Diagnóstico sem revelar segredos: apenas forma e conferência do Base64.
+        base64_len: base64.length,
+        base64_confere: base64Confere,
+        cpf_solicitante_enviado: Boolean(cpfSolicitante),
+        resposta_oficial: raw.slice(0, 1000),
         timestamp: new Date().toISOString(),
       }),
     );
@@ -118,7 +134,10 @@ async function testarEnv(env: Env, user: string, password: string): Promise<Test
       veredito,
       mensagem,
       api_mensagem: response.ok ? null : extractMessage(raw),
+      resposta_completa: raw ? raw.slice(0, 1000) : null,
+      base64_confere: base64Confere,
     };
+
   } catch (error) {
     const aborted = (error as Error)?.name === "AbortError";
     const duration = Date.now() - startedAt;
