@@ -28,7 +28,12 @@ interface TesteResultado {
   veredito: Veredito;
   mensagem: string;
   api_mensagem: string | null;
+  /** Corpo completo devolvido pela API oficial (truncado), para diagnóstico. */
+  resposta_completa?: string | null;
+  /** true/false quando o chamador envia base64_esperado; nunca devolve o Base64 real. */
+  base64_confere?: boolean | null;
 }
+
 
 function extractMessage(raw: string): string | null {
   if (!raw) return null;
