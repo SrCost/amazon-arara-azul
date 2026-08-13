@@ -198,6 +198,7 @@ serve(async (req) => {
     const base64Esperado = typeof (body as Record<string, unknown>)?.base64_esperado === "string"
       ? String((body as Record<string, unknown>).base64_esperado)
       : undefined;
+    const debugVerbose = Boolean((body as Record<string, unknown>)?.debug_verbose);
 
 
     const rawUser = Deno.env.get("FNRH_API_USER") ?? "";
