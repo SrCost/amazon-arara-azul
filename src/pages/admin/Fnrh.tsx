@@ -31,7 +31,11 @@ import {
   AlertTriangle,
   ShieldCheck,
   PencilLine,
+  Plug,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
+
 
 
 type Situacao =
@@ -119,6 +123,33 @@ const formatSyncError = (message: string) => {
   return message;
 };
 
+interface DiagTeste {
+  env: string;
+  base_url: string;
+  http_status: number | null;
+  duration_ms: number;
+  veredito: string;
+  mensagem: string;
+  api_mensagem: string | null;
+}
+
+interface DiagResultado {
+  env: string;
+  testado_em?: string;
+  credenciais: {
+    usuario_configurado: boolean;
+    senha_configurada: boolean;
+    usuario_tamanho: number;
+    senha_tamanho: number;
+    usuario_com_espacos: boolean;
+    senha_com_espacos: boolean;
+    contem_quebra_de_linha: boolean;
+    cpf_solicitante_configurado: boolean;
+    cpf_solicitante_valido: boolean;
+  };
+  testes: DiagTeste[];
+}
+
 const Fnrh = () => {
   const { toast } = useToast();
   const [fichas, setFichas] = useState<Ficha[]>([]);
@@ -131,6 +162,9 @@ const Fnrh = () => {
   const [dataFim, setDataFim] = useState("");
   const [completar, setCompletar] = useState<{ ficha: Ficha; fields: string[] } | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [diag, setDiag] = useState<DiagResultado | null>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
+
 
 
   const loadFichas = useCallback(async () => {
@@ -250,6 +284,37 @@ const Fnrh = () => {
     await loadFichas();
   };
 
+  const testarConexao = async (compararAmbientes = false) => {
+    setDiagLoading(true);
+    setDiag(null);
+    const { data, error } = await supabase.functions.invoke("fnrh-diagnostico", {
+      body: { comparar_ambientes: compararAmbientes },
+    });
+    setDiagLoading(false);
+
+    if (error) {
+      const parsed = await readErrorBody(error);
+      const expired = parsed?.code === "SEM_SESSAO" || parsed?.code === "SESSAO_EXPIRADA";
+      if (expired) setSessionExpired(true);
+      toast({
+        title: expired ? "Sessão expirada" : "Falha no diagnóstico",
+        description: parsed?.error ?? error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = data as DiagResultado;
+    setDiag(result);
+    const principal = result.testes?.[0];
+    toast({
+      title: principal?.veredito === "OK" ? "Credenciais aceitas pela FNRH" : "FNRH recusou a conexão",
+      description: principal?.mensagem,
+      variant: principal?.veredito === "OK" ? "default" : "destructive",
+    });
+  };
+
+
   const copyLink = async (link: string) => {
     await navigator.clipboard.writeText(link);
     toast({ title: "Link de pré-check-in copiado" });
@@ -285,7 +350,11 @@ const Fnrh = () => {
             {env ? ` · ambiente ${env}` : ""}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => testarConexao(false)} disabled={diagLoading}>
+            <Plug className={`h-4 w-4 mr-2 ${diagLoading ? "animate-pulse" : ""}`} />
+            Testar conexão FNRH
+          </Button>
           <Button variant="outline" onClick={loadFichas} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Atualizar
@@ -296,6 +365,76 @@ const Fnrh = () => {
           </Button>
         </div>
       </div>
+
+      {diag && (
+        <Card
+          className={
+            diag.testes[0]?.veredito === "OK"
+              ? "border-primary/40 bg-primary/5"
+              : "border-destructive/40 bg-destructive/5"
+          }
+        >
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-base">
+              {diag.testes[0]?.veredito === "OK" ? (
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+              ) : (
+                <XCircle className="h-5 w-5 text-destructive" />
+              )}
+              Diagnóstico de autenticação FNRH
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            {diag.testes.map((teste) => (
+              <div key={teste.env} className="rounded-lg border border-border bg-card p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant={teste.veredito === "OK" ? "default" : "destructive"}>
+                    {teste.veredito}
+                  </Badge>
+                  <span className="font-medium">Ambiente: {teste.env}</span>
+                  <span className="text-muted-foreground">
+                    HTTP {teste.http_status ?? "—"} · {teste.duration_ms} ms
+                  </span>
+                </div>
+                <p className="mt-2">{teste.mensagem}</p>
+                {teste.api_mensagem && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Resposta oficial: {teste.api_mensagem}
+                  </p>
+                )}
+              </div>
+            ))}
+
+            <div className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
+              <span>Usuário configurado: {diag.credenciais.usuario_configurado ? "sim" : "não"} ({diag.credenciais.usuario_tamanho} caracteres)</span>
+              <span>Senha configurada: {diag.credenciais.senha_configurada ? "sim" : "não"} ({diag.credenciais.senha_tamanho} caracteres)</span>
+              <span>Espaços extras na credencial: {diag.credenciais.usuario_com_espacos || diag.credenciais.senha_com_espacos ? "sim (revisar)" : "não"}</span>
+              <span>Quebra de linha na credencial: {diag.credenciais.contem_quebra_de_linha ? "sim (revisar)" : "não"}</span>
+              <span>CPF do solicitante: {diag.credenciais.cpf_solicitante_valido ? "válido (11 dígitos)" : diag.credenciais.cpf_solicitante_configurado ? "configurado, mas fora do formato" : "ausente"}</span>
+              {diag.testado_em && <span>Testado em: {new Date(diag.testado_em).toLocaleString("pt-BR")}</span>}
+            </div>
+
+            {diag.testes[0]?.veredito !== "OK" && (
+              <div className="space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-xs">
+                <p className="font-medium text-foreground">O que verificar com o suporte da FNRH:</p>
+                <p>1. O usuário está habilitado no ambiente de produção (não apenas em homologação).</p>
+                <p>2. A senha usada é a de API/integração, que costuma ser diferente da senha do portal web.</p>
+                <p>3. O CPF do solicitante está vinculado ao CADASTUR do meio de hospedagem.</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => testarConexao(true)}
+                  disabled={diagLoading}
+                >
+                  Comparar produção e homologação
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
