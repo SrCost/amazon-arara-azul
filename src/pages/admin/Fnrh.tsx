@@ -131,7 +131,10 @@ interface DiagTeste {
   veredito: string;
   mensagem: string;
   api_mensagem: string | null;
+  resposta_completa?: string | null;
+  base64_confere?: boolean | null;
 }
+
 
 interface DiagResultado {
   env: string;
