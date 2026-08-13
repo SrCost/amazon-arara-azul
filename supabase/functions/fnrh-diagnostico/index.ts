@@ -175,6 +175,10 @@ serve(async (req) => {
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const compararAmbientes = Boolean((body as Record<string, unknown>)?.comparar_ambientes);
+    const base64Esperado = typeof (body as Record<string, unknown>)?.base64_esperado === "string"
+      ? String((body as Record<string, unknown>).base64_esperado)
+      : undefined;
+
 
     const rawUser = Deno.env.get("FNRH_API_USER") ?? "";
     const rawPassword = Deno.env.get("FNRH_API_PASSWORD") ?? "";
