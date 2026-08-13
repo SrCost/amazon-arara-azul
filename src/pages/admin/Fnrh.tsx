@@ -131,7 +131,10 @@ interface DiagTeste {
   veredito: string;
   mensagem: string;
   api_mensagem: string | null;
+  resposta_completa?: string | null;
+  base64_confere?: boolean | null;
 }
+
 
 interface DiagResultado {
   env: string;
@@ -402,8 +405,20 @@ const Fnrh = () => {
                     Resposta oficial: {teste.api_mensagem}
                   </p>
                 )}
+                {teste.base64_confere != null && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Codificação Basic (Base64) conferida:{" "}
+                    {teste.base64_confere ? "igual à esperada (código correto)" : "diferente da esperada (revisar credenciais)"}
+                  </p>
+                )}
+                {teste.resposta_completa && (
+                  <pre className="mt-2 max-h-32 overflow-auto rounded bg-muted p-2 text-[11px] text-muted-foreground">
+                    {teste.resposta_completa}
+                  </pre>
+                )}
               </div>
             ))}
+
 
             <div className="grid gap-1 text-xs text-muted-foreground sm:grid-cols-2">
               <span>Usuário configurado: {diag.credenciais.usuario_configurado ? "sim" : "não"} ({diag.credenciais.usuario_tamanho} caracteres)</span>
