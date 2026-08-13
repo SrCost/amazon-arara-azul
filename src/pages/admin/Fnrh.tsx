@@ -284,6 +284,37 @@ const Fnrh = () => {
     await loadFichas();
   };
 
+  const testarConexao = async (compararAmbientes = false) => {
+    setDiagLoading(true);
+    setDiag(null);
+    const { data, error } = await supabase.functions.invoke("fnrh-diagnostico", {
+      body: { comparar_ambientes: compararAmbientes },
+    });
+    setDiagLoading(false);
+
+    if (error) {
+      const parsed = await readErrorBody(error);
+      const expired = parsed?.code === "SEM_SESSAO" || parsed?.code === "SESSAO_EXPIRADA";
+      if (expired) setSessionExpired(true);
+      toast({
+        title: expired ? "Sessão expirada" : "Falha no diagnóstico",
+        description: parsed?.error ?? error.message,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const result = data as DiagResultado;
+    setDiag(result);
+    const principal = result.testes?.[0];
+    toast({
+      title: principal?.veredito === "OK" ? "Credenciais aceitas pela FNRH" : "FNRH recusou a conexão",
+      description: principal?.mensagem,
+      variant: principal?.veredito === "OK" ? "default" : "destructive",
+    });
+  };
+
+
   const copyLink = async (link: string) => {
     await navigator.clipboard.writeText(link);
     toast({ title: "Link de pré-check-in copiado" });
