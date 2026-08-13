@@ -31,7 +31,11 @@ import {
   AlertTriangle,
   ShieldCheck,
   PencilLine,
+  Plug,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
+
 
 
 type Situacao =
