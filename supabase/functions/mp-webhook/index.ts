@@ -457,6 +457,18 @@ serve(async (req) => {
           });
           const emailResult = await emailResponse.json();
           console.log('Email enviado:', emailResult);
+
+          // E-mail de Pré Check-in (FNRH) — adição pontual, best-effort
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-pre-checkin-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ reservationId }),
+            });
+          } catch (preErr) {
+            console.error('Pre check-in email failed:', preErr);
+          }
+          
           
           // Send internal admin notification
           try {
