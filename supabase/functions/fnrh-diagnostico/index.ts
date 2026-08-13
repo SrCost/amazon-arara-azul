@@ -225,8 +225,9 @@ serve(async (req) => {
 
     const testes: TesteResultado[] = [];
     for (const env of envs) {
-      testes.push(await testarEnv(env, user, password));
+      testes.push(await testarEnv(env, user, password, rawCpf.replace(/\D/g, ""), base64Esperado));
     }
+
 
     return jsonResponse({ env: envAtual, credenciais, testes, testado_em: new Date().toISOString() });
   } catch (error) {
