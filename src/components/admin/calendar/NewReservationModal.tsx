@@ -385,6 +385,13 @@ const NewReservationModal = ({
 
       // Send confirmation email in the guest's language (best-effort, non-blocking)
       if (data.send_confirmation_email && insertedReservation?.id) {
+        // E-mail de Pré Check-in (FNRH) — adição pontual, best-effort
+        supabase.functions
+          .invoke("send-pre-checkin-email", { body: { reservationId: insertedReservation.id } })
+          .then(({ error: preErr }) => {
+            if (preErr) console.error("Pre check-in email failed:", preErr);
+          });
+
         supabase.functions.invoke("send-reservation-email", {
           body: {
             type: "reservation_confirmed",
