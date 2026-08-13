@@ -167,6 +167,7 @@ Deno.serve(async (req) => {
         checkin_sent: checkinSent,
         checkout_sent: checkoutSent,
         pre_arrival_sent: preArrivalSent,
+        pre_checkin_sent: preCheckinSent,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
