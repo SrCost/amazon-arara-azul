@@ -123,6 +123,33 @@ const formatSyncError = (message: string) => {
   return message;
 };
 
+interface DiagTeste {
+  env: string;
+  base_url: string;
+  http_status: number | null;
+  duration_ms: number;
+  veredito: string;
+  mensagem: string;
+  api_mensagem: string | null;
+}
+
+interface DiagResultado {
+  env: string;
+  testado_em?: string;
+  credenciais: {
+    usuario_configurado: boolean;
+    senha_configurada: boolean;
+    usuario_tamanho: number;
+    senha_tamanho: number;
+    usuario_com_espacos: boolean;
+    senha_com_espacos: boolean;
+    contem_quebra_de_linha: boolean;
+    cpf_solicitante_configurado: boolean;
+    cpf_solicitante_valido: boolean;
+  };
+  testes: DiagTeste[];
+}
+
 const Fnrh = () => {
   const { toast } = useToast();
   const [fichas, setFichas] = useState<Ficha[]>([]);
@@ -135,6 +162,9 @@ const Fnrh = () => {
   const [dataFim, setDataFim] = useState("");
   const [completar, setCompletar] = useState<{ ficha: Ficha; fields: string[] } | null>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
+  const [diag, setDiag] = useState<DiagResultado | null>(null);
+  const [diagLoading, setDiagLoading] = useState(false);
+
 
 
   const loadFichas = useCallback(async () => {
