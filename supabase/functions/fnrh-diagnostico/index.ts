@@ -123,6 +123,13 @@ async function testarEnv(
     const duration = Date.now() - startedAt;
     const { veredito, mensagem } = veredictFor(response.status);
 
+    if (debugVerbose) {
+      console.log("RESPONSE STATUS:", response.status, response.statusText);
+      console.log("RESPONSE HEADERS:", JSON.stringify(Object.fromEntries(response.headers.entries())));
+      console.log("RESPONSE BODY:", raw);
+      console.log("=== /FNRH DEBUG ===");
+    }
+
     console.log(
       JSON.stringify({
         scope: "fnrh-diagnostico",
