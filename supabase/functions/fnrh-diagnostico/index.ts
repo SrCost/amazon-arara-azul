@@ -80,6 +80,7 @@ async function testarEnv(
   password: string,
   cpfSolicitante: string,
   base64Esperado?: string,
+  debugVerbose = false,
 ): Promise<TesteResultado> {
   const baseUrl = BASE_URLS[env];
   // Endpoint que efetivamente valida o Basic Auth (um POST vazio: 401 = credencial recusada,
@@ -90,6 +91,18 @@ async function testarEnv(
   const startedAt = Date.now();
   const base64 = btoa(`${user}:${password}`);
   const base64Confere = base64Esperado ? base64 === base64Esperado.trim() : null;
+
+  // DEBUG TEMPORÁRIO (somente quando solicitado explicitamente) — remover após diagnóstico.
+  if (debugVerbose) {
+    console.log("=== FNRH DEBUG ===");
+    console.log("URL:", url);
+    console.log("USUARIO:", JSON.stringify(user), "length:", user.length);
+    console.log("CHAVE:", JSON.stringify(password), "length:", password.length);
+    console.log("CONCATENADO:", JSON.stringify(`${user}:${password}`));
+    console.log("BASE64:", base64);
+    console.log("AUTHORIZATION HEADER:", `Basic ${base64}`);
+    console.log("CPF_SOLICITANTE:", JSON.stringify(cpfSolicitante));
+  }
 
   try {
     const headers: Record<string, string> = {
