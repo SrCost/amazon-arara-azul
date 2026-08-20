@@ -895,6 +895,11 @@
     "people": "People",
     "perPerson": "Per person",
     "total": "Total",
-    "priceNote": "Reference prices per group, with progressive discounts. Booking is arranged directly with the lodge."
+    "priceNote": "Reference prices per group, with progressive discounts. Booking is arranged directly with the lodge.",
+    "stepTitle": "Experiences for your stay",
+    "stepSubtitle": "Optional. Prices already calculated for {{count}} guest(s).",
+    "stepTotal": "{{count}} experience(s) selected",
+    "stepOptional": "You can continue without choosing experiences and book them later.",
+    "forGuests": "for {{count}} person(s)"
   }
 }

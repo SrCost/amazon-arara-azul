@@ -895,6 +895,11 @@
     "people": "Personas",
     "perPerson": "Por persona",
     "total": "Total",
-    "priceNote": "Valores de referencia por grupo, con descuento progresivo. La contratación se realiza directamente con la posada."
+    "priceNote": "Valores de referencia por grupo, con descuento progresivo. La contratación se realiza directamente con la posada.",
+    "stepTitle": "Experiencias para tu estancia",
+    "stepSubtitle": "Opcional. Precios ya calculados para {{count}} huésped(es).",
+    "stepTotal": "{{count}} experiencia(s) seleccionada(s)",
+    "stepOptional": "Puedes continuar sin elegir experiencias y contratarlas después.",
+    "forGuests": "para {{count}} persona(s)"
   }
 }

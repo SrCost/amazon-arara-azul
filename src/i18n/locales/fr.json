@@ -895,6 +895,11 @@
     "people": "Personnes",
     "perPerson": "Par personne",
     "total": "Total",
-    "priceNote": "Tarifs indicatifs par groupe, avec remise progressive. La réservation se fait directement auprès du lodge."
+    "priceNote": "Tarifs indicatifs par groupe, avec remise progressive. La réservation se fait directement auprès du lodge.",
+    "stepTitle": "Expériences pour votre séjour",
+    "stepSubtitle": "Facultatif. Prix calculés pour {{count}} personne(s).",
+    "stepTotal": "{{count}} expérience(s) sélectionnée(s)",
+    "stepOptional": "Vous pouvez continuer sans choisir d'expériences et les réserver plus tard.",
+    "forGuests": "pour {{count}} personne(s)"
   }
 }

@@ -877,6 +877,11 @@
     "people": "Personen",
     "perPerson": "Pro Person",
     "total": "Gesamt",
-    "priceNote": "Referenzpreise pro Gruppe mit progressivem Rabatt. Die Buchung erfolgt direkt bei der Pousada."
+    "priceNote": "Referenzpreise pro Gruppe mit progressivem Rabatt. Die Buchung erfolgt direkt bei der Pousada.",
+    "stepTitle": "Erlebnisse für Ihren Aufenthalt",
+    "stepSubtitle": "Optional. Preise für {{count}} Gast/Gäste berechnet.",
+    "stepTotal": "{{count}} Erlebnis(se) ausgewählt",
+    "stepOptional": "Sie können ohne Erlebnisse fortfahren und sie später buchen.",
+    "forGuests": "für {{count}} Person(en)"
   }
 }
