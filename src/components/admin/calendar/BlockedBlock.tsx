@@ -14,6 +14,10 @@ interface BlockedBlockProps {
   block: BlockedDate;
   startCol: number;
   span: number;
+  startHalf?: boolean;
+  endHalf?: boolean;
+  lane?: number;
+  laneCount?: number;
   onClick: () => void;
 }
 
