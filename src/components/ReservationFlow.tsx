@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import { GuestInfoForm } from "@/components/reservation/GuestInfoForm";
 import { PaymentStep } from "@/components/reservation/PaymentStep";
 import { ReviewStep } from "@/components/reservation/ReviewStep";
 import { ExtraRoomsSelector, type ExtraRoomEntry } from "@/components/reservation/ExtraRoomsSelector";
+import ExperiencesStep from "@/components/reservation/ExperiencesStep";
 
 interface ReservationFlowProps {
   lodgeName: string;
@@ -128,6 +129,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   // Acomodações adicionais (múltiplos bangalôs na mesma reserva)
   const [extraRooms, setExtraRooms] = useState<ExtraRoomEntry[]>([]);
   
+  // Experiências avulsas selecionadas para a estadia
+  const [selectedExperienceIds, setSelectedExperienceIds] = useState<string[]>([]);
+  const [experiencesTotal, setExperiencesTotal] = useState(0);
+
   // Guest info state
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -190,9 +195,10 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const steps = [
     { number: 1, title: "Pacote" },
     { number: 2, title: "Datas" },
-    { number: 3, title: "Dados" },
-    { number: 4, title: "Pagamento" },
-    { number: 5, title: "Confirmação" },
+    { number: 3, title: "Experiências" },
+    { number: 4, title: "Dados" },
+    { number: 5, title: "Pagamento" },
+    { number: 6, title: "Confirmação" },
   ];
 
   // Load initial dates
@@ -289,9 +295,9 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
   // Auto-avanço quando pagamento PIX confirmado
   useEffect(() => {
-    if (step === 4 && paymentMethod === "pix" && paymentVerified && showPixCode) {
+    if (step === 5 && paymentMethod === "pix" && paymentVerified && showPixCode) {
       toast.success('✓ Pagamento confirmado! Avançando para confirmação...');
-      setTimeout(() => setStep(5), 1500);
+      setTimeout(() => setStep(6), 1500);
     }
   }, [paymentVerified, step, paymentMethod, showPixCode]);
 
@@ -309,11 +315,23 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     );
   }, [checkIn, checkOut, extraRooms]);
 
+  // Total de hóspedes da reserva (bangalô principal + adicionais)
+  const totalReservationGuests = useMemo(
+    () => (parseInt(guests) || 1) + extraRooms.reduce((sum, room) => sum + room.guests, 0),
+    [guests, extraRooms]
+  );
+
+  const toggleExperience = useCallback((id: string) => {
+    setSelectedExperienceIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  }, []);
+
   const calculateTotal = useCallback(() => {
     if (!checkIn || !checkOut) return 0;
     const nights = calculateNights(checkIn, checkOut);
     const guestsNum = parseInt(guests) || 2;
-    const extrasTotal = calculateExtraRoomsTotal();
+    const extrasTotal = calculateExtraRoomsTotal() + experiencesTotal;
     
     if (selectedPackage) {
       const pkg = packages.find(p => p.id === selectedPackage);
@@ -326,7 +344,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
 
     // Dynamic pricing based on number of guests, using database pricePerNight
     return getDailyRate(guestsNum, pricePerNight) * nights + extrasTotal;
-  }, [checkIn, checkOut, guests, selectedPackage, packages, isCustomizablePackage, pricePerNight, calculateExtraRoomsTotal]);
+  }, [checkIn, checkOut, guests, selectedPackage, packages, isCustomizablePackage, pricePerNight, calculateExtraRoomsTotal, experiencesTotal]);
 
   // Manual check payment status (fallback)
   const checkPaymentStatus = useCallback(async (paymentIdToCheck: string, resId: string) => {
@@ -397,6 +415,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         checkout: checkOut!.toISOString().split('T')[0],
         guests: parseInt(guests),
         extra_rooms: extraRooms.map((room) => ({ room_id: room.roomId, guests: room.guests })),
+        experience_ids: selectedExperienceIds,
         full_name: guestName,
         email: guestEmail,
         phone: guestPhone || null,
@@ -560,7 +579,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       }
     }
     
-    if (step === 3) {
+    if (step === 4) {
       if (!guestName || !guestEmail || !guestPhone) {
         toast.error("Preencha todos os campos obrigatórios");
         return;
@@ -609,7 +628,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     }
 
     
-    if (step === 4) {
+    if (step === 5) {
       if (!paymentMethod) {
         toast.error("Selecione um método de pagamento");
         return;
@@ -648,7 +667,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
       }
     }
     
-    if (step < 5) setStep(step + 1);
+    if (step < 6) setStep(step + 1);
   };
 
   // Confirm reservation
@@ -762,6 +781,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           checkout: checkOut!.toISOString().split('T')[0],
           guests: parseInt(guests),
         extra_rooms: extraRooms.map((room) => ({ room_id: room.roomId, guests: room.guests })),
+        experience_ids: selectedExperienceIds,
           full_name: guestName,
           email: guestEmail,
           phone: guestPhone || null,
@@ -883,7 +903,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   return (
     <div className="max-w-3xl mx-auto relative">
       {/* Loading Overlay during confirmation */}
-      {isSubmitting && step === 5 && (
+      {isSubmitting && step === 6 && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-card p-8 rounded-xl shadow-2xl flex flex-col items-center gap-4 border">
             <div className="relative">
@@ -963,6 +983,15 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           )}
 
           {step === 3 && (
+            <ExperiencesStep
+              totalGuests={totalReservationGuests}
+              selectedIds={selectedExperienceIds}
+              onToggle={toggleExperience}
+              onTotalChange={setExperiencesTotal}
+            />
+          )}
+
+          {step === 4 && (
             <GuestInfoForm
               isForeign={isForeign}
               setIsForeign={setIsForeign}
@@ -997,7 +1026,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             />
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <PaymentStep
               paymentMethod={paymentMethod}
               setPaymentMethod={setPaymentMethod}
@@ -1032,7 +1061,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
             />
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <ReviewStep
               lodgeName={lodgeName}
               guestName={guestName}
@@ -1060,19 +1089,19 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               <div />
             )}
 
-            {step < 5 ? (
+            {step < 6 ? (
               <Button 
                 onClick={handleNext} 
                 className="bg-gradient-forest"
                 disabled={
-                  step === 4 && 
+                  step === 5 && 
                   paymentMethod === "pix" && 
                   showPixCode && 
                   !paymentVerified && 
                   paymentStatus !== 'paid'
                 }
               >
-                {step === 4 && paymentMethod === "pix" && showPixCode && !paymentVerified ? (
+                {step === 5 && paymentMethod === "pix" && showPixCode && !paymentVerified ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Aguardando PIX...

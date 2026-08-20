@@ -1032,6 +1032,64 @@ export type Database = {
           },
         ]
       }
+      reservation_experiences: {
+        Row: {
+          base_price_per_person: number
+          created_at: string
+          experience_id: string
+          experience_name: string
+          id: string
+          participants: number
+          reservation_id: string
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          base_price_per_person?: number
+          created_at?: string
+          experience_id: string
+          experience_name: string
+          id?: string
+          participants?: number
+          reservation_id: string
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          base_price_per_person?: number
+          created_at?: string
+          experience_id?: string
+          experience_name?: string
+          id?: string
+          participants?: number
+          reservation_id?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservation_experiences_experience_id_fkey"
+            columns: ["experience_id"]
+            isOneToOne: false
+            referencedRelation: "experiences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_experiences_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reservation_experiences_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "reservations_public_summary"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservation_rooms: {
         Row: {
           created_at: string
