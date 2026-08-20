@@ -197,6 +197,15 @@ const CalendarGrid = ({
           const roomReservations = reservationsByRoom[room.id] || [];
           const roomBlocks = blockedByRoom[room.id] || [];
 
+          // Lanes compartilhadas entre bloqueios e reservas do mesmo bangalô
+          const laneItems = [
+            ...roomBlocks.map((b) => ({ start: b.start_date, end: b.end_date })),
+            ...roomReservations.map((r) => ({ start: r.check_in, end: r.check_out })),
+          ];
+          const { laneByIndex, laneCount } = assignLanes(laneItems);
+          const blockOffset = 0;
+          const reservationOffset = roomBlocks.length;
+
           return (
             <div key={room.id} className="contents">
               {/* Room Name */}
