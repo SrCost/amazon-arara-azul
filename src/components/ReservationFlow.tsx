@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import { GuestInfoForm } from "@/components/reservation/GuestInfoForm";
 import { PaymentStep } from "@/components/reservation/PaymentStep";
 import { ReviewStep } from "@/components/reservation/ReviewStep";
 import { ExtraRoomsSelector, type ExtraRoomEntry } from "@/components/reservation/ExtraRoomsSelector";
+import ExperiencesStep from "@/components/reservation/ExperiencesStep";
 
 interface ReservationFlowProps {
   lodgeName: string;
