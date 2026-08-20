@@ -224,6 +224,7 @@ const CalendarGrid = ({
                 style={{
                   gridColumn: `2 / -1`,
                   gridTemplateColumns: `repeat(${days.length}, minmax(50px, 1fr))`,
+                  minHeight: laneCount > 1 ? `${laneCount * 46}px` : undefined,
                 }}
               >
                 {/* Background cells (droppable) */}
@@ -237,7 +238,7 @@ const CalendarGrid = ({
                 ))}
 
                 {/* Blocked dates overlay */}
-                {roomBlocks.map((block) => {
+                {roomBlocks.map((block, i) => {
                   const position = getReservationPosition(block.start_date, block.end_date, days);
                   if (!position) return null;
 
@@ -247,13 +248,17 @@ const CalendarGrid = ({
                       block={block}
                       startCol={position.startCol}
                       span={position.span}
+                      startHalf={position.startHalf}
+                      endHalf={position.endHalf}
+                      lane={laneByIndex.get(blockOffset + i) ?? 0}
+                      laneCount={laneCount}
                       onClick={() => onBlockClick(block)}
                     />
                   );
                 })}
 
                 {/* Reservations overlay (draggable) */}
-                {roomReservations.map((reservation) => {
+                {roomReservations.map((reservation, i) => {
                   const position = getReservationPosition(
                     reservation.check_in,
                     reservation.check_out,
@@ -267,6 +272,10 @@ const CalendarGrid = ({
                       reservation={reservation}
                       startCol={position.startCol}
                       span={position.span}
+                      startHalf={position.startHalf}
+                      endHalf={position.endHalf}
+                      lane={laneByIndex.get(reservationOffset + i) ?? 0}
+                      laneCount={laneCount}
                       onClick={() => onReservationClick(reservation)}
                       isDragEnabled={isDragEnabled}
                     />
