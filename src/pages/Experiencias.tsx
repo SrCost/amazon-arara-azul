@@ -142,6 +142,46 @@ const Experiencias = () => {
 
       <WaveDivider flip />
 
+      {/* Section 2b — Experiências para contratar (banco de dados) */}
+      <section id="experiencias-exclusivas" className="py-12 sm:py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
+              {t("experiencesModule.sectionTitle")}
+            </h2>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              {t("experiencesModule.sectionSubtitle")}
+            </p>
+          </div>
+
+          {offersLoading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="w-full h-[380px] rounded-2xl" />
+              ))}
+            </div>
+          ) : offers.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              {t("experiencesModule.empty")}
+            </p>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {offers.map((experience, index) => (
+                <ExperienceOfferCard
+                  key={experience.id}
+                  experience={experience}
+                  index={index}
+                  onClick={() => setSelectedExperience(experience)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <WaveDivider />
+
+
       {/* Section 3 — Full Gallery (irregular grid) */}
       <section id="gallery-full" className="py-12 sm:py-20 bg-muted/30">
         <div className="container mx-auto px-4">
