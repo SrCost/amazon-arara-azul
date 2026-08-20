@@ -18,6 +18,9 @@ import passeioCanoa from "@/assets/experiences/passeio_de_canoa.png.asset.json";
 import visitasComunidades from "@/assets/experiences/visitas_as_comunidades.jpg.asset.json";
 import porDoSol from "@/assets/experiences/por_do_sol.jpeg.asset.json";
 import fotografiasNatureza from "@/assets/experiences/fotografias_de_natureza.jpg.asset.json";
+import ExperienceOfferCard from "@/components/experiences/ExperienceOfferCard";
+import ExperienceDetailModal from "@/components/experiences/ExperienceDetailModal";
+import { useExperiences, type Experience } from "@/hooks/useExperiences";
 
 const Experiencias = () => {
   const { t } = useTranslation();
@@ -30,6 +33,9 @@ const Experiencias = () => {
   const { data: galleryImages = [], isLoading } = useGalleryImages("experiences");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const { experiences: offers, loading: offersLoading } = useExperiences();
+  const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
+
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
