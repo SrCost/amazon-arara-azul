@@ -39,6 +39,7 @@ import CalendarReservations from "./pages/admin/CalendarReservations";
 import HeroCarouselAdmin from "./pages/admin/HeroCarousel";
 import GuestAutomation from "./pages/admin/GuestAutomation";
 import AdminFnrh from "./pages/admin/Fnrh";
+import AdminExperiencias from "./pages/admin/Experiencias";
 
 const queryClient = new QueryClient();
 
@@ -195,6 +196,16 @@ const App = () => (
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout>
                     <GuestAutomation />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/experiencias"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <AdminExperiencias />
                   </AdminLayout>
                 </ProtectedRoute>
               }

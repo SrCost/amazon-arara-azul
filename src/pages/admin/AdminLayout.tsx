@@ -25,6 +25,7 @@ import {
   SlidersHorizontal,
   ClipboardCheck,
   FileCheck2,
+  Compass,
 } from "lucide-react";
 import logoArara from "@/assets/logo-arara-azul.jpg";
 
@@ -63,6 +64,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         { icon: FileCheck2, label: "FNRH", path: "/admin/fnrh" },
         { icon: Package, label: "Pacotes", path: "/admin/packages" },
         { icon: Building2, label: "Bangalôs", path: "/admin/bangalos" },
+        { icon: Compass, label: "Experiências", path: "/admin/experiencias" },
         { icon: DollarSign, label: "Pagamentos", path: "/admin/payments" },
       ]
     : [];

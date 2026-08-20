@@ -864,5 +864,19 @@
       "desc": "Vielen Dank! Wir haben die Informationen zu dieser Reservierung erhalten; sie können über diesen Link nicht mehr geändert werden.",
       "answeredOn": "Gesendet am {{date}}. Möchten Sie etwas ändern? Sprechen Sie mit unserem Team."
     }
+  },
+  "experiencesModule": {
+    "sectionTitle": "Exklusive Erlebnisse",
+    "sectionSubtitle": "Aktivitäten, die Sie Ihrem Aufenthalt hinzufügen können, geführt von einheimischen Guides am Rio Negro.",
+    "empty": "Derzeit sind keine Erlebnisse verfügbar.",
+    "from": "ab",
+    "perPersonShort": "pro Person",
+    "whatToWear": "Was anziehen",
+    "whatToBring": "Was mitbringen",
+    "priceTableTitle": "Referenzpreise",
+    "people": "Personen",
+    "perPerson": "Pro Person",
+    "total": "Gesamt",
+    "priceNote": "Referenzpreise pro Gruppe mit progressivem Rabatt. Die Buchung erfolgt direkt bei der Pousada."
   }
 }

@@ -882,5 +882,19 @@
       "desc": "Thank you! We already received the information for this reservation and it can no longer be changed through this link.",
       "answeredOn": "Submitted on {{date}}. Need to adjust something? Talk to our team."
     }
+  },
+  "experiencesModule": {
+    "sectionTitle": "Exclusive experiences",
+    "sectionSubtitle": "Activities that can be added to your stay, led by local guides of the Rio Negro.",
+    "empty": "No experiences available at the moment.",
+    "from": "from",
+    "perPersonShort": "per person",
+    "whatToWear": "What to wear",
+    "whatToBring": "What to bring",
+    "priceTableTitle": "Reference prices",
+    "people": "People",
+    "perPerson": "Per person",
+    "total": "Total",
+    "priceNote": "Reference prices per group, with progressive discounts. Booking is arranged directly with the lodge."
   }
 }

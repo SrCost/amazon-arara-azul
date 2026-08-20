@@ -18,6 +18,9 @@ import passeioCanoa from "@/assets/experiences/passeio_de_canoa.png.asset.json";
 import visitasComunidades from "@/assets/experiences/visitas_as_comunidades.jpg.asset.json";
 import porDoSol from "@/assets/experiences/por_do_sol.jpeg.asset.json";
 import fotografiasNatureza from "@/assets/experiences/fotografias_de_natureza.jpg.asset.json";
+import ExperienceOfferCard from "@/components/experiences/ExperienceOfferCard";
+import ExperienceDetailModal from "@/components/experiences/ExperienceDetailModal";
+import { useExperiences, type Experience } from "@/hooks/useExperiences";
 
 const Experiencias = () => {
   const { t } = useTranslation();
@@ -30,6 +33,9 @@ const Experiencias = () => {
   const { data: galleryImages = [], isLoading } = useGalleryImages("experiences");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const { experiences: offers, loading: offersLoading } = useExperiences();
+  const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
+
 
   const openLightbox = (index: number) => {
     setLightboxIndex(index);
@@ -142,6 +148,46 @@ const Experiencias = () => {
 
       <WaveDivider flip />
 
+      {/* Section 2b — Experiências para contratar (banco de dados) */}
+      <section id="experiencias-exclusivas" className="py-12 sm:py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
+              {t("experiencesModule.sectionTitle")}
+            </h2>
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
+              {t("experiencesModule.sectionSubtitle")}
+            </p>
+          </div>
+
+          {offersLoading ? (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="w-full h-[380px] rounded-2xl" />
+              ))}
+            </div>
+          ) : offers.length === 0 ? (
+            <p className="text-center text-muted-foreground">
+              {t("experiencesModule.empty")}
+            </p>
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {offers.map((experience, index) => (
+                <ExperienceOfferCard
+                  key={experience.id}
+                  experience={experience}
+                  index={index}
+                  onClick={() => setSelectedExperience(experience)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      <WaveDivider />
+
+
       {/* Section 3 — Full Gallery (irregular grid) */}
       <section id="gallery-full" className="py-12 sm:py-20 bg-muted/30">
         <div className="container mx-auto px-4">
@@ -178,6 +224,14 @@ const Experiencias = () => {
           onNavigate={setLightboxIndex}
         />
       )}
+
+      <ExperienceDetailModal
+        experience={selectedExperience}
+        open={!!selectedExperience}
+        onClose={() => setSelectedExperience(null)}
+      />
+
+
 
       <Footer />
     </div>
