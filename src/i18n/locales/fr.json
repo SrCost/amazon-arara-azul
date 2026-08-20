@@ -882,5 +882,19 @@
       "desc": "Merci ! Nous avons déjà reçu les informations de cette réservation et elles ne peuvent plus être modifiées via ce lien.",
       "answeredOn": "Envoyé le {{date}}. Besoin d’un ajustement ? Contactez notre équipe."
     }
+  },
+  "experiencesModule": {
+    "sectionTitle": "Expériences exclusives",
+    "sectionSubtitle": "Des activités à ajouter à votre séjour, encadrées par des guides locaux du Rio Negro.",
+    "empty": "Aucune expérience disponible pour le moment.",
+    "from": "à partir de",
+    "perPersonShort": "par personne",
+    "whatToWear": "Quoi porter",
+    "whatToBring": "Quoi apporter",
+    "priceTableTitle": "Tarifs indicatifs",
+    "people": "Personnes",
+    "perPerson": "Par personne",
+    "total": "Total",
+    "priceNote": "Tarifs indicatifs par groupe, avec remise progressive. La réservation se fait directement auprès du lodge."
   }
 }

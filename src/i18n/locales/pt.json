@@ -882,5 +882,19 @@
       "desc": "Obrigado! Já recebemos as informações desta reserva e elas não podem mais ser alteradas por este link.",
       "answeredOn": "Enviado em {{date}}. Precisa ajustar algo? Fale com nossa equipe."
     }
+  },
+  "experiencesModule": {
+    "sectionTitle": "Experiências exclusivas para contratar",
+    "sectionSubtitle": "Vivências que podem ser somadas à sua hospedagem, conduzidas por guias locais do Rio Negro.",
+    "empty": "Nenhuma experiência disponível no momento.",
+    "from": "a partir de",
+    "perPersonShort": "por pessoa",
+    "whatToWear": "O que vestir",
+    "whatToBring": "O que levar",
+    "priceTableTitle": "Valores de referência",
+    "people": "Pessoas",
+    "perPerson": "Por pessoa",
+    "total": "Total",
+    "priceNote": "Valores de referência por grupo, com desconto progressivo. A contratação é feita diretamente com a pousada."
   }
 }
