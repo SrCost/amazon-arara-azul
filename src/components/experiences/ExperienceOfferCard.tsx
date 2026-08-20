@@ -6,9 +6,11 @@ import { getExperienceIcon } from "./experienceIcons";
 interface ExperienceOfferCardProps {
   experience: Experience;
   onClick: () => void;
+  /** "fixed" = largura fixa (scroll horizontal) | "fill" = ocupa o slide do carrossel */
+  variant?: "fixed" | "fill";
 }
 
-const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) => {
+const ExperienceOfferCard = ({ experience, onClick, variant = "fixed" }: ExperienceOfferCardProps) => {
   const { i18n } = useTranslation();
 
   const name = localizedField(experience, "name", i18n.language);
