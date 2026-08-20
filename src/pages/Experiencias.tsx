@@ -225,6 +225,14 @@ const Experiencias = () => {
         />
       )}
 
+      <ExperienceDetailModal
+        experience={selectedExperience}
+        open={!!selectedExperience}
+        onClose={() => setSelectedExperience(null)}
+      />
+
+
+
       <Footer />
     </div>
   );
