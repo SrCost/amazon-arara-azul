@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -18,12 +18,13 @@ import passeioCanoa from "@/assets/experiences/passeio_de_canoa.png.asset.json";
 import visitasComunidades from "@/assets/experiences/visitas_as_comunidades.jpg.asset.json";
 import porDoSol from "@/assets/experiences/por_do_sol.jpeg.asset.json";
 import fotografiasNatureza from "@/assets/experiences/fotografias_de_natureza.jpg.asset.json";
-import ExperienceOfferCard from "@/components/experiences/ExperienceOfferCard";
+import ExperienceCategoryRow from "@/components/experiences/ExperienceCategoryRow";
 import ExperienceDetailModal from "@/components/experiences/ExperienceDetailModal";
-import { useExperiences, type Experience } from "@/hooks/useExperiences";
+import { useExperiences, localizedField, type Experience } from "@/hooks/useExperiences";
+
 
 const Experiencias = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   usePageMeta({
     title: t("pages.experiencesTitle"),
@@ -35,6 +36,20 @@ const Experiencias = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { experiences: offers, loading: offersLoading } = useExperiences();
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
+
+  // Agrupa as experiências por categoria, preservando a ordem de display_order
+  const offerGroups = useMemo(() => {
+    const groups: { category: string; items: Experience[] }[] = [];
+    offers.forEach((experience) => {
+      const category =
+        localizedField(experience, "category", i18n.language) ||
+        t("experiencesModule.sectionTitle");
+      const group = groups.find((item) => item.category === category);
+      if (group) group.items.push(experience);
+      else groups.push({ category, items: [experience] });
+    });
+    return groups;
+  }, [offers, i18n.language, t]);
 
 
   const openLightbox = (index: number) => {
@@ -161,9 +176,9 @@ const Experiencias = () => {
           </div>
 
           {offersLoading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Skeleton key={i} className="w-full h-[380px] rounded-2xl" />
+            <div className="space-y-8">
+              {[...Array(3)].map((_, i) => (
+                <Skeleton key={i} className="w-full h-[260px] rounded-2xl" />
               ))}
             </div>
           ) : offers.length === 0 ? (
@@ -171,17 +186,19 @@ const Experiencias = () => {
               {t("experiencesModule.empty")}
             </p>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {offers.map((experience, index) => (
-                <ExperienceOfferCard
-                  key={experience.id}
-                  experience={experience}
+            <div className="space-y-10 sm:space-y-12">
+              {offerGroups.map((group, index) => (
+                <ExperienceCategoryRow
+                  key={group.category}
+                  category={group.category}
+                  experiences={group.items}
                   index={index}
-                  onClick={() => setSelectedExperience(experience)}
+                  onSelect={setSelectedExperience}
                 />
               ))}
             </div>
           )}
+
         </div>
       </section>
 

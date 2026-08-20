@@ -7,6 +7,11 @@ import {
   persistReservationRooms,
   computeServerTotal,
 } from "../_shared/multi-rooms.ts";
+import {
+  parseExperienceIds,
+  buildReservationExperiences,
+  persistReservationExperiences,
+} from "../_shared/experiences.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -128,7 +133,8 @@ serve(async (req) => {
       total_amount,
       package_id,
       guest_language,
-      extra_rooms
+      extra_rooms,
+      experience_ids
     } = body;
     const lang = ['pt','en','es','fr','de'].includes(guest_language) ? guest_language : 'pt';
 
@@ -262,12 +268,21 @@ serve(async (req) => {
       const price = Number(pkg?.price) || 0;
       packagePrice = price > 0 ? price : null;
     }
+    // Experiências avulsas escolhidas no fluxo de reserva (recalculadas no servidor)
+    const experienceIdsInput = parseExperienceIds(experience_ids);
+    const { items: reservationExperiences, total: experiencesTotal } =
+      await buildReservationExperiences(supabase, experienceIdsInput, totalGuests);
+    if (reservationExperiences.length > 0) {
+      console.log('Experiências:', reservationExperiences.map(e => `${e.experience_name}=${e.total_price}`).join(', '));
+    }
+
     const serverTotal = computeServerTotal(accommodations, packagePrice);
     if (serverTotal > 0) {
-      if (Math.abs(serverTotal - amount) > 0.5) {
-        console.warn('Total do cliente divergente. Cliente:', amount, 'Servidor:', serverTotal);
+      const totalWithExperiences = Math.round((serverTotal + experiencesTotal) * 100) / 100;
+      if (Math.abs(totalWithExperiences - amount) > 0.5) {
+        console.warn('Total do cliente divergente. Cliente:', amount, 'Servidor:', totalWithExperiences);
       }
-      amount = Math.max(serverTotal, MIN_AMOUNT);
+      amount = Math.max(totalWithExperiences, MIN_AMOUNT);
     }
 
     // 2. VALIDAR DISPONIBILIDADE DE TODAS AS ACOMODAÇÕES
@@ -315,6 +330,7 @@ serve(async (req) => {
         .update({ guests: totalGuests, total_price: amount })
         .eq('id', reservationId);
       await persistReservationRooms(supabase, reservationId, accommodations);
+      await persistReservationExperiences(supabase, reservationId, reservationExperiences);
     } else {
       // 3b. Criar pré-reserva
       console.log('=== CRIANDO PRÉ-RESERVA ===');
@@ -353,6 +369,7 @@ serve(async (req) => {
       }
 
       await persistReservationRooms(supabase, reservation.id, accommodations);
+      await persistReservationExperiences(supabase, reservation.id, reservationExperiences);
 
       reservationId = reservation.id;
       console.log('Reserva criada:', reservationId);

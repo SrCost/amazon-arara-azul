@@ -15,8 +15,9 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { localizedField, type Experience } from "@/hooks/useExperiences";
-import ExperiencePriceTable from "./ExperiencePriceTable";
+import { formatBRL } from "@/lib/experiencePricing";
 import { getExperienceIcon } from "./experienceIcons";
+
 
 interface ExperienceDetailModalProps {
   experience: Experience | null;
@@ -125,12 +126,19 @@ const ExperienceDetailModal = ({ experience, open, onClose }: ExperienceDetailMo
             </div>
           )}
 
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-foreground">
-              {t("experiencesModule.priceTableTitle")}
+          <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <p className="text-sm text-foreground">
+              <span className="text-muted-foreground">{t("experiencesModule.from")} </span>
+              <span className="font-semibold">
+                {formatBRL(experience.base_price_per_person)}
+              </span>
+              <span className="text-muted-foreground">
+                {" "}
+                {t("experiencesModule.perPersonShort")}
+              </span>
             </p>
-            <ExperiencePriceTable basePrice={experience.base_price_per_person} />
           </div>
+
         </div>
       </DialogContent>
     </Dialog>

@@ -47,6 +47,8 @@ import {
   type ExperienceLang,
 } from "@/hooks/useExperiences";
 import { formatBRL } from "@/lib/experiencePricing";
+import ExperiencePriceTable from "@/components/experiences/ExperiencePriceTable";
+
 
 const STORAGE_BUCKET = "gallery";
 const STORAGE_PREFIX = "experiences-module";
@@ -539,7 +541,16 @@ const AdminExperiencias = () => {
                   </p>
                 </div>
               </div>
+
+              <div className="space-y-2">
+                <Label>Prévia de preços (referência interna)</Label>
+                <ExperiencePriceTable basePrice={Number(price) || 0} />
+                <p className="text-xs text-muted-foreground">
+                  Tabela visível apenas no painel. O hóspede vê somente o valor final.
+                </p>
+              </div>
             </div>
+
           </div>
 
           <DialogFooter>
