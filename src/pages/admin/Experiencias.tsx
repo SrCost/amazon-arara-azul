@@ -178,12 +178,15 @@ const AdminExperiencias = () => {
     try {
       const payload = {
         ...texts,
+        name_pt: namePt,
         slug: finalSlug,
         base_price_per_person: Number(price) || 0,
         display_order: Number(order) || 0,
         is_active: active,
         photos,
-      };
+      } as unknown as Parameters<
+        ReturnType<typeof supabase.from<"experiences">>["insert"]
+      >[0];
 
       const { error } = editing
         ? await supabase.from("experiences").update(payload).eq("id", editing.id)
