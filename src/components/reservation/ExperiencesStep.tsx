@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Clock, Sparkles } from "lucide-react";
 import { useExperiences, localizedField, type Experience } from "@/hooks/useExperiences";
@@ -9,9 +10,10 @@ interface ExperiencesStepProps {
   totalGuests: number;
   selectedIds: string[];
   onToggle: (id: string) => void;
+  onTotalChange: (total: number) => void;
 }
 
-const ExperiencesStep = ({ totalGuests, selectedIds, onToggle }: ExperiencesStepProps) => {
+const ExperiencesStep = ({ totalGuests, selectedIds, onToggle, onTotalChange }: ExperiencesStepProps) => {
   const { t, i18n } = useTranslation();
   const { experiences, loading } = useExperiences();
 
@@ -20,6 +22,10 @@ const ExperiencesStep = ({ totalGuests, selectedIds, onToggle }: ExperiencesStep
   const experiencesTotal = experiences
     .filter((exp) => selectedIds.includes(exp.id))
     .reduce((sum, exp) => sum + calculateExperiencePrice(exp.base_price_per_person, people), 0);
+
+  useEffect(() => {
+    onTotalChange(Math.round(experiencesTotal * 100) / 100);
+  }, [experiencesTotal, onTotalChange]);
 
   return (
     <div className="space-y-5">

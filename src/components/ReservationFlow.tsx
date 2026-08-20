@@ -314,6 +314,12 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
     );
   }, [checkIn, checkOut, extraRooms]);
 
+  // Total de hóspedes da reserva (bangalô principal + adicionais)
+  const totalReservationGuests = useMemo(
+    () => (parseInt(guests) || 1) + extraRooms.reduce((sum, room) => sum + room.guests, 0),
+    [guests, extraRooms]
+  );
+
   const toggleExperience = useCallback((id: string) => {
     setSelectedExperienceIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
@@ -980,6 +986,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               totalGuests={totalReservationGuests}
               selectedIds={selectedExperienceIds}
               onToggle={toggleExperience}
+              onTotalChange={setExperiencesTotal}
             />
           )}
 
