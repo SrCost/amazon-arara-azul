@@ -184,9 +184,7 @@ const AdminExperiencias = () => {
         display_order: Number(order) || 0,
         is_active: active,
         photos,
-      } as unknown as Parameters<
-        ReturnType<typeof supabase.from<"experiences">>["insert"]
-      >[0];
+      } as ExperienceInsert;
 
       const { error } = editing
         ? await supabase.from("experiences").update(payload).eq("id", editing.id)
