@@ -24,7 +24,11 @@ const ExperienceOfferCard = ({ experience, onClick, variant = "fixed" }: Experie
       type="button"
       onClick={onClick}
       aria-label={name}
-      className="group shrink-0 snap-start text-left w-[210px] sm:w-[240px] lg:w-[270px] rounded-xl overflow-hidden bg-card border border-border shadow-medium hover:shadow-strong transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+      className={`group text-left rounded-xl overflow-hidden bg-card border border-border shadow-medium hover:shadow-strong transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
+        variant === "fill"
+          ? "w-full"
+          : "shrink-0 snap-start w-[210px] sm:w-[240px] lg:w-[270px]"
+      }`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-forest">
         {cover ? (
