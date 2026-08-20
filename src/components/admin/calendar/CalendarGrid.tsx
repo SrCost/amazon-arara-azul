@@ -72,34 +72,66 @@ const CalendarGrid = ({
   );
 
   // Calculate grid column positions for reservations using parseDateOnly for timezone safety
+  // startHalf/endHalf: a barra começa no meio do dia de check-in e termina no meio do
+  // dia de check-out (entrada à tarde / saída pela manhã), evitando sobreposição no dia de virada.
   const getReservationPosition = (
     checkIn: string,
     checkOut: string,
     days: Date[]
-  ): { startCol: number; span: number } | null => {
+  ): { startCol: number; span: number; startHalf: boolean; endHalf: boolean } | null => {
     const checkInDate = parseDateOnly(checkIn);
     const checkOutDate = parseDateOnly(checkOut);
-    
+
     let startCol = days.findIndex((d) => isSameDay(d, checkInDate));
     let endCol = days.findIndex((d) => isSameDay(d, checkOutDate));
 
+    let startHalf = startCol !== -1;
+    let endHalf = endCol !== -1;
+
     if (startCol === -1 && checkInDate < days[0]) {
       startCol = 0;
+      startHalf = false;
     }
 
     if (endCol === -1 && checkOutDate > days[days.length - 1]) {
-      endCol = days.length;
+      endCol = days.length - 1;
+      endHalf = false;
     }
 
     if (startCol === -1 || endCol === -1) return null;
     if (endCol < startCol) return null;
 
-    // Inclui visualmente o dia de check-out (mesmo span +1), respeitando o fim do mês
-    const rawSpan = endCol - startCol + 1;
-    const maxSpan = days.length - startCol;
-    const span = Math.min(rawSpan, maxSpan);
+    const span = endCol - startCol + 1;
 
-    return { startCol: startCol + 1, span };
+    return { startCol: startCol + 1, span, startHalf, endHalf };
+  };
+
+  // Empilha em faixas (lanes) itens que realmente se sobrepõem no mesmo bangalô.
+  // Usa semântica de meio-dia: check-out no mesmo dia de um check-in NÃO é sobreposição.
+  const assignLanes = <T extends { start: string; end: string }>(items: T[]) => {
+    const laneEnds: number[] = [];
+    const map = new Map<number, number>();
+
+    const sorted = items
+      .map((item, index) => ({
+        index,
+        start: parseDateOnly(item.start).getTime(),
+        end: parseDateOnly(item.end).getTime(),
+      }))
+      .sort((a, b) => a.start - b.start);
+
+    sorted.forEach((item) => {
+      let lane = laneEnds.findIndex((end) => end <= item.start);
+      if (lane === -1) {
+        lane = laneEnds.length;
+        laneEnds.push(item.end);
+      } else {
+        laneEnds[lane] = item.end;
+      }
+      map.set(item.index, lane);
+    });
+
+    return { laneByIndex: map, laneCount: Math.max(laneEnds.length, 1) };
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -165,6 +197,15 @@ const CalendarGrid = ({
           const roomReservations = reservationsByRoom[room.id] || [];
           const roomBlocks = blockedByRoom[room.id] || [];
 
+          // Lanes compartilhadas entre bloqueios e reservas do mesmo bangalô
+          const laneItems = [
+            ...roomBlocks.map((b) => ({ start: b.start_date, end: b.end_date })),
+            ...roomReservations.map((r) => ({ start: r.check_in, end: r.check_out })),
+          ];
+          const { laneByIndex, laneCount } = assignLanes(laneItems);
+          const blockOffset = 0;
+          const reservationOffset = roomBlocks.length;
+
           return (
             <div key={room.id} className="contents">
               {/* Room Name */}
@@ -183,6 +224,7 @@ const CalendarGrid = ({
                 style={{
                   gridColumn: `2 / -1`,
                   gridTemplateColumns: `repeat(${days.length}, minmax(50px, 1fr))`,
+                  minHeight: laneCount > 1 ? `${laneCount * 46}px` : undefined,
                 }}
               >
                 {/* Background cells (droppable) */}
@@ -196,7 +238,7 @@ const CalendarGrid = ({
                 ))}
 
                 {/* Blocked dates overlay */}
-                {roomBlocks.map((block) => {
+                {roomBlocks.map((block, i) => {
                   const position = getReservationPosition(block.start_date, block.end_date, days);
                   if (!position) return null;
 
@@ -206,13 +248,17 @@ const CalendarGrid = ({
                       block={block}
                       startCol={position.startCol}
                       span={position.span}
+                      startHalf={position.startHalf}
+                      endHalf={position.endHalf}
+                      lane={laneByIndex.get(blockOffset + i) ?? 0}
+                      laneCount={laneCount}
                       onClick={() => onBlockClick(block)}
                     />
                   );
                 })}
 
                 {/* Reservations overlay (draggable) */}
-                {roomReservations.map((reservation) => {
+                {roomReservations.map((reservation, i) => {
                   const position = getReservationPosition(
                     reservation.check_in,
                     reservation.check_out,
@@ -226,6 +272,10 @@ const CalendarGrid = ({
                       reservation={reservation}
                       startCol={position.startCol}
                       span={position.span}
+                      startHalf={position.startHalf}
+                      endHalf={position.endHalf}
+                      lane={laneByIndex.get(reservationOffset + i) ?? 0}
+                      laneCount={laneCount}
                       onClick={() => onReservationClick(reservation)}
                       isDragEnabled={isDragEnabled}
                     />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Navigation from "@/components/Navigation";
 import Footer from "@/components/Footer";
@@ -18,9 +18,9 @@ import passeioCanoa from "@/assets/experiences/passeio_de_canoa.png.asset.json";
 import visitasComunidades from "@/assets/experiences/visitas_as_comunidades.jpg.asset.json";
 import porDoSol from "@/assets/experiences/por_do_sol.jpeg.asset.json";
 import fotografiasNatureza from "@/assets/experiences/fotografias_de_natureza.jpg.asset.json";
-import ExperienceCategoryRow from "@/components/experiences/ExperienceCategoryRow";
+import ExperiencesCarousel from "@/components/experiences/ExperiencesCarousel";
 import ExperienceDetailModal from "@/components/experiences/ExperienceDetailModal";
-import { useExperiences, localizedField, type Experience } from "@/hooks/useExperiences";
+import { useExperiences, type Experience } from "@/hooks/useExperiences";
 
 
 const Experiencias = () => {
@@ -36,20 +36,6 @@ const Experiencias = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { experiences: offers, loading: offersLoading } = useExperiences();
   const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
-
-  // Agrupa as experiências por categoria, preservando a ordem de display_order
-  const offerGroups = useMemo(() => {
-    const groups: { category: string; items: Experience[] }[] = [];
-    offers.forEach((experience) => {
-      const category =
-        localizedField(experience, "category", i18n.language) ||
-        t("experiencesModule.sectionTitle");
-      const group = groups.find((item) => item.category === category);
-      if (group) group.items.push(experience);
-      else groups.push({ category, items: [experience] });
-    });
-    return groups;
-  }, [offers, i18n.language, t]);
 
 
   const openLightbox = (index: number) => {
@@ -186,17 +172,7 @@ const Experiencias = () => {
               {t("experiencesModule.empty")}
             </p>
           ) : (
-            <div className="space-y-10 sm:space-y-12">
-              {offerGroups.map((group, index) => (
-                <ExperienceCategoryRow
-                  key={group.category}
-                  category={group.category}
-                  experiences={group.items}
-                  index={index}
-                  onSelect={setSelectedExperience}
-                />
-              ))}
-            </div>
+            <ExperiencesCarousel experiences={offers} onSelect={setSelectedExperience} />
           )}
 
         </div>

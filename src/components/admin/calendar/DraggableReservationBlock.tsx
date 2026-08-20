@@ -15,6 +15,13 @@ interface DraggableReservationBlockProps {
   reservation: CalendarReservation;
   startCol: number;
   span: number;
+  /** Barra inicia no meio do dia (check-in real dentro do mês exibido) */
+  startHalf?: boolean;
+  /** Barra termina no meio do dia (check-out real dentro do mês exibido) */
+  endHalf?: boolean;
+  /** Faixa vertical (empilhamento quando há sobreposição real) */
+  lane?: number;
+  laneCount?: number;
   onClick: () => void;
   isDragEnabled: boolean;
 }
@@ -99,6 +106,10 @@ const DraggableReservationBlock = ({
   reservation,
   startCol,
   span,
+  startHalf = false,
+  endHalf = false,
+  lane = 0,
+  laneCount = 1,
   onClick,
   isDragEnabled,
 }: DraggableReservationBlockProps) => {
@@ -175,7 +186,7 @@ const DraggableReservationBlock = ({
             }
           }}
           className={cn(
-            "absolute top-1 bottom-1 rounded-md border-l-4 px-1.5 py-0.5",
+            "absolute rounded-md border-l-4 px-1.5 py-0.5",
             "flex flex-col justify-center overflow-hidden",
             "transition-all z-10",
             statusColor,
@@ -185,8 +196,10 @@ const DraggableReservationBlock = ({
           )}
           style={{
             gridColumn: `${startCol} / span ${span}`,
-            left: "1px",
-            right: "1px",
+            left: startHalf ? `calc(${50 / span}% + 1px)` : "1px",
+            right: endHalf ? `calc(${50 / span}% + 1px)` : "1px",
+            top: `calc(${(lane * 100) / laneCount}% + 4px)`,
+            height: `calc(${100 / laneCount}% - 8px)`,
             ...style,
           }}
         >

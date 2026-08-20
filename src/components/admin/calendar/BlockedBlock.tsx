@@ -14,6 +14,10 @@ interface BlockedBlockProps {
   block: BlockedDate;
   startCol: number;
   span: number;
+  startHalf?: boolean;
+  endHalf?: boolean;
+  lane?: number;
+  laneCount?: number;
   onClick: () => void;
 }
 
@@ -52,7 +56,16 @@ const getBlockTypeInfo = (blockType: string | null) => {
   }
 };
 
-const BlockedBlock = ({ block, startCol, span, onClick }: BlockedBlockProps) => {
+const BlockedBlock = ({
+  block,
+  startCol,
+  span,
+  startHalf = false,
+  endHalf = false,
+  lane = 0,
+  laneCount = 1,
+  onClick,
+}: BlockedBlockProps) => {
   const { icon: Icon, label, color } = getBlockTypeInfo(block.block_type);
 
   return (
@@ -61,7 +74,7 @@ const BlockedBlock = ({ block, startCol, span, onClick }: BlockedBlockProps) => 
         <div
           onClick={onClick}
           className={cn(
-            "absolute top-1 bottom-1 rounded-md border-l-4 px-2 py-1 cursor-pointer",
+            "absolute rounded-md border-l-4 px-2 py-1 cursor-pointer",
             "flex items-center gap-1 overflow-hidden",
             "hover:scale-[1.02] hover:shadow-lg transition-all z-10",
             "text-white",
@@ -69,8 +82,10 @@ const BlockedBlock = ({ block, startCol, span, onClick }: BlockedBlockProps) => 
           )}
           style={{
             gridColumn: `${startCol} / span ${span}`,
-            left: "2px",
-            right: "2px",
+            left: startHalf ? `calc(${50 / span}% + 2px)` : "2px",
+            right: endHalf ? `calc(${50 / span}% + 2px)` : "2px",
+            top: `calc(${(lane * 100) / laneCount}% + 4px)`,
+            height: `calc(${100 / laneCount}% - 8px)`,
           }}
         >
           <Icon className="h-3 w-3 flex-shrink-0" />
