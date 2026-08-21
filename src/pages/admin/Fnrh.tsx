@@ -169,6 +169,8 @@ const Fnrh = () => {
   const [sessionExpired, setSessionExpired] = useState(false);
   const [diag, setDiag] = useState<DiagResultado | null>(null);
   const [diagLoading, setDiagLoading] = useState(false);
+  const [showCreds, setShowCreds] = useState(false);
+
 
 
 
