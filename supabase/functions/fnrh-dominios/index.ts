@@ -1,31 +1,54 @@
-// fnrh-dominios — domínios (listas) da FNRH com cache em memória de 24h.
+// fnrh-dominios — domínios (listas de valores fixos) da FNRH com cache de 1h.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { fnrhFetch, getFnrhEnv, toErrorBody } from "../_shared/fnrh.ts";
 import { corsHeaders, jsonResponse, getInternalAuth, unauthorizedResponse } from "../_shared/internal.ts";
 
-const PATHS: Record<string, string> = {
-  transporte: "/dominios/meios-transporte",
-  motivo_viagem: "/dominios/motivos-viagem",
-  genero: "/dominios/generos",
-  raca: "/dominios/racas",
-  deficiencia: "/dominios/deficiencias",
-  tipo_deficiencia: "/dominios/tipos-deficiencia",
-  tipo_documento: "/dominios/tipos-documento",
+// Caminhos conforme a documentação oficial da API FNRH v2.
+const PATHS = {
+  meios_transporte: "/dominios/fnrh/meios_transporte",
+  motivos_viagem: "/dominios/fnrh/motivos_viagem",
+  hospedes_situacoes: "/dominios/hospedes/situacoes",
+  generos: "/dominios/pessoas/generos",
+  opcao_deficiencia: "/dominios/pessoas/opcao_deficiencia",
+  racas: "/dominios/pessoas/racas",
+  tipos_deficiencia: "/dominios/pessoas/tipos_deficiencia",
+  tipos_documento: "/dominios/pessoas/tipos_documento",
+  reservas_situacoes: "/dominios/reservas/situacoes",
+  fichas_situacoes: "/dominios/fichas/situacoes",
+} as const;
+
+type Tipo = keyof typeof PATHS;
+
+// Aliases mantidos para não quebrar chamadas já existentes no painel.
+const ALIASES: Record<string, Tipo> = {
+  transporte: "meios_transporte",
+  motivo_viagem: "motivos_viagem",
+  genero: "generos",
+  raca: "racas",
+  deficiencia: "opcao_deficiencia",
+  tipo_deficiencia: "tipos_deficiencia",
+  tipo_documento: "tipos_documento",
+  situacao_hospede: "hospedes_situacoes",
+  situacao_reserva: "reservas_situacoes",
+  situacao_ficha: "fichas_situacoes",
 };
 
-const TipoSchema = z.enum([
-  "transporte",
-  "motivo_viagem",
-  "genero",
-  "raca",
-  "deficiencia",
-  "tipo_deficiencia",
-  "tipo_documento",
-]);
+const TipoSchema = z.enum(
+  [...(Object.keys(PATHS) as Tipo[]), ...Object.keys(ALIASES), "todos"] as [string, ...string[]],
+);
 
-const TTL_MS = 24 * 60 * 60 * 1000;
+const TTL_MS = 60 * 60 * 1000; // 1h — listas estáticas
 const cache = new Map<string, { at: number; data: unknown }>();
+
+async function loadDominio(env: string, tipo: Tipo) {
+  const key = `${env}:${tipo}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < TTL_MS) return { data: hit.data, cached: true };
+  const data = await fnrhFetch({ method: "GET", path: PATHS[tipo], timeoutMs: 20000 });
+  cache.set(key, { at: Date.now(), data });
+  return { data, cached: false };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -44,22 +67,35 @@ serve(async (req) => {
     const parsed = TipoSchema.safeParse(tipo);
     if (!parsed.success) {
       return jsonResponse(
-        { error: `Parâmetro "tipo" inválido. Use: ${Object.keys(PATHS).join(", ")}.`, code: "VALIDACAO" },
+        {
+          error: `Parâmetro "tipo" inválido. Use: ${Object.keys(PATHS).join(", ")} ou "todos".`,
+          code: "VALIDACAO",
+        },
         400,
       );
     }
 
     const env = getFnrhEnv();
-    const key = `${env}:${parsed.data}`;
-    const hit = cache.get(key);
-    if (hit && Date.now() - hit.at < TTL_MS) {
-      return jsonResponse({ env, tipo: parsed.data, cached: true, data: hit.data });
+    const raw = parsed.data;
+
+    if (raw === "todos") {
+      const entries = Object.keys(PATHS) as Tipo[];
+      const results = await Promise.all(
+        entries.map(async (t) => {
+          try {
+            const { data } = await loadDominio(env, t);
+            return [t, data] as const;
+          } catch {
+            return [t, null] as const;
+          }
+        }),
+      );
+      return jsonResponse({ env, tipo: "todos", dominios: Object.fromEntries(results) });
     }
 
-    const data = await fnrhFetch({ method: "GET", path: PATHS[parsed.data], timeoutMs: 20000 });
-    cache.set(key, { at: Date.now(), data });
-
-    return jsonResponse({ env, tipo: parsed.data, cached: false, data });
+    const tipoNorm = (ALIASES[raw] ?? raw) as Tipo;
+    const { data, cached } = await loadDominio(env, tipoNorm);
+    return jsonResponse({ env, tipo: tipoNorm, cached, data });
   } catch (error) {
     const { status, body } = toErrorBody(error);
     return jsonResponse(body, status);
