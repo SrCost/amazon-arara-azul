@@ -158,7 +158,7 @@ export interface RegistrarResult {
 
 /** Chama POST /hospedagem/registrar e normaliza a resposta. */
 export async function registrarHospedagem(r: ReservationRow): Promise<RegistrarResult> {
-  const cpfSolicitante = getCpfSolicitante();
+  const cpfSolicitante = await getCpfSolicitante();
   if (!cpfSolicitante) {
     throw new FnrhError(500, "CONFIG_AUSENTE", "FNRH_CPF_SOLICITANTE não configurado no backend.");
   }
