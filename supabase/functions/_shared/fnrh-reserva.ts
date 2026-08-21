@@ -249,11 +249,18 @@ export async function registrarHospedagem(r: ReservationRow): Promise<RegistrarR
     JSON.stringify({
       scope: "fnrh-registrar",
       reservation_id: r.id,
-      documento: maskDoc(payload.hospede.numeroDocumento),
-      pais: payload.hospede.paisNacionalidade,
+      numero_reserva: payload.reserva.numero_reserva,
+      data_entrada: payload.reserva.data_entrada,
+      data_saida: payload.reserva.data_saida,
+      quantidade_hospede_adulto: payload.reserva.quantidade_hospede_adulto,
+      quantidade_hospede_menor: payload.reserva.quantidade_hospede_menor,
+      hospede: maskName(payload.hospede.nome),
+      documento: maskDoc(payload.hospede.numero_documento),
+      pais: payload.hospede.pais_nacionalidade,
       timestamp: new Date().toISOString(),
     }),
   );
+
 
   const raw = await fnrhFetch<Record<string, unknown>>({
     method: "POST",
