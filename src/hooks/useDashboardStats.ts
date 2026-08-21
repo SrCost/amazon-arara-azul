@@ -247,48 +247,60 @@ export const useDashboardStats = (): DashboardData & { refetch: () => Promise<vo
         ),
       });
 
-      // === FETCH MONTHLY DATA FOR CHARTS (last 6 months) ===
-      const sixMonthsAgo = subMonths(new Date(), 6);
-      
+      // === FETCH MONTHLY DATA FOR CHARTS (last 6 months, current month included) ===
+      const chartWindowStart = startOfMonth(subMonths(now, 5));
+      const chartWindowEnd = endOfMonth(now);
+
       const { data: chartReservations } = await supabase
         .from("reservations")
         .select("check_in, total_price, status")
         .eq("is_test", false)
         .neq("status", "cancelled")
-        .gte("check_in", sixMonthsAgo.toISOString())
+        .gte("check_in", format(chartWindowStart, "yyyy-MM-dd"))
+        .lte("check_in", format(chartWindowEnd, "yyyy-MM-dd"))
         .order("check_in", { ascending: true });
 
-      // Group by month
-      const monthlyMap = new Map<string, { reservations: number; revenue: number }>();
-      
-      // Initialize last 6 months with zeros
+      // Group by year+month so months from different years never collide
+      const monthlyMap = new Map<
+        string,
+        { label: string; reservations: number; revenue: number }
+      >();
+
       for (let i = 5; i >= 0; i--) {
-        const monthDate = subMonths(new Date(), i);
-        const monthKey = format(monthDate, "MMM", { locale: ptBR });
-        monthlyMap.set(monthKey, { reservations: 0, revenue: 0 });
+        const monthDate = subMonths(now, i);
+        const monthKey = format(monthDate, "yyyy-MM");
+        const label = format(monthDate, "MMM/yy", { locale: ptBR });
+        monthlyMap.set(monthKey, {
+          label: label.charAt(0).toUpperCase() + label.slice(1),
+          reservations: 0,
+          revenue: 0,
+        });
       }
 
-      // Aggregate real data
+      // Aggregate real data (ignore anything outside the 6-month window)
       chartReservations?.forEach((res) => {
         const checkInDate = parseDateOnly(res.check_in);
-        const monthKey = format(checkInDate, "MMM", { locale: ptBR });
-        
-        const existing = monthlyMap.get(monthKey) || { reservations: 0, revenue: 0 };
+        const monthKey = format(checkInDate, "yyyy-MM");
+        const existing = monthlyMap.get(monthKey);
+        if (!existing) return;
+
         monthlyMap.set(monthKey, {
+          label: existing.label,
           reservations: existing.reservations + 1,
           revenue: existing.revenue + (Number(res.total_price) || 0),
         });
       });
 
-      const chartData: MonthlyData[] = Array.from(monthlyMap.entries()).map(
-        ([month, data]) => ({
-          month: month.charAt(0).toUpperCase() + month.slice(1), // Capitalize
+      const chartData: MonthlyData[] = Array.from(monthlyMap.entries())
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([, data]) => ({
+          month: data.label,
           reservations: data.reservations,
           revenue: data.revenue,
-        })
-      );
+        }));
 
       setMonthlyData(chartData);
+
 
       // === FETCH RECENT ACTIVITY ===
       const { data: recentReservations } = await supabase
