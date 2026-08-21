@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { CalendarCheck, DollarSign, MessageSquare, TrendingUp } from "lucide-react";
 import {
   LineChart,
@@ -13,11 +15,13 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useDashboardStats, type ChartBasis } from "@/hooks/useDashboardStats";
 
 const Dashboard = () => {
   const { t } = useTranslation();
-  const { stats, trends, monthlyData, recentActivity, loading } = useDashboardStats();
+  const [chartBasis, setChartBasis] = useState<ChartBasis>("sale");
+  const { stats, trends, monthlyData, recentActivity, loading } =
+    useDashboardStats(chartBasis);
 
   const statCards = [
     {
@@ -93,6 +97,27 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Chart basis selector */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs sm:text-sm text-muted-foreground mr-1">
+          Base dos gráficos:
+        </span>
+        <Button
+          size="sm"
+          variant={chartBasis === "sale" ? "default" : "outline"}
+          onClick={() => setChartBasis("sale")}
+        >
+          Por venda (data da reserva)
+        </Button>
+        <Button
+          size="sm"
+          variant={chartBasis === "stay" ? "default" : "outline"}
+          onClick={() => setChartBasis("stay")}
+        >
+          Por estadia (check-in)
+        </Button>
       </div>
 
       {/* Charts */}

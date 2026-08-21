@@ -145,7 +145,11 @@ const getMonthStats = async (
   };
 };
 
-export const useDashboardStats = (): DashboardData & { refetch: () => Promise<void> } => {
+export type ChartBasis = "sale" | "stay";
+
+export const useDashboardStats = (
+  chartBasis: ChartBasis = "sale"
+): DashboardData & { refetch: () => Promise<void> } => {
   const [stats, setStats] = useState<DashboardStats>({
     totalReservations: 0,
     occupancyRate: 0,
@@ -248,17 +252,30 @@ export const useDashboardStats = (): DashboardData & { refetch: () => Promise<vo
       });
 
       // === FETCH MONTHLY DATA FOR CHARTS (last 6 months, current month included) ===
+      // "sale" = grouped by when the reservation was created (financial movement)
+      // "stay" = grouped by check-in date (occupancy view)
       const chartWindowStart = startOfMonth(subMonths(now, 5));
       const chartWindowEnd = endOfMonth(now);
+      const dateField = chartBasis === "sale" ? "created_at" : "check_in";
 
       const { data: chartReservations } = await supabase
         .from("reservations")
-        .select("check_in, total_price, status")
+        .select(`${dateField}, total_price, status`)
         .eq("is_test", false)
         .neq("status", "cancelled")
-        .gte("check_in", format(chartWindowStart, "yyyy-MM-dd"))
-        .lte("check_in", format(chartWindowEnd, "yyyy-MM-dd"))
-        .order("check_in", { ascending: true });
+        .gte(
+          dateField,
+          chartBasis === "sale"
+            ? chartWindowStart.toISOString()
+            : format(chartWindowStart, "yyyy-MM-dd")
+        )
+        .lte(
+          dateField,
+          chartBasis === "sale"
+            ? chartWindowEnd.toISOString()
+            : format(chartWindowEnd, "yyyy-MM-dd")
+        )
+        .order(dateField, { ascending: true });
 
       // Group by year+month so months from different years never collide
       const monthlyMap = new Map<
@@ -278,9 +295,13 @@ export const useDashboardStats = (): DashboardData & { refetch: () => Promise<vo
       }
 
       // Aggregate real data (ignore anything outside the 6-month window)
-      chartReservations?.forEach((res) => {
-        const checkInDate = parseDateOnly(res.check_in);
-        const monthKey = format(checkInDate, "yyyy-MM");
+      (chartReservations as Array<Record<string, unknown>> | null)?.forEach((res) => {
+        const rawDate = res[dateField] as string | null;
+        if (!rawDate) return;
+
+        const eventDate =
+          chartBasis === "sale" ? new Date(rawDate) : parseDateOnly(rawDate);
+        const monthKey = format(eventDate, "yyyy-MM");
         const existing = monthlyMap.get(monthKey);
         if (!existing) return;
 
@@ -343,7 +364,7 @@ export const useDashboardStats = (): DashboardData & { refetch: () => Promise<vo
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [chartBasis]);
 
   useEffect(() => {
     fetchDashboardData();
