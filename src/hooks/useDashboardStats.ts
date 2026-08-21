@@ -364,7 +364,7 @@ export const useDashboardStats = (
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [chartBasis]);
 
   useEffect(() => {
     fetchDashboardData();
