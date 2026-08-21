@@ -130,18 +130,18 @@ export interface FnrhRequestOptions {
   timeoutMs?: number;
 }
 
-function authHeader(): string {
-  const user = Deno.env.get("FNRH_API_USER")?.trim();
-  const password = Deno.env.get("FNRH_API_PASSWORD")?.trim();
+async function authHeader(): Promise<string> {
+  const { user, password } = await getFnrhCredentials();
   if (!user || !password) {
     throw new FnrhError(
       500,
       "FNRH_CREDENCIAIS_AUSENTES",
-      "Credenciais da FNRH não configuradas no backend (FNRH_API_USER / FNRH_API_PASSWORD).",
+      "Credenciais da FNRH não configuradas. Cadastre-as em Painel > FNRH > Credenciais.",
     );
   }
   return `Basic ${btoa(`${user}:${password}`)}`;
 }
+
 
 function friendlyMessage(status: number, apiMessage: string | null): string {
   switch (status) {
