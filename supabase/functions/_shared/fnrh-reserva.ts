@@ -1,7 +1,7 @@
 // Montagem do payload de /hospedagem/registrar e persistência local.
 // Usado por fnrh-criar-reserva e fnrh-reprocessar-reserva.
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
-import { fnrhFetch, getCpfSolicitante, FnrhError, maskDoc } from "./fnrh.ts";
+import { fnrhFetch, getCpfSolicitante, FnrhError, maskDoc, maskName } from "./fnrh.ts";
 
 export interface ReservationRow {
   id: string;
@@ -23,14 +23,44 @@ export interface ReservationRow {
   quantidade_hospede_adulto: number | null;
   quantidade_hospede_menor: number | null;
   room_name: string | null;
+  channel_reference_id?: string | null;
 }
 
 export const RESERVATION_FIELDS =
-  "id, check_in, check_out, guests, guest_name, guest_email, guest_phone, cpf, passport, birth_date, nationality, country, is_foreign, address, genero, documento_tipo, quantidade_hospede_adulto, quantidade_hospede_menor, room_name, reserva_id_fnrh, hospede_id_fnrh, pessoa_id_fnrh, situacao_fnrh, link_precheckin";
+  "id, check_in, check_out, guests, guest_name, guest_email, guest_phone, cpf, passport, birth_date, nationality, country, is_foreign, address, genero, documento_tipo, quantidade_hospede_adulto, quantidade_hospede_menor, room_name, channel_reference_id, reserva_id_fnrh, hospede_id_fnrh, pessoa_id_fnrh, situacao_fnrh, link_precheckin";
 
 function onlyDigits(v?: string | null) {
   return v ? v.replace(/\D/g, "") : "";
 }
+
+/** Número canônico da reserva (mesma regra exibida ao hóspede: PAA-XXXXXX). */
+export function resolveNumeroReserva(r: ReservationRow): string {
+  const external = (r.channel_reference_id || "").trim();
+  if (external) return external;
+  const suffix = (r.id || "").replace(/-/g, "").slice(0, 6).toUpperCase();
+  return suffix ? `PAA-${suffix}` : "";
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Normaliza para YYYY-MM-DD ou retorna "" quando o valor não é uma data usável. */
+export function toDateOnlyStrict(value?: string | null): string {
+  if (!value) return "";
+  const raw = String(value).trim();
+  const iso = DATE_RE.test(raw) ? raw : "";
+  if (iso) return iso;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().slice(0, 10);
+}
+
+/** Datas placeholder (1900-01-01 e afins) nunca podem ser enviadas. */
+function isPlausibleDate(value: string): boolean {
+  if (!DATE_RE.test(value)) return false;
+  const year = Number(value.slice(0, 4));
+  return year >= 2000 && year <= 2100;
+}
+
 
 /** Descobre tipo/número de documento a partir dos campos existentes. */
 export function resolveDocumento(r: ReservationRow): { tipo: string; numero: string } {
@@ -96,32 +126,82 @@ export function validateForFnrh(r: ReservationRow): FieldIssue[] {
   if (!resolvePais(r)) {
     issues.push({ field: "nationality", message: "País de nacionalidade é obrigatório." });
   }
-  if (!r.check_in || !r.check_out) {
-    issues.push({ field: "check_in/check_out", message: "Datas de entrada e saída são obrigatórias." });
+
+  if (!resolveNumeroReserva(r)) {
+    issues.push({ field: "numero_reserva", message: "Reserva sem número válido — verifique o cadastro." });
   }
+
+  const entrada = toDateOnlyStrict(r.check_in);
+  const saida = toDateOnlyStrict(r.check_out);
+  if (!isPlausibleDate(entrada) || !isPlausibleDate(saida)) {
+    issues.push({
+      field: "check_in/check_out",
+      message: "Datas de entrada e saída inválidas — verifique o cadastro da reserva.",
+    });
+  } else if (saida <= entrada) {
+    issues.push({ field: "check_out", message: "A data de saída deve ser posterior à de entrada." });
+  }
+
+  const adultos = r.quantidade_hospede_adulto ?? r.guests ?? 0;
+  if (!adultos || adultos < 1) {
+    issues.push({ field: "quantidade_hospede_adulto", message: "Informe pelo menos 1 hóspede adulto." });
+  }
+
   return issues;
 }
 
+/**
+ * Payload de POST /hospedagem/registrar no formato aceito pela API FNRH v2 (snake_case).
+ * Não existe fallback silencioso: campo obrigatório ausente aborta o envio com erro claro.
+ */
 export function buildRegistrarPayload(r: ReservationRow, extra?: Record<string, unknown>) {
   const doc = resolveDocumento(r);
-  const adultos = r.quantidade_hospede_adulto ?? r.guests ?? 1;
+  const numeroReserva = resolveNumeroReserva(r);
+  const dataEntrada = toDateOnlyStrict(r.check_in);
+  const dataSaida = toDateOnlyStrict(r.check_out);
+  const adultos = r.quantidade_hospede_adulto ?? r.guests ?? 0;
   const menores = r.quantidade_hospede_menor ?? 0;
+
+  const faltando: string[] = [];
+  if (!numeroReserva) faltando.push("numero_reserva");
+  if (!isPlausibleDate(dataEntrada)) faltando.push("data_entrada");
+  if (!isPlausibleDate(dataSaida)) faltando.push("data_saida");
+  if (!adultos || adultos < 1) faltando.push("quantidade_hospede_adulto");
+  if (!r.guest_name?.trim()) faltando.push("nome_hospede");
+  if (!doc.numero) faltando.push("numero_documento");
+  if (faltando.length > 0) {
+    throw new FnrhError(
+      400,
+      "PAYLOAD_INCOMPLETO",
+      `Reserva sem dados válidos para a FNRH (${faltando.join(", ")}). Verifique o cadastro antes de sincronizar.`,
+      faltando,
+    );
+  }
+  if (dataSaida <= dataEntrada) {
+    throw new FnrhError(
+      400,
+      "PAYLOAD_INCOMPLETO",
+      "A data de saída da reserva deve ser posterior à data de entrada.",
+      ["data_saida"],
+    );
+  }
 
   return {
     reserva: {
-      dataEntrada: r.check_in,
-      dataSaida: r.check_out,
-      quantidadeHospedeAdulto: adultos,
-      quantidadeHospedeMenor: menores,
-      codigoReservaMeioHospedagem: r.id,
+      numero_reserva: numeroReserva,
+      data_entrada: dataEntrada,
+      data_saida: dataSaida,
+      quantidade_hospede_adulto: adultos,
+      quantidade_hospede_menor: menores,
       observacao: r.room_name || undefined,
     },
     hospede: {
-      nome: r.guest_name?.trim(),
-      tipoDocumento: doc.tipo,
-      numeroDocumento: doc.numero,
-      paisNacionalidade: resolvePais(r),
-      dataNascimento: r.birth_date,
+      nome: r.guest_name!.trim(),
+      tipo_documento: doc.tipo,
+      numero_documento: doc.numero,
+      pais_nacionalidade: resolvePais(r),
+      pais_residencia: resolvePais(r),
+      data_nascimento: toDateOnlyStrict(r.birth_date) || undefined,
       genero: resolveGenero(r),
       email: r.guest_email || undefined,
       telefone: r.guest_phone || undefined,
@@ -130,6 +210,7 @@ export function buildRegistrarPayload(r: ReservationRow, extra?: Record<string, 
     ...(extra || {}),
   };
 }
+
 
 function pick(obj: unknown, keys: string[]): string | null {
   if (!obj || typeof obj !== "object") return null;
@@ -168,11 +249,18 @@ export async function registrarHospedagem(r: ReservationRow): Promise<RegistrarR
     JSON.stringify({
       scope: "fnrh-registrar",
       reservation_id: r.id,
-      documento: maskDoc(payload.hospede.numeroDocumento),
-      pais: payload.hospede.paisNacionalidade,
+      numero_reserva: payload.reserva.numero_reserva,
+      data_entrada: payload.reserva.data_entrada,
+      data_saida: payload.reserva.data_saida,
+      quantidade_hospede_adulto: payload.reserva.quantidade_hospede_adulto,
+      quantidade_hospede_menor: payload.reserva.quantidade_hospede_menor,
+      hospede: maskName(payload.hospede.nome),
+      documento: maskDoc(payload.hospede.numero_documento),
+      pais: payload.hospede.pais_nacionalidade,
       timestamp: new Date().toISOString(),
     }),
   );
+
 
   const raw = await fnrhFetch<Record<string, unknown>>({
     method: "POST",

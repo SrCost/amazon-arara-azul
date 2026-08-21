@@ -227,16 +227,46 @@ const Fnrh = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Validação client-side: bloqueia envio de reserva sem número/datas válidas.
+  const validarAntesDeEnviar = (ficha: Ficha | undefined): string | null => {
+    if (!ficha) return null;
+    const numero = (ficha.id || "").replace(/-/g, "").slice(0, 6);
+    if (!numero) return "Reserva sem número válido — verifique o cadastro.";
+    const plausivel = (d?: string | null) => {
+      if (!d) return false;
+      const date = new Date(d);
+      if (Number.isNaN(date.getTime())) return false;
+      const ano = date.getUTCFullYear();
+      return ano >= 2000 && ano <= 2100;
+    };
+    if (!plausivel(ficha.check_in) || !plausivel(ficha.check_out)) {
+      return "Reserva sem número/datas válidas — verifique o cadastro.";
+    }
+    if (new Date(ficha.check_out) <= new Date(ficha.check_in)) {
+      return "A data de saída deve ser posterior à de entrada — verifique o cadastro.";
+    }
+    if ((ficha.guests ?? 0) < 1) return "Reserva sem quantidade de hóspedes — verifique o cadastro.";
+    return null;
+  };
+
   const runAction = async (
     fn: "fnrh-criar-reserva" | "fnrh-checkin" | "fnrh-checkout" | "fnrh-reprocessar-reserva",
     reservationId: string,
     successMessage: string,
     extraBody?: Record<string, unknown>,
   ): Promise<boolean> => {
+    if (fn === "fnrh-criar-reserva" || fn === "fnrh-reprocessar-reserva") {
+      const problema = validarAntesDeEnviar(fichas.find((f) => f.id === reservationId));
+      if (problema) {
+        toast({ title: "Envio bloqueado", description: problema, variant: "destructive" });
+        return false;
+      }
+    }
     setBusy(`${fn}:${reservationId}`);
     const { data, error } = await supabase.functions.invoke(fn, {
       body: { reservation_id: reservationId, ...(extraBody ?? {}) },
     });
+
     setBusy(null);
 
     if (error) {
