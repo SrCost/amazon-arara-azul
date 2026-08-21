@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import CompletarDadosFnrhModal from "@/components/admin/fnrh/CompletarDadosFnrhModal";
+import FnrhCredenciaisPanel from "@/components/admin/fnrh/FnrhCredenciaisPanel";
+
 import {
   Search,
   RefreshCw,
