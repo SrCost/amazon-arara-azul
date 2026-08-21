@@ -99,6 +99,27 @@ const Dashboard = () => {
         ))}
       </div>
 
+      {/* Chart basis selector */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs sm:text-sm text-muted-foreground mr-1">
+          Base dos gráficos:
+        </span>
+        <Button
+          size="sm"
+          variant={chartBasis === "sale" ? "default" : "outline"}
+          onClick={() => setChartBasis("sale")}
+        >
+          Por venda (data da reserva)
+        </Button>
+        <Button
+          size="sm"
+          variant={chartBasis === "stay" ? "default" : "outline"}
+          onClick={() => setChartBasis("stay")}
+        >
+          Por estadia (check-in)
+        </Button>
+      </div>
+
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
         <Card>
