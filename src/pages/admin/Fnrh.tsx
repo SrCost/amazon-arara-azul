@@ -386,6 +386,8 @@ const Fnrh = () => {
 
       {showCreds && <FnrhCredenciaisPanel />}
 
+      {showConsultas && <FnrhConsultasPanel />}
+
 
 
       {diag && (
