@@ -508,6 +508,39 @@ export type Database = {
         }
         Relationships: []
       }
+      fnrh_credentials: {
+        Row: {
+          api_password: string
+          api_user: string
+          cpf_solicitante: string
+          env: string
+          id: string
+          updated_at: string
+          updated_by: string | null
+          updated_by_email: string | null
+        }
+        Insert: {
+          api_password: string
+          api_user: string
+          cpf_solicitante: string
+          env?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_email?: string | null
+        }
+        Update: {
+          api_password?: string
+          api_user?: string
+          cpf_solicitante?: string
+          env?: string
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+          updated_by_email?: string | null
+        }
+        Relationships: []
+      }
       gallery_images: {
         Row: {
           alt_text: string
