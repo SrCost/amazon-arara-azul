@@ -17,10 +17,88 @@ export function getFnrhBaseUrl(): string {
   return BASE_URLS[getFnrhEnv()];
 }
 
-export function getCpfSolicitante(): string | null {
-  const cpf = Deno.env.get("FNRH_CPF_SOLICITANTE");
-  return cpf ? cpf.replace(/\D/g, "") : null;
+export interface FnrhCredentials {
+  user: string;
+  password: string;
+  cpfSolicitante: string;
+  origem: "painel" | "secrets" | "ausente";
+  updatedAt?: string | null;
+  updatedByEmail?: string | null;
 }
+
+let credCache: { value: FnrhCredentials; at: number } | null = null;
+const CRED_CACHE_MS = 15000;
+
+/** Invalida o cache em memória (usado após salvar novas credenciais). */
+export function clearFnrhCredentialsCache() {
+  credCache = null;
+}
+
+function credsFromEnv(): FnrhCredentials {
+  const user = (Deno.env.get("FNRH_API_USER") || "").trim();
+  const password = (Deno.env.get("FNRH_API_PASSWORD") || "").trim();
+  const cpf = (Deno.env.get("FNRH_CPF_SOLICITANTE") || "").replace(/\D/g, "");
+  return {
+    user,
+    password,
+    cpfSolicitante: cpf,
+    origem: user && password ? "secrets" : "ausente",
+  };
+}
+
+/**
+ * Credenciais em vigor: primeiro a tabela gerenciada pelo painel admin,
+ * caindo para os secrets do backend quando ainda não houver registro salvo.
+ */
+export async function getFnrhCredentials(): Promise<FnrhCredentials> {
+  if (credCache && Date.now() - credCache.at < CRED_CACHE_MS) return credCache.value;
+
+  let value = credsFromEnv();
+  try {
+    const url = Deno.env.get("SUPABASE_URL");
+    const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (url && key) {
+      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.76.1");
+      const admin = createClient(url, key, { auth: { persistSession: false } });
+      const { data } = await admin
+        .from("fnrh_credentials")
+        .select("api_user, api_password, cpf_solicitante, updated_at, updated_by_email")
+        .eq("id", "default")
+        .maybeSingle();
+
+      const dbUser = (data?.api_user || "").trim();
+      const dbPass = (data?.api_password || "").trim();
+      if (dbUser && dbPass) {
+        value = {
+          user: dbUser,
+          password: dbPass,
+          cpfSolicitante: (data?.cpf_solicitante || "").replace(/\D/g, "") || value.cpfSolicitante,
+          origem: "painel",
+          updatedAt: data?.updated_at ?? null,
+          updatedByEmail: data?.updated_by_email ?? null,
+        };
+      }
+    }
+  } catch (error) {
+    console.log(
+      JSON.stringify({
+        scope: "fnrh",
+        step: "carregar_credenciais",
+        status: "fallback_secrets",
+        detalhe: (error as Error)?.message,
+      }),
+    );
+  }
+
+  credCache = { value, at: Date.now() };
+  return value;
+}
+
+export async function getCpfSolicitante(): Promise<string | null> {
+  const { cpfSolicitante } = await getFnrhCredentials();
+  return cpfSolicitante || null;
+}
+
 
 /** Mascara documentos em logs: mantém apenas os 3 últimos caracteres. */
 export function maskDoc(value?: string | null): string {
@@ -52,18 +130,18 @@ export interface FnrhRequestOptions {
   timeoutMs?: number;
 }
 
-function authHeader(): string {
-  const user = Deno.env.get("FNRH_API_USER")?.trim();
-  const password = Deno.env.get("FNRH_API_PASSWORD")?.trim();
+async function authHeader(): Promise<string> {
+  const { user, password } = await getFnrhCredentials();
   if (!user || !password) {
     throw new FnrhError(
       500,
       "FNRH_CREDENCIAIS_AUSENTES",
-      "Credenciais da FNRH não configuradas no backend (FNRH_API_USER / FNRH_API_PASSWORD).",
+      "Credenciais da FNRH não configuradas. Cadastre-as em Painel > FNRH > Credenciais.",
     );
   }
   return `Basic ${btoa(`${user}:${password}`)}`;
 }
+
 
 function friendlyMessage(status: number, apiMessage: string | null): string {
   switch (status) {
@@ -127,7 +205,9 @@ export async function fnrhFetch<T = unknown>(opts: FnrhRequestOptions): Promise<
   }
 
   const headers: Record<string, string> = {
-    Authorization: authHeader(),
+    Authorization: await authHeader(),
+
+
     Accept: "application/json",
     ...(opts.headers || {}),
   };

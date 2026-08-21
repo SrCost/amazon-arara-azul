@@ -45,7 +45,7 @@ serve(async (req) => {
 
     const headers: Record<string, string> = {};
     if (include_cpf_solicitante) {
-      const cpf = getCpfSolicitante();
+      const cpf = await getCpfSolicitante();
       if (!cpf) {
         return jsonResponse(
           { error: "FNRH_CPF_SOLICITANTE não configurado no backend.", code: "CONFIG_AUSENTE" },

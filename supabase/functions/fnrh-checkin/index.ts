@@ -42,7 +42,7 @@ serve(async (req) => {
       );
     }
 
-    const cpf = getCpfSolicitante();
+    const cpf = await getCpfSolicitante();
     if (!cpf) throw new FnrhError(500, "CONFIG_AUSENTE", "FNRH_CPF_SOLICITANTE não configurado.");
 
     const data = await fnrhFetch({
