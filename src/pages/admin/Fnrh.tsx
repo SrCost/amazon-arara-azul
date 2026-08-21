@@ -358,6 +358,10 @@ const Fnrh = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setShowCreds((v) => !v)}>
+            <KeyRound className="h-4 w-4 mr-2" />
+            {showCreds ? "Fechar credenciais" : "Credenciais"}
+          </Button>
           <Button variant="outline" onClick={() => testarConexao(false)} disabled={diagLoading}>
             <Plug className={`h-4 w-4 mr-2 ${diagLoading ? "animate-pulse" : ""}`} />
             Testar conexão FNRH
@@ -372,6 +376,10 @@ const Fnrh = () => {
           </Button>
         </div>
       </div>
+
+      {showCreds && <FnrhCredenciaisPanel />}
+
+
 
       {diag && (
         <Card
