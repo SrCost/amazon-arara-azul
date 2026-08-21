@@ -207,6 +207,7 @@ export async function fnrhFetch<T = unknown>(opts: FnrhRequestOptions): Promise<
   const headers: Record<string, string> = {
     Authorization: await authHeader(),
 
+
     Accept: "application/json",
     ...(opts.headers || {}),
   };
