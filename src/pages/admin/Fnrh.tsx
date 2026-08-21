@@ -34,6 +34,7 @@ import {
   ShieldCheck,
   PencilLine,
   Plug,
+  KeyRound,
   CheckCircle2,
   XCircle,
 } from "lucide-react";
