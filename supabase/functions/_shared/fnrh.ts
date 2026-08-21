@@ -13,9 +13,34 @@ export function getFnrhEnv(): FnrhEnv {
   return raw === "producao" ? "producao" : "homologacao";
 }
 
+/**
+ * URL base da API. `FNRH_API_BASE_URL` sobrescreve o padrão por ambiente.
+ * ATENÇÃO: a documentação oficial cita duas URLs de produção
+ * (fnrh.turismo.serpro.gov.br e api.fnrh.gov.br) — confirmar com o SERPRO.
+ */
 export function getFnrhBaseUrl(): string {
+  const override = (Deno.env.get("FNRH_API_BASE_URL") || "").trim().replace(/\/+$/, "");
+  if (override) return override;
   return BASE_URLS[getFnrhEnv()];
 }
+
+/** Mascara nome próprio em logs: mantém iniciais. */
+export function maskName(value?: string | null): string {
+  if (!value) return "";
+  return String(value)
+    .trim()
+    .split(/\s+/)
+    .map((part) => (part ? `${part[0].toUpperCase()}.` : ""))
+    .join(" ");
+}
+
+/** Mascara texto livre sensível (endereço, observações) em logs. */
+export function maskFreeText(value?: string | null): string {
+  if (!value) return "";
+  const v = String(value).trim();
+  return v ? `[${v.length} chars]` : "";
+}
+
 
 export interface FnrhCredentials {
   user: string;
