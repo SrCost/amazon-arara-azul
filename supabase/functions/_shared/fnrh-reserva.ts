@@ -1,7 +1,7 @@
 // Montagem do payload de /hospedagem/registrar e persistência local.
 // Usado por fnrh-criar-reserva e fnrh-reprocessar-reserva.
 import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.76.1";
-import { fnrhFetch, getCpfSolicitante, FnrhError, maskDoc } from "./fnrh.ts";
+import { fnrhFetch, getCpfSolicitante, FnrhError, maskDoc, maskName } from "./fnrh.ts";
 
 export interface ReservationRow {
   id: string;
@@ -23,14 +23,44 @@ export interface ReservationRow {
   quantidade_hospede_adulto: number | null;
   quantidade_hospede_menor: number | null;
   room_name: string | null;
+  channel_reference_id?: string | null;
 }
 
 export const RESERVATION_FIELDS =
-  "id, check_in, check_out, guests, guest_name, guest_email, guest_phone, cpf, passport, birth_date, nationality, country, is_foreign, address, genero, documento_tipo, quantidade_hospede_adulto, quantidade_hospede_menor, room_name, reserva_id_fnrh, hospede_id_fnrh, pessoa_id_fnrh, situacao_fnrh, link_precheckin";
+  "id, check_in, check_out, guests, guest_name, guest_email, guest_phone, cpf, passport, birth_date, nationality, country, is_foreign, address, genero, documento_tipo, quantidade_hospede_adulto, quantidade_hospede_menor, room_name, channel_reference_id, reserva_id_fnrh, hospede_id_fnrh, pessoa_id_fnrh, situacao_fnrh, link_precheckin";
 
 function onlyDigits(v?: string | null) {
   return v ? v.replace(/\D/g, "") : "";
 }
+
+/** Número canônico da reserva (mesma regra exibida ao hóspede: PAA-XXXXXX). */
+export function resolveNumeroReserva(r: ReservationRow): string {
+  const external = (r.channel_reference_id || "").trim();
+  if (external) return external;
+  const suffix = (r.id || "").replace(/-/g, "").slice(0, 6).toUpperCase();
+  return suffix ? `PAA-${suffix}` : "";
+}
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Normaliza para YYYY-MM-DD ou retorna "" quando o valor não é uma data usável. */
+export function toDateOnlyStrict(value?: string | null): string {
+  if (!value) return "";
+  const raw = String(value).trim();
+  const iso = DATE_RE.test(raw) ? raw : "";
+  if (iso) return iso;
+  const parsed = new Date(raw);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toISOString().slice(0, 10);
+}
+
+/** Datas placeholder (1900-01-01 e afins) nunca podem ser enviadas. */
+function isPlausibleDate(value: string): boolean {
+  if (!DATE_RE.test(value)) return false;
+  const year = Number(value.slice(0, 4));
+  return year >= 2000 && year <= 2100;
+}
+
 
 /** Descobre tipo/número de documento a partir dos campos existentes. */
 export function resolveDocumento(r: ReservationRow): { tipo: string; numero: string } {
