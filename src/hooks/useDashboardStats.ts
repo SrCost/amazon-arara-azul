@@ -145,7 +145,11 @@ const getMonthStats = async (
   };
 };
 
-export const useDashboardStats = (): DashboardData & { refetch: () => Promise<void> } => {
+export type ChartBasis = "sale" | "stay";
+
+export const useDashboardStats = (
+  chartBasis: ChartBasis = "sale"
+): DashboardData & { refetch: () => Promise<void> } => {
   const [stats, setStats] = useState<DashboardStats>({
     totalReservations: 0,
     occupancyRate: 0,
