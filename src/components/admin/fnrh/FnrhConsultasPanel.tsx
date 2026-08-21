@@ -63,9 +63,6 @@ export default function FnrhConsultasPanel() {
     setResultado(data);
   };
 
-  const opt = (key: Parameters<typeof domains.hasOwnProperty>[0] extends never ? never : never) => key;
-  void opt;
-
   const renderSelect = (
     label: string,
     value: string,
