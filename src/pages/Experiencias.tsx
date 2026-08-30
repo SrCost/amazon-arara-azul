@@ -107,7 +107,7 @@ const Experiencias = () => {
           </div>
 
           {isLoading ? (
-            <Skeleton className="w-full h-[320px] sm:h-[400px] rounded-2xl" />
+            <Skeleton className="w-full h-[380px] sm:h-[520px] lg:h-[620px] rounded-2xl" />
           ) : (
             <ImmersiveHero
               images={heroImages}
