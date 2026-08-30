@@ -35,9 +35,13 @@ const ExperienceOfferCard = ({
         variant === "fill"
           ? "w-full"
           : "shrink-0 snap-start w-[210px] sm:w-[240px] lg:w-[270px]"
-      }`}
+      } ${fillHeight ? "h-full flex flex-col" : ""}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-forest">
+      <div
+        className={`relative overflow-hidden bg-gradient-forest ${
+          fillHeight ? "flex-1 min-h-[160px]" : "aspect-[4/3]"
+        }`}
+      >
         {cover ? (
           <img
             src={cover}
