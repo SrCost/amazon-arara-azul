@@ -79,6 +79,7 @@
     "privacyPolicy": "Politique de Confidentialité",
     "termsOfUse": "Conditions d'Utilisation",
     "cancellationPolicy": "Politique d'Annulation",
+    "preCheckinGuide": "Comment faire le pré-enregistrement (FNRH)",
     "developedBy": "Site développé par {{name}}"
   },
   "auth": {

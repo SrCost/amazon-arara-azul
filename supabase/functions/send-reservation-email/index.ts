@@ -333,6 +333,40 @@ const buildGoogleCalendarLink = (checkIn: string, checkOut: string, codigo: stri
 };
 
 // ============================================
+// PRÉ CHECK-IN OFICIAL (FNRH / Ministério do Turismo)
+// ============================================
+const FNRH_PRECHECKIN_URL =
+  "https://fnrh.turismo.serpro.gov.br/FNRH_Hospede/QRCodeFNRH?Source=kJrRjPmZvkVRf1IdirebJA28bPOEI3WRih0au20qvQuQDMGsd4aEwPwuLxL7caMUNEwUMhHfYUTzf02GQ%2bJr6C5KqRPmPQ6U7DHFgPiCBRxFVLIAiI%2b3TG7W6mO2z4s3U2HObssBZn0KfNHxOgmJwA%3d%3d&From=MH";
+
+const PRECHECKIN_I18N: Record<Lang, { title: string; text: string; btn: string }> = {
+  pt: {
+    title: 'Pré Check-in (FNRH)',
+    text: 'Para agilizar sua chegada, o Ministério do Turismo exige o preenchimento do pré check-in (FNRH). Leva menos de 2 minutos.',
+    btn: 'Fazer meu pré check-in',
+  },
+  en: {
+    title: 'Pre Check-in (FNRH)',
+    text: 'To speed up your arrival, the Brazilian Ministry of Tourism requires the pre check-in form (FNRH). It takes less than 2 minutes.',
+    btn: 'Complete my pre check-in',
+  },
+  es: {
+    title: 'Pre Check-in (FNRH)',
+    text: 'Para agilizar su llegada, el Ministerio de Turismo exige completar el pre check-in (FNRH). Toma menos de 2 minutos.',
+    btn: 'Hacer mi pre check-in',
+  },
+  fr: {
+    title: 'Pré-enregistrement (FNRH)',
+    text: "Pour accélérer votre arrivée, le Ministère du Tourisme exige le pré-enregistrement (FNRH). Cela prend moins de 2 minutes.",
+    btn: 'Faire mon pré-enregistrement',
+  },
+  de: {
+    title: 'Pre-Check-in (FNRH)',
+    text: 'Für eine schnellere Ankunft verlangt das Tourismusministerium das Ausfüllen des Pre-Check-ins (FNRH). Es dauert weniger als 2 Minuten.',
+    btn: 'Pre-Check-in ausfüllen',
+  },
+};
+
+// ============================================
 // TEMPLATE PREMIUM: RESERVA CONFIRMADA
 // ============================================
 const getReservationConfirmedEmailPremium = (data: {
@@ -348,7 +382,7 @@ const getReservationConfirmedEmailPremium = (data: {
   link_passeio: string;
   link_equipe: string;
   lang: Lang;
-}) => { const T = I18N[data.lang]; return `<!DOCTYPE html>
+}) => { const T = I18N[data.lang]; const P = PRECHECKIN_I18N[data.lang]; return `<!DOCTYPE html>
 <html lang="${LOCALE_MAP[data.lang]}">
 <head>
 <meta charset="UTF-8">
@@ -382,6 +416,11 @@ const getReservationConfirmedEmailPremium = (data: {
 </table></td></tr></table>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;"><tr><td align="center">
 <a href="${data.google_calendar_link}" style="background:#0B3A66;color:#ffffff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;">${T.addCalendar}</a>
+</td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;background:#F6FBF9;border-radius:14px;border:1px solid #E4EFEA;"><tr><td style="padding:24px 28px;">
+<h3 style="margin:0 0 10px;color:#0B3A66;font-size:15px;font-weight:700;">${P.title}</h3>
+<p style="margin:0 0 18px;font-size:13px;color:#4A5568;line-height:1.6;">${P.text}</p>
+<a href="${FNRH_PRECHECKIN_URL}" style="background:#1E8F5A;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;font-size:13px;">${P.btn}</a>
 </td></tr></table>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:45px;background:#FFF8ED;border-radius:14px;border:1px solid #F2E3C7;"><tr><td style="padding:28px;">
 <h3 style="margin:0 0 12px;color:#7A4A00;">${T.upgradeTitle}</h3>

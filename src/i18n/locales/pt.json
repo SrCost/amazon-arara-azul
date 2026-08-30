@@ -79,6 +79,7 @@
     "privacyPolicy": "Política de Privacidade",
     "termsOfUse": "Termos de Uso",
     "cancellationPolicy": "Política de Cancelamento",
+    "preCheckinGuide": "Como fazer o Pré Check-in (FNRH)",
     "developedBy": "Site desenvolvido por {{name}}"
   },
   "auth": {

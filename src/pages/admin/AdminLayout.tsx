@@ -24,6 +24,7 @@ import {
   Menu,
   SlidersHorizontal,
   ClipboardCheck,
+  ClipboardList,
   FileCheck2,
   Compass,
 } from "lucide-react";
@@ -61,6 +62,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const adminItems = isAdmin || isSuperAdmin
     ? [
         { icon: ClipboardCheck, label: "Automação", path: "/admin/guest-automation" },
+        { icon: ClipboardList, label: "Formulários", path: "/admin/formularios" },
         { icon: FileCheck2, label: "FNRH", path: "/admin/fnrh" },
         { icon: Package, label: "Pacotes", path: "/admin/packages" },
         { icon: Building2, label: "Bangalôs", path: "/admin/bangalos" },

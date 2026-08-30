@@ -8,9 +8,16 @@ interface ExperienceOfferCardProps {
   onClick: () => void;
   /** "fixed" = largura fixa (scroll horizontal) | "fill" = ocupa o slide do carrossel */
   variant?: "fixed" | "fill";
+  /** Estica o card para ocupar toda a altura disponível (evita vão em coluna ímpar) */
+  fillHeight?: boolean;
 }
 
-const ExperienceOfferCard = ({ experience, onClick, variant = "fixed" }: ExperienceOfferCardProps) => {
+const ExperienceOfferCard = ({
+  experience,
+  onClick,
+  variant = "fixed",
+  fillHeight = false,
+}: ExperienceOfferCardProps) => {
   const { i18n } = useTranslation();
 
   const name = localizedField(experience, "name", i18n.language);
@@ -28,9 +35,13 @@ const ExperienceOfferCard = ({ experience, onClick, variant = "fixed" }: Experie
         variant === "fill"
           ? "w-full"
           : "shrink-0 snap-start w-[210px] sm:w-[240px] lg:w-[270px]"
-      }`}
+      } ${fillHeight ? "h-full flex flex-col" : ""}`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-forest">
+      <div
+        className={`relative overflow-hidden bg-gradient-forest ${
+          fillHeight ? "flex-1 min-h-[160px]" : "aspect-[4/3]"
+        }`}
+      >
         {cover ? (
           <img
             src={cover}
@@ -53,16 +64,21 @@ const ExperienceOfferCard = ({ experience, onClick, variant = "fixed" }: Experie
         )}
       </div>
 
-      <div className="p-3 space-y-1">
-        <h3 className="text-sm sm:text-base font-display font-semibold text-foreground line-clamp-2">
+      <div className="p-3 flex flex-col">
+        <h3
+          title={name}
+          className="text-sm sm:text-base font-display font-semibold text-foreground line-clamp-2 h-[2.6em] leading-[1.3]"
+        >
           {name}
         </h3>
-        {duration && (
-          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock className="h-3.5 w-3.5" />
-            {duration}
-          </p>
-        )}
+        <p className="flex items-center gap-1.5 text-xs text-muted-foreground h-5 mt-1">
+          {duration && (
+            <>
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{duration}</span>
+            </>
+          )}
+        </p>
       </div>
     </button>
   );
