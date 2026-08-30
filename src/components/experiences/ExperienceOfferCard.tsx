@@ -6,18 +6,10 @@ import { getExperienceIcon } from "./experienceIcons";
 interface ExperienceOfferCardProps {
   experience: Experience;
   onClick: () => void;
-  /** "fixed" = largura fixa (scroll horizontal) | "fill" = ocupa o slide do carrossel */
-  variant?: "fixed" | "fill";
-  /** Estica o card para ocupar toda a altura disponível (evita vão em coluna ímpar) */
-  fillHeight?: boolean;
 }
 
-const ExperienceOfferCard = ({
-  experience,
-  onClick,
-  variant = "fixed",
-  fillHeight = false,
-}: ExperienceOfferCardProps) => {
+/** Card de largura fixa para o carrossel de scroll horizontal contínuo. */
+const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) => {
   const { i18n } = useTranslation();
 
   const name = localizedField(experience, "name", i18n.language);
@@ -31,17 +23,9 @@ const ExperienceOfferCard = ({
       type="button"
       onClick={onClick}
       aria-label={name}
-      className={`group text-left rounded-xl overflow-hidden bg-card border border-border shadow-medium hover:shadow-strong transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
-        variant === "fill"
-          ? "w-full"
-          : "shrink-0 snap-start w-[210px] sm:w-[240px] lg:w-[270px]"
-      } ${fillHeight ? "h-full flex flex-col" : ""}`}
+      className="group text-left rounded-xl overflow-hidden bg-card border border-border shadow-medium hover:shadow-strong transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 shrink-0 snap-start w-[210px] sm:w-[240px] lg:w-[260px]"
     >
-      <div
-        className={`relative overflow-hidden bg-gradient-forest ${
-          fillHeight ? "flex-1 min-h-[160px]" : "aspect-[4/3]"
-        }`}
-      >
+      <div className="relative overflow-hidden bg-gradient-forest aspect-[4/3]">
         {cover ? (
           <img
             src={cover}
