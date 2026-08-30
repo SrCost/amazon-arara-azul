@@ -43,6 +43,40 @@ const ExperiencesCarousel = ({ experiences, onSelect }: ExperiencesCarouselProps
     el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: "smooth" });
   };
 
+  // Drag com mouse no desktop: arrasta a fileira; suprime o clique apenas se houve arraste real.
+  const dragState = useRef({ startX: 0, startScroll: 0, dragging: false, moved: false });
+
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = trackRef.current;
+    if (!el) return;
+    dragState.current = { startX: e.clientX, startScroll: el.scrollLeft, dragging: true, moved: false };
+  };
+
+  const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = trackRef.current;
+    const state = dragState.current;
+    if (!el || !state.dragging) return;
+    const delta = e.clientX - state.startX;
+    if (Math.abs(delta) > 6) state.moved = true;
+    if (state.moved) {
+      e.preventDefault();
+      el.scrollLeft = state.startScroll - delta;
+    }
+  };
+
+  const endDrag = () => {
+    dragState.current.dragging = false;
+  };
+
+  // Cancela o clique no card quando o usuário arrastou (capture phase).
+  const onClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragState.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      dragState.current.moved = false;
+    }
+  };
+
   return (
     <div className="relative">
       <div
