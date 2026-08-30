@@ -62,14 +62,16 @@ const ExperiencesCarousel = ({ experiences, onSelect }: ExperiencesCarouselProps
               key={pair[0]?.id ?? index}
               className="pl-3 sm:pl-4 shrink-0 grow-0 basis-[78%] sm:basis-1/2 lg:basis-1/3 xl:basis-1/4"
             >
-              <div className="flex flex-col gap-3 sm:gap-4">
+              <div className="flex flex-col gap-3 sm:gap-4 h-full">
                 {pair.map((experience) => (
-                  <ExperienceOfferCard
-                    key={experience.id}
-                    experience={experience}
-                    variant="fill"
-                    onClick={() => onSelect(experience)}
-                  />
+                  <div key={experience.id} className={pair.length === 1 ? "flex-1 min-h-0" : ""}>
+                    <ExperienceOfferCard
+                      experience={experience}
+                      variant="fill"
+                      fillHeight={pair.length === 1}
+                      onClick={() => onSelect(experience)}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
