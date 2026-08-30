@@ -382,7 +382,7 @@ const getReservationConfirmedEmailPremium = (data: {
   link_passeio: string;
   link_equipe: string;
   lang: Lang;
-}) => { const T = I18N[data.lang]; return `<!DOCTYPE html>
+}) => { const T = I18N[data.lang]; const P = PRECHECKIN_I18N[data.lang]; return `<!DOCTYPE html>
 <html lang="${LOCALE_MAP[data.lang]}">
 <head>
 <meta charset="UTF-8">
