@@ -32,6 +32,7 @@ const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) 
             alt={name}
             loading="lazy"
             decoding="async"
+            draggable={false}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
