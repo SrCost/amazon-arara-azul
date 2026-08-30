@@ -109,6 +109,76 @@ export function resolveGenero(r: ReservationRow): string {
   return "NAO_INFORMADO";
 }
 
+/**
+ * Completa dados faltantes da reserva com o que o hóspede já informou no
+ * check-in digital (booking_checkins) e no questionário de pré-chegada.
+ * Persiste o resultado em `reservations` para não exigir digitação dupla.
+ */
+export async function enrichReservationFromGuestForms(
+  admin: SupabaseClient,
+  r: ReservationRow,
+): Promise<ReservationRow> {
+  const needs =
+    !r.birth_date || !r.nationality || !r.address || !r.documento_tipo || !onlyDigits(r.cpf);
+  if (!needs) return r;
+
+  const { data: checkin } = await admin
+    .from("booking_checkins")
+    .select("document, full_name, birth_date, nationality, address, city_state")
+    .eq("reservation_id", r.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!checkin) return r;
+
+  const patch: Record<string, unknown> = {};
+  const merged: ReservationRow = { ...r };
+
+  if (!merged.birth_date && checkin.birth_date) {
+    merged.birth_date = checkin.birth_date;
+    patch.birth_date = checkin.birth_date;
+  }
+  if (!merged.nationality && checkin.nationality) {
+    merged.nationality = checkin.nationality;
+    patch.nationality = checkin.nationality;
+  }
+  const endereco = checkin.address || checkin.city_state;
+  if (!merged.address && endereco) {
+    merged.address = endereco;
+    patch.address = endereco;
+  }
+
+  const doc = (checkin.document || "").trim();
+  const docDigits = onlyDigits(doc);
+  if (!onlyDigits(merged.cpf) && !merged.passport && doc) {
+    if (docDigits.length === 11) {
+      merged.cpf = docDigits;
+      merged.documento_tipo = "CPF";
+      patch.cpf = docDigits;
+      patch.documento_tipo = "CPF";
+    } else {
+      merged.passport = doc;
+      merged.documento_tipo = "PASSAPORTE";
+      patch.passport = doc;
+      patch.documento_tipo = "PASSAPORTE";
+    }
+  }
+
+  if (Object.keys(patch).length > 0) {
+    await admin.from("reservations").update(patch).eq("id", r.id);
+    console.log(
+      JSON.stringify({
+        scope: "fnrh-enrich",
+        reservation_id: r.id,
+        campos_preenchidos: Object.keys(patch),
+      }),
+    );
+  }
+
+  return merged;
+}
+
 export interface FieldIssue {
   field: string;
   message: string;
