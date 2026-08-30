@@ -51,7 +51,7 @@ serve(async (req) => {
 
     const resultados: Array<Record<string, unknown>> = [];
 
-    for (const row of rows as unknown as Array<ReservationRow & { reserva_id_fnrh: string | null }>) {
+    for (let row of rows as unknown as Array<ReservationRow & { reserva_id_fnrh: string | null }>) {
       if (row.reserva_id_fnrh) {
         resultados.push({ reservation_id: row.id, status: "ja_sincronizada" });
         continue;
