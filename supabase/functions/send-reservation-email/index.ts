@@ -417,6 +417,11 @@ const getReservationConfirmedEmailPremium = (data: {
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;"><tr><td align="center">
 <a href="${data.google_calendar_link}" style="background:#0B3A66;color:#ffffff;padding:14px 28px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;">${T.addCalendar}</a>
 </td></tr></table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:30px;background:#F6FBF9;border-radius:14px;border:1px solid #E4EFEA;"><tr><td style="padding:24px 28px;">
+<h3 style="margin:0 0 10px;color:#0B3A66;font-size:15px;font-weight:700;">${P.title}</h3>
+<p style="margin:0 0 18px;font-size:13px;color:#4A5568;line-height:1.6;">${P.text}</p>
+<a href="${FNRH_PRECHECKIN_URL}" style="background:#1E8F5A;color:#ffffff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block;font-size:13px;">${P.btn}</a>
+</td></tr></table>
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:45px;background:#FFF8ED;border-radius:14px;border:1px solid #F2E3C7;"><tr><td style="padding:28px;">
 <h3 style="margin:0 0 12px;color:#7A4A00;">${T.upgradeTitle}</h3>
 <p style="margin:0 0 20px;">${T.upgradeText}</p>
