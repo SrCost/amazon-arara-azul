@@ -8,9 +8,16 @@ interface ExperienceOfferCardProps {
   onClick: () => void;
   /** "fixed" = largura fixa (scroll horizontal) | "fill" = ocupa o slide do carrossel */
   variant?: "fixed" | "fill";
+  /** Estica o card para ocupar toda a altura disponível (evita vão em coluna ímpar) */
+  fillHeight?: boolean;
 }
 
-const ExperienceOfferCard = ({ experience, onClick, variant = "fixed" }: ExperienceOfferCardProps) => {
+const ExperienceOfferCard = ({
+  experience,
+  onClick,
+  variant = "fixed",
+  fillHeight = false,
+}: ExperienceOfferCardProps) => {
   const { i18n } = useTranslation();
 
   const name = localizedField(experience, "name", i18n.language);
