@@ -91,7 +91,7 @@ const ImmersiveHero = ({ images, onSlideClick }: ImmersiveHeroProps) => {
 
   if (!slides.length) {
     return (
-      <div className="w-full h-[320px] sm:h-[400px] rounded-2xl bg-muted animate-pulse" />
+      <div className="w-full h-[380px] sm:h-[520px] lg:h-[620px] rounded-2xl bg-muted animate-pulse" />
     );
   }
 
@@ -125,7 +125,7 @@ const ImmersiveHero = ({ images, onSlideClick }: ImmersiveHeroProps) => {
         style={{ perspective: "1200px" }}
       >
         <div
-          className="relative w-full h-[320px] sm:h-[400px] rounded-2xl overflow-hidden shadow-strong transition-transform duration-300 ease-out"
+          className="relative w-full h-[380px] sm:h-[520px] lg:h-[620px] rounded-2xl overflow-hidden shadow-strong transition-transform duration-300 ease-out"
           style={{
             transform: `rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
             transformStyle: "preserve-3d",
@@ -148,7 +148,8 @@ const ImmersiveHero = ({ images, onSlideClick }: ImmersiveHeroProps) => {
                 draggable={false}
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out"
                 style={{
-                  transform: `translate3d(${tilt.py}px, ${tilt.px}px, 0) scale(1.08)`,
+                  transform: `translate3d(${tilt.py}px, ${tilt.px}px, 0) scale(1.04)`,
+                  objectPosition: "center 35%",
                   opacity: 0.92,
                 }}
               />
