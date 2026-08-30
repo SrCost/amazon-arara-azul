@@ -119,37 +119,7 @@ const Experiencias = () => {
 
       <WaveDivider />
 
-      {/* Section 2 — Experience Cards */}
-      <section className="py-12 sm:py-20 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-foreground mb-3">
-              {t("experiences.galleryTitle")}
-            </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              {t("experiences.gallerySubtitle")}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
-            {experiences.map((exp, index) => (
-              <ExperienceCard
-                key={index}
-                icon={exp.icon}
-                title={exp.title}
-                description={exp.description}
-                category={exp.category}
-                image={exp.image}
-                index={index}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <WaveDivider flip />
-
-      {/* Section 2b — Experiências para contratar (banco de dados) */}
+      {/* Section 2 — Experiências para contratar (banco de dados) */}
       <section id="experiencias-exclusivas" className="py-12 sm:py-20 bg-background">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8 sm:mb-12">
