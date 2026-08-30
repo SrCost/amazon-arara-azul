@@ -69,6 +69,7 @@
     "privacyPolicy": "Datenschutz",
     "termsOfUse": "Nutzungsbedingungen",
     "cancellationPolicy": "Stornierungsbedingungen",
+    "preCheckinGuide": "Pre-Check-in ausführen (FNRH)",
     "developedBy": "Website entwickelt von {{name}}"
   },
   "auth": {
