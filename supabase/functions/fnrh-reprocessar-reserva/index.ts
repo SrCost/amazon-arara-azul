@@ -9,6 +9,7 @@ import {
   saveSyncError,
   saveSyncSuccess,
   validateForFnrh,
+  enrichReservationFromGuestForms,
   type ReservationRow,
 } from "../_shared/fnrh-reserva.ts";
 
@@ -56,6 +57,7 @@ serve(async (req) => {
         continue;
       }
 
+      row = { ...row, ...(await enrichReservationFromGuestForms(admin, row)) };
       const issues = validateForFnrh(row);
       if (issues.length > 0) {
         await saveSyncError(admin, row.id, issues.map((i) => `${i.field}: ${i.message}`).join("; "));

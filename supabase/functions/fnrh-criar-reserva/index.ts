@@ -11,6 +11,7 @@ import {
   saveSyncError,
   saveSyncSuccess,
   validateForFnrh,
+  enrichReservationFromGuestForms,
   type ReservationRow,
 } from "../_shared/fnrh-reserva.ts";
 
@@ -67,7 +68,7 @@ serve(async (req) => {
       return jsonResponse({ error: "Reserva não encontrada.", code: "NAO_ENCONTRADA" }, 404);
     }
 
-    const current = reservation as unknown as ReservationRow & {
+    let current = reservation as unknown as ReservationRow & {
       reserva_id_fnrh: string | null;
       link_precheckin: string | null;
       situacao_fnrh: string | null;
@@ -81,6 +82,12 @@ serve(async (req) => {
         link_precheckin: current.link_precheckin,
       });
     }
+
+    // Aproveita dados já informados pelo hóspede no check-in digital
+    current = {
+      ...current,
+      ...(await enrichReservationFromGuestForms(admin, current)),
+    };
 
     const issues = validateForFnrh(current);
     if (issues.length > 0) {
