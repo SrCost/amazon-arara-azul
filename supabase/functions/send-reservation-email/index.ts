@@ -333,6 +333,40 @@ const buildGoogleCalendarLink = (checkIn: string, checkOut: string, codigo: stri
 };
 
 // ============================================
+// PRÉ CHECK-IN OFICIAL (FNRH / Ministério do Turismo)
+// ============================================
+const FNRH_PRECHECKIN_URL =
+  "https://fnrh.turismo.serpro.gov.br/FNRH_Hospede/QRCodeFNRH?Source=kJrRjPmZvkVRf1IdirebJA28bPOEI3WRih0au20qvQuQDMGsd4aEwPwuLxL7caMUNEwUMhHfYUTzf02GQ%2bJr6C5KqRPmPQ6U7DHFgPiCBRxFVLIAiI%2b3TG7W6mO2z4s3U2HObssBZn0KfNHxOgmJwA%3d%3d&From=MH";
+
+const PRECHECKIN_I18N: Record<Lang, { title: string; text: string; btn: string }> = {
+  pt: {
+    title: 'Pré Check-in (FNRH)',
+    text: 'Para agilizar sua chegada, o Ministério do Turismo exige o preenchimento do pré check-in (FNRH). Leva menos de 2 minutos.',
+    btn: 'Fazer meu pré check-in',
+  },
+  en: {
+    title: 'Pre Check-in (FNRH)',
+    text: 'To speed up your arrival, the Brazilian Ministry of Tourism requires the pre check-in form (FNRH). It takes less than 2 minutes.',
+    btn: 'Complete my pre check-in',
+  },
+  es: {
+    title: 'Pre Check-in (FNRH)',
+    text: 'Para agilizar su llegada, el Ministerio de Turismo exige completar el pre check-in (FNRH). Toma menos de 2 minutos.',
+    btn: 'Hacer mi pre check-in',
+  },
+  fr: {
+    title: 'Pré-enregistrement (FNRH)',
+    text: "Pour accélérer votre arrivée, le Ministère du Tourisme exige le pré-enregistrement (FNRH). Cela prend moins de 2 minutes.",
+    btn: 'Faire mon pré-enregistrement',
+  },
+  de: {
+    title: 'Pre-Check-in (FNRH)',
+    text: 'Für eine schnellere Ankunft verlangt das Tourismusministerium das Ausfüllen des Pre-Check-ins (FNRH). Es dauert weniger als 2 Minuten.',
+    btn: 'Pre-Check-in ausfüllen',
+  },
+};
+
+// ============================================
 // TEMPLATE PREMIUM: RESERVA CONFIRMADA
 // ============================================
 const getReservationConfirmedEmailPremium = (data: {
