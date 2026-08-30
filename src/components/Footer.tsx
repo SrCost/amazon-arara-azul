@@ -135,6 +135,7 @@ const Footer = () => {
                 { href: "/docs/politica-privacidade.pdf", label: t("footer.privacyPolicy") },
                 { href: "/docs/termos-de-uso.pdf", label: t("footer.termsOfUse") },
                 { href: "/docs/politica-cancelamento.pdf", label: t("footer.cancellationPolicy") },
+                { href: "/docs/guia-pre-checkin-fnrh.pdf", label: t("footer.preCheckinGuide") },
               ].map((link) => (
                 <li key={link.href}>
                   <a href={link.href} download className="opacity-90 hover:opacity-100 transition-opacity inline-flex items-center py-1 min-h-[36px] sm:min-h-0 break-words">
