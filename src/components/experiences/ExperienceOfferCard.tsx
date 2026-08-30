@@ -49,10 +49,18 @@ const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) 
         )}
       </div>
 
-      <div className="p-3 flex flex-col">
+      <div className="p-3 flex flex-col min-w-0 overflow-hidden">
         <h3
           title={name}
-          className="text-sm sm:text-base font-display font-semibold text-foreground line-clamp-2 h-[2.6em] leading-[1.3]"
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            overflowWrap: "anywhere",
+          }}
+          className="text-sm sm:text-base font-display font-semibold text-foreground w-full min-w-0 h-[46px] leading-[1.3] break-words"
         >
           {name}
         </h3>
