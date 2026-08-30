@@ -552,6 +552,60 @@ const NewReservationModal = ({
               />
             </div>
 
+            {/* Dados FNRH (opcionais, evitam ficha incompleta) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="birth_date"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Data de nascimento (FNRH)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="nationality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nacionalidade (FNRH)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Brasil" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="genero"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Gênero (FNRH)</FormLabel>
+                    <Select value={field.value || "NAO_INFORMADO"} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Não informado" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="NAO_INFORMADO">Não informado</SelectItem>
+                        <SelectItem value="MASCULINO">Masculino</SelectItem>
+                        <SelectItem value="FEMININO">Feminino</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
             {/* Package Selection */}
             <div className="p-4 bg-accent/20 rounded-lg border border-accent">
               <FormField
