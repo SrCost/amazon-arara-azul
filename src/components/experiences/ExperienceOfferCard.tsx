@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Clock } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 import { localizedField, type Experience } from "@/hooks/useExperiences";
 import { getExperienceIcon } from "./experienceIcons";
 
@@ -10,20 +10,34 @@ interface ExperienceOfferCardProps {
 
 /** Card de largura fixa para o carrossel de scroll horizontal contínuo. */
 const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const name = localizedField(experience, "name", i18n.language);
   const category = localizedField(experience, "category", i18n.language);
   const duration = localizedField(experience, "duration_label", i18n.language);
   const cover = experience.photos?.[0];
   const Icon = getExperienceIcon(localizedField(experience, "category", "pt"));
+  const basePrice = Number(experience.base_price_per_person) || 0;
+  const formatPrice = (value: number) => {
+    const options: Intl.NumberFormatOptions = {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    };
+    try {
+      return new Intl.NumberFormat(i18n.language, options).format(value);
+    } catch {
+      return new Intl.NumberFormat("pt-BR", options).format(value);
+    }
+  };
+  const formattedPrice = basePrice > 0 ? formatPrice(basePrice) : null;
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={name}
-      className="group text-left rounded-xl overflow-hidden bg-card border border-border shadow-medium hover:shadow-strong transition-all duration-300 hover:-translate-y-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 shrink-0 snap-start w-[210px] sm:w-[240px] lg:w-[260px]"
+      className="group text-left rounded-xl overflow-hidden bg-card border border-border shadow-medium hover:shadow-strong hover:-translate-y-1 transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:hover:translate-y-0 shrink-0 snap-start w-[210px] sm:w-[240px] lg:w-[260px]"
     >
       <div className="relative overflow-hidden bg-gradient-forest aspect-[4/3]">
         {cover ? (
@@ -33,7 +47,7 @@ const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) 
             loading="lazy"
             decoding="async"
             draggable={false}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.06] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -72,6 +86,20 @@ const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) 
             </>
           )}
         </p>
+        <p className="h-5 mt-0.5 text-sm font-semibold text-primary truncate">
+          {formattedPrice && (
+            <>
+              <span className="text-xs font-normal text-muted-foreground">
+                {t("experiencesModule.from")}{" "}
+              </span>
+              {formattedPrice}
+            </>
+          )}
+        </p>
+        <span className="mt-2 inline-flex items-center gap-1.5 self-start rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
+          {t("experiencesModule.hireCta")}
+          <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
+        </span>
       </div>
     </button>
   );
