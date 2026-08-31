@@ -17,20 +17,6 @@ const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) 
   const duration = localizedField(experience, "duration_label", i18n.language);
   const cover = experience.photos?.[0];
   const Icon = getExperienceIcon(localizedField(experience, "category", "pt"));
-  const basePrice = Number(experience.base_price_per_person) || 0;
-  const formatPrice = (value: number) => {
-    const options: Intl.NumberFormatOptions = {
-      style: "currency",
-      currency: "BRL",
-      maximumFractionDigits: 0,
-    };
-    try {
-      return new Intl.NumberFormat(i18n.language, options).format(value);
-    } catch {
-      return new Intl.NumberFormat("pt-BR", options).format(value);
-    }
-  };
-  const formattedPrice = basePrice > 0 ? formatPrice(basePrice) : null;
 
   return (
     <button
@@ -86,18 +72,8 @@ const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) 
             </>
           )}
         </p>
-        <p className="h-5 mt-0.5 text-sm font-semibold text-primary truncate">
-          {formattedPrice && (
-            <>
-              <span className="text-xs font-normal text-muted-foreground">
-                {t("experiencesModule.from")}{" "}
-              </span>
-              {formattedPrice}
-            </>
-          )}
-        </p>
         <span className="mt-2 inline-flex items-center gap-1.5 self-start rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary transition-colors duration-300 group-hover:bg-primary group-hover:text-primary-foreground">
-          {t("experiencesModule.hireCta")}
+          {t("experiencesModule.discoverMore")}
           <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0" />
         </span>
       </div>
