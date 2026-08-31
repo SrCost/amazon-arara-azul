@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import CompletarDadosFnrhModal from "@/components/admin/fnrh/CompletarDadosFnrhModal";
 import FnrhCredenciaisPanel from "@/components/admin/fnrh/FnrhCredenciaisPanel";
 import FnrhConsultasPanel from "@/components/admin/fnrh/FnrhConsultasPanel";
+import HospedesPanel from "@/components/admin/fnrh/HospedesPanel";
 
 import {
   Search,
