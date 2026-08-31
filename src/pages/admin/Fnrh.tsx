@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import CompletarDadosFnrhModal from "@/components/admin/fnrh/CompletarDadosFnrhModal";
 import FnrhCredenciaisPanel from "@/components/admin/fnrh/FnrhCredenciaisPanel";
 import FnrhConsultasPanel from "@/components/admin/fnrh/FnrhConsultasPanel";
+import HospedesPanel from "@/components/admin/fnrh/HospedesPanel";
 
 import {
   Search,
@@ -35,6 +36,7 @@ import {
   ShieldCheck,
   PencilLine,
   Plug,
+  UserCheck,
   KeyRound,
   CheckCircle2,
   XCircle,
@@ -173,6 +175,7 @@ const Fnrh = () => {
   const [diagLoading, setDiagLoading] = useState(false);
   const [showCreds, setShowCreds] = useState(false);
   const [showConsultas, setShowConsultas] = useState(false);
+  const [showHospedes, setShowHospedes] = useState(false);
 
 
 
@@ -398,6 +401,10 @@ const Fnrh = () => {
           <Button variant="outline" onClick={() => setShowConsultas((v) => !v)}>
             <Search className="h-4 w-4 mr-2" />
             {showConsultas ? "Fechar consultas" : "Consultas API"}
+           </Button>
+          <Button variant="outline" onClick={() => setShowHospedes((v) => !v)}>
+            <UserCheck className="h-4 w-4 mr-2" />
+            {showHospedes ? "Fechar hóspedes" : "Recebimento e envio"}
           </Button>
           <Button variant="outline" onClick={() => testarConexao(false)} disabled={diagLoading}>
             <Plug className={`h-4 w-4 mr-2 ${diagLoading ? "animate-pulse" : ""}`} />
@@ -417,6 +424,8 @@ const Fnrh = () => {
       {showCreds && <FnrhCredenciaisPanel />}
 
       {showConsultas && <FnrhConsultasPanel />}
+
+      {showHospedes && <HospedesPanel />}
 
 
 

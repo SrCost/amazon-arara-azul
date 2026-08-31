@@ -13,7 +13,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Search, RefreshCw, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
+import {
+  Search,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  MailCheck,
+  MailX,
+  Inbox,
+} from "lucide-react";
 
 interface ReservationRow {
   id: string;
@@ -52,6 +61,13 @@ interface CheckinRow {
   estimated_arrival_time: string | null;
 }
 
+interface PreArrivalRow {
+  reservation_id: string;
+  status: string | null;
+  answered_at: string | null;
+  last_sent_at: string | null;
+}
+
 type Filtro = "todos" | "pendentes" | "completos";
 
 const formatDate = (value: string | null | undefined) =>
@@ -64,17 +80,18 @@ const codigo = (id: string) => `PAA-${id.replace(/-/g, "").slice(0, 6).toUpperCa
 
 const texto = (value: string | null | undefined) => (value?.trim() ? value.trim() : null);
 
-const Hospedes = () => {
+const HospedesPanel = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [reservations, setReservations] = useState<ReservationRow[]>([]);
   const [checkins, setCheckins] = useState<CheckinRow[]>([]);
+  const [preArrivals, setPreArrivals] = useState<PreArrivalRow[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [res, ci] = await Promise.all([
+    const [res, ci, pa] = await Promise.all([
       supabase
         .from("reservations")
         .select(
@@ -87,10 +104,13 @@ const Hospedes = () => {
         .select(
           "reservation_id, created_at, full_name, document, birth_date, nationality, city_state, address, transport_mode, travel_reason, estimated_arrival_time",
         ),
+      supabase
+        .from("pre_arrival_responses")
+        .select("reservation_id, status, answered_at, last_sent_at"),
     ]);
     setLoading(false);
 
-    const firstError = res.error || ci.error;
+    const firstError = res.error || ci.error || pa.error;
     if (firstError) {
       toast({
         title: "Erro ao carregar hóspedes",
@@ -102,6 +122,7 @@ const Hospedes = () => {
 
     setReservations((res.data ?? []) as ReservationRow[]);
     setCheckins((ci.data ?? []) as CheckinRow[]);
+    setPreArrivals((pa.data ?? []) as PreArrivalRow[]);
   }, [toast]);
 
   useEffect(() => {
@@ -113,9 +134,15 @@ const Hospedes = () => {
     [checkins],
   );
 
+  const preArrivalById = useMemo(
+    () => new Map(preArrivals.map((p) => [p.reservation_id, p])),
+    [preArrivals],
+  );
+
   const linhas = useMemo(() => {
     return reservations.map((r) => {
       const ci = checkinById.get(r.id);
+      const pa = preArrivalById.get(r.id);
       const nome = texto(ci?.full_name) ?? r.guest_name;
       const nascimento = texto(ci?.birth_date) ?? texto(r.birth_date);
       const nacionalidade =
@@ -124,7 +151,7 @@ const Hospedes = () => {
       const tipoDocumento =
         texto(r.documento_tipo) ??
         (texto(r.cpf) ? "CPF" : texto(r.passport) ? "Passaporte" : null);
-      const completo = Boolean(ci) || Boolean(r.checkin_completed);
+      const completo = Boolean(ci) || Boolean(r.checkin_completed) || Boolean(pa?.answered_at);
       const faltando = [
         !nascimento && "nascimento",
         !nacionalidade && "nacionalidade",
@@ -134,6 +161,7 @@ const Hospedes = () => {
       return {
         reserva: r,
         checkin: ci,
+        preArrival: pa,
         nome,
         nascimento,
         nacionalidade,
@@ -143,7 +171,7 @@ const Hospedes = () => {
         faltando,
       };
     });
-  }, [reservations, checkinById]);
+  }, [reservations, checkinById, preArrivalById]);
 
   const filtradas = useMemo(() => {
     const term = busca.trim().toLowerCase();
@@ -171,49 +199,41 @@ const Hospedes = () => {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <Card className="border-primary/20">
+      <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Hóspedes por reserva</h1>
+          <CardTitle className="text-base">Recebimento e envio por hóspede</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Dados coletados no pré check-in (nascimento, nacionalidade e documento) e status de quem
-            ainda não concluiu o processo.
+            Dados coletados no pré check-in (nascimento, nacionalidade e documento), envio do e-mail
+            e recebimento das respostas.
           </p>
         </div>
         <Button variant="outline" onClick={load} disabled={loading} className="gap-2">
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} /> Atualizar
         </Button>
-      </div>
+      </CardHeader>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Reservas listadas</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{stats.total}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Pré check-in concluído</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold text-primary">{stats.completos}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Pendentes</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{stats.pendentes}</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-muted-foreground">Pendentes sem e-mail enviado</CardTitle>
-          </CardHeader>
-          <CardContent className="text-2xl font-semibold">{stats.semEmail}</CardContent>
-        </Card>
-      </div>
+      <CardContent className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Reservas listadas</p>
+            <p className="text-xl font-semibold">{stats.total}</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Pré check-in recebido</p>
+            <p className="text-xl font-semibold text-primary">{stats.completos}</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Pendentes</p>
+            <p className="text-xl font-semibold">{stats.pendentes}</p>
+          </div>
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs text-muted-foreground">Pendentes sem e-mail enviado</p>
+            <p className="text-xl font-semibold">{stats.semEmail}</p>
+          </div>
+        </div>
 
-      <Card>
-        <CardHeader className="gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="relative max-w-sm flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -241,8 +261,9 @@ const Hospedes = () => {
               </Button>
             ))}
           </div>
-        </CardHeader>
-        <CardContent className="overflow-x-auto">
+        </div>
+
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -252,21 +273,22 @@ const Hospedes = () => {
                 <TableHead>Nascimento</TableHead>
                 <TableHead>Nacionalidade</TableHead>
                 <TableHead>Documento</TableHead>
-                <TableHead>Pré check-in</TableHead>
+                <TableHead>Envio</TableHead>
+                <TableHead>Recebimento</TableHead>
                 <TableHead>Dados faltantes</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground">
                     Carregando…
                   </TableCell>
                 </TableRow>
               )}
               {!loading && filtradas.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center text-muted-foreground">
                     Nenhum hóspede encontrado.
                   </TableCell>
                 </TableRow>
@@ -302,24 +324,46 @@ const Hospedes = () => {
                     )}
                   </TableCell>
                   <TableCell>
+                    {l.reserva.pre_checkin_email_sent ? (
+                      <div className="space-y-1">
+                        <Badge variant="secondary" className="gap-1">
+                          <MailCheck className="h-3 w-3" /> E-mail enviado
+                        </Badge>
+                        <div className="text-xs text-muted-foreground">
+                          {formatDateTime(l.reserva.pre_checkin_email_sent_at)}
+                        </div>
+                      </div>
+                    ) : (
+                      <Badge variant="outline" className="gap-1 text-muted-foreground">
+                        <MailX className="h-3 w-3" /> Não enviado
+                      </Badge>
+                    )}
+                    {l.preArrival?.last_sent_at && (
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        Pré-chegada enviada {formatDateTime(l.preArrival.last_sent_at)}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
                     {l.completo ? (
                       <div className="space-y-1">
                         <Badge className="gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Concluído
+                          <CheckCircle2 className="h-3 w-3" /> Recebido
                         </Badge>
                         <div className="text-xs text-muted-foreground">
-                          {formatDateTime(l.checkin?.created_at)}
+                          Formulário: {formatDateTime(l.checkin?.created_at)}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Pré-chegada: {formatDateTime(l.preArrival?.answered_at)}
                         </div>
                       </div>
                     ) : (
                       <div className="space-y-1">
                         <Badge variant="outline" className="gap-1 text-muted-foreground">
-                          <Clock className="h-3 w-3" /> Pendente
+                          <Clock className="h-3 w-3" /> Aguardando
                         </Badge>
-                        <div className="text-xs text-muted-foreground">
-                          {l.reserva.pre_checkin_email_sent
-                            ? `E-mail enviado ${formatDateTime(l.reserva.pre_checkin_email_sent_at)}`
-                            : "E-mail não enviado"}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Inbox className="h-3 w-3" /> Nenhuma resposta recebida
                         </div>
                       </div>
                     )}
@@ -337,10 +381,10 @@ const Hospedes = () => {
               ))}
             </TableBody>
           </Table>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
-export default Hospedes;
+export default HospedesPanel;
