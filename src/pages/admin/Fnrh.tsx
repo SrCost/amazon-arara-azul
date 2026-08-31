@@ -425,6 +425,8 @@ const Fnrh = () => {
 
       {showConsultas && <FnrhConsultasPanel />}
 
+      {showHospedes && <HospedesPanel />}
+
 
 
       {diag && (
