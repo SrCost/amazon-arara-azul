@@ -174,6 +174,7 @@ const Fnrh = () => {
   const [diagLoading, setDiagLoading] = useState(false);
   const [showCreds, setShowCreds] = useState(false);
   const [showConsultas, setShowConsultas] = useState(false);
+  const [showHospedes, setShowHospedes] = useState(false);
 
 
 
