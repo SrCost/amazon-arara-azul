@@ -41,6 +41,7 @@ import GuestAutomation from "./pages/admin/GuestAutomation";
 import AdminFnrh from "./pages/admin/Fnrh";
 import AdminExperiencias from "./pages/admin/Experiencias";
 import AdminFormularios from "./pages/admin/Formularios";
+import AdminHospedes from "./pages/admin/Hospedes";
 
 const queryClient = new QueryClient();
 
@@ -217,6 +218,16 @@ const App = () => (
                 <ProtectedRoute requiredRole="admin">
                   <AdminLayout>
                     <AdminFormularios />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/hospedes"
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <AdminLayout>
+                    <AdminHospedes />
                   </AdminLayout>
                 </ProtectedRoute>
               }
