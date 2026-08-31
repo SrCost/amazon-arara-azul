@@ -400,6 +400,10 @@ const Fnrh = () => {
           <Button variant="outline" onClick={() => setShowConsultas((v) => !v)}>
             <Search className="h-4 w-4 mr-2" />
             {showConsultas ? "Fechar consultas" : "Consultas API"}
+           </Button>
+          <Button variant="outline" onClick={() => setShowHospedes((v) => !v)}>
+            <UserCheck className="h-4 w-4 mr-2" />
+            {showHospedes ? "Fechar hóspedes" : "Recebimento e envio"}
           </Button>
           <Button variant="outline" onClick={() => testarConexao(false)} disabled={diagLoading}>
             <Plug className={`h-4 w-4 mr-2 ${diagLoading ? "animate-pulse" : ""}`} />
