@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import "@/i18n/config";
@@ -41,7 +41,6 @@ import GuestAutomation from "./pages/admin/GuestAutomation";
 import AdminFnrh from "./pages/admin/Fnrh";
 import AdminExperiencias from "./pages/admin/Experiencias";
 import AdminFormularios from "./pages/admin/Formularios";
-import AdminHospedes from "./pages/admin/Hospedes";
 
 const queryClient = new QueryClient();
 
@@ -222,16 +221,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/admin/hospedes"
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <AdminLayout>
-                    <AdminHospedes />
-                  </AdminLayout>
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/admin/hospedes" element={<Navigate to="/admin/fnrh" replace />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
