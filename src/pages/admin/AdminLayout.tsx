@@ -16,6 +16,7 @@ import {
   LogOut,
   Home,
   Users as UsersIcon,
+  UserCheck,
   DollarSign,
   History,
   Package,
@@ -63,6 +64,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     ? [
         { icon: ClipboardCheck, label: "Automação", path: "/admin/guest-automation" },
         { icon: ClipboardList, label: "Formulários", path: "/admin/formularios" },
+        { icon: UserCheck, label: "Hóspedes", path: "/admin/hospedes" },
         { icon: FileCheck2, label: "FNRH", path: "/admin/fnrh" },
         { icon: Package, label: "Pacotes", path: "/admin/packages" },
         { icon: Building2, label: "Bangalôs", path: "/admin/bangalos" },
