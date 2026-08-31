@@ -18,14 +18,19 @@ const ExperienceOfferCard = ({ experience, onClick }: ExperienceOfferCardProps) 
   const cover = experience.photos?.[0];
   const Icon = getExperienceIcon(localizedField(experience, "category", "pt"));
   const basePrice = Number(experience.base_price_per_person) || 0;
-  const formattedPrice =
-    basePrice > 0
-      ? new Intl.NumberFormat(i18n.language, {
-          style: "currency",
-          currency: "BRL",
-          maximumFractionDigits: 0,
-        }).format(basePrice)
-      : null;
+  const formatPrice = (value: number) => {
+    const options: Intl.NumberFormatOptions = {
+      style: "currency",
+      currency: "BRL",
+      maximumFractionDigits: 0,
+    };
+    try {
+      return new Intl.NumberFormat(i18n.language, options).format(value);
+    } catch {
+      return new Intl.NumberFormat("pt-BR", options).format(value);
+    }
+  };
+  const formattedPrice = basePrice > 0 ? formatPrice(basePrice) : null;
 
   return (
     <button
