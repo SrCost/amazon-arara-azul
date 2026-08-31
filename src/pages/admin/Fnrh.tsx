@@ -36,6 +36,7 @@ import {
   ShieldCheck,
   PencilLine,
   Plug,
+  UserCheck,
   KeyRound,
   CheckCircle2,
   XCircle,
