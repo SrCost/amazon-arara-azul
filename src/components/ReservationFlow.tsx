@@ -144,6 +144,7 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
   const [country, setCountry] = useState("");
   const [nationality, setNationality] = useState("");
   const [passport, setPassport] = useState("");
+  const [gender, setGender] = useState("NAO_INFORMADO");
   const [address, setAddress] = useState("");
   const [nextDestination, setNextDestination] = useState("");
   const [dietaryRestrictions, setDietaryRestrictions] = useState("");
@@ -424,6 +425,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
         is_foreign: isForeign,
         foreign_passport: isForeign ? passport : null,
         foreign_nationality: isForeign ? nationality : null,
+        nationality: isForeign ? nationality || null : "BR",
+        gender,
         total_amount: totalPrice,
         package_id: selectedPackage || null,
         accepted_terms: acceptedTerms,
@@ -790,6 +793,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
           is_foreign: isForeign,
           foreign_passport: isForeign ? passport : null,
           foreign_nationality: isForeign ? nationality : null,
+          nationality: isForeign ? nationality || null : "BR",
+          gender,
           total_amount: totalPrice,
           card_token: cardToken.id,
           card_brand: cardBrand,
@@ -1013,6 +1018,8 @@ const ReservationFlow = ({ lodgeName, pricePerNight, roomId, onClose }: Reservat
               setNationality={setNationality}
               passport={passport}
               setPassport={setPassport}
+              gender={gender}
+              setGender={setGender}
               nextDestination={nextDestination}
               setNextDestination={setNextDestination}
               emergencyContact={emergencyContact}

@@ -584,7 +584,11 @@
     "privacyPolicy": "Política de Privacidade",
     "termsTail": "da Pousada Arara Azul.",
     "and": "e",
-    "comma": ","
+    "comma": ",",
+    "gender": "Gênero (opcional)",
+    "genderNotInformed": "Não informado",
+    "genderMale": "Masculino",
+    "genderFemale": "Feminino"
   },
   "payment": {
     "subtitle": "Escolha a forma de pagamento",
