@@ -4,6 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AlertCircle } from "lucide-react";
 
 const isValidEmail = (email: string): boolean => {
@@ -32,6 +39,8 @@ interface GuestInfoFormProps {
   setNationality: (value: string) => void;
   passport: string;
   setPassport: (value: string) => void;
+  gender: string;
+  setGender: (value: string) => void;
   nextDestination: string;
   setNextDestination: (value: string) => void;
   emergencyContact: string;
@@ -65,6 +74,8 @@ export const GuestInfoForm = ({
   setNationality,
   passport,
   setPassport,
+  gender,
+  setGender,
   nextDestination,
   setNextDestination,
   emergencyContact,
@@ -187,6 +198,20 @@ export const GuestInfoForm = ({
             </div>
           </>
         )}
+
+        <div>
+          <Label htmlFor="gender" className="text-sm font-medium">{t("guestForm.gender")}</Label>
+          <Select value={gender} onValueChange={setGender}>
+            <SelectTrigger id="gender" className="mt-1">
+              <SelectValue placeholder={t("guestForm.genderNotInformed")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="NAO_INFORMADO">{t("guestForm.genderNotInformed")}</SelectItem>
+              <SelectItem value="MASCULINO">{t("guestForm.genderMale")}</SelectItem>
+              <SelectItem value="FEMININO">{t("guestForm.genderFemale")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <div>
           <Label htmlFor="dietaryRestrictions" className="text-sm font-medium">{t("guestForm.dietary")}</Label>
