@@ -131,6 +131,8 @@ serve(async (req) => {
       is_foreign,
       foreign_passport,
       foreign_nationality,
+      nationality: nationality_input,
+      gender,
       total_amount,
       card_token,
       card_brand,
@@ -252,6 +254,14 @@ serve(async (req) => {
     // Sanitizar campos opcionais
     const sanitizedPassport = sanitizeString(foreign_passport, 50);
     const sanitizedNationality = sanitizeString(foreign_nationality, 100);
+    // Dados FNRH: nacionalidade, tipo de documento e genero resolvidos no servidor
+    const resolvedNationality =
+      sanitizeString(nationality_input, 100) || sanitizedNationality || (is_foreign ? null : 'BR');
+    const documentoTipo = cleanCpf ? 'CPF' : (sanitizedPassport ? 'PASSAPORTE' : null);
+    const allowedGenders = ['MASCULINO', 'FEMININO', 'NAO_INFORMADO'];
+    const resolvedGender = allowedGenders.includes(String(gender || '').toUpperCase())
+      ? String(gender).toUpperCase()
+      : 'NAO_INFORMADO';
 
     console.log('Validação de entrada concluída com sucesso');
 
@@ -337,7 +347,15 @@ serve(async (req) => {
       reservationId = existingReservation.id;
       await supabase
         .from('reservations')
-        .update({ guests: totalGuests, total_price: amount })
+        .update({
+          guests: totalGuests,
+          total_price: amount,
+          nationality: resolvedNationality,
+          documento_tipo: documentoTipo,
+          genero: resolvedGender,
+          quantidade_hospede_adulto: totalGuests,
+          quantidade_hospede_menor: 0,
+        })
         .eq('id', reservationId);
       await persistReservationRooms(supabase, reservationId, accommodations);
       await persistReservationExperiences(supabase, reservationId, reservationExperiences);
@@ -362,7 +380,11 @@ serve(async (req) => {
           birth_date: date_of_birth && isValidDate(date_of_birth) ? date_of_birth : null,
           is_foreign: is_foreign || false,
           passport: sanitizedPassport || null,
-          nationality: sanitizedNationality || null,
+          nationality: resolvedNationality,
+          documento_tipo: documentoTipo,
+          genero: resolvedGender,
+          quantidade_hospede_adulto: totalGuests,
+          quantidade_hospede_menor: 0,
           payment_method: 'credit_card',
           total_price: amount,
           status: 'pending',
