@@ -82,6 +82,13 @@ const formSchema = z.object({
   special_requests: z.string().optional(),
   package_id: z.string().optional(),
   guest_language: z.enum(["pt", "en", "es", "fr", "de"]),
+  cpf: z.string().optional(),
+  passport: z.string().optional(),
+  birth_date: z.string().optional(),
+  nationality: z.string().optional(),
+  genero: z.string().optional(),
+  quantidade_hospede_adulto: z.string().optional(),
+  quantidade_hospede_menor: z.string().optional(),
   extra_rooms: z
     .array(
       z.object({
@@ -143,6 +150,13 @@ const EditReservationModal = ({
       special_requests: "",
       package_id: "",
       guest_language: "pt",
+      cpf: "",
+      passport: "",
+      birth_date: "",
+      nationality: "",
+      genero: "NAO_INFORMADO",
+      quantidade_hospede_adulto: "",
+      quantidade_hospede_menor: "0",
       extra_rooms: [],
     },
   });
@@ -223,6 +237,13 @@ const EditReservationModal = ({
         special_requests: reservation.special_requests || "",
         package_id: reservation.package_id || "",
         guest_language: (["pt","en","es","fr","de"].includes(resolvedLang) ? resolvedLang : "pt") as any,
+        cpf: reservation.cpf || "",
+        passport: reservation.passport || "",
+        birth_date: reservation.birth_date || "",
+        nationality: reservation.nationality || "",
+        genero: reservation.genero || "NAO_INFORMADO",
+        quantidade_hospede_adulto: String(reservation.quantidade_hospede_adulto ?? reservation.guests ?? ""),
+        quantidade_hospede_menor: String(reservation.quantidade_hospede_menor ?? 0),
         extra_rooms: extraItems,
       });
 
@@ -348,6 +369,22 @@ const EditReservationModal = ({
           special_requests: data.special_requests || null,
           package_id: data.package_id && data.package_id !== "" ? data.package_id : null,
           guest_language: data.guest_language,
+          cpf: data.cpf?.replace(/\D/g, "") || null,
+          passport: data.passport?.trim() || null,
+          birth_date: data.birth_date || null,
+          nationality: data.nationality?.trim() || null,
+          genero: data.genero && data.genero !== "NAO_INFORMADO" ? data.genero : null,
+          documento_tipo: data.cpf?.replace(/\D/g, "")
+            ? "CPF"
+            : data.passport?.trim()
+              ? "PASSAPORTE"
+              : null,
+          quantidade_hospede_adulto: data.quantidade_hospede_adulto
+            ? Number(data.quantidade_hospede_adulto)
+            : totalGuests,
+          quantidade_hospede_menor: data.quantidade_hospede_menor
+            ? Number(data.quantidade_hospede_menor)
+            : 0,
         })
         .eq("id", reservation.id);
 
@@ -1024,6 +1061,115 @@ const EditReservationModal = ({
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Dados do hóspede (FNRH) */}
+            <div className="border-t pt-4 space-y-3">
+              <p className="text-sm font-medium">Dados do hóspede (FNRH)</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="cpf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CPF</FormLabel>
+                      <FormControl>
+                        <Input placeholder="000.000.000-00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="passport"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Passaporte</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Número do passaporte" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="birth_date"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Data de nascimento</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="nationality"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nacionalidade (país)</FormLabel>
+                      <FormControl>
+                        <Input placeholder="BR" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="genero"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gênero</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="NAO_INFORMADO">Não informado</SelectItem>
+                          <SelectItem value="MASCULINO">Masculino</SelectItem>
+                          <SelectItem value="FEMININO">Feminino</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="quantidade_hospede_adulto"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Adultos</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={1} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="quantidade_hospede_menor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Menores</FormLabel>
+                        <FormControl>
+                          <Input type="number" min={0} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Notes */}
