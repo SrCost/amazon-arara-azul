@@ -24,6 +24,14 @@ export interface CalendarReservation {
   special_requests: string | null;
   created_at: string | null;
   package_id: string | null;
+  cpf: string | null;
+  passport: string | null;
+  birth_date: string | null;
+  nationality: string | null;
+  genero: string | null;
+  documento_tipo: string | null;
+  quantidade_hospede_adulto: number | null;
+  quantidade_hospede_menor: number | null;
   /** Acomodações da reserva (1..N bangalôs) */
   items?: ReservationRoomItem[];
 }
@@ -107,7 +115,15 @@ export const useCalendarReservations = (initialDate?: Date) => {
           operational_notes,
           special_requests,
           created_at,
-          package_id
+          package_id,
+          cpf,
+          passport,
+          birth_date,
+          nationality,
+          genero,
+          documento_tipo,
+          quantidade_hospede_adulto,
+          quantidade_hospede_menor
         `)
         .or(`check_in.gte.${startStr},check_out.gte.${startStr}`)
         .lte("check_in", endStr)
