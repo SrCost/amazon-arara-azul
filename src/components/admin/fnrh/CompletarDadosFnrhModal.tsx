@@ -36,6 +36,7 @@ interface Props {
   guests: number | null;
   pendingFields: string[];
   submitting: boolean;
+  initial?: HospedeCompletarPayload;
   onSubmit: (payload: HospedeCompletarPayload) => void;
 }
 
@@ -64,6 +65,7 @@ export const CompletarDadosFnrhModal = ({
   guests,
   pendingFields,
   submitting,
+  initial,
   onSubmit,
 }: Props) => {
   const [docTipo, setDocTipo] = useState<"CPF" | "PASSAPORTE">("CPF");
@@ -78,8 +80,17 @@ export const CompletarDadosFnrhModal = ({
   useEffect(() => {
     if (open) {
       setErro(null);
-      setAdultos(String(guests ?? 1));
+      const tipo: "CPF" | "PASSAPORTE" =
+        initial?.cpf ? "CPF" : initial?.passport ? "PASSAPORTE" : (initial?.documento_tipo ?? "CPF");
+      setDocTipo(tipo);
+      setDocumento(tipo === "CPF" ? (initial?.cpf ?? "") : (initial?.passport ?? ""));
+      setBirthDate(initial?.birth_date ?? "");
+      setNationality(initial?.nationality || "BR");
+      setGenero(initial?.genero || "NAO_INFORMADO");
+      setAdultos(String(initial?.quantidade_hospede_adulto ?? guests ?? 1));
+      setMenores(String(initial?.quantidade_hospede_menor ?? 0));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, guests]);
 
   const needsDoc = pendingFields.includes("documento");

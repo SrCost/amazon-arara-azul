@@ -27,7 +27,7 @@ const FiltersSchema = z.object({
 });
 
 const FIELDS =
-  "id, guest_name, guest_email, guest_phone, room_name, check_in, check_out, guests, status, situacao_fnrh, link_precheckin, reserva_id_fnrh, hospede_id_fnrh, erro_sincronizacao_fnrh, fnrh_checkin_em, fnrh_checkout_em, created_at";
+  "id, guest_name, guest_email, guest_phone, room_name, check_in, check_out, guests, status, situacao_fnrh, link_precheckin, reserva_id_fnrh, hospede_id_fnrh, erro_sincronizacao_fnrh, fnrh_checkin_em, fnrh_checkout_em, created_at, cpf, passport, documento_tipo, birth_date, nationality, genero, quantidade_hospede_adulto, quantidade_hospede_menor";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

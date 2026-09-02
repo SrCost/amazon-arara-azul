@@ -74,6 +74,14 @@ interface Ficha {
   fnrh_checkin_em: string | null;
   fnrh_checkout_em: string | null;
   created_at: string | null;
+  cpf?: string | null;
+  passport?: string | null;
+  documento_tipo?: string | null;
+  birth_date?: string | null;
+  nationality?: string | null;
+  genero?: string | null;
+  quantidade_hospede_adulto?: number | null;
+  quantidade_hospede_menor?: number | null;
 }
 
 const SITUACAO_LABEL: Record<Situacao, string> = {
@@ -705,6 +713,20 @@ const Fnrh = () => {
           guestName={completar.ficha.guest_name}
           guests={completar.ficha.guests}
           pendingFields={completar.fields}
+          initial={{
+            documento_tipo: completar.ficha.cpf
+              ? "CPF"
+              : completar.ficha.passport
+                ? "PASSAPORTE"
+                : (completar.ficha.documento_tipo as "CPF" | "PASSAPORTE" | undefined),
+            cpf: completar.ficha.cpf ?? undefined,
+            passport: completar.ficha.passport ?? undefined,
+            birth_date: completar.ficha.birth_date ?? undefined,
+            nationality: completar.ficha.nationality ?? undefined,
+            genero: completar.ficha.genero ?? undefined,
+            quantidade_hospede_adulto: completar.ficha.quantidade_hospede_adulto ?? undefined,
+            quantidade_hospede_menor: completar.ficha.quantidade_hospede_menor ?? undefined,
+          }}
           submitting={busy === `fnrh-criar-reserva:${completar.ficha.id}`}
           onSubmit={async (hospede) => {
             const ficha = completar.ficha;
