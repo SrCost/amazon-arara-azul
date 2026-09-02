@@ -68,6 +68,14 @@ interface Reservation {
   special_requests?: string;
   created_at: string;
   updated_at?: string;
+  cpf?: string | null;
+  passport?: string | null;
+  documento_tipo?: string | null;
+  birth_date?: string | null;
+  nationality?: string | null;
+  genero?: string | null;
+  quantidade_hospede_adulto?: number | null;
+  quantidade_hospede_menor?: number | null;
   pre_arrival?: PreArrivalStatusRow | null;
 }
 
@@ -571,6 +579,53 @@ const Reservations = () => {
                 <div>
                   <Label className="text-muted-foreground">Valor Total</Label>
                   <p className="font-medium text-lg">R$ {selectedReservation.total_price.toLocaleString()}</p>
+                </div>
+              </div>
+
+              {/* Dados do hóspede (FNRH) */}
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold text-muted-foreground mb-2">Dados do hóspede (FNRH)</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Documento</Label>
+                    <p className="font-medium">
+                      {selectedReservation.cpf
+                        ? `CPF ${selectedReservation.cpf}`
+                        : selectedReservation.passport
+                          ? `Passaporte ${selectedReservation.passport}`
+                          : <span className="text-destructive">Não informado</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Data de nascimento</Label>
+                    <p className="font-medium">
+                      {selectedReservation.birth_date
+                        ? new Date(`${selectedReservation.birth_date}T12:00:00`).toLocaleDateString("pt-BR")
+                        : <span className="text-destructive">Não informado</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Nacionalidade</Label>
+                    <p className="font-medium">
+                      {selectedReservation.nationality || <span className="text-destructive">Não informado</span>}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Gênero</Label>
+                    <p className="font-medium">
+                      {selectedReservation.genero === "MASCULINO"
+                        ? "Masculino"
+                        : selectedReservation.genero === "FEMININO"
+                          ? "Feminino"
+                          : "Não informado"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Adultos / Menores</Label>
+                    <p className="font-medium">
+                      {selectedReservation.quantidade_hospede_adulto ?? selectedReservation.guests} / {selectedReservation.quantidade_hospede_menor ?? 0}
+                    </p>
+                  </div>
                 </div>
               </div>
 
