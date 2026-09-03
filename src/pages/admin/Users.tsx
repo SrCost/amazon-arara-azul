@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Edit, Trash2, UserPlus, Shield } from "lucide-react";
+import { Search, Trash2, UserPlus, Shield, SlidersHorizontal } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,11 +27,19 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  ADMIN_MODULES,
+  DEFAULT_ENABLED_MODULES,
+  ROLE_HIERARCHY,
+  type AdminRole,
+} from "@/config/adminModules";
 
 interface UserProfile {
   id: string;
@@ -39,12 +47,6 @@ interface UserProfile {
   full_name?: string;
   phone?: string;
   created_at: string;
-}
-
-interface UserRole {
-  id: string;
-  user_id: string;
-  role: 'super_admin' | 'admin' | 'user';
 }
 
 const Users = () => {
@@ -55,14 +57,19 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserProfile & { role: string } | null>(null);
+  const [permissionsUser, setPermissionsUser] = useState<(UserProfile & { role: string }) | null>(null);
+  const [permissionsDraft, setPermissionsDraft] = useState<Record<string, boolean>>({});
+  const [savingPermissions, setSavingPermissions] = useState(false);
   const [newUser, setNewUser] = useState({
     email: "",
     password: "",
     full_name: "",
-    role: "user" as 'super_admin' | 'admin' | 'user',
+    role: "user" as AdminRole,
   });
+  const [newUserModules, setNewUserModules] = useState<Record<string, boolean>>(
+    Object.fromEntries(ADMIN_MODULES.map((m) => [m.key, DEFAULT_ENABLED_MODULES.includes(m.key)])),
+  );
+
 
   useEffect(() => {
     checkUserRole();
@@ -191,6 +198,9 @@ const Users = () => {
           password: newUser.password,
           full_name: newUser.full_name,
           role: newUser.role,
+          modules: Object.entries(newUserModules)
+            .filter(([, enabled]) => enabled)
+            .map(([key]) => key),
         }),
       });
 
@@ -203,7 +213,11 @@ const Users = () => {
       toast.success("Usuário criado com sucesso!");
       setIsAddDialogOpen(false);
       setNewUser({ email: "", password: "", full_name: "", role: "user" });
+      setNewUserModules(
+        Object.fromEntries(ADMIN_MODULES.map((m) => [m.key, DEFAULT_ENABLED_MODULES.includes(m.key)])),
+      );
       fetchUsers();
+
       
       console.log("User created successfully:", result.user);
     } catch (error: any) {
@@ -288,6 +302,57 @@ const Users = () => {
       toast.error(error.message || "Erro ao excluir usuário");
     }
   };
+
+  const openPermissions = async (target: UserProfile & { role: string }) => {
+    setPermissionsUser(target);
+    try {
+      const { data, error } = await supabase
+        .from("user_module_permissions")
+        .select("module, enabled")
+        .eq("user_id", target.id);
+
+      if (error) throw error;
+
+      const saved = new Map((data || []).map((r) => [r.module, r.enabled]));
+      const draft: Record<string, boolean> = {};
+      ADMIN_MODULES.forEach((m) => {
+        draft[m.key] = saved.size === 0
+          ? ROLE_HIERARCHY[target.role as AdminRole] >= ROLE_HIERARCHY[m.minRole]
+          : saved.get(m.key) === true;
+      });
+      setPermissionsDraft(draft);
+    } catch (error) {
+      console.error("Error loading permissions:", error);
+      toast.error("Erro ao carregar permissões");
+    }
+  };
+
+  const savePermissions = async () => {
+    if (!permissionsUser) return;
+    setSavingPermissions(true);
+    try {
+      const rows = ADMIN_MODULES.map((m) => ({
+        user_id: permissionsUser.id,
+        module: m.key,
+        enabled: permissionsDraft[m.key] === true,
+      }));
+
+      const { error } = await supabase
+        .from("user_module_permissions")
+        .upsert(rows, { onConflict: "user_id,module" });
+
+      if (error) throw error;
+
+      toast.success("Permissões salvas com sucesso!");
+      setPermissionsUser(null);
+    } catch (error: any) {
+      console.error("Error saving permissions:", error);
+      toast.error(error.message || "Erro ao salvar permissões");
+    } finally {
+      setSavingPermissions(false);
+    }
+  };
+
 
   const getRoleBadge = (role: string) => {
     const variants: { [key: string]: any } = {
@@ -389,11 +454,47 @@ const Users = () => {
                   onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                 />
               </div>
+              <div className="space-y-3 pt-2 border-t">
+                <div>
+                  <Label className="text-sm">Módulos de acesso</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Habilite os módulos que este usuário poderá acessar.
+                  </p>
+                </div>
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                  {ADMIN_MODULES.map((m) => {
+                    const blockedByRole =
+                      newUser.role !== "super_admin" &&
+                      ROLE_HIERARCHY[newUser.role] < ROLE_HIERARCHY[m.minRole];
+                    const forced = newUser.role === "super_admin";
+                    return (
+                      <div key={m.key} className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm truncate">{m.label}</p>
+                          {blockedByRole && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Requer cargo {m.minRole === "admin" ? "Admin" : "Super Admin"}
+                            </p>
+                          )}
+                        </div>
+                        <Switch
+                          checked={forced ? true : newUserModules[m.key] && !blockedByRole}
+                          disabled={forced || blockedByRole}
+                          onCheckedChange={(checked) =>
+                            setNewUserModules((prev) => ({ ...prev, [m.key]: checked }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
               <Button onClick={handleCreateUser} className="bg-gradient-forest w-full sm:w-auto">Criar Usuário</Button>
             </DialogFooter>
+
           </DialogContent>
         </Dialog>
       </div>
@@ -445,7 +546,15 @@ const Users = () => {
                     </TableCell>
                     <TableCell className="text-xs sm:text-sm hidden md:table-cell">{new Date(user.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openPermissions(user)}
+                          title="Módulos de acesso"
+                        >
+                          <SlidersHorizontal className="h-4 w-4" />
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="ghost"
@@ -463,7 +572,58 @@ const Users = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!permissionsUser} onOpenChange={(open) => !open && setPermissionsUser(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Módulos de acesso</DialogTitle>
+            <DialogDescription>
+              {permissionsUser?.full_name || permissionsUser?.email}
+              {permissionsUser?.role === "super_admin" && " — super administradores têm acesso a tudo."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-3 py-2 pr-1">
+            {ADMIN_MODULES.map((m) => {
+              const role = (permissionsUser?.role as AdminRole) || "user";
+              const forced = role === "super_admin";
+              const blockedByRole = !forced && ROLE_HIERARCHY[role] < ROLE_HIERARCHY[m.minRole];
+              return (
+                <div key={m.key} className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{m.label}</p>
+                    {blockedByRole && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Requer cargo {m.minRole === "admin" ? "Admin" : "Super Admin"}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    checked={forced ? true : permissionsDraft[m.key] === true && !blockedByRole}
+                    disabled={forced || blockedByRole}
+                    onCheckedChange={(checked) =>
+                      setPermissionsDraft((prev) => ({ ...prev, [m.key]: checked }))
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setPermissionsUser(null)} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button
+              onClick={savePermissions}
+              disabled={savingPermissions || permissionsUser?.role === "super_admin"}
+              className="bg-gradient-forest w-full sm:w-auto"
+            >
+              {savingPermissions ? "Salvando..." : "Salvar permissões"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 

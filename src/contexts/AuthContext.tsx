@@ -3,6 +3,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useModulePermissions } from '@/hooks/useModulePermissions';
+import { canAccessModule, type AdminRole } from '@/config/adminModules';
 
 interface AuthContextType {
   user: User | null;
@@ -13,6 +15,10 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  role: AdminRole;
+  modulePermissions: Record<string, boolean> | null;
+  permissionsLoading: boolean;
+  hasModule: (moduleKey: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +29,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [role, setRole] = useState<AdminRole>('user');
   const navigate = useNavigate();
+  const { permissions: modulePermissions, loading: permissionsLoading } = useModulePermissions(user?.id);
+
 
   useEffect(() => {
     // Set up auth state listener
@@ -93,8 +102,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       const roles = data?.map((r) => r.role) || [];
-      setIsSuperAdmin(roles.includes('super_admin'));
-      setIsAdmin(roles.includes('admin') || roles.includes('super_admin'));
+      const superAdmin = roles.includes('super_admin');
+      const admin = roles.includes('admin');
+      setIsSuperAdmin(superAdmin);
+      setIsAdmin(admin || superAdmin);
+      setRole(superAdmin ? 'super_admin' : admin ? 'admin' : 'user');
+
     } catch (error) {
       console.error('Error checking user role:', error);
     }
@@ -183,9 +196,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(null);
       setIsAdmin(false);
       setIsSuperAdmin(false);
+      setRole('user');
       navigate('/');
+
+
     }
   };
+
+  const hasModule = (moduleKey: string) => canAccessModule(moduleKey, role, modulePermissions);
 
   return (
     <AuthContext.Provider
@@ -198,8 +216,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signOut,
         isAdmin,
         isSuperAdmin,
+        role,
+        modulePermissions,
+        permissionsLoading,
+        hasModule,
       }}
     >
+
       {children}
     </AuthContext.Provider>
   );

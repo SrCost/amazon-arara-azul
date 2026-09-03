@@ -28,7 +28,9 @@ import {
   FileCheck2,
   Compass,
 } from "lucide-react";
+import { ADMIN_MODULES } from "@/config/adminModules";
 import logoArara from "@/assets/logo-arara-azul.jpg";
+
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -38,7 +40,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, isAdmin, isSuperAdmin, user, loading } = useAuth();
+  const { signOut, user, loading, hasModule } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!loading && !user) {
@@ -50,35 +52,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     return null;
   }
 
-  const baseMenuItems = [
-    { icon: LayoutDashboard, label: t("admin.dashboard"), path: "/admin" },
-    { icon: CalendarRange, label: "Calendário", path: "/admin/calendario-reservas" },
-    { icon: CalendarCheck, label: t("admin.reservations"), path: "/admin/reservations" },
-    { icon: MessageSquare, label: t("admin.messages"), path: "/admin/messages" },
-    { icon: Images, label: "Galeria", path: "/admin/gallery" },
-    { icon: SlidersHorizontal, label: "Carrossel", path: "/admin/carrossel" },
-  ];
+  const menuItems = ADMIN_MODULES.filter((m) => hasModule(m.key)).map((m) => ({
+    icon: m.icon,
+    label: m.key === "dashboard" ? t("admin.dashboard")
+      : m.key === "reservations" ? t("admin.reservations")
+      : m.key === "messages" ? t("admin.messages")
+      : m.key === "users" ? t("admin.users")
+      : m.label,
+    path: m.path,
+  }));
 
-  const adminItems = isAdmin || isSuperAdmin
-    ? [
-        { icon: ClipboardCheck, label: "Automação", path: "/admin/guest-automation" },
-        { icon: ClipboardList, label: "Formulários", path: "/admin/formularios" },
-        { icon: FileCheck2, label: "FNRH", path: "/admin/fnrh" },
-        { icon: Package, label: "Pacotes", path: "/admin/packages" },
-        { icon: Building2, label: "Bangalôs", path: "/admin/bangalos" },
-        { icon: Compass, label: "Experiências", path: "/admin/experiencias" },
-        { icon: DollarSign, label: "Pagamentos", path: "/admin/payments" },
-      ]
-    : [];
-
-  const superAdminItems = isSuperAdmin
-    ? [
-        { icon: UsersIcon, label: t("admin.users"), path: "/admin/users" },
-        { icon: History, label: "Histórico", path: "/admin/audit" },
-      ]
-    : [];
-
-  const menuItems = [...baseMenuItems, ...adminItems, ...superAdminItems];
 
   const handleSignOut = async () => {
     await signOut();
