@@ -74,7 +74,7 @@ const App = () => (
             <Route
               path="/admin"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute requiredRole="user" module="dashboard">
                   <AdminLayout>
                     <Dashboard />
                   </AdminLayout>
@@ -84,7 +84,7 @@ const App = () => (
             <Route
               path="/admin/reservations"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute requiredRole="user" module="reservations">
                   <AdminLayout>
                     <Reservations />
                   </AdminLayout>
@@ -94,7 +94,7 @@ const App = () => (
             <Route
               path="/admin/messages"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute requiredRole="user" module="messages">
                   <AdminLayout>
                     <Messages />
                   </AdminLayout>
@@ -104,7 +104,7 @@ const App = () => (
             <Route
               path="/admin/packages"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="packages">
                   <AdminLayout>
                     <AdminPackages />
                   </AdminLayout>
@@ -114,7 +114,7 @@ const App = () => (
             <Route
               path="/admin/gallery"
               element={
-                <ProtectedRoute requiredRole="user">
+                <ProtectedRoute requiredRole="user" module="gallery">
                   <AdminLayout>
                     <Gallery />
                   </AdminLayout>
@@ -124,7 +124,7 @@ const App = () => (
             <Route
               path="/admin/bangalos"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="bungalows">
                   <AdminLayout>
                     <AdminBangalos />
                   </AdminLayout>
@@ -134,7 +134,7 @@ const App = () => (
             <Route
               path="/admin/fnrh"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="fnrh">
                   <AdminLayout>
                     <AdminFnrh />
                   </AdminLayout>
@@ -144,7 +144,7 @@ const App = () => (
             <Route
               path="/admin/payments"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="payments">
                   <AdminLayout>
                     <Payments />
                   </AdminLayout>
@@ -154,7 +154,7 @@ const App = () => (
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute requiredRole="super_admin">
+                <ProtectedRoute requiredRole="super_admin" module="users">
                   <AdminLayout>
                     <Users />
                   </AdminLayout>
@@ -164,7 +164,7 @@ const App = () => (
             <Route
               path="/admin/audit"
               element={
-                <ProtectedRoute requiredRole="super_admin">
+                <ProtectedRoute requiredRole="super_admin" module="audit">
                   <AdminLayout>
                     <Audit />
               </AdminLayout>
@@ -174,7 +174,7 @@ const App = () => (
         <Route
           path="/admin/calendario-reservas"
           element={
-            <ProtectedRoute requiredRole="user">
+            <ProtectedRoute requiredRole="user" module="calendar">
               <AdminLayout>
                 <CalendarReservations />
               </AdminLayout>
@@ -184,7 +184,7 @@ const App = () => (
             <Route
               path="/admin/carrossel"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="carousel">
                   <AdminLayout>
                     <HeroCarouselAdmin />
                   </AdminLayout>
@@ -194,7 +194,7 @@ const App = () => (
             <Route
               path="/admin/guest-automation"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="automation">
                   <AdminLayout>
                     <GuestAutomation />
                   </AdminLayout>
@@ -204,7 +204,7 @@ const App = () => (
             <Route
               path="/admin/experiencias"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="experiences">
                   <AdminLayout>
                     <AdminExperiencias />
                   </AdminLayout>
@@ -214,7 +214,7 @@ const App = () => (
             <Route
               path="/admin/formularios"
               element={
-                <ProtectedRoute requiredRole="admin">
+                <ProtectedRoute requiredRole="admin" module="forms">
                   <AdminLayout>
                     <AdminFormularios />
                   </AdminLayout>
