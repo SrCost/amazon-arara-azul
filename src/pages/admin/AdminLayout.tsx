@@ -28,7 +28,9 @@ import {
   FileCheck2,
   Compass,
 } from "lucide-react";
+import { ADMIN_MODULES } from "@/config/adminModules";
 import logoArara from "@/assets/logo-arara-azul.jpg";
+
 
 interface AdminLayoutProps {
   children: ReactNode;
