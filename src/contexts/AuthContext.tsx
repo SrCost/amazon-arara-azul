@@ -200,6 +200,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const hasModule = (moduleKey: string) => canAccessModule(moduleKey, role, modulePermissions);
+
   return (
     <AuthContext.Provider
       value={{
@@ -211,8 +213,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signOut,
         isAdmin,
         isSuperAdmin,
+        role,
+        modulePermissions,
+        permissionsLoading,
+        hasModule,
       }}
     >
+
       {children}
     </AuthContext.Provider>
   );
