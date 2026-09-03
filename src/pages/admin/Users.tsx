@@ -546,7 +546,15 @@ const Users = () => {
                     </TableCell>
                     <TableCell className="text-xs sm:text-sm hidden md:table-cell">{new Date(user.created_at).toLocaleDateString()}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end">
+                      <div className="flex justify-end gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openPermissions(user)}
+                          title="Módulos de acesso"
+                        >
+                          <SlidersHorizontal className="h-4 w-4" />
+                        </Button>
                         <Button 
                           size="sm" 
                           variant="ghost"
@@ -564,7 +572,58 @@ const Users = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={!!permissionsUser} onOpenChange={(open) => !open && setPermissionsUser(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Módulos de acesso</DialogTitle>
+            <DialogDescription>
+              {permissionsUser?.full_name || permissionsUser?.email}
+              {permissionsUser?.role === "super_admin" && " — super administradores têm acesso a tudo."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto space-y-3 py-2 pr-1">
+            {ADMIN_MODULES.map((m) => {
+              const role = (permissionsUser?.role as AdminRole) || "user";
+              const forced = role === "super_admin";
+              const blockedByRole = !forced && ROLE_HIERARCHY[role] < ROLE_HIERARCHY[m.minRole];
+              return (
+                <div key={m.key} className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm truncate">{m.label}</p>
+                    {blockedByRole && (
+                      <p className="text-[11px] text-muted-foreground">
+                        Requer cargo {m.minRole === "admin" ? "Admin" : "Super Admin"}
+                      </p>
+                    )}
+                  </div>
+                  <Switch
+                    checked={forced ? true : permissionsDraft[m.key] === true && !blockedByRole}
+                    disabled={forced || blockedByRole}
+                    onCheckedChange={(checked) =>
+                      setPermissionsDraft((prev) => ({ ...prev, [m.key]: checked }))
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setPermissionsUser(null)} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button
+              onClick={savePermissions}
+              disabled={savingPermissions || permissionsUser?.role === "super_admin"}
+              className="bg-gradient-forest w-full sm:w-auto"
+            >
+              {savingPermissions ? "Salvando..." : "Salvar permissões"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 };
 
