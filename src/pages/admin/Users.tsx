@@ -454,11 +454,47 @@ const Users = () => {
                   onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                 />
               </div>
+              <div className="space-y-3 pt-2 border-t">
+                <div>
+                  <Label className="text-sm">Módulos de acesso</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Habilite os módulos que este usuário poderá acessar.
+                  </p>
+                </div>
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                  {ADMIN_MODULES.map((m) => {
+                    const blockedByRole =
+                      newUser.role !== "super_admin" &&
+                      ROLE_HIERARCHY[newUser.role] < ROLE_HIERARCHY[m.minRole];
+                    const forced = newUser.role === "super_admin";
+                    return (
+                      <div key={m.key} className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm truncate">{m.label}</p>
+                          {blockedByRole && (
+                            <p className="text-[11px] text-muted-foreground">
+                              Requer cargo {m.minRole === "admin" ? "Admin" : "Super Admin"}
+                            </p>
+                          )}
+                        </div>
+                        <Switch
+                          checked={forced ? true : newUserModules[m.key] && !blockedByRole}
+                          disabled={forced || blockedByRole}
+                          onCheckedChange={(checked) =>
+                            setNewUserModules((prev) => ({ ...prev, [m.key]: checked }))
+                          }
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
               <Button onClick={handleCreateUser} className="bg-gradient-forest w-full sm:w-auto">Criar Usuário</Button>
             </DialogFooter>
+
           </DialogContent>
         </Dialog>
       </div>
