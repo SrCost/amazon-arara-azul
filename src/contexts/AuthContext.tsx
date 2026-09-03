@@ -3,6 +3,8 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useModulePermissions } from '@/hooks/useModulePermissions';
+import { canAccessModule, type AdminRole } from '@/config/adminModules';
 
 interface AuthContextType {
   user: User | null;
@@ -13,6 +15,10 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   isAdmin: boolean;
   isSuperAdmin: boolean;
+  role: AdminRole;
+  modulePermissions: Record<string, boolean> | null;
+  permissionsLoading: boolean;
+  hasModule: (moduleKey: string) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,7 +29,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [role, setRole] = useState<AdminRole>('user');
   const navigate = useNavigate();
+  const { permissions: modulePermissions, loading: permissionsLoading } = useModulePermissions(user?.id);
+
 
   useEffect(() => {
     // Set up auth state listener
