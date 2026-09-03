@@ -197,6 +197,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(false);
       setIsSuperAdmin(false);
       setRole('user');
+      navigate('/');
+
 
     }
   };
