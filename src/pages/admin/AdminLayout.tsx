@@ -40,7 +40,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, isAdmin, isSuperAdmin, user, loading } = useAuth();
+  const { signOut, user, loading, hasModule } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (!loading && !user) {
