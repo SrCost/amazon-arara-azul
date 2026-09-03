@@ -198,6 +198,9 @@ const Users = () => {
           password: newUser.password,
           full_name: newUser.full_name,
           role: newUser.role,
+          modules: Object.entries(newUserModules)
+            .filter(([, enabled]) => enabled)
+            .map(([key]) => key),
         }),
       });
 
@@ -210,7 +213,11 @@ const Users = () => {
       toast.success("Usuário criado com sucesso!");
       setIsAddDialogOpen(false);
       setNewUser({ email: "", password: "", full_name: "", role: "user" });
+      setNewUserModules(
+        Object.fromEntries(ADMIN_MODULES.map((m) => [m.key, DEFAULT_ENABLED_MODULES.includes(m.key)])),
+      );
       fetchUsers();
+
       
       console.log("User created successfully:", result.user);
     } catch (error: any) {
