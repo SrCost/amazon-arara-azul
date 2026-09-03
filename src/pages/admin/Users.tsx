@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Edit, Trash2, UserPlus, Shield } from "lucide-react";
+import { Search, Trash2, UserPlus, Shield, SlidersHorizontal } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -27,11 +27,19 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  ADMIN_MODULES,
+  DEFAULT_ENABLED_MODULES,
+  ROLE_HIERARCHY,
+  type AdminRole,
+} from "@/config/adminModules";
 
 interface UserProfile {
   id: string;
@@ -39,12 +47,6 @@ interface UserProfile {
   full_name?: string;
   phone?: string;
   created_at: string;
-}
-
-interface UserRole {
-  id: string;
-  user_id: string;
-  role: 'super_admin' | 'admin' | 'user';
 }
 
 const Users = () => {
@@ -55,14 +57,19 @@ const Users = () => {
   const [loading, setLoading] = useState(true);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<UserProfile & { role: string } | null>(null);
+  const [permissionsUser, setPermissionsUser] = useState<(UserProfile & { role: string }) | null>(null);
+  const [permissionsDraft, setPermissionsDraft] = useState<Record<string, boolean>>({});
+  const [savingPermissions, setSavingPermissions] = useState(false);
   const [newUser, setNewUser] = useState({
     email: "",
     password: "",
     full_name: "",
-    role: "user" as 'super_admin' | 'admin' | 'user',
+    role: "user" as AdminRole,
   });
+  const [newUserModules, setNewUserModules] = useState<Record<string, boolean>>(
+    Object.fromEntries(ADMIN_MODULES.map((m) => [m.key, DEFAULT_ENABLED_MODULES.includes(m.key)])),
+  );
+
 
   useEffect(() => {
     checkUserRole();
