@@ -303,6 +303,57 @@ const Users = () => {
     }
   };
 
+  const openPermissions = async (target: UserProfile & { role: string }) => {
+    setPermissionsUser(target);
+    try {
+      const { data, error } = await supabase
+        .from("user_module_permissions")
+        .select("module, enabled")
+        .eq("user_id", target.id);
+
+      if (error) throw error;
+
+      const saved = new Map((data || []).map((r) => [r.module, r.enabled]));
+      const draft: Record<string, boolean> = {};
+      ADMIN_MODULES.forEach((m) => {
+        draft[m.key] = saved.size === 0
+          ? ROLE_HIERARCHY[target.role as AdminRole] >= ROLE_HIERARCHY[m.minRole]
+          : saved.get(m.key) === true;
+      });
+      setPermissionsDraft(draft);
+    } catch (error) {
+      console.error("Error loading permissions:", error);
+      toast.error("Erro ao carregar permissões");
+    }
+  };
+
+  const savePermissions = async () => {
+    if (!permissionsUser) return;
+    setSavingPermissions(true);
+    try {
+      const rows = ADMIN_MODULES.map((m) => ({
+        user_id: permissionsUser.id,
+        module: m.key,
+        enabled: permissionsDraft[m.key] === true,
+      }));
+
+      const { error } = await supabase
+        .from("user_module_permissions")
+        .upsert(rows, { onConflict: "user_id,module" });
+
+      if (error) throw error;
+
+      toast.success("Permissões salvas com sucesso!");
+      setPermissionsUser(null);
+    } catch (error: any) {
+      console.error("Error saving permissions:", error);
+      toast.error(error.message || "Erro ao salvar permissões");
+    } finally {
+      setSavingPermissions(false);
+    }
+  };
+
+
   const getRoleBadge = (role: string) => {
     const variants: { [key: string]: any } = {
       super_admin: { label: t("admin.superAdmin"), className: "bg-purple-100 text-purple-800" },
