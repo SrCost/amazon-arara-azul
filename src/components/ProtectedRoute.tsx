@@ -3,14 +3,17 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { canAccessModule, type AdminRole } from "@/config/adminModules";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: 'user' | 'admin' | 'super_admin';
+  requiredRole?: AdminRole;
+  /** Module key from src/config/adminModules.ts */
+  module?: string;
 }
 
-export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+export const ProtectedRoute = ({ children, requiredRole, module }: ProtectedRouteProps) => {
+  const { user, loading, modulePermissions, permissionsLoading } = useAuth();
   const [userRole, setUserRole] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
@@ -42,7 +45,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     checkRole();
   }, [user]);
 
-  if (loading || checking) {
+  if (loading || checking || (user && permissionsLoading)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-pulse text-muted-foreground">Carregando...</div>
@@ -55,6 +58,8 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
     return <Navigate to="/auth" replace />;
   }
 
+  const effectiveRole = (userRole as AdminRole) || 'user';
+
   // Check role permissions with proper hierarchy
   if (requiredRole) {
     const roleHierarchy = {
@@ -63,7 +68,7 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
       'super_admin': 3
     };
 
-    const userRoleLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] || 0;
+    const userRoleLevel = roleHierarchy[effectiveRole as keyof typeof roleHierarchy] || 0;
     const requiredRoleLevel = roleHierarchy[requiredRole];
 
     // Allow access if user role level is equal or higher than required
@@ -71,6 +76,12 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
       toast.error("Acesso restrito. Você não tem permissão para acessar esta página.");
       return <Navigate to="/admin" replace />;
     }
+  }
+
+  // Check per-module permission (module "dashboard" is never blocked to avoid redirect loops)
+  if (module && module !== "dashboard" && !canAccessModule(module, effectiveRole, modulePermissions)) {
+    toast.error("Acesso restrito. Este módulo não está habilitado para o seu usuário.");
+    return <Navigate to="/admin" replace />;
   }
 
   return <>{children}</>;
