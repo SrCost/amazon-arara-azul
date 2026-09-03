@@ -102,8 +102,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) throw error;
 
       const roles = data?.map((r) => r.role) || [];
-      setIsSuperAdmin(roles.includes('super_admin'));
-      setIsAdmin(roles.includes('admin') || roles.includes('super_admin'));
+      const superAdmin = roles.includes('super_admin');
+      const admin = roles.includes('admin');
+      setIsSuperAdmin(superAdmin);
+      setIsAdmin(admin || superAdmin);
+      setRole(superAdmin ? 'super_admin' : admin ? 'admin' : 'user');
+
     } catch (error) {
       console.error('Error checking user role:', error);
     }
