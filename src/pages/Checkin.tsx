@@ -266,36 +266,21 @@ const Checkin = () => {
                   <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)}
                     placeholder={t("checkinPage.addressPh")} maxLength={500} />
                 </div>
-                <div>
-                  <Label htmlFor="transportMode">{t("checkinPage.transport")}</Label>
-                  <Select value={transportMode} onValueChange={setTransportMode}>
-                    <SelectTrigger id="transportMode"><SelectValue placeholder={t("checkinPage.selectPh")} /></SelectTrigger>
-                    <SelectContent>
-                      {TRANSPORT_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="travelReason">{t("checkinPage.travelReason")}</Label>
-                  <Select value={travelReason} onValueChange={setTravelReason}>
-                    <SelectTrigger id="travelReason"><SelectValue placeholder={t("checkinPage.selectPh")} /></SelectTrigger>
-                    <SelectContent>
-                      {TRAVEL_REASON_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <hr className="my-2 border-border" />
 
                 <div>
                   <Label htmlFor="arrival">{t("checkinPage.arrival")}</Label>
-                  <Input id="arrival" value={estimatedArrival} onChange={(e) => setEstimatedArrival(e.target.value)}
-                    placeholder={t("checkinPage.arrivalPh")} maxLength={100} />
+                  <Select value={estimatedArrival} onValueChange={setEstimatedArrival}>
+                    <SelectTrigger id="arrival"><SelectValue placeholder={t("checkinPage.selectPh")} /></SelectTrigger>
+                    <SelectContent>
+                      {ARRIVAL_TIME_OPTIONS.map((time) => (
+                        <SelectItem key={time} value={time}>{time}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
                 <div>
                   <Label htmlFor="notes">{t("checkinPage.notes")}</Label>
                   <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)}
