@@ -69,7 +69,7 @@ serve(async (req) => {
     }
 
     // Get request body
-    const { email, password, full_name, role }: CreateUserRequest = await req.json()
+    const { email, password, full_name, role, modules }: CreateUserRequest = await req.json()
 
     // Validate input
     if (!email || !password || !full_name || !role) {
@@ -79,6 +79,13 @@ serve(async (req) => {
     if (!['super_admin', 'admin', 'user'].includes(role)) {
       throw new Error('Invalid role. Must be: super_admin, admin, or user')
     }
+
+    if (modules !== undefined) {
+      if (!Array.isArray(modules) || modules.some((m) => typeof m !== 'string' || !VALID_MODULES.includes(m))) {
+        throw new Error('Invalid modules list')
+      }
+    }
+
 
     // Create user using Admin API
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
