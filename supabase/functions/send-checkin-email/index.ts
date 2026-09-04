@@ -44,49 +44,56 @@ serve(async (req) => {
     const siteUrl = (Deno.env.get("SITE_URL") || "https://pousadararazul.com").replace(/\/+$/, "");
     const checkinLink = `${siteUrl}/checkin?token=${token}`;
 
-    // Token independente para o questionário de Pré-Chegada (sem relação com a FNRH)
-    const preArrivalToken = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-    await supabase.from("booking_tokens").insert({
-      reservation_id: reservationId,
-      token: preArrivalToken,
-      type: "pre_arrival",
-      expires_at: new Date(new Date(reservation.check_out + "T12:00:00Z").getTime() + 24 * 60 * 60 * 1000).toISOString(),
-    });
-    const preArrivalLink = `${siteUrl}/pre-chegada?token=${preArrivalToken}`;
-
+    // Bloco de Pré-Chegada apenas se o questionário ainda NÃO foi respondido
     const { data: existingPreArrival } = await supabase
       .from("pre_arrival_responses")
       .select("id, status, first_sent_at")
       .eq("reservation_id", reservationId)
       .maybeSingle();
 
-    const nowIso = new Date().toISOString();
-    if (existingPreArrival) {
-      await supabase.from("pre_arrival_responses").update({
-        status: existingPreArrival.status === "pending" ? "sent" : existingPreArrival.status,
-        first_sent_at: existingPreArrival.first_sent_at || nowIso,
-        last_sent_at: nowIso,
-        last_send_origin: "auto",
-      }).eq("id", existingPreArrival.id);
-    } else {
-      await supabase.from("pre_arrival_responses").insert({
+    const preArrivalAnswered = ["answered", "updated"].includes(existingPreArrival?.status || "");
+    let preArrivalLink: string | null = null;
+
+    if (!preArrivalAnswered) {
+      // Token independente para o questionário de Pré-Chegada (sem relação com a FNRH)
+      const preArrivalToken = crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+      await supabase.from("booking_tokens").insert({
         reservation_id: reservationId,
-        status: "sent",
-        first_sent_at: nowIso,
-        last_sent_at: nowIso,
-        last_send_origin: "auto",
+        token: preArrivalToken,
+        type: "pre_arrival",
+        expires_at: new Date(new Date(reservation.check_out + "T12:00:00Z").getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      });
+      preArrivalLink = `${siteUrl}/pre-chegada?token=${preArrivalToken}`;
+
+      const nowIso = new Date().toISOString();
+      if (existingPreArrival) {
+        await supabase.from("pre_arrival_responses").update({
+          status: existingPreArrival.status === "pending" ? "sent" : existingPreArrival.status,
+          first_sent_at: existingPreArrival.first_sent_at || nowIso,
+          last_sent_at: nowIso,
+          last_send_origin: "auto",
+        }).eq("id", existingPreArrival.id);
+      } else {
+        await supabase.from("pre_arrival_responses").insert({
+          reservation_id: reservationId,
+          status: "sent",
+          first_sent_at: nowIso,
+          last_sent_at: nowIso,
+          last_send_origin: "auto",
+        });
+      }
+
+      // Auditoria reaproveitando o registro de atividades existente
+      await supabase.from("activity_log").insert({
+        user_email: "system",
+        action: "pre_arrival_sent_auto",
+        description: "Link de Pre-Chegada enviado automaticamente junto ao e-mail de check-in",
+        entity_type: "pre_arrival_responses",
+        entity_id: reservationId,
+        metadata: { origin: "auto", trigger: "send-checkin-email" },
       });
     }
 
-    // Auditoria reaproveitando o registro de atividades existente
-    await supabase.from("activity_log").insert({
-      user_email: "system",
-      action: "pre_arrival_sent_auto",
-      description: "Link de Pre-Chegada enviado automaticamente junto ao e-mail de check-in",
-      entity_type: "pre_arrival_responses",
-      entity_id: reservationId,
-      metadata: { origin: "auto", trigger: "send-checkin-email" },
-    });
 
 
 
