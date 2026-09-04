@@ -112,7 +112,10 @@ serve(async (req) => {
       if (roleUpdateError) {
         console.error('Error updating role:', roleUpdateError)
         throw new Error('User created but failed to assign role')
+      }
     }
+
+
 
     // Persist per-module permissions (super_admin always has full access, no rows needed)
     if (modules !== undefined && role !== 'super_admin') {
