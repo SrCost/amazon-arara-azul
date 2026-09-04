@@ -112,8 +112,27 @@ serve(async (req) => {
       if (roleUpdateError) {
         console.error('Error updating role:', roleUpdateError)
         throw new Error('User created but failed to assign role')
+    }
+
+    // Persist per-module permissions (super_admin always has full access, no rows needed)
+    if (modules !== undefined && role !== 'super_admin') {
+      const enabled = new Set(modules)
+      const rows = VALID_MODULES.map((m) => ({
+        user_id: newUser.user.id,
+        module: m,
+        enabled: enabled.has(m),
+      }))
+
+      const { error: permError } = await supabaseAdmin
+        .from('user_module_permissions')
+        .upsert(rows, { onConflict: 'user_id,module' })
+
+      if (permError) {
+        console.error('Error saving module permissions:', permError)
+        throw new Error('User created but failed to save module permissions')
       }
     }
+
 
     console.log('User created successfully:', { userId: newUser.user.id, email, role })
 
