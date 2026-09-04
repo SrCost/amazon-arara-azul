@@ -9,12 +9,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const VALID_MODULES = [
+  'dashboard', 'calendar', 'reservations', 'messages', 'gallery', 'carousel',
+  'automation', 'forms', 'fnrh', 'packages', 'bungalows', 'experiences',
+  'payments', 'users', 'audit',
+]
+
 interface CreateUserRequest {
   email: string
   password: string
   full_name: string
   role: 'super_admin' | 'admin' | 'user'
+  modules?: string[]
 }
+
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -61,7 +69,7 @@ serve(async (req) => {
     }
 
     // Get request body
-    const { email, password, full_name, role }: CreateUserRequest = await req.json()
+    const { email, password, full_name, role, modules }: CreateUserRequest = await req.json()
 
     // Validate input
     if (!email || !password || !full_name || !role) {
@@ -71,6 +79,13 @@ serve(async (req) => {
     if (!['super_admin', 'admin', 'user'].includes(role)) {
       throw new Error('Invalid role. Must be: super_admin, admin, or user')
     }
+
+    if (modules !== undefined) {
+      if (!Array.isArray(modules) || modules.some((m) => typeof m !== 'string' || !VALID_MODULES.includes(m))) {
+        throw new Error('Invalid modules list')
+      }
+    }
+
 
     // Create user using Admin API
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -99,6 +114,28 @@ serve(async (req) => {
         throw new Error('User created but failed to assign role')
       }
     }
+
+
+
+    // Persist per-module permissions (super_admin always has full access, no rows needed)
+    if (modules !== undefined && role !== 'super_admin') {
+      const enabled = new Set(modules)
+      const rows = VALID_MODULES.map((m) => ({
+        user_id: newUser.user.id,
+        module: m,
+        enabled: enabled.has(m),
+      }))
+
+      const { error: permError } = await supabaseAdmin
+        .from('user_module_permissions')
+        .upsert(rows, { onConflict: 'user_id,module' })
+
+      if (permError) {
+        console.error('Error saving module permissions:', permError)
+        throw new Error('User created but failed to save module permissions')
+      }
+    }
+
 
     console.log('User created successfully:', { userId: newUser.user.id, email, role })
 
