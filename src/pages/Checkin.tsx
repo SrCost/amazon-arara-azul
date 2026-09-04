@@ -49,8 +49,6 @@ const Checkin = () => {
     nationality: z.string().trim().min(2, t("checkinPage.nationality")).max(100),
     city_state: z.string().trim().min(2, t("checkinPage.cityState")).max(200),
     address: z.string().max(500).optional(),
-    transport_mode: z.string().max(100).optional(),
-    travel_reason: z.string().max(100).optional(),
     estimated_arrival: z.string().max(100).optional(),
     notes: z.string().max(500).optional(),
     accepted_terms: z.literal(true, { errorMap: () => ({ message: t("checkinPage.acceptTermsLead") }) }),
@@ -77,8 +75,6 @@ const Checkin = () => {
   const [nationality, setNationality] = useState("");
   const [cityState, setCityState] = useState("");
   const [address, setAddress] = useState("");
-  const [transportMode, setTransportMode] = useState("");
-  const [travelReason, setTravelReason] = useState("");
   const [estimatedArrival, setEstimatedArrival] = useState("");
   const [notes, setNotes] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -144,8 +140,7 @@ const Checkin = () => {
     e.preventDefault();
     const parsed = checkinSchema.safeParse({
       full_name: fullName, document, birth_date: birthDate, nationality, city_state: cityState,
-      address: address || undefined, transport_mode: transportMode || undefined,
-      travel_reason: travelReason || undefined, estimated_arrival: estimatedArrival || undefined,
+      address: address || undefined, estimated_arrival: estimatedArrival || undefined,
       notes: notes || undefined, accepted_terms: acceptedTerms,
     });
     if (!parsed.success) {
@@ -159,8 +154,8 @@ const Checkin = () => {
       p_accepted_terms: true, p_token: tokenUsed || null,
       p_full_name: fullName.trim(), p_birth_date: birthDate || null,
       p_nationality: nationality.trim() || null, p_city_state: cityState.trim() || null,
-      p_address: address.trim() || null, p_transport_mode: transportMode || null,
-      p_travel_reason: travelReason || null,
+      p_address: address.trim() || null, p_transport_mode: null,
+      p_travel_reason: null,
     });
     if (error) {
       toast({ title: t("checkinPage.errorSubmit"), description: error.message, variant: "destructive" });
