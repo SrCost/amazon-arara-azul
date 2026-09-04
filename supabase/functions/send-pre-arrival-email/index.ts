@@ -109,6 +109,28 @@ serve(async (req) => {
       });
     }
 
+    // Travas de idempotência: nunca reenviar se já respondido; envio automático só uma vez
+    const { data: existingPa } = await supabase
+      .from("pre_arrival_responses")
+      .select("id, status, first_sent_at")
+      .eq("reservation_id", reservationId)
+      .maybeSingle();
+
+    if (existingPa && ["answered", "updated"].includes(existingPa.status || "")) {
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, reason: "already_answered" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (sendOrigin === "auto" && existingPa?.first_sent_at) {
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, reason: "already_sent" }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+
     const lang: Lang = (["pt", "en", "es", "fr", "de"].includes(reservation.guest_language)
       ? reservation.guest_language
       : "pt") as Lang;

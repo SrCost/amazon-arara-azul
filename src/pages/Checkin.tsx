@@ -49,28 +49,17 @@ const Checkin = () => {
     nationality: z.string().trim().min(2, t("checkinPage.nationality")).max(100),
     city_state: z.string().trim().min(2, t("checkinPage.cityState")).max(200),
     address: z.string().max(500).optional(),
-    transport_mode: z.string().max(100).optional(),
-    travel_reason: z.string().max(100).optional(),
     estimated_arrival: z.string().max(100).optional(),
     notes: z.string().max(500).optional(),
     accepted_terms: z.literal(true, { errorMap: () => ({ message: t("checkinPage.acceptTermsLead") }) }),
   });
 
-  const TRANSPORT_OPTIONS = [
-    { value: "carro", label: t("checkinPage.transportOpts.carro") },
-    { value: "onibus", label: t("checkinPage.transportOpts.onibus") },
-    { value: "aviao_barco", label: t("checkinPage.transportOpts.aviao_barco") },
-    { value: "barco", label: t("checkinPage.transportOpts.barco") },
-    { value: "outro", label: t("checkinPage.transportOpts.outro") },
-  ];
+  // Horários de chegada de 30 em 30 minutos, das 08:00 às 22:00
+  const ARRIVAL_TIME_OPTIONS = Array.from({ length: 29 }, (_, i) => {
+    const minutes = 8 * 60 + i * 30;
+    return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  });
 
-  const TRAVEL_REASON_OPTIONS = [
-    { value: "lazer", label: t("checkinPage.reasonOpts.lazer") },
-    { value: "negocios", label: t("checkinPage.reasonOpts.negocios") },
-    { value: "eventos", label: t("checkinPage.reasonOpts.eventos") },
-    { value: "saude", label: t("checkinPage.reasonOpts.saude") },
-    { value: "outro", label: t("checkinPage.reasonOpts.outro") },
-  ];
 
   const [step, setStep] = useState<"validate" | "form" | "success">("validate");
   const [reservationId, setReservationId] = useState("");
@@ -86,8 +75,6 @@ const Checkin = () => {
   const [nationality, setNationality] = useState("");
   const [cityState, setCityState] = useState("");
   const [address, setAddress] = useState("");
-  const [transportMode, setTransportMode] = useState("");
-  const [travelReason, setTravelReason] = useState("");
   const [estimatedArrival, setEstimatedArrival] = useState("");
   const [notes, setNotes] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -153,8 +140,7 @@ const Checkin = () => {
     e.preventDefault();
     const parsed = checkinSchema.safeParse({
       full_name: fullName, document, birth_date: birthDate, nationality, city_state: cityState,
-      address: address || undefined, transport_mode: transportMode || undefined,
-      travel_reason: travelReason || undefined, estimated_arrival: estimatedArrival || undefined,
+      address: address || undefined, estimated_arrival: estimatedArrival || undefined,
       notes: notes || undefined, accepted_terms: acceptedTerms,
     });
     if (!parsed.success) {
@@ -168,8 +154,8 @@ const Checkin = () => {
       p_accepted_terms: true, p_token: tokenUsed || null,
       p_full_name: fullName.trim(), p_birth_date: birthDate || null,
       p_nationality: nationality.trim() || null, p_city_state: cityState.trim() || null,
-      p_address: address.trim() || null, p_transport_mode: transportMode || null,
-      p_travel_reason: travelReason || null,
+      p_address: address.trim() || null, p_transport_mode: null,
+      p_travel_reason: null,
     });
     if (error) {
       toast({ title: t("checkinPage.errorSubmit"), description: error.message, variant: "destructive" });
@@ -266,36 +252,21 @@ const Checkin = () => {
                   <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)}
                     placeholder={t("checkinPage.addressPh")} maxLength={500} />
                 </div>
-                <div>
-                  <Label htmlFor="transportMode">{t("checkinPage.transport")}</Label>
-                  <Select value={transportMode} onValueChange={setTransportMode}>
-                    <SelectTrigger id="transportMode"><SelectValue placeholder={t("checkinPage.selectPh")} /></SelectTrigger>
-                    <SelectContent>
-                      {TRANSPORT_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="travelReason">{t("checkinPage.travelReason")}</Label>
-                  <Select value={travelReason} onValueChange={setTravelReason}>
-                    <SelectTrigger id="travelReason"><SelectValue placeholder={t("checkinPage.selectPh")} /></SelectTrigger>
-                    <SelectContent>
-                      {TRAVEL_REASON_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <hr className="my-2 border-border" />
 
                 <div>
                   <Label htmlFor="arrival">{t("checkinPage.arrival")}</Label>
-                  <Input id="arrival" value={estimatedArrival} onChange={(e) => setEstimatedArrival(e.target.value)}
-                    placeholder={t("checkinPage.arrivalPh")} maxLength={100} />
+                  <Select value={estimatedArrival} onValueChange={setEstimatedArrival}>
+                    <SelectTrigger id="arrival"><SelectValue placeholder={t("checkinPage.selectPh")} /></SelectTrigger>
+                    <SelectContent>
+                      {ARRIVAL_TIME_OPTIONS.map((time) => (
+                        <SelectItem key={time} value={time}>{time}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
+
                 <div>
                   <Label htmlFor="notes">{t("checkinPage.notes")}</Label>
                   <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)}
