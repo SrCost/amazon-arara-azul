@@ -9,12 +9,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const VALID_MODULES = [
+  'dashboard', 'calendar', 'reservations', 'messages', 'gallery', 'carousel',
+  'automation', 'forms', 'fnrh', 'packages', 'bungalows', 'experiences',
+  'payments', 'users', 'audit',
+]
+
 interface CreateUserRequest {
   email: string
   password: string
   full_name: string
   role: 'super_admin' | 'admin' | 'user'
+  modules?: string[]
 }
+
 
 serve(async (req) => {
   // Handle CORS preflight requests
