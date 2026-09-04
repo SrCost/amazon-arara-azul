@@ -56,21 +56,12 @@ const Checkin = () => {
     accepted_terms: z.literal(true, { errorMap: () => ({ message: t("checkinPage.acceptTermsLead") }) }),
   });
 
-  const TRANSPORT_OPTIONS = [
-    { value: "carro", label: t("checkinPage.transportOpts.carro") },
-    { value: "onibus", label: t("checkinPage.transportOpts.onibus") },
-    { value: "aviao_barco", label: t("checkinPage.transportOpts.aviao_barco") },
-    { value: "barco", label: t("checkinPage.transportOpts.barco") },
-    { value: "outro", label: t("checkinPage.transportOpts.outro") },
-  ];
+  // Horários de chegada de 30 em 30 minutos, das 08:00 às 22:00
+  const ARRIVAL_TIME_OPTIONS = Array.from({ length: 29 }, (_, i) => {
+    const minutes = 8 * 60 + i * 30;
+    return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+  });
 
-  const TRAVEL_REASON_OPTIONS = [
-    { value: "lazer", label: t("checkinPage.reasonOpts.lazer") },
-    { value: "negocios", label: t("checkinPage.reasonOpts.negocios") },
-    { value: "eventos", label: t("checkinPage.reasonOpts.eventos") },
-    { value: "saude", label: t("checkinPage.reasonOpts.saude") },
-    { value: "outro", label: t("checkinPage.reasonOpts.outro") },
-  ];
 
   const [step, setStep] = useState<"validate" | "form" | "success">("validate");
   const [reservationId, setReservationId] = useState("");
