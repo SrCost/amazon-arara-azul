@@ -123,8 +123,9 @@ serve(async (req) => {
 <a href="${checkinLink}" style="background:#0B3A66;color:#fff;padding:16px 32px;border-radius:10px;text-decoration:none;font-weight:600;display:inline-block;font-size:16px;">
 Fazer Check-in Agora
 </a></td></tr></table>
-<table width="100%" style="background:#F6FBF9;border-radius:12px;border:1px solid #E4EFEA;margin:24px 0 0;">
+${preArrivalLink ? `<table width="100%" style="background:#F6FBF9;border-radius:12px;border:1px solid #E4EFEA;margin:24px 0 0;">
 <tr><td style="padding:20px 22px;" align="center">
+
 <p style="margin:0 0 6px;font-size:15px;font-weight:700;color:#0F6B4D;">🌿 Prepare sua chegada</p>
 <p style="margin:0 0 16px;font-size:13px;color:#4A5568;line-height:1.6;">Conte suas preferências de alimentação, bem-estar e detalhes especiais para deixarmos tudo do seu jeito.</p>
 <a href="${preArrivalLink}" style="background:#0F6B4D;color:#fff;padding:14px 26px;border-radius:10px;text-decoration:none;font-weight:700;display:inline-block;font-size:14px;letter-spacing:0.5px;">PREPARAR MINHA CHEGADA</a>
