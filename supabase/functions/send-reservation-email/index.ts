@@ -738,7 +738,21 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Erro ao registrar log de email:', logError);
     }
 
+    // Dispara o questionário de Pré-Chegada logo após a confirmação da reserva,
+    // para dar prazo à equipe. A função de destino tem travas próprias de idempotência.
+    if (type === 'reservation_confirmed' && reservationId) {
+      try {
+        const { error: paError } = await supabase.functions.invoke('send-pre-arrival-email', {
+          body: { reservationId, origin: 'auto' },
+        });
+        if (paError) console.error('Falha ao disparar pré-chegada:', paError.message);
+      } catch (paErr: any) {
+        console.error('Falha ao disparar pré-chegada:', paErr?.message);
+      }
+    }
+
     console.log('Email enviado e logado com sucesso');
+
 
     return new Response(
       JSON.stringify({ success: true, data: emailResponse }),
