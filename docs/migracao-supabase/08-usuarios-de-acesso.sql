@@ -1,29 +1,79 @@
 -- ============================================================
 -- 08-usuarios-de-acesso.sql
--- Recriacao dos usuarios administrativos MANTENDO o mesmo
+-- Cria os 4 usuarios administrativos MANTENDO o mesmo
 -- identificador interno (id), para que perfis, cargos e
 -- permissoes por modulo continuem ligados corretamente.
 --
--- ATENCAO: nao se insere diretamente na tabela auth.users.
--- Use o script Node abaixo (roda na sua maquina) e depois
--- execute o arquivo 07-dados-tabela-por-tabela.sql.
+-- EXECUTE ESTE ARQUIVO NO SQL EDITOR *ANTES* DO 07.
+-- Se o 07 falhar com "profiles_id_fkey", e porque este
+-- arquivo ainda nao foi executado.
+--
+-- Senha provisoria de todos: Arara@2026!Trocar
+-- Cada pessoa troca depois em /auth > "Esqueci minha senha".
 -- ============================================================
 
--- Usuarios que devem existir no novo projeto:
---
---  id                                    | e-mail                              | cargo
---  --------------------------------------+-------------------------------------+-------------
---  631d2468-c2a6-4eff-926c-d3fda28048b4  | cst.flavio@pousadaararaazul.com     | super_admin
---  7e1632aa-b7a2-4cfc-9089-64b51abf468d  | kinha@pousadaararaazul.com.br       | super_admin
---  7d78ab2c-9f8b-47d5-b5d1-3d6b4987c29f  | teste2@gmail.com                    | admin
---  f2250b21-3e82-416a-864a-ef814197567a  | laracabral@pousadararazul.com       | admin
---
--- Os cargos e as permissoes por modulo ja vao no arquivo 07
--- (tabelas profiles, user_roles e user_module_permissions).
+-- ------------------------------------------------------------
+-- OPCAO A (recomendada) - rodar aqui mesmo, no SQL Editor
+-- ------------------------------------------------------------
+INSERT INTO auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data,
+  created_at, updated_at
+)
+SELECT
+  '00000000-0000-0000-0000-000000000000'::uuid,
+  u.id,
+  'authenticated',
+  'authenticated',
+  u.email,
+  extensions.crypt('Arara@2026!Trocar', extensions.gen_salt('bf')),
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb,
+  jsonb_build_object('full_name', u.full_name, 'email', u.email, 'email_verified', true),
+  now(),
+  now()
+FROM (VALUES
+  ('631d2468-c2a6-4eff-926c-d3fda28048b4'::uuid, 'cst.flavio@pousadaararaazul.com', 'Flavio Costa'),
+  ('7e1632aa-b7a2-4cfc-9089-64b51abf468d'::uuid, 'kinha@pousadaararaazul.com.br',   'Jessica kinha'),
+  ('7d78ab2c-9f8b-47d5-b5d1-3d6b4987c29f'::uuid, 'teste2@gmail.com',                'teste2'),
+  ('f2250b21-3e82-416a-864a-ef814197567a'::uuid, 'laracabral@pousadararazul.com',   'Lara Cabral')
+) AS u(id, email, full_name)
+ON CONFLICT (id) DO NOTHING;
+
+-- Identidade de e-mail (necessaria para o login por e-mail/senha)
+INSERT INTO auth.identities (
+  id, user_id, provider_id, provider, identity_data,
+  last_sign_in_at, created_at, updated_at
+)
+SELECT
+  gen_random_uuid(),
+  u.id,
+  u.email,
+  'email',
+  jsonb_build_object('sub', u.id::text, 'email', u.email, 'email_verified', true),
+  NULL,
+  now(),
+  now()
+FROM auth.users u
+WHERE u.id IN (
+  '631d2468-c2a6-4eff-926c-d3fda28048b4',
+  '7e1632aa-b7a2-4cfc-9089-64b51abf468d',
+  '7d78ab2c-9f8b-47d5-b5d1-3d6b4987c29f',
+  'f2250b21-3e82-416a-864a-ef814197567a'
+)
+ON CONFLICT DO NOTHING;
 
 -- ------------------------------------------------------------
--- PASSO 1 - crie os usuarios rodando este script na sua maquina
+-- CONFERENCIA - deve retornar 4 linhas antes de rodar o 07
 -- ------------------------------------------------------------
+SELECT id, email, email_confirmed_at IS NOT NULL AS email_confirmado
+FROM auth.users
+ORDER BY created_at;
+
+-- ------------------------------------------------------------
+-- OPCAO B (alternativa) - criar pelo computador, via API admin
+-- ------------------------------------------------------------
+-- Use apenas se a Opcao A nao for possivel.
 -- Salve como criar-usuarios.mjs, preencha as duas variaveis e rode:
 --   npm i @supabase/supabase-js
 --   node criar-usuarios.mjs
@@ -45,24 +95,18 @@
 --   const { error } = await admin.auth.admin.createUser({
 --     id: u.id,
 --     email: u.email,
---     password: crypto.randomUUID() + 'Aa1!',  // senha provisoria descartavel
+--     password: 'Arara@2026!Trocar',
 --     email_confirm: true,
 --   });
 --   console.log(u.email, error ? 'ERRO: ' + error.message : 'criado');
 -- }
 
 -- ------------------------------------------------------------
--- PASSO 2 - cada pessoa define a propria senha
+-- Depois: cada pessoa define a propria senha
 -- ------------------------------------------------------------
 -- Na tela de login do site (/auth), usar "Esqueci minha senha",
 -- ou enviar o convite por e-mail:
 --   await admin.auth.admin.inviteUserByEmail('email@dominio.com')
-
--- ------------------------------------------------------------
--- PASSO 3 - conferencia (rode no SQL Editor apos o arquivo 07)
--- ------------------------------------------------------------
--- SELECT u.email, r.role, p.full_name
--- FROM auth.users u
--- LEFT JOIN public.user_roles r ON r.user_id = u.id
--- LEFT JOIN public.profiles p ON p.id = u.id
--- ORDER BY u.created_at;
+--
+-- Cargos e permissoes por modulo sao carregados pelo arquivo 07
+-- (tabelas profiles, user_roles e user_module_permissions).
