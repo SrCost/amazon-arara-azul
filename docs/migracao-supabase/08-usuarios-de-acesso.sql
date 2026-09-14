@@ -1,0 +1,68 @@
+-- ============================================================
+-- 08-usuarios-de-acesso.sql
+-- Recriacao dos usuarios administrativos MANTENDO o mesmo
+-- identificador interno (id), para que perfis, cargos e
+-- permissoes por modulo continuem ligados corretamente.
+--
+-- ATENCAO: nao se insere diretamente na tabela auth.users.
+-- Use o script Node abaixo (roda na sua maquina) e depois
+-- execute o arquivo 07-dados-tabela-por-tabela.sql.
+-- ============================================================
+
+-- Usuarios que devem existir no novo projeto:
+--
+--  id                                    | e-mail                              | cargo
+--  --------------------------------------+-------------------------------------+-------------
+--  631d2468-c2a6-4eff-926c-d3fda28048b4  | cst.flavio@pousadaararaazul.com     | super_admin
+--  7e1632aa-b7a2-4cfc-9089-64b51abf468d  | kinha@pousadaararaazul.com.br       | super_admin
+--  7d78ab2c-9f8b-47d5-b5d1-3d6b4987c29f  | teste2@gmail.com                    | admin
+--  f2250b21-3e82-416a-864a-ef814197567a  | laracabral@pousadararazul.com       | admin
+--
+-- Os cargos e as permissoes por modulo ja vao no arquivo 07
+-- (tabelas profiles, user_roles e user_module_permissions).
+
+-- ------------------------------------------------------------
+-- PASSO 1 - crie os usuarios rodando este script na sua maquina
+-- ------------------------------------------------------------
+-- Salve como criar-usuarios.mjs, preencha as duas variaveis e rode:
+--   npm i @supabase/supabase-js
+--   node criar-usuarios.mjs
+--
+-- import { createClient } from '@supabase/supabase-js';
+--
+-- const URL = 'https://<SEU-PROJETO>.supabase.co';
+-- const SERVICE_ROLE = '<SUA-SERVICE-ROLE-KEY>';
+-- const admin = createClient(URL, SERVICE_ROLE, { auth: { persistSession: false } });
+--
+-- const usuarios = [
+--   { id: '631d2468-c2a6-4eff-926c-d3fda28048b4', email: 'cst.flavio@pousadaararaazul.com' },
+--   { id: '7e1632aa-b7a2-4cfc-9089-64b51abf468d', email: 'kinha@pousadaararaazul.com.br' },
+--   { id: '7d78ab2c-9f8b-47d5-b5d1-3d6b4987c29f', email: 'teste2@gmail.com' },
+--   { id: 'f2250b21-3e82-416a-864a-ef814197567a', email: 'laracabral@pousadararazul.com' },
+-- ];
+--
+-- for (const u of usuarios) {
+--   const { error } = await admin.auth.admin.createUser({
+--     id: u.id,
+--     email: u.email,
+--     password: crypto.randomUUID() + 'Aa1!',  // senha provisoria descartavel
+--     email_confirm: true,
+--   });
+--   console.log(u.email, error ? 'ERRO: ' + error.message : 'criado');
+-- }
+
+-- ------------------------------------------------------------
+-- PASSO 2 - cada pessoa define a propria senha
+-- ------------------------------------------------------------
+-- Na tela de login do site (/auth), usar "Esqueci minha senha",
+-- ou enviar o convite por e-mail:
+--   await admin.auth.admin.inviteUserByEmail('email@dominio.com')
+
+-- ------------------------------------------------------------
+-- PASSO 3 - conferencia (rode no SQL Editor apos o arquivo 07)
+-- ------------------------------------------------------------
+-- SELECT u.email, r.role, p.full_name
+-- FROM auth.users u
+-- LEFT JOIN public.user_roles r ON r.user_id = u.id
+-- LEFT JOIN public.profiles p ON p.id = u.id
+-- ORDER BY u.created_at;
