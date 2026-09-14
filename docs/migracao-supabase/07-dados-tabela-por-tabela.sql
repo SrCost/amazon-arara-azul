@@ -4,6 +4,28 @@
 -- para que os gatilhos de auditoria nao criem registros falsos.
 -- A tabela fnrh_credentials nao e exportada (contem senha de integracao).
 -- A tabela rate_limits nao e exportada (cache temporario).
+-- ATENCAO: execute o arquivo 08-usuarios-de-acesso.sql ANTES deste.
+
+-- ============================================================
+-- Verificacao previa: os 4 usuarios administrativos precisam existir
+-- ============================================================
+DO $verifica$
+DECLARE
+  total int;
+BEGIN
+  SELECT count(*) INTO total FROM auth.users WHERE id IN (
+    '631d2468-c2a6-4eff-926c-d3fda28048b4',
+    '7e1632aa-b7a2-4cfc-9089-64b51abf468d',
+    '7d78ab2c-9f8b-47d5-b5d1-3d6b4987c29f',
+    'f2250b21-3e82-416a-864a-ef814197567a'
+  );
+  IF total < 4 THEN
+    RAISE EXCEPTION
+      'Faltam usuarios de login (% de 4 encontrados). Execute o arquivo 08-usuarios-de-acesso.sql primeiro e depois rode este arquivo novamente.',
+      total;
+  END IF;
+END
+$verifica$;
 
 -- ============================================================
 -- rooms  (9 registros)
