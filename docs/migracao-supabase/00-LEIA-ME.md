@@ -54,9 +54,22 @@ a senha do banco. Prefira a versão mais recente do Postgres oferecida.
 Abra o SQL Editor e execute os arquivos 1 a 6 da tabela acima, nessa ordem. Cada arquivo
 deve terminar com "Success". Se algum passo falhar, corrija antes de seguir — não pule.
 
+> **Importante — passo 5 antes do passo 6:** o arquivo `08-usuarios-de-acesso.sql` cria os
+> usuários de login. Ele precisa ser executado e conferido **antes** de `07-dados-tabela-por-tabela.sql`,
+> porque perfis, cargos, permissões, auditoria, bloqueios de datas e galeria estão ligados a
+> esses usuários. Depois de rodar o 08, confira:
+>
+> ```sql
+> SELECT id, email FROM auth.users ORDER BY created_at;  -- devem aparecer 4 linhas
+> ```
+>
+> Se o arquivo 07 acusar `profiles_id_fkey` / "is not present in table users", significa
+> exatamente que os usuários ainda não foram criados: rode o 08 e execute o 07 novamente
+> (ele ignora o que já foi carregado, pode repetir sem problema).
+
 ### 3. Senhas dos usuários
-Os usuários são criados com senha provisória. Cada pessoa entra em `/auth` e usa
-"Esqueci minha senha", ou você envia convite por e-mail (instruções no arquivo 08).
+Os usuários são criados com a senha provisória `Arara@2026!Trocar`. Cada pessoa entra em `/auth`
+e usa "Esqueci minha senha", ou você envia convite por e-mail (instruções no arquivo 08).
 
 ### 4. Gatilhos e rotinas
 Execute `05-gatilhos.sql` e depois `06-agendamentos.sql`. No arquivo 06 troque
