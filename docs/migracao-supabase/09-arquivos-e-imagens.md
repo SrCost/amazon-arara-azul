@@ -41,21 +41,48 @@ CREATE POLICY "Admins can delete gallery images"
 
 ## Passo 3 — copiar os arquivos
 
-Use o script `transferir-arquivos.mjs` desta mesma pasta. Ele lê cada arquivo do
-projeto atual e grava no novo com o mesmo caminho.
+Quem é quem:
+
+- **Projeto atual (origem)** = o banco que o site usa hoje, gerenciado pelo Lovable.
+- **Projeto novo (destino)** = o projeto do Supabase que você acabou de criar.
+
+### Opção B (recomendada) — a cópia é feita pelo Lovable
+
+Você não instala nem roda nada. Basta informar, num formulário seguro, o endereço
+(`https://xxxxxxxx.supabase.co`) e a chave secreta *service role* do **projeto novo**
+(painel do projeto novo: Project Settings → API → "service_role" → "Reveal").
+O Lovable lê os arquivos da origem e grava no destino com os mesmos caminhos,
+mostrando no final quantos foram copiados.
+
+> Atenção: o endereço e a chave precisam ser do **mesmo** projeto. Se o endereço for de
+> um projeto e a chave de outro, a gravação falha com "Invalid API key".
+
+### Opção A — rodar no seu computador
+
+1. Instale o Node.js em <https://nodejs.org> (botão LTS, instalação padrão).
+2. Copie o arquivo `transferir-arquivos.mjs` para uma pasta nova, por exemplo
+   `C:\migracao` (Windows) ou `~/migracao` (Mac).
+3. Abra o terminal **nessa pasta**: no Windows, Shift + botão direito dentro da pasta →
+   "Abrir no Terminal"; no Mac, abra o Terminal e digite `cd ~/migracao`.
+4. Preencha no topo do arquivo o endereço e a chave secreta (service role) do projeto
+   atual e do projeto novo.
+5. Rode os dois comandos:
 
 ```bash
 npm i @supabase/supabase-js
 node transferir-arquivos.mjs
 ```
 
-Antes de rodar, preencha no topo do arquivo:
-
-- endereço e chave secreta (service role) do **projeto atual**
-- endereço e chave secreta (service role) do **projeto novo**
-
 O script mostra um resumo no final (copiados / já existentes / erros) e pode ser
 executado novamente sem duplicar nada.
+
+### Limite de tamanho de arquivo
+
+O vídeo do carrossel (`hero/desktop_1781455693704_lv_0_20260611183341.mp4`) tem ~100 MB.
+Se o projeto novo estiver com o limite de upload em 50 MB (padrão do plano gratuito), a
+cópia dele falha com "The object exceeded the maximum allowed size". Ajuste em
+**Storage → Settings → Upload file size limit** no projeto novo (é preciso plano Pro para
+passar de 50 MB) e rode a cópia novamente — os arquivos já copiados são ignorados.
 
 ## Passo 4 — conferir
 
