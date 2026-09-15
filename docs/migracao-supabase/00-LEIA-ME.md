@@ -87,16 +87,39 @@ senão as fotos do site quebram.
   redirecionamentos permitidos: `https://pousadararazul.com/**` e a URL de pré-visualização.
 - **Authentication → Policies/Protection**: ativar a proteção contra senhas vazadas
   (estava ativa no projeto atual).
-- **Authentication → Emails**: reconfigurar remetente e domínio de e-mail.
 - Confirmação de e-mail: manter o mesmo comportamento atual (sem autoconfirmação).
+- **Authentication → Emails (opcional, pode pular):** só serve para personalizar o
+  remetente dos e-mails de login/redefinição de senha do painel. Não se configura na
+  Hostinger. Os e-mails aos hóspedes saem pelo Resend, não por aqui. Se quiser
+  personalizar depois: Authentication → Emails → SMTP Settings, com host
+  `smtp.resend.com`, porta `465`, usuário `resend` e senha = a chave do Resend.
 
 ### 7. Chaves de integração (secrets das funções de servidor)
-Cadastre novamente, no projeto novo, com **exatamente estes nomes**:
+
+**Onde cadastrar:** no projeto novo, menu lateral → **Project Settings** (engrenagem)
+→ **Edge Functions** → **Secrets** → botão **Add new secret**. Não é na tela
+"Integrations".
+
+Cadastre com **exatamente estes nomes**:
 
 `FNRH_API_USER`, `FNRH_API_PASSWORD`, `FNRH_CPF_SOLICITANTE`, `FNRH_ENV`,
 `GOOGLE_API_KEY`, `GOOGLE_PLACE_ID`, `MERCADO_PAGO_ACCESS_TOKEN`,
 `MERCADO_PAGO_WEBHOOK_SECRET`, `RESEND_API_KEY`, `SITE_URL`,
 `VITE_MERCADO_PAGO_PUBLIC_KEY`
+
+De onde vem cada valor:
+
+| Nome | Onde pegar |
+|---|---|
+| `SITE_URL` | `https://pousadararazul.com` |
+| `FNRH_ENV` | `producao` |
+| `MERCADO_PAGO_ACCESS_TOKEN` | Mercado Pago → sua aplicação → Credenciais de produção → Access token |
+| `VITE_MERCADO_PAGO_PUBLIC_KEY` | Mesma tela → Public key |
+| `MERCADO_PAGO_WEBHOOK_SECRET` | Mercado Pago → Webhooks → Configurar notificações → Assinatura secreta |
+| `RESEND_API_KEY` | Resend → API Keys (se não puder revelar, gere uma nova) |
+| `GOOGLE_API_KEY` | Google Cloud Console → APIs e Serviços → Credenciais |
+| `GOOGLE_PLACE_ID` | Identificador do Google Maps da pousada |
+| `FNRH_API_USER` / `FNRH_API_PASSWORD` / `FNRH_CPF_SOLICITANTE` | Cadastro da pousada no sistema FNRH (Ministério do Turismo) |
 
 As chaves do próprio Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_URL`) são preenchidas pelo próprio projeto.
@@ -105,8 +128,16 @@ As chaves do próprio Supabase (`SUPABASE_URL`, `SUPABASE_ANON_KEY`,
 > `fnrh_credentials` é criada vazia; depois da migração, preencha pelo painel
 > administrativo em `/admin/fnrh`.
 
+Faça este passo **antes** do passo 8, senão as funções sobem sem credenciais.
+
 ### 8. Publicar as funções de servidor
-As 37 funções da pasta `supabase/functions` precisam ser publicadas no projeto novo:
+
+Rode os comandos **na pasta do código do site inteiro** (aquela que tem `package.json`
+e a pasta `supabase`), não dentro de `docs/migracao-supabase/`.
+
+1. Instale o Node.js em <https://nodejs.org> (botão LTS).
+2. Baixe o código do site (GitHub → clonar ou baixar ZIP) e descompacte.
+3. Abra o terminal nessa pasta e rode, um por vez:
 
 ```bash
 npx supabase login
@@ -114,8 +145,15 @@ npx supabase link --project-ref <REF-DO-PROJETO-NOVO>
 npx supabase functions deploy
 ```
 
-Depois atualize os endereços de retorno (webhooks) no Mercado Pago e no Resend para
-apontarem para o novo projeto.
+`<REF-DO-PROJETO-NOVO>` é o trecho do endereço antes de `.supabase.co`. O `link` pede
+a senha do banco do projeto novo.
+
+> Se aparecer erro vermelho citando `generate-receipt-pdf` ou `payment-webhook`
+> ("Entrypoint path does not exist"), o código está desatualizado: essas duas funções
+> não existem mais e foram removidas da configuração. Baixe o código atualizado e rode
+> o deploy novamente. As demais funções sobem normalmente mesmo com esse erro.
+
+Depois confira os endereços de retorno (webhooks) — veja o passo 9.
 
 ### 9. Apontar o site para o banco novo
 No arquivo de ambiente do site, troque o endereço e a chave pública do projeto
