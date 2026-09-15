@@ -155,7 +155,19 @@ a senha do banco do projeto novo.
 
 Depois confira os endereços de retorno (webhooks) — veja o passo 9.
 
-### 9. Apontar o site para o banco novo
+### 9. Webhooks (Resend e Mercado Pago)
+
+- **Resend** (painel do Resend → Webhooks → endpoint): trocar para
+  `https://<REF-NOVO>.supabase.co/functions/v1/resend-webhook`.
+- **Mercado Pago: não precisa mexer.** O endereço de aviso de pagamento não vem do
+  painel — o próprio site informa ao Mercado Pago, em cada cobrança, o endereço do
+  banco em uso. Ao virar o site para o banco novo, os avisos passam a chegar no lugar
+  certo automaticamente. A "URL configurada" que aparece no painel é apenas o endereço
+  genérico da aplicação. Só atenção a um ponto: se você gerar uma nova assinatura
+  secreta de webhook no Mercado Pago, cadastre-a como `MERCADO_PAGO_WEBHOOK_SECRET`
+  no projeto novo.
+
+### 9b. Apontar o site para o banco novo
 No arquivo de ambiente do site, troque o endereço e a chave pública do projeto
 (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`),
 publique e teste.
