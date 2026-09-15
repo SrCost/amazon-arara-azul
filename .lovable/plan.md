@@ -1,89 +1,52 @@
-# Migração para o Supabase externo — passos restantes, detalhados
+# Migração para o Supabase externo — respostas e correções
 
-## Sobre as diferenças que você viu na conferência
+## 1. Passo 7 — as chaves: onde pegar cada valor
 
-Estão certas — o problema é a lista de "esperado", não o seu banco novo:
+Eu não consigo ler o conteúdo das chaves guardadas (elas são gravadas de forma cifrada e nem eu tenho acesso). O que posso fazer é dizer, uma por uma, de onde tirar o valor:
 
-- **29 funções e 38 gatilhos é o número correto.** A linha "30 funções / 51 gatilhos" do arquivo de conferência contou errado: o banco antigo lista o mesmo gatilho uma vez para cada operação (inserir, editar, apagar), inflando o total. Os arquivos de migração criam exatamente 29 funções e 38 gatilhos — foi o que apareceu no seu projeto novo. Vou corrigir os números esperados no arquivo `10-verificacao-final.sql`.
-- **65 arquivos no armazenamento** é exatamente o esperado por ora: falta só o vídeo do carrossel (~100 MB), barrado pelo limite de 50 MB do plano gratuito.
+| Nome (copie exatamente) | Onde pegar o valor |
+|---|---|
+| `SITE_URL` | Já sei: `https://pousadararazul.com` |
+| `FNRH_ENV` | Já sei: `producao` |
+| `MERCADO_PAGO_ACCESS_TOKEN` | Mercado Pago → sua aplicação → **Credenciais de produção** → "Access token" |
+| `VITE_MERCADO_PAGO_PUBLIC_KEY` | Mesma tela → "Public key" |
+| `MERCADO_PAGO_WEBHOOK_SECRET` | Mercado Pago → Webhooks → **Configurar notificações** → "Assinatura secreta" (botão de revelar) |
+| `RESEND_API_KEY` | Resend → API Keys (se não puder revelar a atual, crie uma nova e use a nova) |
+| `GOOGLE_API_KEY` | Google Cloud Console → APIs e Serviços → Credenciais → sua chave de API |
+| `GOOGLE_PLACE_ID` | É o identificador do Google Maps da pousada; posso recuperar e te passar |
+| `FNRH_API_USER` | Usuário do cadastro da pousada no sistema FNRH/Ministério do Turismo |
+| `FNRH_API_PASSWORD` | Senha do mesmo cadastro |
+| `FNRH_CPF_SOLICITANTE` | CPF do responsável cadastrado na FNRH |
 
-Ação: nenhuma. Essas duas divergências não são erro.
+Se você não tiver mais em mãos alguma delas, eu consigo recuperar as informações não sigilosas (como `GOOGLE_PLACE_ID` e o CPF cadastrado, se estiver no banco) e te aviso quais precisam ser geradas de novo no painel do fornecedor.
 
-## Passo 6 — "reconfigurar remetente/domínio" (pode pular)
+## 2. Passo 8 — o erro do terminal (e a correção)
 
-Isso **não** se configura na Hostinger. É a tela de e-mails do próprio Supabase, e só importa se você quiser que os e-mails de login/redefinição de senha saiam com o seu domínio.
+O deploy funcionou: todas as funções subiram. As duas linhas em vermelho são de **duas funções que não existem mais** no projeto — `generate-receipt-pdf` e `payment-webhook`. Elas continuam listadas num arquivo de configuração antigo, então a ferramenta tenta publicá-las e não encontra o arquivo.
 
-Hoje seus e-mails para hóspedes saem pelo Resend (chave `RESEND_API_KEY`), não pelo Supabase. Então:
+**Correção que eu faço:** remover essas duas entradas obsoletas do arquivo `supabase/config.toml`.
 
-- **Pode deixar como está.** Os e-mails de recuperação de senha do painel sairão pelo remetente padrão do Supabase, o que funciona.
-- Se quiser depois personalizar: no projeto novo, Authentication → Emails → Settings → SMTP Settings, informando os dados do Resend (host `smtp.resend.com`, porta `465`, usuário `resend`, senha = a chave do Resend).
+Depois disso, baixe o código atualizado e rode `npx supabase functions deploy` de novo — vai terminar sem erro. As 37 funções reais já estão publicadas; nada ficou faltando.
 
-## Passo 7 — Onde cadastrar as chaves de integração
+## 3. Passo 9 — o Mercado Pago realmente não precisa de mudança
 
-O print que você mandou é a tela **Integrations** — não é ali. O caminho é:
+Você está certo. O endereço de aviso de pagamento **não** vem do painel: o próprio site informa ao Mercado Pago, em cada cobrança, o endereço do banco que está em uso naquele momento. Ou seja, ao virar o site para o banco novo (passo 10), os avisos passam a chegar no lugar certo automaticamente.
 
-1. No projeto novo, menu lateral: **Project Settings** (engrenagem, no rodapé do menu).
-2. Seção **Edge Functions** → **Secrets** (em alguns painéis aparece como "Functions → Secrets", ou "Edge Functions → Manage secrets").
-3. Botão **Add new secret** e cadastre um por um, com o nome exatamente igual:
+A "URL configurada" que aparece no seu print (`https://pousadararazul.com/`) é só o endereço genérico da aplicação e não interfere. Único ajuste a conferir lá: se você gerar uma nova **assinatura secreta** de webhook, ela precisa ser cadastrada como `MERCADO_PAGO_WEBHOOK_SECRET` no projeto novo (item do passo 7).
 
-`FNRH_API_USER`, `FNRH_API_PASSWORD`, `FNRH_CPF_SOLICITANTE`, `FNRH_ENV`, `GOOGLE_API_KEY`, `GOOGLE_PLACE_ID`, `MERCADO_PAGO_ACCESS_TOKEN`, `MERCADO_PAGO_WEBHOOK_SECRET`, `RESEND_API_KEY`, `SITE_URL`, `VITE_MERCADO_PAGO_PUBLIC_KEY`
+O Resend, que você já configurou, era o que de fato precisava do endereço novo. Bom.
 
-Os valores são os mesmos que você já usa hoje (Mercado Pago, Resend, Google Cloud, FNRH). `SITE_URL` = `https://pousadararazul.com`. As chaves `SUPABASE_*` não precisam ser cadastradas — o próprio projeto já as fornece.
+## 4. O que eu vou fazer nesta etapa
 
-Importante: essa etapa precisa vir **antes** do passo 8, senão as funções sobem sem credenciais.
+- Remover de `supabase/config.toml` os dois blocos obsoletos (`generate-receipt-pdf` e `payment-webhook`), que é a causa do erro em vermelho.
+- Corrigir os números esperados em `docs/migracao-supabase/10-verificacao-final.sql`: 29 funções e 38 gatilhos (não 30/51), e 65 arquivos enquanto o vídeo não for copiado.
+- Atualizar `docs/migracao-supabase/00-LEIA-ME.md` com: onde cadastrar as chaves (Project Settings → Edge Functions → Secrets), de qual pasta rodar o deploy, a nota de que o Mercado Pago não precisa de alteração de endereço e que a configuração de remetente de e-mail no Supabase é opcional.
 
-## Passo 8 — Publicar as funções de servidor, em detalhe
+## 5. Depois disso, o que falta
 
-Não é dentro da pasta `docs/migracao-supabase/`. É na **pasta do projeto do site inteiro**, porque o comando lê a pasta `supabase/functions`.
+1. Você cadastra as 11 chaves no projeto novo (passo 7).
+2. Roda o deploy novamente com o código corrigido (passo 8) — deve terminar limpo.
+3. Passo 10: eu troco o endereço e a chave pública do site para o projeto novo, publicamos e testamos juntos (página inicial, /bangalos, /experiencias, uma reserva de teste com PIX, login do painel, calendário, painel FNRH e pré-chegada).
+4. Você roda a conferência final para registro.
 
-Como fazer (Windows ou Mac):
-
-1. Instale o **Node.js** em <https://nodejs.org> (botão LTS).
-2. Baixe o código do site: no Lovable, canto superior direito → GitHub → e clone/baixe o repositório como ZIP; descompacte, por exemplo em `C:\arara-site`.
-3. Abra o terminal **dentro dessa pasta** (a que tem os arquivos `package.json` e a pasta `supabase`).
-4. Rode, um por vez:
-
-```bash
-npx supabase login
-npx supabase link --project-ref <REF-DO-PROJETO-NOVO>
-npx supabase functions deploy
-```
-
-- O `login` abre o navegador para você autorizar.
-- `<REF-DO-PROJETO-NOVO>` é o pedaço do endereço antes de `.supabase.co`.
-- Ele vai pedir a senha do banco do projeto novo no `link`.
-- O `deploy` sobe as 37 funções de uma vez e mostra a lista ao final.
-
-Se preferir não mexer em terminal, existe alternativa: manter o site no Lovable Cloud (banco atual) e usar o projeto externo só como cópia. Me diga se quiser avaliar esse caminho.
-
-## Passo 9 — Endereços dos webhooks
-
-Troque `<REF-NOVO>` pela referência do projeto novo:
-
-- **Mercado Pago** (painel do MP → Suas integrações → sua aplicação → Webhooks / Notificações):
-  `https://<REF-NOVO>.supabase.co/functions/v1/mp-webhook`
-- **Resend** (painel do Resend → Webhooks → Add endpoint):
-  `https://<REF-NOVO>.supabase.co/functions/v1/resend-webhook`
-
-Antes de trocar, confira nos painéis do Mercado Pago e do Resend qual endereço está configurado hoje: se o atual terminar em `/mercado-pago-webhook` em vez de `/mp-webhook`, mantenha o mesmo final, só mudando o começo do endereço.
-
-Só faça isso depois do passo 8 — os endereços só respondem quando as funções estiverem publicadas. E lembre: no momento em que você trocar, as notificações de pagamento passam a chegar no banco novo, então essa é a hora de virar o site também (passo 10).
-
-## Passo 10 — Virada e conferência final
-
-1. Eu troco no site o endereço e a chave pública do projeto novo.
-2. Publicamos.
-3. Testamos juntos: página inicial, /bangalos, /experiencias, uma reserva de teste com PIX, login do painel, calendário de reservas, painel FNRH e formulário de pré-chegada.
-4. Você roda `10-verificacao-final.sql` (já com os números corrigidos) para o registro final.
-
-## O que eu faço nesta etapa
-
-- Corrigir os números esperados em `10-verificacao-final.sql` (29 funções, 38 gatilhos) e a nota sobre os 65/66 arquivos.
-- Detalhar no `00-LEIA-ME.md` os passos 7, 8 e 9 com o conteúdo acima (onde cadastrar as chaves, de onde rodar o deploy, quais endereços de webhook).
-- Deixar registrado que a configuração de remetente de e-mail é opcional.
-
-Nada do código do site é alterado agora — a troca do endereço do banco fica para o passo 10, quando você autorizar.
-
-## Pendências suas
-- Confirmar que o projeto novo é o mesmo em que copiei as imagens.
-- Decidir sobre o vídeo do carrossel (aumentar o limite de upload ou seguir sem ele por ora).
+Pendências suas: confirmar que o projeto novo é o mesmo onde copiei as imagens, e decidir sobre o vídeo do carrossel (aumentar o limite de upload no plano pago ou seguir sem ele por ora).
