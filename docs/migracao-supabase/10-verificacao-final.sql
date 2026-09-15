@@ -46,7 +46,8 @@ SELECT e.tabela, e.esperado, a.c AS atual,
 FROM esperado e JOIN atual a ON a.t = e.tabela
 ORDER BY situacao DESC, e.tabela;
 
--- 2) Estrutura: 26 tabelas, 30 funcoes, 51 gatilhos, 73 politicas
+-- 2) Estrutura esperada: 26 tabelas, 29 funcoes, 38 gatilhos, 73 politicas
+--    (os arquivos 04 e 05 criam exatamente 29 funcoes e 38 gatilhos)
 SELECT
   (SELECT count(*) FROM pg_tables WHERE schemaname = 'public') AS tabelas,
   (SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
@@ -72,7 +73,9 @@ SELECT
   (SELECT count(*) FROM public.user_roles ur
      LEFT JOIN auth.users u ON u.id = ur.user_id WHERE u.id IS NULL) AS cargos_sem_usuario;
 
--- 5) Arquivos do armazenamento (esperado: 66 no bucket "gallery")
+-- 5) Arquivos do armazenamento (esperado: 66 no bucket "gallery";
+--    65 e o resultado correto enquanto o video do carrossel (~100 MB) nao
+--    for copiado, pois depende de aumentar o limite de upload do projeto)
 SELECT bucket_id, count(*) AS arquivos,
        pg_size_pretty(sum((metadata->>'size')::bigint)) AS tamanho
 FROM storage.objects GROUP BY bucket_id;
