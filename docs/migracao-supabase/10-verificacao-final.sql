@@ -73,7 +73,9 @@ SELECT
   (SELECT count(*) FROM public.user_roles ur
      LEFT JOIN auth.users u ON u.id = ur.user_id WHERE u.id IS NULL) AS cargos_sem_usuario;
 
--- 5) Arquivos do armazenamento (esperado: 66 no bucket "gallery")
+-- 5) Arquivos do armazenamento (esperado: 66 no bucket "gallery";
+--    65 e o resultado correto enquanto o video do carrossel (~100 MB) nao
+--    for copiado, pois depende de aumentar o limite de upload do projeto)
 SELECT bucket_id, count(*) AS arquivos,
        pg_size_pretty(sum((metadata->>'size')::bigint)) AS tamanho
 FROM storage.objects GROUP BY bucket_id;
